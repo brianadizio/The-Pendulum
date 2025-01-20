@@ -1,0 +1,6 @@
+projectKey=The-Maze
+serverUrl=http://localhost:9000
+serverVersion=10.6.0.92116
+dashboardUrl=http://localhost:9000/dashboard?id=The-Maze
+ceTaskId=1a9224a8-2ce0-4239-8cc6-14350b3e574f
+ceTaskUrl=http://localhost:9000/api/ce/task?id=1a9224a8-2ce0-4239-8cc6-14350b3e574f
