@@ -1,8 +1,90 @@
 {
   "name": "The Pendulum",
-  "currentStage": "raw_development",
+  "type": "software",
+  "currentStage": "mvp_release",
   "completionPercentage": 0,
-  "lastUpdated": "31-Jan-2025 16:18:50",
+  "lastUpdated": "07-Feb-2025 14:53:45",
   "stageHistory": [],
-  "type": "software"
+  "requirements": {
+    "RefactorAndExtractWorkingPendulumCodeInSwift": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "MakeNew_Fresh_CleanXcodeProject": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "TestInputs": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "AddParameterSettings": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "ExpandVisualization": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "Starting_Controlling_PendulumNoise_ExternalPerturbationsThatCan": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "Output_Times_PendulumPosition_PendulumVelocity_InputParameters_": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "OtherControls": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "Expert_Novice_AI": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "Game_Visuals_Global_PersonalDataExporting_PlotStatistics_GESRes": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "ExperimentMode_Exporting": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "MultiplayerWithTwoPeopleControlling_AmountOfControlChangesByTim": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "PhaseSpaceVisualizationOption": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "NoFallLineOnPhaseSpaceManifold_GetMatlabCodeFromDad_GetEmpirica": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "test_TryModels": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    },
+    "refineGraphics": {
+      "completed": false,
+      "lastUpdated": "07-Feb-2025 14:53:45",
+      "notes": ""
+    }
+  }
 }
