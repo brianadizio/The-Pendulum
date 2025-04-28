@@ -39,6 +39,9 @@ class PendulumViewModel: ObservableObject {
         }
     }
     
+    // Force strength parameter for push buttons
+    @Published var forceStrength: Double = 2.5
+    
     private let simulation = PendulumSimulation()
     var timer: Timer? // Changed from private for use in extensions
     
@@ -111,13 +114,33 @@ class PendulumViewModel: ObservableObject {
     }
     
     func applyForce(_ magnitude: Double) {
-        // Apply external force and update state
+        // Apply external force using the adjustable force strength parameter
+        let scaledMagnitude = magnitude * forceStrength
+        
+        print("Applying force: \(scaledMagnitude) to pendulum with current velocity \(currentState.thetaDot)")
+        
+        // Update the state with the new angular velocity
         let newState = PendulumState(
             theta: currentState.theta,
-            thetaDot: currentState.thetaDot + magnitude,
+            thetaDot: currentState.thetaDot + scaledMagnitude,
             time: currentState.time
         )
+        
+        // Apply the new state
         currentState = newState
+        
+        // If simulation is not running, start it briefly to show effect
+        let wasNotSimulating = !isSimulating
+        if wasNotSimulating {
+            // Start simulation temporarily to show effect of push
+            startSimulation()
+            
+            // Optionally, stop simulation after a delay if it wasn't running before
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self, wasNotSimulating, self.isSimulating else { return }
+                self.stopSimulation()
+            }
+        }
     }
     
     func reset() {
@@ -131,5 +154,6 @@ class PendulumViewModel: ObservableObject {
         damping = 0.1
         gravity = 9.81
         springConstant = 0.0
+        forceStrength = 2.5
     }
 }
