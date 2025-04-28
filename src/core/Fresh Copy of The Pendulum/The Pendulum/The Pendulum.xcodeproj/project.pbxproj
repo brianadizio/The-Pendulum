@@ -1,0 +1,555 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		D67B2C9B2DBF2EDF00FC0011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D67B2C852DBF2EDE00FC0011 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D67B2C8C2DBF2EDE00FC0011;
+			remoteInfo = "The Pendulum";
+		};
+		D67B2CA52DBF2EDF00FC0011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D67B2C852DBF2EDE00FC0011 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D67B2C8C2DBF2EDE00FC0011;
+			remoteInfo = "The Pendulum";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		D67B2C8D2DBF2EDE00FC0011 /* The Pendulum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D67B2C9A2DBF2EDF00FC0011 /* The PendulumTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "The PendulumTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D67B2CA42DBF2EDF00FC0011 /* The PendulumUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "The PendulumUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D67B2C8F2DBF2EDE00FC0011 /* The Pendulum */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "The Pendulum";
+			sourceTree = "<group>";
+		};
+		D67B2C9D2DBF2EDF00FC0011 /* The PendulumTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "The PendulumTests";
+			sourceTree = "<group>";
+		};
+		D67B2CA72DBF2EDF00FC0011 /* The PendulumUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "The PendulumUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D67B2C8A2DBF2EDE00FC0011 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2C972DBF2EDF00FC0011 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2CA12DBF2EDF00FC0011 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D67B2C842DBF2EDE00FC0011 = {
+			isa = PBXGroup;
+			children = (
+				D67B2C8F2DBF2EDE00FC0011 /* The Pendulum */,
+				D67B2C9D2DBF2EDF00FC0011 /* The PendulumTests */,
+				D67B2CA72DBF2EDF00FC0011 /* The PendulumUITests */,
+				D67B2C8E2DBF2EDE00FC0011 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D67B2C8E2DBF2EDE00FC0011 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D67B2C8D2DBF2EDE00FC0011 /* The Pendulum.app */,
+				D67B2C9A2DBF2EDF00FC0011 /* The PendulumTests.xctest */,
+				D67B2CA42DBF2EDF00FC0011 /* The PendulumUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D67B2C8C2DBF2EDE00FC0011 /* The Pendulum */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D67B2CAE2DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The Pendulum" */;
+			buildPhases = (
+				D67B2C892DBF2EDE00FC0011 /* Sources */,
+				D67B2C8A2DBF2EDE00FC0011 /* Frameworks */,
+				D67B2C8B2DBF2EDE00FC0011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D67B2C8F2DBF2EDE00FC0011 /* The Pendulum */,
+			);
+			name = "The Pendulum";
+			packageProductDependencies = (
+			);
+			productName = "The Pendulum";
+			productReference = D67B2C8D2DBF2EDE00FC0011 /* The Pendulum.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D67B2C992DBF2EDF00FC0011 /* The PendulumTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D67B2CB12DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The PendulumTests" */;
+			buildPhases = (
+				D67B2C962DBF2EDF00FC0011 /* Sources */,
+				D67B2C972DBF2EDF00FC0011 /* Frameworks */,
+				D67B2C982DBF2EDF00FC0011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D67B2C9C2DBF2EDF00FC0011 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D67B2C9D2DBF2EDF00FC0011 /* The PendulumTests */,
+			);
+			name = "The PendulumTests";
+			packageProductDependencies = (
+			);
+			productName = "The PendulumTests";
+			productReference = D67B2C9A2DBF2EDF00FC0011 /* The PendulumTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D67B2CA32DBF2EDF00FC0011 /* The PendulumUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D67B2CB42DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The PendulumUITests" */;
+			buildPhases = (
+				D67B2CA02DBF2EDF00FC0011 /* Sources */,
+				D67B2CA12DBF2EDF00FC0011 /* Frameworks */,
+				D67B2CA22DBF2EDF00FC0011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D67B2CA62DBF2EDF00FC0011 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D67B2CA72DBF2EDF00FC0011 /* The PendulumUITests */,
+			);
+			name = "The PendulumUITests";
+			packageProductDependencies = (
+			);
+			productName = "The PendulumUITests";
+			productReference = D67B2CA42DBF2EDF00FC0011 /* The PendulumUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D67B2C852DBF2EDE00FC0011 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					D67B2C8C2DBF2EDE00FC0011 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					D67B2C992DBF2EDF00FC0011 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = D67B2C8C2DBF2EDE00FC0011;
+					};
+					D67B2CA32DBF2EDF00FC0011 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = D67B2C8C2DBF2EDE00FC0011;
+					};
+				};
+			};
+			buildConfigurationList = D67B2C882DBF2EDE00FC0011 /* Build configuration list for PBXProject "The Pendulum" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D67B2C842DBF2EDE00FC0011;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D67B2C8E2DBF2EDE00FC0011 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D67B2C8C2DBF2EDE00FC0011 /* The Pendulum */,
+				D67B2C992DBF2EDF00FC0011 /* The PendulumTests */,
+				D67B2CA32DBF2EDF00FC0011 /* The PendulumUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D67B2C8B2DBF2EDE00FC0011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2C982DBF2EDF00FC0011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2CA22DBF2EDF00FC0011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D67B2C892DBF2EDE00FC0011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2C962DBF2EDF00FC0011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D67B2CA02DBF2EDF00FC0011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D67B2C9C2DBF2EDF00FC0011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D67B2C8C2DBF2EDE00FC0011 /* The Pendulum */;
+			targetProxy = D67B2C9B2DBF2EDF00FC0011 /* PBXContainerItemProxy */;
+		};
+		D67B2CA62DBF2EDF00FC0011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D67B2C8C2DBF2EDE00FC0011 /* The Pendulum */;
+			targetProxy = D67B2CA52DBF2EDF00FC0011 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D67B2CAC2DBF2EDF00FC0011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D67B2CAD2DBF2EDF00FC0011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D67B2CAF2DBF2EDF00FC0011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D67B2CB02DBF2EDF00FC0011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D67B2CB22DBF2EDF00FC0011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-PendulumTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/The Pendulum.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/The Pendulum";
+			};
+			name = Debug;
+		};
+		D67B2CB32DBF2EDF00FC0011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-PendulumTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/The Pendulum.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/The Pendulum";
+			};
+			name = Release;
+		};
+		D67B2CB52DBF2EDF00FC0011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-PendulumUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "The Pendulum";
+			};
+			name = Debug;
+		};
+		D67B2CB62DBF2EDF00FC0011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-PendulumUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "The Pendulum";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D67B2C882DBF2EDE00FC0011 /* Build configuration list for PBXProject "The Pendulum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D67B2CAC2DBF2EDF00FC0011 /* Debug */,
+				D67B2CAD2DBF2EDF00FC0011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D67B2CAE2DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The Pendulum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D67B2CAF2DBF2EDF00FC0011 /* Debug */,
+				D67B2CB02DBF2EDF00FC0011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D67B2CB12DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The PendulumTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D67B2CB22DBF2EDF00FC0011 /* Debug */,
+				D67B2CB32DBF2EDF00FC0011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D67B2CB42DBF2EDF00FC0011 /* Build configuration list for PBXNativeTarget "The PendulumUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D67B2CB52DBF2EDF00FC0011 /* Debug */,
+				D67B2CB62DBF2EDF00FC0011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D67B2C852DBF2EDE00FC0011 /* Project object */;
+}
