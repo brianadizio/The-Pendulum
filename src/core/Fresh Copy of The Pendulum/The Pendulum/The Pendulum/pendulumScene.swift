@@ -14,6 +14,10 @@ class PendulumScene: SKScene {
     override func didMove(to view: SKView) {
         print("PendulumScene: didMove called")
         
+        // Log view and scene information for debugging
+        print("Scene size: \(self.size)")
+        print("View size: \(view.bounds.size)")
+        
         // Set up a gradient background
         let gradientNode = SKSpriteNode(color: .clear, size: self.size)
         gradientNode.zPosition = -100
@@ -42,35 +46,55 @@ class PendulumScene: SKScene {
         // Setup decorative grid for perspective
         setupGrid()
         
-        // Setup pivot point - more refined design
+        // Add a visible center marker for debugging
+        let centerMarker = SKShapeNode(circleOfRadius: 5)
+        centerMarker.fillColor = .red
+        centerMarker.position = CGPoint(x: frame.midX, y: frame.midY)
+        centerMarker.zPosition = 100
+        addChild(centerMarker)
+        
+        // Setup pivot point - more refined design and centered horizontally
         pendulumPivot.fillColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Dark gray
         pendulumPivot.strokeColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-        pendulumPivot.position = CGPoint(x: frame.midX, y: frame.midY + 100)
+        
+        // Center the pendulum horizontally and position it in the upper portion
+        pendulumPivot.position = CGPoint(x: frame.midX, y: frame.midY + 50)
         pendulumPivot.lineWidth = 2
         pendulumPivot.glowWidth = 1
+        pendulumPivot.zPosition = 10
         addChild(pendulumPivot)
         
         // Setup pendulum rod - more refined look
         pendulumRod.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
         pendulumRod.lineWidth = 3
+        pendulumRod.zPosition = 5
         addChild(pendulumRod)
         
-        // Setup bob - more professional appearance
+        // Setup bob - more professional appearance and ensure it's visible
         pendulumBob.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Royal blue
         pendulumBob.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
         pendulumBob.lineWidth = 2
         pendulumBob.glowWidth = 2
+        pendulumBob.zPosition = 15
         addChild(pendulumBob)
         
         // Setup trail with better appearance
         trailNode.alpha = 0.6
+        trailNode.zPosition = 3
         addChild(trailNode)
         
         // Force update of initial pendulum position
         if let viewModel = viewModel {
             updatePendulumPosition(with: viewModel.currentState)
+        } else {
+            // If no viewModel, set a default position
+            let defaultState = PendulumState(theta: 0.05, thetaDot: 0, time: 0)
+            updatePendulumPosition(with: defaultState)
         }
         
+        // Print pendulum positions for debugging
+        print("PendulumScene: Pivot position: \(pendulumPivot.position)")
+        print("PendulumScene: Bob position: \(pendulumBob.position)")
         print("PendulumScene: didMove completed - scene size: \(self.size)")
     }
     
@@ -118,14 +142,18 @@ class PendulumScene: SKScene {
     private func updatePendulumPosition(with state: PendulumState) {
         let angle = state.theta
         
-        // Use the length from the viewModel if available, otherwise use a default
-        let baseLength: CGFloat = 130 // Default length in points
+        // Use a larger base length to make pendulum more visible
+        let baseLength: CGFloat = 100 // Reduced from 130 to better fit in view
         let modelLength = viewModel?.length ?? 1.0
         let length = baseLength * CGFloat(modelLength)
         
+        // Calculate bob position based on angle
         let bobX = pendulumPivot.position.x + length * sin(angle)
         let bobY = pendulumPivot.position.y - length * cos(angle)
         let bobPosition = CGPoint(x: bobX, y: bobY)
+        
+        // Print the bob position for debugging
+        print("Bob position: \(bobPosition) for angle: \(angle)")
         
         // Update rod path with slight curve for aesthetics
         let path = CGMutablePath()
@@ -139,16 +167,30 @@ class PendulumScene: SKScene {
         path.addQuadCurve(to: bobPosition, control: controlPoint)
         pendulumRod.path = path
         
-        // Update bob position with smooth animation
-        let moveAction = SKAction.move(to: bobPosition, duration: 0.02)
-        moveAction.timingMode = .easeOut
-        pendulumBob.run(moveAction)
+        // Update bob position directly (no animation for now)
+        pendulumBob.position = bobPosition
         
         // Add subtle rotation to the bob based on velocity
         let rotationAngle = min(max(CGFloat(state.thetaDot) * 0.1, -0.3), 0.3)
         pendulumBob.run(SKAction.rotate(toAngle: rotationAngle, duration: 0.05))
         
-        // Add shadow under the bob if needed (without changing bob radius here)
+        // Ensure the bob is large enough to be visible
+        if pendulumBob.frame.width < 20 {
+            // Create a new larger bob
+            let newBob = SKShapeNode(circleOfRadius: 20)
+            newBob.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
+            newBob.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
+            newBob.lineWidth = 2
+            newBob.glowWidth = 2
+            newBob.zPosition = 15
+            newBob.position = bobPosition
+            
+            pendulumBob.removeFromParent()
+            addChild(newBob)
+            pendulumBob = newBob
+        }
+        
+        // Add shadow under the bob if needed
         if pendulumBob.children.isEmpty {
             let shadow = SKShapeNode(circleOfRadius: pendulumBob.frame.width / 2)
             shadow.fillColor = UIColor.black.withAlphaComponent(0.2)

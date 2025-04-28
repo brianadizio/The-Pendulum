@@ -24,6 +24,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let lengthSlider = UISlider()
     private let dampingSlider = UISlider()
     private let gravitySlider = UISlider()
+    private let forceStrengthSlider = UISlider()
     
     // Control buttons
     private lazy var startButton: UIButton = {
@@ -123,30 +124,63 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set background color
         simulationView.backgroundColor = .white
         
-        // Set up the SpriteKit view for the pendulum simulation
-        let skView = SKView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 100))
+        // Create a container for the SpriteKit view with proper constraints
+        let skViewContainer = UIView()
+        skViewContainer.translatesAutoresizingMaskIntoConstraints = false
+        skViewContainer.backgroundColor = .white
+        simulationView.addSubview(skViewContainer)
+        
+        // Position the SKView container to take most of the screen space
+        // Leave space at the bottom for controls
+        NSLayoutConstraint.activate([
+            skViewContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 100),
+            skViewContainer.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor),
+            skViewContainer.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor),
+            skViewContainer.heightAnchor.constraint(equalTo: simulationView.heightAnchor, multiplier: 0.5)
+        ])
+        
+        // Add the SpriteKit view
+        let skView = SKView(frame: .zero)
+        skView.translatesAutoresizingMaskIntoConstraints = false
         skView.backgroundColor = .white
-        skView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        simulationView.addSubview(skView)
+        skViewContainer.addSubview(skView)
+        
+        // Make the SKView fill its container
+        NSLayoutConstraint.activate([
+            skView.topAnchor.constraint(equalTo: skViewContainer.topAnchor),
+            skView.leadingAnchor.constraint(equalTo: skViewContainer.leadingAnchor),
+            skView.trailingAnchor.constraint(equalTo: skViewContainer.trailingAnchor),
+            skView.bottomAnchor.constraint(equalTo: skViewContainer.bottomAnchor)
+        ])
         
         // Configure the SpriteKit view
         skView.showsFPS = true
         skView.showsNodeCount = true
         skView.ignoresSiblingOrder = true
         
-        // Create and present the pendulum scene
-        let sceneSize = CGSize(width: skView.bounds.width, height: skView.bounds.height)
-        scene = PendulumScene(size: sceneSize)
-        scene?.scaleMode = .aspectFill
-        scene?.viewModel = viewModel
-        scene?.backgroundColor = .white
+        // Add a border to the SKView for visibility
+        skView.layer.borderColor = UIColor.lightGray.cgColor
+        skView.layer.borderWidth = 1.0
         
-        // Set the scene in the viewModel for bidirectional communication
-        viewModel.scene = scene
-        
-        // Present the scene
-        if let theScene = scene {
-            skView.presentScene(theScene, transition: SKTransition.fade(withDuration: 0.5))
+        // Wait for the view to layout before creating the scene
+        DispatchQueue.main.async {
+            // Create and present the pendulum scene once view is sized
+            let sceneSize = skView.bounds.size
+            print("Creating scene with size: \(sceneSize)")
+            
+            self.scene = PendulumScene(size: sceneSize)
+            self.scene?.scaleMode = .aspectFill
+            self.scene?.viewModel = self.viewModel
+            self.scene?.backgroundColor = .white
+            
+            // Set the scene in the viewModel for bidirectional communication
+            self.viewModel.scene = self.scene
+            
+            // Present the scene
+            if let theScene = self.scene {
+                skView.presentScene(theScene, transition: SKTransition.fade(withDuration: 0.5))
+                print("Scene presented. SKView size: \(skView.bounds.size)")
+            }
         }
         
         // Add control buttons
@@ -167,8 +201,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         parametersView.addSubview(titleLabel)
         
         // Configure sliders
-        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider]
-        let sliderTitles = ["Mass", "Length", "Damping", "Gravity"]
+        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, forceStrengthSlider]
+        let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Force Strength"]
         
         // Create a container for parameter controls
         let parametersContainer = UIView()
@@ -258,11 +292,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         gravitySlider.maximumValue = 20.0
         gravitySlider.value = Float(viewModel.gravity)
         
+        forceStrengthSlider.minimumValue = 0.1
+        forceStrengthSlider.maximumValue = 10.0
+        forceStrengthSlider.value = Float(viewModel.forceStrength)
+        
         // Add actions to sliders
         massSlider.addTarget(self, action: #selector(massSliderChanged), for: .valueChanged)
         lengthSlider.addTarget(self, action: #selector(lengthSliderChanged), for: .valueChanged)
         dampingSlider.addTarget(self, action: #selector(dampingSliderChanged), for: .valueChanged)
         gravitySlider.addTarget(self, action: #selector(gravitySliderChanged), for: .valueChanged)
+        forceStrengthSlider.addTarget(self, action: #selector(forceStrengthSliderChanged), for: .valueChanged)
     }
     
     private func setupInfoView() {
@@ -571,11 +610,37 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func pushLeftButtonTapped() {
-        viewModel.applyForce(-0.1)
+        // Apply a leftward force (negative value)
+        print("Push left button tapped")
+        
+        // Use a fixed baseline for the push direction, let the slider control the magnitude
+        viewModel.applyForce(-1.0) 
+        
+        // Visual feedback - animate button
+        UIView.animate(withDuration: 0.1, animations: {
+            self.pushLeftButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.pushLeftButton.transform = .identity
+            }
+        }
     }
     
     @objc private func pushRightButtonTapped() {
-        viewModel.applyForce(0.1)
+        // Apply a rightward force (positive value)
+        print("Push right button tapped")
+        
+        // Use a fixed baseline for the push direction, let the slider control the magnitude
+        viewModel.applyForce(1.0)
+        
+        // Visual feedback - animate button
+        UIView.animate(withDuration: 0.1, animations: {
+            self.pushRightButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.pushRightButton.transform = .identity
+            }
+        }
     }
     
     @objc private func resetButtonTapped() {
@@ -586,12 +651,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         lengthSlider.value = Float(viewModel.length)
         dampingSlider.value = Float(viewModel.damping)
         gravitySlider.value = Float(viewModel.gravity)
+        forceStrengthSlider.value = Float(viewModel.forceStrength)
         
         // Update value labels
         updateSliderValueLabel(massSlider)
         updateSliderValueLabel(lengthSlider)
         updateSliderValueLabel(dampingSlider)
         updateSliderValueLabel(gravitySlider)
+        updateSliderValueLabel(forceStrengthSlider)
     }
     
     @objc private func sliderValueChanged(_ slider: UISlider) {
@@ -619,6 +686,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     @objc private func gravitySliderChanged() {
         viewModel.gravity = Double(gravitySlider.value)
+    }
+    
+    @objc private func forceStrengthSliderChanged() {
+        viewModel.forceStrength = Double(forceStrengthSlider.value)
     }
     
     // UITabBarDelegate method
