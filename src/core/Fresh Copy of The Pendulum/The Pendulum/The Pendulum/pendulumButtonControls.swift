@@ -35,9 +35,11 @@ extension PendulumScene {
             
             for node in touchedNodes {
                 if node.name == "leftControl" {
-                    applyForce(-0.5)
-                } else if node.name == "rightControl" {
+                    // Changed sign: left button should move pendulum left (positive force for inverted pendulum)
                     applyForce(0.5)
+                } else if node.name == "rightControl" {
+                    // Changed sign: right button should move pendulum right (negative force for inverted pendulum)
+                    applyForce(-0.5)
                 }
             }
         }

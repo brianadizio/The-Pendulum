@@ -17,7 +17,7 @@ class PendulumSimulation {
     private var mass: Double = 1.0
     private var length: Double = 1.0
     private var gravity: Double = 9.81
-    private var damping: Double = 0.5
+    private var damping: Double = 0.3  // Reduced from 0.5 for better control
     private var springConstant: Double = 0.0
     private var momentOfInertia: Double = 1.0
     
@@ -27,10 +27,10 @@ class PendulumSimulation {
     private var inputCommands: [PendulumSimData] = []
     
     init() {
-        // Initial conditions
+        // Initial conditions for inverted pendulum (starting at exact top position)
         currentState = PendulumState(
-            theta: 0.05,  // Initial position
-            thetaDot: 0,  // Initial velocity
+            theta: Double.pi,  // Exactly at top position
+            thetaDot: 0,       // Initial velocity
             time: 0
         )
         
@@ -218,7 +218,8 @@ class PendulumSimulation {
                 let ks = self.springConstant / inertia
                 let kb = self.damping / inertia
                 
-                return ka * sin(theta) - ks * theta - kb * omega
+                // Changed sign for inverted pendulum to create unstable equilibrium
+                return ka * sin(theta) + ks * theta - kb * omega
             }
         ]
         
@@ -335,5 +336,20 @@ class PendulumSimulation {
     // Method to get all current parameters
     func getCurrentParameters() -> (mass: Double, length: Double, gravity: Double, damping: Double, springConstant: Double) {
         return (mass, length, gravity, damping, springConstant)
+    }
+    
+    // Method to set initial state directly (for guaranteed start position)
+    func setInitialState(state: PendulumState) {
+        self.currentState = state
+        self.currentTime = state.time
+        print("Simulation state set to: theta = \(state.theta), omega = \(state.thetaDot)")
+    }
+    
+    // Method to apply an external force to the pendulum
+    func applyExternalForce(magnitude: Double) {
+        // Update angular velocity directly
+        currentState.thetaDot += magnitude
+        // Minimal logging for external force
+        print("Force: \(String(format: "%.2f", magnitude)), new vel: \(String(format: "%.2f", currentState.thetaDot))")
     }
 }

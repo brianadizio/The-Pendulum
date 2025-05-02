@@ -57,12 +57,15 @@ class PendulumScene: SKScene {
         pendulumPivot.fillColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Dark gray
         pendulumPivot.strokeColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
         
-        // Center the pendulum horizontally and position it in the upper portion
-        pendulumPivot.position = CGPoint(x: frame.midX, y: frame.midY + 50)
+        // Center the pendulum horizontally and position it in the lower portion for inverted pendulum
+        pendulumPivot.position = CGPoint(x: frame.midX, y: frame.midY - 100)
         pendulumPivot.lineWidth = 2
         pendulumPivot.glowWidth = 1
         pendulumPivot.zPosition = 10
         addChild(pendulumPivot)
+        
+        // Add a platform/base for the inverted pendulum
+        setupPlatform()
         
         // Setup pendulum rod - more refined look
         pendulumRod.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
@@ -96,6 +99,30 @@ class PendulumScene: SKScene {
         print("PendulumScene: Pivot position: \(pendulumPivot.position)")
         print("PendulumScene: Bob position: \(pendulumBob.position)")
         print("PendulumScene: didMove completed - scene size: \(self.size)")
+    }
+    
+    private func setupPlatform() {
+        // Create a platform/base for the inverted pendulum
+        let platformWidth: CGFloat = 120
+        let platformHeight: CGFloat = 10
+        
+        let platform = SKShapeNode(rectOf: CGSize(width: platformWidth, height: platformHeight))
+        platform.fillColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0)
+        platform.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        platform.position = CGPoint(x: pendulumPivot.position.x, y: pendulumPivot.position.y - platformHeight/2)
+        platform.zPosition = 5
+        addChild(platform)
+        
+        // Add a small vertical support under the pivot
+        let supportWidth: CGFloat = 8
+        let supportHeight: CGFloat = 20
+        
+        let support = SKShapeNode(rectOf: CGSize(width: supportWidth, height: supportHeight))
+        support.fillColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1.0)
+        support.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        support.position = CGPoint(x: pendulumPivot.position.x, y: pendulumPivot.position.y - supportHeight/2)
+        support.zPosition = 7
+        addChild(support)
     }
     
     private func setupGrid() {
@@ -152,8 +179,10 @@ class PendulumScene: SKScene {
         let bobY = pendulumPivot.position.y - length * cos(angle)
         let bobPosition = CGPoint(x: bobX, y: bobY)
         
-        // Print the bob position for debugging
-        print("Bob position: \(bobPosition) for angle: \(angle)")
+        // Only print the bob position occasionally
+        if Int(angle * 100) % 300 == 0 {
+            print("Bob position: \(bobPosition) for angle: \(angle)")
+        }
         
         // Update rod path with slight curve for aesthetics
         let path = CGMutablePath()

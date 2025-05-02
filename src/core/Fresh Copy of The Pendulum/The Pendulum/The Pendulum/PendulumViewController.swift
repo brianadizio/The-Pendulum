@@ -26,10 +26,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let gravitySlider = UISlider()
     private let forceStrengthSlider = UISlider()
     
+    // Game HUD elements
+    private var scoreLabel: UILabel!
+    private var timeLabel: UILabel!
+    private var gameMessageLabel: UILabel!
+    private var hudContainer: UIView!
+    private var phaseSpaceView: PhaseSpaceView!
+    private var updateTimer: Timer?
+    
     // Control buttons
     private lazy var startButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Start", for: .normal)
+        button.setTitle("Balance!", for: .normal) // Changed from "Start" to "Balance!"
         button.addTarget(self, action: #selector(startButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -185,6 +193,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Add control buttons
         setupSimulationControls(in: simulationView)
+        
+        // Setup game HUD
+        setupGameHUD()
+        
+        // Setup phase space view
+        setupPhaseSpaceView()
     }
     
     private func setupParametersView() {
@@ -466,6 +480,121 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     // MARK: - Simulation Controls
     
+    private func setupGameHUD() {
+        // Container for game HUD elements
+        hudContainer = UIView()
+        hudContainer.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
+        hudContainer.layer.cornerRadius = 16
+        hudContainer.layer.shadowColor = UIColor.black.cgColor
+        hudContainer.layer.shadowOffset = CGSize(width: 0, height: 3)
+        hudContainer.layer.shadowOpacity = 0.2
+        hudContainer.layer.shadowRadius = 5
+        hudContainer.translatesAutoresizingMaskIntoConstraints = false
+        simulationView.addSubview(hudContainer)
+        
+        // Score label
+        scoreLabel = UILabel()
+        scoreLabel.text = "Score: 0"
+        scoreLabel.textAlignment = .center
+        scoreLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        scoreLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        scoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        hudContainer.addSubview(scoreLabel)
+        
+        // Time label
+        timeLabel = UILabel()
+        timeLabel.text = "Time: 0.0s"
+        timeLabel.textAlignment = .center
+        timeLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        timeLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        hudContainer.addSubview(timeLabel)
+        
+        // Game message label (for game over messages)
+        gameMessageLabel = UILabel()
+        gameMessageLabel.text = "Balance the Pendulum!"
+        gameMessageLabel.textAlignment = .center
+        gameMessageLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
+        gameMessageLabel.translatesAutoresizingMaskIntoConstraints = false
+        gameMessageLabel.isHidden = true
+        hudContainer.addSubview(gameMessageLabel)
+        
+        // Position HUD at top of screen
+        NSLayoutConstraint.activate([
+            hudContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 90),
+            hudContainer.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            hudContainer.trailingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            
+            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 12),
+            scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 16),
+            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
+            
+            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 12),
+            timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -16),
+            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
+            
+            gameMessageLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 8),
+            gameMessageLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 16),
+            gameMessageLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -16),
+            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -12)
+        ])
+        
+        // Start update timer for HUD
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateGameHUD()
+        }
+    }
+    
+    private func setupPhaseSpaceView() {
+        // Create phase space view
+        phaseSpaceView = PhaseSpaceView(frame: .zero)
+        phaseSpaceView.translatesAutoresizingMaskIntoConstraints = false
+        simulationView.addSubview(phaseSpaceView)
+        
+        NSLayoutConstraint.activate([
+            phaseSpaceView.topAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: 16),
+            phaseSpaceView.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            phaseSpaceView.widthAnchor.constraint(equalToConstant: 150),
+            phaseSpaceView.heightAnchor.constraint(equalToConstant: 150)
+        ])
+        
+        // Create a label for it
+        let phaseSpaceLabel = UILabel()
+        phaseSpaceLabel.text = "Phase Space"
+        phaseSpaceLabel.textAlignment = .center
+        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 14)
+        phaseSpaceLabel.textColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0)
+        phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
+        simulationView.addSubview(phaseSpaceLabel)
+        
+        NSLayoutConstraint.activate([
+            phaseSpaceLabel.topAnchor.constraint(equalTo: phaseSpaceView.bottomAnchor, constant: 4),
+            phaseSpaceLabel.centerXAnchor.constraint(equalTo: phaseSpaceView.centerXAnchor)
+        ])
+    }
+
+    private func updateGameHUD() {
+        scoreLabel.text = "Score: \(viewModel.score)"
+        timeLabel.text = String(format: "Time: %.1fs", viewModel.totalBalanceTime)
+        
+        if !viewModel.isGameActive && viewModel.gameOverReason != nil {
+            gameMessageLabel.text = viewModel.gameOverReason
+            gameMessageLabel.isHidden = false
+            
+            // Change Start button to Restart if game is over
+            startButton.setTitle("↺ Restart", for: .normal)
+        } else {
+            gameMessageLabel.isHidden = viewModel.isGameActive
+            
+            // Change back to Start if game is active or not yet started
+            startButton.setTitle("▶ Start", for: .normal)
+        }
+        
+        // Update phase space view
+        phaseSpaceView.addPoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
+    }
+    
     private func setupSimulationControls(in parentView: UIView) {
         // Create a custom title/header view
         let headerContainer = UIView()
@@ -520,6 +649,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         stopButton.backgroundColor = UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.9)
         stopButton.setTitleColor(UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0), for: .normal)
         
+        
         // Add custom icons to buttons
         startButton.setTitle("▶ Start", for: .normal)
         stopButton.setTitle("◼ Stop", for: .normal)
@@ -553,6 +683,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         forceControlsStack.translatesAutoresizingMaskIntoConstraints = false
         forceControlsStack.addArrangedSubview(pushLeftButton)
         forceControlsStack.addArrangedSubview(pushRightButton)
+        
         
         // Main control stack
         let controlStack = UIStackView()
@@ -602,7 +733,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Actions
     
     @objc private func startButtonTapped() {
-        viewModel.startSimulation()
+        // If game is over, clear phase space and restart
+        if viewModel.gameOverReason != nil {
+            phaseSpaceView.clearPoints()
+            viewModel.resetAndStart()
+        } else {
+            // Start the game normally
+            viewModel.startGame()
+        }
     }
     
     @objc private func stopButtonTapped() {
@@ -613,8 +751,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Apply a leftward force (negative value)
         print("Push left button tapped")
         
-        // Use a fixed baseline for the push direction, let the slider control the magnitude
-        viewModel.applyForce(-1.0) 
+        // Use a fixed baseline for the push direction with increased magnitude
+        viewModel.applyForce(-2.0) 
         
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
@@ -630,8 +768,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Apply a rightward force (positive value)
         print("Push right button tapped")
         
-        // Use a fixed baseline for the push direction, let the slider control the magnitude
-        viewModel.applyForce(1.0)
+        // Use a fixed baseline for the push direction with increased magnitude
+        viewModel.applyForce(2.0)
         
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
@@ -643,22 +781,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         }
     }
     
+    // This method is no longer used but we're keeping it for now as startButtonTapped
+    // has the reset functionality when needed
     @objc private func resetButtonTapped() {
-        viewModel.reset()
-        
-        // Reset sliders to their initial values
-        massSlider.value = Float(viewModel.mass)
-        lengthSlider.value = Float(viewModel.length)
-        dampingSlider.value = Float(viewModel.damping)
-        gravitySlider.value = Float(viewModel.gravity)
-        forceStrengthSlider.value = Float(viewModel.forceStrength)
-        
-        // Update value labels
-        updateSliderValueLabel(massSlider)
-        updateSliderValueLabel(lengthSlider)
-        updateSliderValueLabel(dampingSlider)
-        updateSliderValueLabel(gravitySlider)
-        updateSliderValueLabel(forceStrengthSlider)
+        phaseSpaceView.clearPoints()
+        viewModel.resetAndStart()
     }
     
     @objc private func sliderValueChanged(_ slider: UISlider) {
