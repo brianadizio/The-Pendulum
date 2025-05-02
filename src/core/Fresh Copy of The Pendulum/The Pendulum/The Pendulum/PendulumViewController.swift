@@ -24,15 +24,22 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let lengthSlider = UISlider()
     private let dampingSlider = UISlider()
     private let gravitySlider = UISlider()
+    private let springConstantSlider = UISlider()
+    private let momentOfInertiaSlider = UISlider()
     private let forceStrengthSlider = UISlider()
     private let initialPerturbationSlider = UISlider()
     
     // Game HUD elements
     private var scoreLabel: UILabel!
     private var timeLabel: UILabel!
+    private var levelLabel: UILabel!
     private var gameMessageLabel: UILabel!
     private var hudContainer: UIView!
+    
+    // Dashboard elements for stats
+    private var dashboardContainer: UIView!
     private var phaseSpaceView: PhaseSpaceView!
+    private var phaseSpaceLabel: UILabel!
     private var updateTimer: Timer?
     
     // Control buttons
@@ -130,8 +137,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupSimulationView() {
-        // Set background color
-        simulationView.backgroundColor = .white
+        // Set background color with gradient
+        simulationView.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1.0)
         
         // Create a container for the SpriteKit view with proper constraints
         let skViewContainer = UIView()
@@ -216,8 +223,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         parametersView.addSubview(titleLabel)
         
         // Configure sliders
-        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, forceStrengthSlider, initialPerturbationSlider]
-        let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Force Strength", "Initial Perturbation"]
+        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, springConstantSlider, momentOfInertiaSlider, forceStrengthSlider, initialPerturbationSlider]
+        let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Spring Constant", "Moment of Inertia", "Force Strength", "Initial Perturbation"]
         
         // Create a container for parameter controls
         let parametersContainer = UIView()
@@ -307,6 +314,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         gravitySlider.maximumValue = 20.0
         gravitySlider.value = Float(viewModel.gravity)
         
+        springConstantSlider.minimumValue = 0.0
+        springConstantSlider.maximumValue = 3.0
+        springConstantSlider.value = Float(viewModel.springConstant)
+        
+        momentOfInertiaSlider.minimumValue = 0.1
+        momentOfInertiaSlider.maximumValue = 2.0
+        momentOfInertiaSlider.value = Float(viewModel.momentOfInertia)
+        
         forceStrengthSlider.minimumValue = 0.1
         forceStrengthSlider.maximumValue = 10.0
         forceStrengthSlider.value = Float(viewModel.forceStrength)
@@ -320,6 +335,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         lengthSlider.addTarget(self, action: #selector(lengthSliderChanged), for: .valueChanged)
         dampingSlider.addTarget(self, action: #selector(dampingSliderChanged), for: .valueChanged)
         gravitySlider.addTarget(self, action: #selector(gravitySliderChanged), for: .valueChanged)
+        springConstantSlider.addTarget(self, action: #selector(springConstantSliderChanged), for: .valueChanged)
+        momentOfInertiaSlider.addTarget(self, action: #selector(momentOfInertiaSliderChanged), for: .valueChanged)
         forceStrengthSlider.addTarget(self, action: #selector(forceStrengthSliderChanged), for: .valueChanged)
         initialPerturbationSlider.addTarget(self, action: #selector(initialPerturbationSliderChanged), for: .valueChanged)
     }
@@ -415,17 +432,22 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
         
-        // Title label
+        // Get units for the parameter
+        let units = getUnitsForParameter(title)
+        
+        // Title label with units
         let titleLabel = UILabel()
-        titleLabel.text = title
+        titleLabel.text = "\(title) (\(units))"
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         titleLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
         
-        // Value label
+        // Value label with formatted value and initial non-zero value
         let valueLabel = UILabel()
-        valueLabel.text = String(format: "%.2f", slider.value)
+        // Use a non-zero initial value even before slider is set
+        let initialValue = getDefaultValueForParameter(title)
+        valueLabel.text = formatParameterValue(title, value: initialValue)
         valueLabel.font = UIFont.systemFont(ofSize: 16)
         valueLabel.textAlignment = .right
         valueLabel.textColor = UIColor(red: 0.4, green: 0.4, blue: 0.6, alpha: 1.0)
@@ -487,7 +509,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Simulation Controls
     
     private func setupGameHUD() {
-        // Container for game HUD elements
+        // Container for game HUD elements - more compact design based on Slide2
         hudContainer = UIView()
         hudContainer.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
         hudContainer.layer.cornerRadius = 16
@@ -498,27 +520,36 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         hudContainer.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(hudContainer)
         
-        // Score label
+        // Score label - moved to the top
         scoreLabel = UILabel()
         scoreLabel.text = "Score: 0"
         scoreLabel.textAlignment = .center
-        scoreLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        scoreLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         scoreLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(scoreLabel)
+        
+        // Level label
+        levelLabel = UILabel()
+        levelLabel.text = "Level: 1"
+        levelLabel.textAlignment = .center
+        levelLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        levelLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        levelLabel.translatesAutoresizingMaskIntoConstraints = false
+        hudContainer.addSubview(levelLabel)
         
         // Time label
         timeLabel = UILabel()
         timeLabel.text = "Time: 0.0s"
         timeLabel.textAlignment = .center
-        timeLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        timeLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         timeLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
         
         // Game message label (for game over messages)
         gameMessageLabel = UILabel()
-        gameMessageLabel.text = "Balance the Pendulum!"
+        gameMessageLabel.text = "Balance the Inverted Pendulum!"
         gameMessageLabel.textAlignment = .center
         gameMessageLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
@@ -526,24 +557,32 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         gameMessageLabel.isHidden = true
         hudContainer.addSubview(gameMessageLabel)
         
-        // Position HUD at top of screen
+        // Position HUD at top of screen - make it larger to fit level info
         NSLayoutConstraint.activate([
-            hudContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 90),
+            hudContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 5),
             hudContainer.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             hudContainer.trailingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            // Increase height to fit 3 elements
+            hudContainer.heightAnchor.constraint(equalToConstant: 80),
             
-            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 12),
+            // Move score to top left
+            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
             scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 16),
             scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
             
-            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 12),
+            // Level in center
+            levelLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
+            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
+            
+            // Time at top right
+            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
             timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -16),
             timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
             
-            gameMessageLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 8),
-            gameMessageLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 16),
-            gameMessageLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -16),
-            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -12)
+            // Game message below stats
+            gameMessageLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
+            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -10),
+            gameMessageLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, constant: -32)
         ])
         
         // Start update timer for HUD
@@ -552,84 +591,108 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         }
     }
     
+    private var controlPanel: UIView!
+    
     private func setupPhaseSpaceView() {
+        // Create a container view for the phase space
+        let phaseSpaceContainer = UIView()
+        phaseSpaceContainer.translatesAutoresizingMaskIntoConstraints = false
+        phaseSpaceContainer.backgroundColor = UIColor.clear
+        simulationView.addSubview(phaseSpaceContainer)
+        
+        // Position the container at the bottom of the screen
+        NSLayoutConstraint.activate([
+            phaseSpaceContainer.bottomAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -80),
+            phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
+            phaseSpaceContainer.widthAnchor.constraint(equalToConstant: 200),
+            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 240) // Increased height for container
+        ])
+        
+        // Create a label for the phase space
+        phaseSpaceLabel = UILabel()
+        phaseSpaceLabel.text = "Phase Space"
+        phaseSpaceLabel.textAlignment = .center
+        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        phaseSpaceLabel.textColor = UIColor.white
+        phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
+        phaseSpaceContainer.addSubview(phaseSpaceLabel)
+        
         // Create phase space view
         phaseSpaceView = PhaseSpaceView(frame: .zero)
         phaseSpaceView.translatesAutoresizingMaskIntoConstraints = false
-        simulationView.addSubview(phaseSpaceView)
+        phaseSpaceContainer.addSubview(phaseSpaceView)
         
+        // Position phase space and label
         NSLayoutConstraint.activate([
-            phaseSpaceView.topAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: 16),
-            phaseSpaceView.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            phaseSpaceView.widthAnchor.constraint(equalToConstant: 150),
-            phaseSpaceView.heightAnchor.constraint(equalToConstant: 150)
-        ])
-        
-        // Create a label for it
-        let phaseSpaceLabel = UILabel()
-        phaseSpaceLabel.text = "Phase Space"
-        phaseSpaceLabel.textAlignment = .center
-        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 14)
-        phaseSpaceLabel.textColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0)
-        phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
-        simulationView.addSubview(phaseSpaceLabel)
-        
-        NSLayoutConstraint.activate([
-            phaseSpaceLabel.topAnchor.constraint(equalTo: phaseSpaceView.bottomAnchor, constant: 4),
-            phaseSpaceLabel.centerXAnchor.constraint(equalTo: phaseSpaceView.centerXAnchor)
+            phaseSpaceLabel.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor),
+            phaseSpaceLabel.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
+            phaseSpaceLabel.widthAnchor.constraint(equalTo: phaseSpaceContainer.widthAnchor),
+            phaseSpaceLabel.heightAnchor.constraint(equalToConstant: 30),
+            
+            phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
+            phaseSpaceView.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
+            phaseSpaceView.widthAnchor.constraint(equalToConstant: 180),
+            phaseSpaceView.heightAnchor.constraint(equalToConstant: 180)
         ])
     }
 
     private func updateGameHUD() {
+        // Update score and basic stats
         scoreLabel.text = "Score: \(viewModel.score)"
+        levelLabel.text = "Level: \(viewModel.currentLevel)"
         timeLabel.text = String(format: "Time: %.1fs", viewModel.totalBalanceTime)
         
+        // Calculate time needed to complete level
+        let timeRemaining = max(0, viewModel.levelSuccessTime - viewModel.consecutiveBalanceTime)
+        
+        // Update message based on game state
         if !viewModel.isGameActive && viewModel.gameOverReason != nil {
             gameMessageLabel.text = viewModel.gameOverReason
             gameMessageLabel.isHidden = false
             
-            // Change Start button to Restart if game is over
-            startButton.setTitle("↺ Restart", for: .normal)
-        } else {
-            gameMessageLabel.isHidden = viewModel.isGameActive
+            // For level completion, use special formatting
+            if viewModel.gameOverReason!.contains("completed") {
+                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+            } else if viewModel.gameOverReason!.contains("Level") && !viewModel.gameOverReason!.contains("completed") {
+                // For level announcement, use blue
+                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.8, alpha: 1.0)
+            } else {
+                // For failure, use red
+                gameMessageLabel.textColor = UIColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+            }
             
-            // Change back to Start if game is active or not yet started
-            startButton.setTitle("▶ Start", for: .normal)
+            // Change Start button to Restart if game is over and not just paused
+            if viewModel.gameOverReason == "Pendulum fell!" {
+                startButton.setTitle("↺ Restart", for: .normal)
+            }
+        } else if viewModel.isGameActive {
+            // During active gameplay, show balance progress
+            if viewModel.consecutiveBalanceTime > 0 {
+                gameMessageLabel.text = String(format: "Balance: %.1fs / %.1fs", 
+                                              viewModel.consecutiveBalanceTime, 
+                                              viewModel.levelSuccessTime)
+                gameMessageLabel.isHidden = false
+                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0)
+            } else {
+                gameMessageLabel.isHidden = true
+            }
+        } else {
+            // Not active, not game over - must be paused
+            gameMessageLabel.isHidden = false
+            gameMessageLabel.text = "Game Paused"
+            gameMessageLabel.textColor = UIColor(red: 0.5, green: 0.3, blue: 0.0, alpha: 1.0)
+            
+            // Change button text
+            startButton.setTitle("▶ Resume", for: .normal)
         }
         
-        // Update phase space view
+        // Update phase space view with current pendulum state
         phaseSpaceView.addPoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
     }
     
     private func setupSimulationControls(in parentView: UIView) {
-        // Create a custom title/header view
-        let headerContainer = UIView()
-        headerContainer.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
-        headerContainer.layer.cornerRadius = 10
-        headerContainer.layer.shadowColor = UIColor.black.cgColor
-        headerContainer.layer.shadowOffset = CGSize(width: 0, height: 2)
-        headerContainer.layer.shadowOpacity = 0.2
-        headerContainer.layer.shadowRadius = 4
-        headerContainer.translatesAutoresizingMaskIntoConstraints = false
-        parentView.addSubview(headerContainer)
-        
-        // Title label
-        let titleLabel = UILabel()
-        titleLabel.text = "The Pendulum"
-        titleLabel.textAlignment = .center
-        titleLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        headerContainer.addSubview(titleLabel)
-        
-        // Subtitle label
-        let subtitleLabel = UILabel()
-        subtitleLabel.text = "Physics Simulation"
-        subtitleLabel.textAlignment = .center
-        subtitleLabel.textColor = UIColor(red: 0.4, green: 0.4, blue: 0.6, alpha: 1.0)
-        subtitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        headerContainer.addSubview(subtitleLabel)
+        // Remove title labels per feedback
+        // We'll use just the score and time from the HUD at the top
         
         // Style buttons with a modern, elegant appearance
         let buttonStyle: (UIButton) -> Void = { button in
@@ -663,7 +726,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         pushRightButton.setTitle("Push ►", for: .normal)
         
         // Create a container for the buttons
-        let controlPanel = UIView()
+        controlPanel = UIView()
         controlPanel.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
         controlPanel.layer.cornerRadius = 16
         controlPanel.layer.shadowColor = UIColor.black.cgColor
@@ -703,26 +766,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Layout constraints
         NSLayoutConstraint.activate([
-            // Header container
-            headerContainer.topAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.topAnchor, constant: 16),
-            headerContainer.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            headerContainer.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            headerContainer.heightAnchor.constraint(equalToConstant: 80),
             
-            // Title label
-            titleLabel.topAnchor.constraint(equalTo: headerContainer.topAnchor, constant: 12),
-            titleLabel.leadingAnchor.constraint(equalTo: headerContainer.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: headerContainer.trailingAnchor, constant: -16),
-            
-            // Subtitle label
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            subtitleLabel.leadingAnchor.constraint(equalTo: headerContainer.leadingAnchor, constant: 16),
-            subtitleLabel.trailingAnchor.constraint(equalTo: headerContainer.trailingAnchor, constant: -16),
-            
-            // Control panel
+            // Control panel - moved to middle of screen per Slide2.jpeg
+            controlPanel.centerYAnchor.constraint(equalTo: parentView.centerYAnchor, constant: 80),
             controlPanel.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             controlPanel.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            controlPanel.bottomAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             
             // Control stack
             controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 16),
@@ -734,6 +782,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             simulationControlsStack.heightAnchor.constraint(equalToConstant: 50),
             forceControlsStack.heightAnchor.constraint(equalToConstant: 50)
         ])
+        
+        // We now position the phase space in setupPhaseSpaceView
     }
     
     // MARK: - Actions
@@ -750,7 +800,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func stopButtonTapped() {
+        // Stop the simulation
         viewModel.stopSimulation()
+        
+        // Make the game inactive but don't reset score
+        viewModel.isGameActive = false
+        
+        // Show message that game is paused
+        updateStatusLabel("Game paused")
+        
+        // Change button text to reflect state
+        startButton.setTitle("▶ Resume", for: .normal)
     }
     
     @objc private func pushLeftButtonTapped() {
@@ -801,32 +861,178 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     private func updateSliderValueLabel(_ slider: UISlider) {
         if let label = Unmanaged<UILabel>.fromOpaque(UnsafeRawPointer(bitPattern: slider.tag)!).takeUnretainedValue() as UILabel? {
-            label.text = String(format: "%.2f", slider.value)
+            // Get parameter name from slider
+            let parameterName = getParameterNameFromSlider(slider)
+            label.text = formatParameterValue(parameterName, value: slider.value)
+        }
+    }
+    
+    // Helper to determine parameter name from slider
+    private func getParameterNameFromSlider(_ slider: UISlider) -> String {
+        if slider === massSlider {
+            return "Mass"
+        } else if slider === lengthSlider {
+            return "Length"
+        } else if slider === dampingSlider {
+            return "Damping"
+        } else if slider === gravitySlider {
+            return "Gravity"
+        } else if slider === springConstantSlider {
+            return "Spring Constant"
+        } else if slider === momentOfInertiaSlider {
+            return "Moment of Inertia"
+        } else if slider === forceStrengthSlider {
+            return "Force Strength"
+        } else if slider === initialPerturbationSlider {
+            return "Initial Perturbation"
+        } else {
+            return "Parameter"
+        }
+    }
+    
+    // Helper to get units for each parameter
+    private func getUnitsForParameter(_ title: String) -> String {
+        switch title {
+        case "Mass":
+            return "kg"
+        case "Length":
+            return "m"
+        case "Damping":
+            return "Ns/m"
+        case "Gravity":
+            return "m/s²"
+        case "Spring Constant":
+            return "N/m"
+        case "Moment of Inertia":
+            return "kg·m²"
+        case "Force Strength":
+            return "multiplier"
+        case "Initial Perturbation":
+            return "degrees"
+        default:
+            return ""
+        }
+    }
+    
+    // Format parameter value with appropriate precision and units
+    private func formatParameterValue(_ parameterName: String, value: Float) -> String {
+        switch parameterName {
+        case "Initial Perturbation":
+            return String(format: "%.1f°", value)
+        case "Damping":
+            return String(format: "%.3f", value)
+        case "Spring Constant":
+            return String(format: "%.2f", value)
+        case "Moment of Inertia":
+            return String(format: "%.2f", value)
+        default:
+            return String(format: "%.2f", value)
+        }
+    }
+    
+    // Get sensible default value for each parameter to ensure non-zero display
+    private func getDefaultValueForParameter(_ parameterName: String) -> Float {
+        switch parameterName {
+        case "Mass":
+            return Float(viewModel.mass > 0 ? viewModel.mass : 1.0)
+        case "Length":
+            return Float(viewModel.length > 0 ? viewModel.length : 1.0)
+        case "Damping":
+            return Float(viewModel.damping)  // Can legitimately be 0
+        case "Gravity":
+            return Float(viewModel.gravity > 0 ? viewModel.gravity : 15.0)
+        case "Spring Constant":
+            return Float(viewModel.springConstant)  // Can legitimately be 0
+        case "Moment of Inertia":
+            return Float(viewModel.momentOfInertia > 0 ? viewModel.momentOfInertia : 0.5)
+        case "Force Strength":
+            return Float(viewModel.forceStrength > 0 ? viewModel.forceStrength : 5.0)
+        case "Initial Perturbation":
+            return Float(viewModel.initialPerturbation > 0 ? viewModel.initialPerturbation : 20.0)
+        default:
+            return 1.0  // Default fallback
         }
     }
     
     @objc private func massSliderChanged() {
         viewModel.mass = Double(massSlider.value)
+        updateStatusLabel("Mass updated to \(String(format: "%.2f", massSlider.value)) kg")
     }
     
     @objc private func lengthSliderChanged() {
         viewModel.length = Double(lengthSlider.value)
+        updateStatusLabel("Length updated to \(String(format: "%.2f", lengthSlider.value)) m")
     }
     
     @objc private func dampingSliderChanged() {
         viewModel.damping = Double(dampingSlider.value)
+        updateStatusLabel("Damping updated to \(String(format: "%.3f", dampingSlider.value)) Ns/m")
     }
     
     @objc private func gravitySliderChanged() {
         viewModel.gravity = Double(gravitySlider.value)
+        updateStatusLabel("Gravity updated to \(String(format: "%.2f", gravitySlider.value)) m/s²")
     }
     
     @objc private func forceStrengthSliderChanged() {
         viewModel.forceStrength = Double(forceStrengthSlider.value)
+        updateStatusLabel("Force strength updated to \(String(format: "%.2f", forceStrengthSlider.value))x")
+    }
+    
+    @objc private func springConstantSliderChanged() {
+        viewModel.springConstant = Double(springConstantSlider.value)
+        updateStatusLabel("Spring constant updated to \(String(format: "%.2f", springConstantSlider.value)) N/m")
+    }
+    
+    @objc private func momentOfInertiaSliderChanged() {
+        viewModel.momentOfInertia = Double(momentOfInertiaSlider.value)
+        updateStatusLabel("Moment of inertia updated to \(String(format: "%.2f", momentOfInertiaSlider.value)) kg·m²")
     }
     
     @objc private func initialPerturbationSliderChanged() {
         viewModel.setInitialPerturbation(Double(initialPerturbationSlider.value))
+        updateStatusLabel("Initial perturbation set to \(String(format: "%.1f", initialPerturbationSlider.value))°")
+    }
+    
+    // Show a temporary status message with visual feedback
+    private func updateStatusLabel(_ message: String) {
+        // Show a game message temporarily with visual styling
+        gameMessageLabel.text = message
+        gameMessageLabel.isHidden = false
+        
+        // Change color to indicate update (blue for parameter changes)
+        gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.8, alpha: 1.0)
+        
+        // Animate the label for better visibility
+        UIView.animate(withDuration: 0.2, animations: {
+            self.gameMessageLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+        }) { _ in
+            UIView.animate(withDuration: 0.2) {
+                self.gameMessageLabel.transform = .identity
+            }
+        }
+        
+        // Hide it after 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            if self?.viewModel.gameOverReason == nil {
+                // Fade out animation
+                UIView.animate(withDuration: 0.5, animations: {
+                    self?.gameMessageLabel.alpha = 0
+                }) { _ in
+                    self?.gameMessageLabel.isHidden = true
+                    self?.gameMessageLabel.alpha = 1
+                    // Reset color for other messages
+                    self?.gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
+                }
+            }
+        }
+        
+        // Force an immediate update of the parameter in the simulation
+        // This ensures parameter changes take immediate effect without waiting
+        DispatchQueue.main.async {
+            // This will trigger updatePhysicsParameters through property observers
+            self.viewModel.updateSimulationParameters()
+        }
     }
     
     // UITabBarDelegate method

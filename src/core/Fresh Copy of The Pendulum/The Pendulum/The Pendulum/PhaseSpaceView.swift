@@ -3,9 +3,9 @@ import UIKit
 class PhaseSpaceView: UIView {
     private var points: [CGPoint] = []
     private let maxPoints = 500
-    private let pointColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 0.7)
-    private let axisColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 0.8)
-    private let originColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
+    private let pointColor = UIColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 0.9) // Bright blue for dark background
+    private let axisColor = UIColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 0.8) // Light gray for dark background
+    private let originColor = UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0) // Bright red for dark background
     
     // Scaling factors
     private let thetaScale: CGFloat = 100.0 // pixels per radian
@@ -22,10 +22,16 @@ class PhaseSpaceView: UIView {
     }
     
     private func commonInit() {
-        backgroundColor = UIColor(white: 0.98, alpha: 1.0)
+        backgroundColor = UIColor(white: 0.1, alpha: 0.9) // Dark background for better visibility
         layer.cornerRadius = 12
         layer.borderWidth = 1
-        layer.borderColor = UIColor.lightGray.cgColor
+        layer.borderColor = UIColor.white.cgColor // White border for contrast
+        
+        // Make the view more prominent
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 3)
+        layer.shadowOpacity = 0.5
+        layer.shadowRadius = 6
     }
     
     func addPoint(theta: Double, omega: Double) {
@@ -81,8 +87,8 @@ class PhaseSpaceView: UIView {
         
         // Draw axis labels
         let labelAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 10),
-            .foregroundColor: axisColor
+            .font: UIFont.boldSystemFont(ofSize: 12),
+            .foregroundColor: UIColor.white
         ]
         
         // Theta label
