@@ -4,20 +4,25 @@ import QuartzCore
 
 class PendulumViewController: UIViewController, UITabBarDelegate {
     
-    private let viewModel = PendulumViewModel()
+    let viewModel = PendulumViewModel()
     private var scene: PendulumScene?
     
     // Tab bar for navigation
     private let tabBar = UITabBar()
     private let simulationItem = UITabBarItem(title: "Simulation", image: UIImage(systemName: "waveform.path"), tag: 0)
-    private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 1)
-    private let infoItem = UITabBarItem(title: "Info", image: UIImage(systemName: "info.circle"), tag: 2)
+    private let dashboardItem = UITabBarItem(title: "Dashboard", image: UIImage(systemName: "chart.bar"), tag: 1)
+    private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 2)
+    private let infoItem = UITabBarItem(title: "Info", image: UIImage(systemName: "info.circle"), tag: 3)
     
     // Views for different tabs
-    private let simulationView = UIView()
-    private let parametersView = UIView()
-    private let infoView = UIView()
+    let simulationView = UIView()
+    let dashboardView = UIView()
+    let parametersView = UIView()
+    let infoView = UIView()
     private var currentView: UIView?
+    
+    // Dashboard view controller
+    var dashboardViewController: DashboardViewController?
     
     // Parameter controls
     private let massSlider = UISlider()
@@ -41,6 +46,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private var phaseSpaceView: PhaseSpaceView!
     private var phaseSpaceLabel: UILabel!
     private var updateTimer: Timer?
+    var dashboardUpdateTimer: Timer?
     
     // Control buttons
     private lazy var startButton: UIButton = {
@@ -95,11 +101,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupTabBar() {
-        // Configure tab bar
+        // Configure tab bar with Golden Enterprises theme
         tabBar.delegate = self
-        tabBar.items = [simulationItem, parametersItem, infoItem]
+        tabBar.items = [simulationItem, dashboardItem, parametersItem, infoItem]
         tabBar.selectedItem = simulationItem
         tabBar.translatesAutoresizingMaskIntoConstraints = false
+        tabBar.tintColor = .goldenPrimary
+        tabBar.unselectedItemTintColor = .goldenTextLight
+        tabBar.backgroundColor = .goldenBackground
+        
+        // Add subtle top border
+        tabBar.layer.borderWidth = 0.5
+        tabBar.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
         
         // Add tab bar to view
         view.addSubview(tabBar)
@@ -113,13 +126,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupViews() {
-        // Setup all three views
+        // Apply Golden Enterprises theme to main view
+        view.backgroundColor = .goldenBackground
+        
+        // Setup all four views
         setupSimulationView()
+        setupDashboardView() // This will create and configure the dashboard
         setupParametersView()
         setupInfoView()
         
         // Add views to main view
-        [simulationView, parametersView, infoView].forEach { subview in
+        [simulationView, dashboardView, parametersView, infoView].forEach { subview in
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
             
@@ -137,22 +154,54 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupSimulationView() {
-        // Set background color with gradient
-        simulationView.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1.0)
+        // Apply Golden Enterprises theme
+        simulationView.backgroundColor = .goldenBackground
+        
+        // Add a header view at the top
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        simulationView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add title to header
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "The Pendulum"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: simulationView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
         
         // Create a container for the SpriteKit view with proper constraints
         let skViewContainer = UIView()
         skViewContainer.translatesAutoresizingMaskIntoConstraints = false
         skViewContainer.backgroundColor = .white
+        skViewContainer.applyGoldenStyle() // Apply the Golden theme styling
         simulationView.addSubview(skViewContainer)
         
-        // Position the SKView container to take most of the screen space
+        // Position the SKView container to take most of the screen space below the header
         // Leave space at the bottom for controls
         NSLayoutConstraint.activate([
-            skViewContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 100),
-            skViewContainer.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor),
-            skViewContainer.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor),
-            skViewContainer.heightAnchor.constraint(equalTo: simulationView.heightAnchor, multiplier: 0.5)
+            skViewContainer.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
+            skViewContainer.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 20),
+            skViewContainer.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
+            skViewContainer.heightAnchor.constraint(equalTo: simulationView.heightAnchor, multiplier: 0.45)
         ])
         
         // Add the SpriteKit view
@@ -210,17 +259,48 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupParametersView() {
-        // Set background
-        parametersView.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 1.0)
+        // Set background to Golden Enterprises theme
+        parametersView.backgroundColor = .goldenBackground
         
-        // Create a title label
+        // Add a header view
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        parametersView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add title to header
         let titleLabel = UILabel()
-        titleLabel.text = "Pendulum Parameters"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
-        titleLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
-        titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        parametersView.addSubview(titleLabel)
+        titleLabel.text = "Pendulum Parameters"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: parametersView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
+        
+        // Create a subtitle label
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = "Adjust Parameters Below"
+        subtitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        subtitleLabel.textColor = .goldenDark
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        parametersView.addSubview(subtitleLabel)
         
         // Configure sliders
         let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, springConstantSlider, momentOfInertiaSlider, forceStrengthSlider, initialPerturbationSlider]
@@ -279,13 +359,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Layout constraints
         NSLayoutConstraint.activate([
-            // Title
-            titleLabel.topAnchor.constraint(equalTo: parametersView.safeAreaLayoutGuide.topAnchor, constant: 20),
-            titleLabel.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
+            // Subtitle
+            subtitleLabel.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
+            subtitleLabel.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
+            subtitleLabel.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
             
             // Parameters container
-            parametersContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            parametersContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
             parametersContainer.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
             parametersContainer.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
             parametersContainer.bottomAnchor.constraint(lessThanOrEqualTo: parametersView.safeAreaLayoutGuide.bottomAnchor, constant: -20),
@@ -342,8 +422,39 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupInfoView() {
-        // Set background
-        infoView.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 1.0)
+        // Set background to Golden Enterprises theme
+        infoView.backgroundColor = .goldenBackground
+        
+        // Add a header view
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        infoView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add title to header
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "About The Pendulum"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: infoView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: infoView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: infoView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
         
         // Create scroll view for content
         let scrollView = UIScrollView()
@@ -355,14 +466,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentView)
         
-        // Title
-        let titleLabel = UILabel()
-        titleLabel.text = "About The Pendulum"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
-        titleLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(titleLabel)
+        // Content title (distinct from header)
+        let contentTitleLabel = UILabel()
+        contentTitleLabel.text = "Golden Enterprise Solutions"
+        contentTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+        contentTitleLabel.textColor = .goldenDark
+        contentTitleLabel.textAlignment = .center
+        contentTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(contentTitleLabel)
         
         // Description text
         let descriptionTextView = UITextView()
@@ -393,7 +504,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         Experiment with different parameters to see how they affect the pendulum's behavior!
         """
         descriptionTextView.font = UIFont.systemFont(ofSize: 16)
-        descriptionTextView.textColor = UIColor(red: 0.2, green: 0.2, blue: 0.3, alpha: 1.0)
+        descriptionTextView.textColor = .goldenText
         descriptionTextView.backgroundColor = .clear
         descriptionTextView.isEditable = false
         descriptionTextView.isScrollEnabled = false
@@ -498,6 +609,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func showView(_ view: UIView) {
         // Hide all views
         simulationView.isHidden = true
+        dashboardView.isHidden = true
         parametersView.isHidden = true
         infoView.isHidden = true
         
@@ -509,14 +621,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Simulation Controls
     
     private func setupGameHUD() {
-        // Container for game HUD elements - more compact design based on Slide2
+        // Container for game HUD elements - using Golden Enterprises theme
         hudContainer = UIView()
-        hudContainer.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
-        hudContainer.layer.cornerRadius = 16
-        hudContainer.layer.shadowColor = UIColor.black.cgColor
-        hudContainer.layer.shadowOffset = CGSize(width: 0, height: 3)
-        hudContainer.layer.shadowOpacity = 0.2
-        hudContainer.layer.shadowRadius = 5
+        hudContainer.backgroundColor = .goldenSecondary
+        hudContainer.applyGoldenCard() // Apply Golden Enterprise styling
         hudContainer.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(hudContainer)
         
@@ -525,7 +633,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         scoreLabel.text = "Score: 0"
         scoreLabel.textAlignment = .center
         scoreLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        scoreLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        scoreLabel.textColor = .goldenDark
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(scoreLabel)
         
@@ -534,7 +642,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         levelLabel.text = "Level: 1"
         levelLabel.textAlignment = .center
         levelLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        levelLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        levelLabel.textColor = .goldenDark
         levelLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(levelLabel)
         
@@ -543,7 +651,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         timeLabel.text = "Time: 0.0s"
         timeLabel.textAlignment = .center
         timeLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        timeLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        timeLabel.textColor = .goldenDark
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
         
@@ -600,20 +708,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         phaseSpaceContainer.backgroundColor = UIColor.clear
         simulationView.addSubview(phaseSpaceContainer)
         
-        // Position the container at the bottom of the screen
+        // Position the container at the bottom third of the screen, after the controls
         NSLayoutConstraint.activate([
-            phaseSpaceContainer.bottomAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -80),
+            // Position below the controls button panel
+            phaseSpaceContainer.topAnchor.constraint(equalTo: simulationView.centerYAnchor, constant: 160),
             phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
-            phaseSpaceContainer.widthAnchor.constraint(equalToConstant: 200),
-            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 240) // Increased height for container
+            phaseSpaceContainer.widthAnchor.constraint(equalToConstant: 180),
+            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 200) // Reduced height for container
         ])
         
         // Create a label for the phase space
         phaseSpaceLabel = UILabel()
         phaseSpaceLabel.text = "Phase Space"
         phaseSpaceLabel.textAlignment = .center
-        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        phaseSpaceLabel.textColor = UIColor.white
+        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        phaseSpaceLabel.textColor = UIColor.darkGray
         phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
         phaseSpaceContainer.addSubview(phaseSpaceLabel)
         
@@ -627,12 +736,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             phaseSpaceLabel.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor),
             phaseSpaceLabel.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
             phaseSpaceLabel.widthAnchor.constraint(equalTo: phaseSpaceContainer.widthAnchor),
-            phaseSpaceLabel.heightAnchor.constraint(equalToConstant: 30),
+            phaseSpaceLabel.heightAnchor.constraint(equalToConstant: 20),
             
             phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
             phaseSpaceView.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
-            phaseSpaceView.widthAnchor.constraint(equalToConstant: 180),
-            phaseSpaceView.heightAnchor.constraint(equalToConstant: 180)
+            phaseSpaceView.widthAnchor.constraint(equalToConstant: 170),
+            phaseSpaceView.heightAnchor.constraint(equalToConstant: 170)
         ])
     }
 
@@ -694,29 +803,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Remove title labels per feedback
         // We'll use just the score and time from the HUD at the top
         
-        // Style buttons with a modern, elegant appearance
+        // Style buttons with Golden Enterprises theme
         let buttonStyle: (UIButton) -> Void = { button in
-            button.layer.cornerRadius = 12
-            button.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
-            button.setTitleColor(UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0), for: .normal)
+            button.applyGoldenButtonStyle(isPrimary: false)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.shadowColor = UIColor.black.cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowOpacity = 0.1
-            button.layer.shadowRadius = 3
-            button.layer.borderWidth = 1
-            button.layer.borderColor = UIColor(red: 0.8, green: 0.8, blue: 0.9, alpha: 0.5).cgColor
         }
         
         // Apply styles to buttons
         [startButton, stopButton, pushLeftButton, pushRightButton].forEach(buttonStyle)
         
-        // Special styling for Start/Stop buttons
-        startButton.backgroundColor = UIColor(red: 0.9, green: 1.0, blue: 0.9, alpha: 0.9)
-        startButton.setTitleColor(UIColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0), for: .normal)
+        // Special styling for Start/Stop buttons using Golden theme
+        startButton.applyGoldenButtonStyle(isPrimary: true)
+        startButton.backgroundColor = .goldenAccentGreen
         
-        stopButton.backgroundColor = UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.9)
-        stopButton.setTitleColor(UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0), for: .normal)
+        stopButton.applyGoldenButtonStyle(isPrimary: true)
+        stopButton.backgroundColor = .goldenError
         
         
         // Add custom icons to buttons
@@ -725,14 +826,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         pushLeftButton.setTitle("◄ Push", for: .normal)
         pushRightButton.setTitle("Push ►", for: .normal)
         
-        // Create a container for the buttons
+        // Create a container for the buttons with Golden Enterprises styling
         controlPanel = UIView()
-        controlPanel.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.98, alpha: 0.85)
-        controlPanel.layer.cornerRadius = 16
-        controlPanel.layer.shadowColor = UIColor.black.cgColor
-        controlPanel.layer.shadowOffset = CGSize(width: 0, height: 3)
-        controlPanel.layer.shadowOpacity = 0.2
-        controlPanel.layer.shadowRadius = 5
+        controlPanel.backgroundColor = .goldenSecondary
+        controlPanel.applyGoldenCard() // Apply Golden Enterprise styling
         controlPanel.translatesAutoresizingMaskIntoConstraints = false
         parentView.addSubview(controlPanel)
         
@@ -767,10 +864,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Layout constraints
         NSLayoutConstraint.activate([
             
-            // Control panel - moved to middle of screen per Slide2.jpeg
-            controlPanel.centerYAnchor.constraint(equalTo: parentView.centerYAnchor, constant: 80),
+            // Control panel - positioned to leave space for phase space below
+            controlPanel.centerYAnchor.constraint(equalTo: parentView.centerYAnchor, constant: 50),
             controlPanel.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             controlPanel.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            controlPanel.heightAnchor.constraint(lessThanOrEqualToConstant: 140), // Ensure fixed max height
             
             // Control stack
             controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 16),
@@ -1037,12 +1135,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     // UITabBarDelegate method
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+        // First stop any dashboard updates to avoid unnecessary refreshes
+        stopDashboardUpdates()
+        
         switch item.tag {
         case 0: // Simulation
             showView(simulationView)
-        case 1: // Parameters
+        case 1: // Dashboard
+            updateDashboardStats() // Update stats before showing (this will start the timer)
+            showView(dashboardView)
+        case 2: // Parameters
             showView(parametersView)
-        case 2: // Info
+        case 3: // Info
             showView(infoView)
         default:
             break

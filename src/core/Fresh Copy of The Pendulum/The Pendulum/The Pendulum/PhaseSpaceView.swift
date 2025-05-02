@@ -3,9 +3,9 @@ import UIKit
 class PhaseSpaceView: UIView {
     private var points: [CGPoint] = []
     private let maxPoints = 500
-    private let pointColor = UIColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 0.9) // Bright blue for dark background
-    private let axisColor = UIColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 0.8) // Light gray for dark background
-    private let originColor = UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0) // Bright red for dark background
+    private let pointColor = UIColor.goldenAccent.withAlphaComponent(0.7) // Golden theme color
+    private let axisColor = UIColor.goldenTextLight.withAlphaComponent(0.8) // Golden text light color
+    private let originColor = UIColor.goldenPrimary // Golden primary color
     
     // Scaling factors
     private let thetaScale: CGFloat = 100.0 // pixels per radian
@@ -22,16 +22,16 @@ class PhaseSpaceView: UIView {
     }
     
     private func commonInit() {
-        backgroundColor = UIColor(white: 0.1, alpha: 0.9) // Dark background for better visibility
+        backgroundColor = UIColor(white: 0.98, alpha: 1.0) // Lighter background for aesthetics
         layer.cornerRadius = 12
         layer.borderWidth = 1
-        layer.borderColor = UIColor.white.cgColor // White border for contrast
+        layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
         
-        // Make the view more prominent
+        // Subtle shadow for depth
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOffset = CGSize(width: 0, height: 3)
-        layer.shadowOpacity = 0.5
-        layer.shadowRadius = 6
+        layer.shadowOffset = CGSize(width: 0, height: 2)
+        layer.shadowOpacity = 0.2
+        layer.shadowRadius = 4
     }
     
     func addPoint(theta: Double, omega: Double) {
@@ -87,8 +87,8 @@ class PhaseSpaceView: UIView {
         
         // Draw axis labels
         let labelAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.boldSystemFont(ofSize: 12),
-            .foregroundColor: UIColor.white
+            .font: UIFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: UIColor.darkGray
         ]
         
         // Theta label
