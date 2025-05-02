@@ -11,12 +11,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let tabBar = UITabBar()
     private let simulationItem = UITabBarItem(title: "Simulation", image: UIImage(systemName: "waveform.path"), tag: 0)
     private let dashboardItem = UITabBarItem(title: "Dashboard", image: UIImage(systemName: "chart.bar"), tag: 1)
-    private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 2)
-    private let infoItem = UITabBarItem(title: "Info", image: UIImage(systemName: "info.circle"), tag: 3)
+    private let modesItem = UITabBarItem(title: "Modes", image: UIImage(systemName: "square.grid.2x2"), tag: 2)
+    private let integrationItem = UITabBarItem(title: "Integration", image: UIImage(systemName: "link"), tag: 3)
+    private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 4)
+    private let infoItem = UITabBarItem(title: "Info", image: UIImage(systemName: "info.circle"), tag: 5)
     
     // Views for different tabs
     let simulationView = UIView()
     let dashboardView = UIView()
+    let modesView = UIView()
+    let integrationView = UIView()
     let parametersView = UIView()
     let infoView = UIView()
     private var currentView: UIView?
@@ -103,7 +107,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func setupTabBar() {
         // Configure tab bar with Golden Enterprises theme
         tabBar.delegate = self
-        tabBar.items = [simulationItem, dashboardItem, parametersItem, infoItem]
+        tabBar.items = [simulationItem, dashboardItem, modesItem, integrationItem, parametersItem, infoItem]
         tabBar.selectedItem = simulationItem
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.tintColor = .goldenPrimary
@@ -129,14 +133,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Apply Golden Enterprises theme to main view
         view.backgroundColor = .goldenBackground
         
-        // Setup all four views
+        // Setup all views
         setupSimulationView()
         setupDashboardView() // This will create and configure the dashboard
+        setupModesView()
+        setupIntegrationView()
         setupParametersView()
         setupInfoView()
         
         // Add views to main view
-        [simulationView, dashboardView, parametersView, infoView].forEach { subview in
+        [simulationView, dashboardView, modesView, integrationView, parametersView, infoView].forEach { subview in
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
             
@@ -421,6 +427,543 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         initialPerturbationSlider.addTarget(self, action: #selector(initialPerturbationSliderChanged), for: .valueChanged)
     }
     
+    // MARK: - Modes View Setup
+    
+    private func setupModesView() {
+        // Set background to Golden Enterprises theme
+        modesView.backgroundColor = .goldenBackground
+        
+        // Add a header view
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        modesView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add title to header
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Pendulum Modes"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: modesView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: modesView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: modesView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
+        
+        // Create a scroll view for the content
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .clear
+        modesView.addSubview(scrollView)
+        
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
+            scrollView.leadingAnchor.constraint(equalTo: modesView.leadingAnchor, constant: 20),
+            scrollView.trailingAnchor.constraint(equalTo: modesView.trailingAnchor, constant: -20),
+            scrollView.bottomAnchor.constraint(equalTo: modesView.bottomAnchor, constant: -20)
+        ])
+        
+        // Add the content view inside the scroll view
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
+        ])
+        
+        // Create the grid layout for the modes
+        setupModesGrid(in: contentView)
+        
+        // Create buttons for additional modes
+        setupAdditionalModesButtons(in: contentView)
+        
+        // Set a minimum height for the content
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 650).isActive = true
+    }
+    
+    private func setupModesGrid(in containerView: UIView) {
+        // Create a container for the grid
+        let gridContainer = UIView()
+        gridContainer.translatesAutoresizingMaskIntoConstraints = false
+        gridContainer.backgroundColor = .clear
+        containerView.addSubview(gridContainer)
+        
+        NSLayoutConstraint.activate([
+            gridContainer.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            gridContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            gridContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ])
+        
+        // Top row - 1x2 grid
+        let topRowStack = createGridRow()
+        gridContainer.addSubview(topRowStack)
+        
+        NSLayoutConstraint.activate([
+            topRowStack.topAnchor.constraint(equalTo: gridContainer.topAnchor),
+            topRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+            topRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+            topRowStack.heightAnchor.constraint(equalToConstant: 120)
+        ])
+        
+        // Add buttons to top row
+        let primaryButton = createModeButton(title: "Primary", tag: 101)
+        let dashboardButton = createModeButton(title: "Dashboard", tag: 102)
+        topRowStack.addArrangedSubview(primaryButton)
+        topRowStack.addArrangedSubview(dashboardButton)
+        
+        // Middle row - 1x2 grid
+        let middleRowStack = createGridRow()
+        gridContainer.addSubview(middleRowStack)
+        
+        NSLayoutConstraint.activate([
+            middleRowStack.topAnchor.constraint(equalTo: topRowStack.bottomAnchor, constant: 10),
+            middleRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+            middleRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+            middleRowStack.heightAnchor.constraint(equalToConstant: 120)
+        ])
+        
+        // Add buttons to middle row
+        let experimentButton = createModeButton(title: "Experiment", tag: 103)
+        let timeButton = createModeButton(title: "Joshua Tree", tag: 104)
+        middleRowStack.addArrangedSubview(experimentButton)
+        middleRowStack.addArrangedSubview(timeButton)
+        
+        // Bottom row - 1x2 grid
+        let bottomRowStack = createGridRow()
+        gridContainer.addSubview(bottomRowStack)
+        
+        NSLayoutConstraint.activate([
+            bottomRowStack.topAnchor.constraint(equalTo: middleRowStack.bottomAnchor, constant: 10),
+            bottomRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+            bottomRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+            bottomRowStack.heightAnchor.constraint(equalToConstant: 120),
+            bottomRowStack.bottomAnchor.constraint(equalTo: gridContainer.bottomAnchor)
+        ])
+        
+        // Add buttons to bottom row
+        let zerosSpaceButton = createModeButton(title: "Zero-G Space", tag: 105)
+        let focalButton = createModeButton(title: "The Focal Calculator", tag: 106)
+        bottomRowStack.addArrangedSubview(zerosSpaceButton)
+        bottomRowStack.addArrangedSubview(focalButton)
+        
+        // Mode buttons row
+        let modeButtonsStack = createGridRow()
+        containerView.addSubview(modeButtonsStack)
+        
+        NSLayoutConstraint.activate([
+            modeButtonsStack.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 15),
+            modeButtonsStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            modeButtonsStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            modeButtonsStack.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        // Add buttons to mode buttons row
+        let mode1Button = createCompactModeButton(title: "Mode 1", tag: 107)
+        let mode2Button = createCompactModeButton(title: "Mode 2", tag: 108)
+        modeButtonsStack.addArrangedSubview(mode1Button)
+        modeButtonsStack.addArrangedSubview(mode2Button)
+    }
+    
+    private func setupAdditionalModesButtons(in containerView: UIView) {
+        // Create buttons for additional modes
+        let buttonTitles = ["Chaotic+Mass Mode Graph", "Pendulum Model", "Pendulum+Data Sources"]
+        let buttonTags = [201, 202, 203]
+        
+        // Create stack view for buttons
+        let buttonStack = UIStackView()
+        buttonStack.axis = .vertical
+        buttonStack.spacing = 15
+        buttonStack.distribution = .fillEqually
+        buttonStack.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(buttonStack)
+        
+        // Find the bottom of the modes grid
+        // (Assuming the grid has been added to the container in setupModesGrid)
+        let previousBottomAnchor = containerView.subviews.count > 1 ? 
+            containerView.subviews[1].bottomAnchor : containerView.topAnchor
+        
+        NSLayoutConstraint.activate([
+            buttonStack.topAnchor.constraint(equalTo: previousBottomAnchor, constant: 25),
+            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            buttonStack.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
+        ])
+        
+        // Create and add buttons
+        for (index, title) in buttonTitles.enumerated() {
+            let button = createLargeButton(title: title, tag: buttonTags[index])
+            buttonStack.addArrangedSubview(button)
+        }
+    }
+    
+    private func createGridRow() -> UIStackView {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.distribution = .fillEqually
+        stackView.spacing = 15
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
+    }
+    
+    private func createModeButton(title: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.tag = tag
+        button.backgroundColor = .white
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.layer.cornerRadius = 15
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
+        
+        // Add shadow
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowRadius = 4
+        
+        return button
+    }
+    
+    private func createCompactModeButton(title: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.tag = tag
+        button.backgroundColor = .goldenBackground
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.layer.cornerRadius = 10
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.5).cgColor
+        button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
+        return button
+    }
+    
+    private func createLargeButton(title: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.tag = tag
+        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.5)
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.layer.cornerRadius = 15
+        button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
+        button.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        
+        // Add subtle shadow
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1)
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowRadius = 2
+        
+        return button
+    }
+    
+    @objc private func modeButtonTapped(_ sender: UIButton) {
+        // Handle mode button tap
+        let title = "Mode Selected"
+        let message = "You selected mode: \(sender.titleLabel?.text ?? "Unknown")"
+        
+        // Show visual feedback
+        UIView.animate(withDuration: 0.1, animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = .identity
+            }
+        }
+        
+        // For now just print the selection
+        print("Selected mode: \(sender.titleLabel?.text ?? "Unknown") (tag: \(sender.tag))")
+    }
+    
+    // MARK: - Integration View Setup
+    
+    private func setupIntegrationView() {
+        // Set background to Golden Enterprises theme
+        integrationView.backgroundColor = .goldenBackground
+        
+        // Add a header view
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        integrationView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add title to header
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Pendulum Integrations"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: integrationView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: integrationView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: integrationView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
+        
+        // Create scroll view for content
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .clear
+        integrationView.addSubview(scrollView)
+        
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
+            scrollView.leadingAnchor.constraint(equalTo: integrationView.leadingAnchor, constant: 20),
+            scrollView.trailingAnchor.constraint(equalTo: integrationView.trailingAnchor, constant: -20),
+            scrollView.bottomAnchor.constraint(equalTo: integrationView.bottomAnchor, constant: -20)
+        ])
+        
+        // Create content view
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
+        ])
+        
+        // Setup View Leaderboards button
+        let leaderboardsButton = createIntegrationButton(
+            title: "View Leaderboards",
+            tag: 301,
+            in: contentView
+        )
+        
+        // Setup social media integration buttons
+        let socialStack = createSocialIntegrationButtons(in: contentView, topAnchor: leaderboardsButton.bottomAnchor)
+        
+        // Setup data view buttons
+        let dataViewsStack = createDataViewButtons(in: contentView, topAnchor: socialStack.bottomAnchor)
+        
+        // Setup connection buttons
+        let connectionsStack = createConnectionButtons(in: contentView, topAnchor: dataViewsStack.bottomAnchor)
+        
+        // Set minimum height for content
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 650).isActive = true
+    }
+    
+    private func createIntegrationButton(title: String, tag: Int, in containerView: UIView) -> UIButton {
+        // Create an integration button
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle(title, for: .normal)
+        button.tag = tag
+        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        button.layer.cornerRadius = 15
+        button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        // Add shadow
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowRadius = 4
+        
+        containerView.addSubview(button)
+        
+        NSLayoutConstraint.activate([
+            button.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            button.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            button.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            button.heightAnchor.constraint(equalToConstant: 60)
+        ])
+        
+        return button
+    }
+    
+    private func createSocialIntegrationButtons(in containerView: UIView, topAnchor: NSLayoutYAxisAnchor) -> UIStackView {
+        // Create a 2x1 grid for social media integration buttons
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.distribution = .fillEqually
+        stackView.spacing = 15
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            stackView.heightAnchor.constraint(equalToConstant: 100)
+        ])
+        
+        // Add Instagram button
+        let instagramButton = UIButton(type: .system)
+        instagramButton.setTitle("Instagram", for: .normal)
+        instagramButton.tag = 302
+        instagramButton.backgroundColor = .white
+        instagramButton.setTitleColor(.goldenDark, for: .normal)
+        instagramButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        instagramButton.layer.cornerRadius = 15
+        instagramButton.layer.borderWidth = 1
+        instagramButton.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        instagramButton.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        // Add Facebook button
+        let facebookButton = UIButton(type: .system)
+        facebookButton.setTitle("Facebook", for: .normal)
+        facebookButton.tag = 303
+        facebookButton.backgroundColor = .white
+        facebookButton.setTitleColor(.goldenDark, for: .normal)
+        facebookButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        facebookButton.layer.cornerRadius = 15
+        facebookButton.layer.borderWidth = 1
+        facebookButton.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        facebookButton.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        stackView.addArrangedSubview(instagramButton)
+        stackView.addArrangedSubview(facebookButton)
+        
+        return stackView
+    }
+    
+    private func createDataViewButtons(in containerView: UIView, topAnchor: NSLayoutYAxisAnchor) -> UIStackView {
+        // Create a vertical stack for data view buttons
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 15
+        stackView.distribution = .fillEqually
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ])
+        
+        // Data view button titles and tags
+        let buttonData = [
+            ("View Data", 304),
+            ("View Metadata", 305),
+            ("View Statistics", 306),
+            ("View Focus", 307),
+            ("View Street", 308),
+            ("View Category", 309)
+        ]
+        
+        // Create data view buttons
+        for (title, tag) in buttonData {
+            let button = UIButton(type: .system)
+            button.setTitle(title, for: .normal)
+            button.tag = tag
+            button.backgroundColor = .goldenBackground.withAlphaComponent(0.8)
+            button.setTitleColor(.goldenDark, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 12
+            button.layer.borderWidth = 1
+            button.layer.borderColor = UIColor.goldenTextLight.withAlphaComponent(0.3).cgColor
+            button.heightAnchor.constraint(equalToConstant: 45).isActive = true
+            button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+            
+            stackView.addArrangedSubview(button)
+        }
+        
+        return stackView
+    }
+    
+    private func createConnectionButtons(in containerView: UIView, topAnchor: NSLayoutYAxisAnchor) -> UIStackView {
+        // Create a vertical stack for connection buttons
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 15
+        stackView.distribution = .fillEqually
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
+        ])
+        
+        // Connection button titles and tags
+        let buttonData = [
+            ("Connect The Pendulum", 310),
+            ("Connect The Focus Calendar", 311)
+        ]
+        
+        // Create connection buttons
+        for (title, tag) in buttonData {
+            let button = UIButton(type: .system)
+            button.setTitle(title, for: .normal)
+            button.tag = tag
+            button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
+            button.setTitleColor(.goldenDark, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 15
+            button.heightAnchor.constraint(equalToConstant: 60).isActive = true
+            button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+            
+            // Add shadow
+            button.layer.shadowColor = UIColor.black.cgColor
+            button.layer.shadowOffset = CGSize(width: 0, height: 2)
+            button.layer.shadowOpacity = 0.1
+            button.layer.shadowRadius = 4
+            
+            stackView.addArrangedSubview(button)
+        }
+        
+        return stackView
+    }
+    
+    @objc private func integrationButtonTapped(_ sender: UIButton) {
+        // Handle integration button tap
+        let buttonTitle = sender.titleLabel?.text ?? "Unknown"
+        
+        // Show visual feedback
+        UIView.animate(withDuration: 0.1, animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = .identity
+            }
+        }
+        
+        // For now just print the selection
+        print("Selected integration: \(buttonTitle) (tag: \(sender.tag))")
+    }
+    
     private func setupInfoView() {
         // Set background to Golden Enterprises theme
         infoView.backgroundColor = .goldenBackground
@@ -610,6 +1153,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Hide all views
         simulationView.isHidden = true
         dashboardView.isHidden = true
+        modesView.isHidden = true
+        integrationView.isHidden = true
         parametersView.isHidden = true
         infoView.isHidden = true
         
@@ -1144,9 +1689,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         case 1: // Dashboard
             updateDashboardStats() // Update stats before showing (this will start the timer)
             showView(dashboardView)
-        case 2: // Parameters
+        case 2: // Modes
+            showView(modesView)
+        case 3: // Integration
+            showView(integrationView)
+        case 4: // Parameters
             showView(parametersView)
-        case 3: // Info
+        case 5: // Info
             showView(infoView)
         default:
             break
