@@ -42,15 +42,24 @@ class PendulumSimulation {
         // Try to load reference data
         if let path = Bundle.main.path(forResource: "OutputPendulumSim", ofType: "csv") {
             referenceData = parseCSV(at: path).compactMap { row in
-                guard row.count >= 3,
-                      let time = Double(row[0]),
-                      let position = Double(row[1]),
-                      let velocity = Double(row[2]) else {
+                guard row.count >= 3 else { return nil }
+                
+                // Safely extract values
+                let timeStr = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                let posStr = row[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                let velStr = row[2].trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                guard !timeStr.isEmpty, !posStr.isEmpty, !velStr.isEmpty,
+                      let time = Double(timeStr),
+                      let position = Double(posStr),
+                      let velocity = Double(velStr) else {
                     return nil
                 }
                 return PendulumSimData(time: time, position: position, velocity: velocity)
             }
             print("Loaded \(referenceData.count) reference data points")
+        } else {
+            print("Warning: OutputPendulumSim.csv not found")
         }
         
         // Try to load input parameters and commands
@@ -63,14 +72,17 @@ class PendulumSimulation {
                     guard row.count >= 2 else { return nil }
                     
                     // Skip rows with empty entries
-                    if row[0].isEmpty || row[1].isEmpty { return nil }
+                    let timeStr = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                    let cmdStr = row[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                    if timeStr.isEmpty || cmdStr.isEmpty { return nil }
                     
-                    guard let time = parseExpression(row[0]),
-                          let command = parseExpression(row[1]) else {
-                        print("Failed to parse command row: \(row)")
+                    if let time = parseExpression(timeStr),
+                       let command = parseExpression(cmdStr) {
+                        return PendulumSimData(time: time, position: 0, velocity: 0, command: command)
+                    } else {
+                        print("Skipping command row: \(row)")
                         return nil
                     }
-                    return PendulumSimData(time: time, position: 0, velocity: 0, command: command)
                 }
                 print("Loaded \(inputCommands.count) input commands")
             }
@@ -79,9 +91,13 @@ class PendulumSimulation {
             if rows.count >= 9 {
                 // Process each row, skipping empty or malformed ones
                 for (index, row) in rows.prefix(9).enumerated() {
-                    guard row.count > 0 && !row[0].isEmpty else { continue }
+                    guard row.count > 0 else { continue }
                     
-                    if let value = parseExpression(row[0]) {
+                    let valueStr = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !valueStr.isEmpty else { continue }
+                    
+                    // Try to parse the value
+                    if let value = parseExpression(valueStr) {
                         switch index {
                         case 0: // 1st row: mass
                             mass = value
@@ -115,21 +131,29 @@ class PendulumSimulation {
                             break
                         }
                     } else {
-                        print("Failed to parse parameter at row \(index): \(row[0])")
+                        print("Failed to parse parameter at row \(index): \(valueStr)")
                     }
                 }
+            } else {
+                print("Warning: InputPendulumSim.csv has fewer than 9 rows of parameters")
             }
+        } else {
+            print("Warning: InputPendulumSim.csv not found")
         }
     }
     
     // Basic CSV parser
     private func parseCSV(at path: String) -> [[String]] {
         do {
+            // Load file content as UTF8
             let content = try String(contentsOfFile: path, encoding: .utf8)
             var results: [[String]] = []
             
+            // Remove BOM (Byte Order Mark) if present at the beginning
+            let cleanContent = content.replacingOccurrences(of: "\u{FEFF}", with: "")
+            
             // Split by newlines
-            let rows = content.components(separatedBy: .newlines)
+            let rows = cleanContent.components(separatedBy: .newlines)
             
             for row in rows {
                 // Skip empty rows
@@ -354,9 +378,15 @@ class PendulumSimulation {
         print("Updated spring constant to \(springConstant)")
     }
     
+    // Method to update moment of inertia parameter
+    func setMomentOfInertia(_ newMomentOfInertia: Double) {
+        momentOfInertia = newMomentOfInertia
+        print("Updated moment of inertia to \(momentOfInertia)")
+    }
+    
     // Method to get all current parameters
-    func getCurrentParameters() -> (mass: Double, length: Double, gravity: Double, damping: Double, springConstant: Double) {
-        return (mass, length, gravity, damping, springConstant)
+    func getCurrentParameters() -> (mass: Double, length: Double, gravity: Double, damping: Double, springConstant: Double, momentOfInertia: Double) {
+        return (mass, length, gravity, damping, springConstant, momentOfInertia)
     }
     
     // Method to set initial state directly (for guaranteed start position)
