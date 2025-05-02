@@ -1,0 +1,2 @@
+- Remember this type of playability in terms of parameters, game flow, scenes, and logic.
+- This is the proper implementation of the inverted pendulum, in how it falls to the fall line, but will oscillate with momentum about the upright, and you have to balance it as the player

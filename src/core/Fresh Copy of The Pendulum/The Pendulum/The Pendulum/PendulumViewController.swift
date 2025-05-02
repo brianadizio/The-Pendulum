@@ -25,6 +25,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let dampingSlider = UISlider()
     private let gravitySlider = UISlider()
     private let forceStrengthSlider = UISlider()
+    private let initialPerturbationSlider = UISlider()
     
     // Game HUD elements
     private var scoreLabel: UILabel!
@@ -215,8 +216,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         parametersView.addSubview(titleLabel)
         
         // Configure sliders
-        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, forceStrengthSlider]
-        let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Force Strength"]
+        let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, forceStrengthSlider, initialPerturbationSlider]
+        let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Force Strength", "Initial Perturbation"]
         
         // Create a container for parameter controls
         let parametersContainer = UIView()
@@ -310,12 +311,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         forceStrengthSlider.maximumValue = 10.0
         forceStrengthSlider.value = Float(viewModel.forceStrength)
         
+        initialPerturbationSlider.minimumValue = 5.0
+        initialPerturbationSlider.maximumValue = 50.0
+        initialPerturbationSlider.value = Float(viewModel.initialPerturbation)
+        
         // Add actions to sliders
         massSlider.addTarget(self, action: #selector(massSliderChanged), for: .valueChanged)
         lengthSlider.addTarget(self, action: #selector(lengthSliderChanged), for: .valueChanged)
         dampingSlider.addTarget(self, action: #selector(dampingSliderChanged), for: .valueChanged)
         gravitySlider.addTarget(self, action: #selector(gravitySliderChanged), for: .valueChanged)
         forceStrengthSlider.addTarget(self, action: #selector(forceStrengthSliderChanged), for: .valueChanged)
+        initialPerturbationSlider.addTarget(self, action: #selector(initialPerturbationSliderChanged), for: .valueChanged)
     }
     
     private func setupInfoView() {
@@ -748,11 +754,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func pushLeftButtonTapped() {
-        // Apply a leftward force (negative value)
+        // Apply a leftward force (positive value for inverted pendulum)
         print("Push left button tapped")
         
         // Use a fixed baseline for the push direction with increased magnitude
-        viewModel.applyForce(-2.0) 
+        viewModel.applyForce(2.0) // Positive force pushes left (matches pendulumButtonControls.swift)
         
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
@@ -765,11 +771,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func pushRightButtonTapped() {
-        // Apply a rightward force (positive value)
+        // Apply a rightward force (negative value for inverted pendulum)
         print("Push right button tapped")
         
         // Use a fixed baseline for the push direction with increased magnitude
-        viewModel.applyForce(2.0)
+        viewModel.applyForce(-2.0) // Negative force pushes right (matches pendulumButtonControls.swift)
         
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
@@ -817,6 +823,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     @objc private func forceStrengthSliderChanged() {
         viewModel.forceStrength = Double(forceStrengthSlider.value)
+    }
+    
+    @objc private func initialPerturbationSliderChanged() {
+        viewModel.setInitialPerturbation(Double(initialPerturbationSlider.value))
     }
     
     // UITabBarDelegate method
