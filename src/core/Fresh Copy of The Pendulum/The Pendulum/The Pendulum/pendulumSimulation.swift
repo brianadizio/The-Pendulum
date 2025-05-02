@@ -16,10 +16,10 @@ class PendulumSimulation {
     // Model parameters
     private var mass: Double = 1.0
     private var length: Double = 1.0
-    private var gravity: Double = 9.81
-    private var damping: Double = 0.3  // Reduced from 0.5 for better control
-    private var springConstant: Double = 0.0
-    private var momentOfInertia: Double = 1.0
+    private var gravity: Double = 15.0  // Increased gravity to make falling motion more pronounced
+    private var damping: Double = 0.0  // Zero damping to allow completely natural falling
+    private var springConstant: Double = 0.0  // No spring force to avoid accidental stabilization
+    private var momentOfInertia: Double = 0.5  // Reduced inertia for faster response to gravity
     
     // State
     private var currentState: PendulumState
@@ -27,10 +27,10 @@ class PendulumSimulation {
     private var inputCommands: [PendulumSimData] = []
     
     init() {
-        // Initial conditions for inverted pendulum (starting at exact top position)
+        // Initial conditions for inverted pendulum (starting SLIGHTLY offset from exact top position)
         currentState = PendulumState(
-            theta: Double.pi,  // Exactly at top position
-            thetaDot: 0,       // Initial velocity
+            theta: Double.pi + 0.1,  // Offset from top position to clearly demonstrate falling
+            thetaDot: 0,             // Initial velocity
             time: 0
         )
         
@@ -218,8 +218,29 @@ class PendulumSimulation {
                 let ks = self.springConstant / inertia
                 let kb = self.damping / inertia
                 
-                // Changed sign for inverted pendulum to create unstable equilibrium
-                return ka * sin(theta) + ks * theta - kb * omega
+                // CORRECTED Inverted pendulum physics: 
+                // For angle θ, with θ = π being the upright position:
+                //
+                // 1. The gravitational torque is proportional to sin(θ):
+                //    - At θ = π (upright): sin(π) = 0, so no torque when perfectly balanced
+                //    - At θ = π + small: sin(π + small) ≈ -small
+                //    - With a negative multiplier (-ka), this makes the pendulum fall away
+                //      from the upright position when disturbed
+                //
+                // 2. The standard torque equation for a pendulum is τ = -mgL*sin(θ)
+                //    - For regular pendulum: stable at θ = 0 (bottom)
+                //    - For inverted pendulum: unstable at θ = π (top)
+                //
+                // 3. The negative sign before sin(theta) creates the correct instability
+                //    that makes the pendulum fall toward 90° when disturbed from upright
+                //
+                // 4. The ks*θ term is set to zero to avoid stabilization
+                //
+                // 5. The -kb*ω term is velocity-dependent damping (also set to zero)
+                // For inverted pendulum, need negative value to produce instability at π
+                // Force = -m*g*L*sin(theta) in physics, but our equation has positive ka
+                // So for correct inverted pendulum physics, we need to negate sin(theta)
+                return -ka * sin(theta) + ks * theta - kb * omega
             }
         ]
         
@@ -342,14 +363,19 @@ class PendulumSimulation {
     func setInitialState(state: PendulumState) {
         self.currentState = state
         self.currentTime = state.time
-        print("Simulation state set to: theta = \(state.theta), omega = \(state.thetaDot)")
+        
+        // Reset internal time tracking to ensure consistent behavior on restart
+        self.timeStep = 0.002
+        
+        print("Simulation state fully reset: theta = \(state.theta), omega = \(state.thetaDot), time = \(state.time)")
     }
     
     // Method to apply an external force to the pendulum
     func applyExternalForce(magnitude: Double) {
-        // Update angular velocity directly
-        currentState.thetaDot += magnitude
+        // Update angular velocity directly - use a stronger force multiplier to make control more obvious
+        let amplifiedForce = magnitude * 1.5  // Amplify force effect to make control more responsive
+        currentState.thetaDot += amplifiedForce
         // Minimal logging for external force
-        print("Force: \(String(format: "%.2f", magnitude)), new vel: \(String(format: "%.2f", currentState.thetaDot))")
+        print("Force: \(String(format: "%.2f", magnitude)), amplified: \(String(format: "%.2f", amplifiedForce)), new vel: \(String(format: "%.2f", currentState.thetaDot))")
     }
 }

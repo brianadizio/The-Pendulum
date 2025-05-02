@@ -3,7 +3,7 @@ import SwiftUI
 import SpriteKit
 
 class PendulumViewModel: ObservableObject {
-    @Published var currentState = PendulumState(theta: Double.pi + 0.05, thetaDot: 0, time: 0)
+    @Published var currentState = PendulumState(theta: Double.pi + 0.1, thetaDot: 0, time: 0)
     @Published var simulationError: Double = 0
     @Published var isSimulating = false // Changed from isRunning to isSimulating
     
@@ -16,8 +16,8 @@ class PendulumViewModel: ObservableObject {
     @Published var totalBalanceTime: TimeInterval = 0
     
     // Constants for balance detection
-    private let balanceAngleThreshold = 0.3  // Radians from vertical considered "balanced"
-    private let failureAngleThreshold = 1.5  // Radians from vertical considered "fallen" (increased from 1.0)
+    private let balanceAngleThreshold = 0.15  // Radians from vertical considered "balanced" (~8.6 degrees)
+    private let failureAngleThreshold = 1.57  // Radians from vertical considered "fallen" (~90 degrees)
     private let scoreUpdateInterval: TimeInterval = 0.1  // How often to update score
     private var lastScoreUpdate: Date?
     private var lastForceAppliedTime: Double = 0
@@ -35,20 +35,20 @@ class PendulumViewModel: ObservableObject {
         }
     }
     
-    @Published var damping: Double = 0.3 {  // Increased from 0.1
+    @Published var damping: Double = 0.0 {  // Zero damping to allow completely natural falling
         didSet {
             updatePhysicsParameters()
         }
     }
     
-    @Published var gravity: Double = 9.81 {
+    @Published var gravity: Double = 15.0 {  // Increased gravity significantly for more pronounced falling behavior
         didSet {
             updatePhysicsParameters()
         }
     }
     
     // Additional parameters that might be needed
-    @Published var springConstant: Double = 0.0 {
+    @Published var springConstant: Double = 0.0 {  // Must be zero to avoid any stabilizing effect at upright
         didSet {
             updatePhysicsParameters()
         }
@@ -134,9 +134,9 @@ class PendulumViewModel: ObservableObject {
         let direction: Double = Bool.random() ? 1.0 : -1.0
         
         // Calculate initial theta (start position) and thetaDot (velocity)
-        // Increase the position offset to make it more visible
-        let initialTheta = Double.pi + (direction * radianOffset * 0.5) // Increased from 0.3 to 0.5 for more visible tilt
-        let initialThetaDot = direction * radianOffset * 0.05 // Slightly increased initial velocity
+        // Use a larger offset to make the falling motion clearly visible
+        let initialTheta = Double.pi + (direction * radianOffset * 0.15) // Small but noticeable offset from vertical
+        let initialThetaDot = direction * radianOffset * 0.02 // Small initial velocity
         
         // Create the pendulum state with random oscillation
         currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
@@ -283,7 +283,7 @@ class PendulumViewModel: ObservableObject {
     
     func reset() {
         // Reset to initial state for inverted pendulum
-        currentState = PendulumState(theta: Double.pi, thetaDot: 0, time: 0)
+        currentState = PendulumState(theta: Double.pi + 0.1, thetaDot: 0, time: 0)
         simulationError = 0
         
         // Reset game state
@@ -292,13 +292,13 @@ class PendulumViewModel: ObservableObject {
         isGameActive = false
         totalBalanceTime = 0
         
-        // Reset parameters to defaults
+        // Reset parameters to match our current settings
         mass = 1.0
         length = 1.0
-        damping = 0.3  // Increased damping for more stability
-        gravity = 9.81
-        springConstant = 0.0
-        forceStrength = 0.5  // Reduced force strength for more precise control (approx 5-10 degrees per push)
+        damping = 0.0  // Zero damping to allow completely natural falling
+        gravity = 15.0  // Keep high gravity for pronounced falling
+        springConstant = 0.0  // No spring force to avoid any stabilizing effect
+        forceStrength = 0.5  // Force strength for control
         initialPerturbation = 20.0  // Default initial perturbation in degrees
         
         // Stop any existing simulation

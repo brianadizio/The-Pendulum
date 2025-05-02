@@ -62,8 +62,9 @@ class InvertedPendulumModel {
                 // Driving force
                 let drive = self.driveAmplitude * sin(2.0 * .pi * self.driveFrequency * t)
                 
-                // Angular acceleration (from myiptype8.m)
-                return ka * sin(theta) - ks * theta - kb * omega + drive
+                // Angular acceleration for inverted pendulum
+                // Negative sign in front of sin(theta) for correct unstable equilibrium
+                return -ka * sin(theta) + ks * theta - kb * omega + drive
             }
         ]
     }
