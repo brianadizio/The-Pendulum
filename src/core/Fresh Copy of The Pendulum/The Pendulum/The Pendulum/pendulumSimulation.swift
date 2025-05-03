@@ -10,16 +10,16 @@ struct PendulumSimData {
 class PendulumSimulation {
     // Parameters
     private var timeStep: Double = 0.002  // From myiptype8.m
-    private var kj: Double = 1.0          // Default value
+    private var kj: Double = 0.8          // Reduced for more nuanced control
     private var currentTime: Double = 0.0
     
     // Model parameters
     private var mass: Double = 1.0
     private var length: Double = 1.0
-    private var gravity: Double = 15.0  // Increased gravity to make falling motion more pronounced
-    private var damping: Double = 0.0  // Zero damping to allow completely natural falling
-    private var springConstant: Double = 0.0  // No spring force to avoid accidental stabilization
-    private var momentOfInertia: Double = 0.5  // Reduced inertia for faster response to gravity
+    private var gravity: Double = 9.81  // Standard gravity for more natural behavior
+    private var damping: Double = 0.3   // Increased damping for better controllability
+    private var springConstant: Double = 0.1  // Stronger stabilizing force to help with balancing
+    private var momentOfInertia: Double = 1.0  // Further increased inertia for more stability
     
     // State
     private var currentState: PendulumState
@@ -402,9 +402,24 @@ class PendulumSimulation {
     
     // Method to apply an external force to the pendulum
     func applyExternalForce(magnitude: Double) {
-        // Update angular velocity directly - use a stronger force multiplier to make control more obvious
-        let amplifiedForce = magnitude * 1.5  // Amplify force effect to make control more responsive
-        currentState.thetaDot += amplifiedForce
+        // Update angular velocity directly - use a carefully calibrated force multiplier
+        // Further reduce the amplification factor for even more controlled, precise pushes
+        // This makes it easier for players to balance with small adjustments
+        let amplifiedForce = magnitude * 0.3  // Even smaller force for more precise control
+        
+        // Apply with smoothing based on current motion
+        // This prevents adding too much force if the pendulum is already moving in that direction
+        // (When currentState.thetaDot and magnitude have the same sign)
+        if (currentState.thetaDot > 0 && magnitude > 0) || (currentState.thetaDot < 0 && magnitude < 0) {
+            // If pushing in same direction as current motion, scale down force a bit to prevent overshooting
+            let scaledForce = amplifiedForce * 0.8
+            currentState.thetaDot += scaledForce
+            print("Same direction force scaling: \(String(format: "%.2f", scaledForce))")
+        } else {
+            // Normal force application when counteracting current motion
+            currentState.thetaDot += amplifiedForce
+        }
+        
         // Minimal logging for external force
         print("Force: \(String(format: "%.2f", magnitude)), amplified: \(String(format: "%.2f", amplifiedForce)), new vel: \(String(format: "%.2f", currentState.thetaDot))")
     }

@@ -1,0 +1,149 @@
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{booktabs}
+
+\geometry{margin=1in}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+
+\title{Inverted Pendulum Physics: Mathematical Foundations and Implementation}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+
+The inverted pendulum is a classic control problem in dynamics and control theory that simulates the behavior of a pendulum balanced in an unstable equilibrium position. This document outlines the physics, mathematical model, numerical integration techniques, and key parameters used in our implementation, with special attention to tuning parameters for optimal gameplay.
+
+\section{Mathematical Model}
+
+\subsection{Governing Equation of Motion}
+
+The dynamics of our inverted pendulum are described by the following second-order nonlinear differential equation:
+
+\[
+\ddot{\theta} = k_a \sin(\theta) - k_s \theta - k_b \dot{\theta} + k_j u(t)
+\]
+
+Where:
+\begin{itemize}
+  \item $\theta$ is the angular displacement from the vertical (positive is clockwise)
+  \item $\dot{\theta}$ is the angular velocity
+  \item $\ddot{\theta}$ is the angular acceleration
+  \item $u(t)$ is the control input (external force)
+\end{itemize}
+
+System coefficients:
+\[
+\begin{aligned}
+k_a &= \frac{m L g}{mL^2 + I_z}, \quad
+k_s = \frac{k_{sp}}{mL^2 + I_z}, \\
+k_b &= \frac{b}{mL^2 + I_z}, \quad
+k_j = \frac{K_{joy}}{mL^2 + I_z}
+\end{aligned}
+\]
+
+\subsection{Physical Interpretation}
+\begin{enumerate}
+  \item \textbf{Gravitational term} ($k_a \sin(\theta)$): Causes the pendulum to fall away from equilibrium.
+  \item \textbf{Spring term} ($-k_s \theta$): Restores pendulum toward center.
+  \item \textbf{Damping term} ($-k_b \dot{\theta}$): Viscous damping slows motion.
+  \item \textbf{Control input} ($k_j u(t)$): Torque applied by player input.
+\end{enumerate}
+
+\section{Numerical Integration}
+
+\subsection{State-Space Formulation}
+\[
+\dot{\theta} = \omega, \quad
+\dot{\omega} = k_a \sin(\theta) - k_s \theta - k_b \omega + k_j u(t)
+\]
+
+\subsection{Runge-Kutta 4th Order Method (RK4)}
+\[
+\begin{aligned}
+k_1 &= h f(t_n, y_n) \\
+k_2 &= h f\left(t_n + \frac{h}{2}, y_n + \frac{k_1}{2}\right) \\
+k_3 &= h f\left(t_n + \frac{h}{2}, y_n + \frac{k_2}{2}\right) \\
+k_4 &= h f(t_n + h, y_n + k_3) \\
+y_{n+1} &= y_n + \frac{1}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\end{aligned}
+\]
+
+Alternative methods include:
+\begin{itemize}
+  \item Euler method (1st order)
+  \item Improved Euler method (2nd order)
+\end{itemize}
+
+\section{Key Parameters and Their Effects}
+
+\subsection{Sensitivity Analysis}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Parameter & Symbol & Effect When Increased \\
+\midrule
+Mass & $m$ & Increases inertia, slower, more stable \\
+Length & $L$ & Increases inertia, harder to stabilize \\
+Spring constant & $k_{sp}$ & More centering force, can cause oscillation \\
+Damping & $b$ & Reduces oscillations, increases control \\
+Force scaling & $k_j$ & More responsive control \\
+\bottomrule
+\end{tabular}
+
+\subsection{Gameplay Recommendations}
+\begin{itemize}
+  \item Lower $k_j$ to reduce excessive torque
+  \item Slightly increase $b$ for better damping
+  \item Try nonlinear control mappings
+\end{itemize}
+
+\section{Visualization}
+
+\subsection{Pendulum Rendering}
+
+\[
+x_{\text{bob}} = x_{\text{pivot}} + L \cdot \sin(\theta), \quad
+y_{\text{bob}} = y_{\text{pivot}} - L \cdot \cos(\theta)
+\]
+
+\subsection{Phase Space Interpretation}
+\begin{itemize}
+  \item Stable points: attractors
+  \item Unstable points: repellers
+  \item Cycles: oscillations
+  \item Irregularity: chaos
+\end{itemize}
+
+\section{Implementation Notes}
+
+\subsection{Boundary Conditions}
+\begin{lstlisting}[language=Python]
+if abs(position) > fallBoundary:
+    position = fallBoundary if position > 0 else -fallBoundary
+    velocity = 0
+\end{lstlisting}
+
+\subsection{Time Step}
+
+Fixed timestep: 1/60 seconds (60 Hz).
+
+\section{Further Development}
+\begin{itemize}
+  \item Adaptive difficulty tuning
+  \item Add perturbation forces
+  \item Impulse response analysis
+  \item Test multiple control schemes
+\end{itemize}
+
+\end{document}
