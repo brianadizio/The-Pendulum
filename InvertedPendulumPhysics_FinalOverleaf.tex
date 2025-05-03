@@ -1,0 +1,119 @@
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{verbatim}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+
+\title{Inverted Pendulum Physics: Mathematical Foundations and Implementation}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+
+The inverted pendulum is a classic control problem in dynamics and control theory that simulates the behavior of a pendulum balanced in an unstable equilibrium position. This document outlines the physics, mathematical model, numerical integration techniques, and key parameters used in our implementation, with special attention to tuning parameters for optimal gameplay.
+
+\section{Mathematical Model}
+
+\subsection{Governing Equation of Motion}
+
+\[
+\ddot{\theta} = k_a \sin(\theta) - k_s \theta - k_b \dot{\theta} + k_j u(t)
+\]
+
+Where:
+\begin{itemize}
+  \item $\theta$: Angular displacement
+  \item $\dot{\theta}$: Angular velocity
+  \item $\ddot{\theta}$: Angular acceleration
+  \item $u(t)$: Control input
+\end{itemize}
+
+\[
+\begin{aligned}
+k_a &= \frac{m L g}{mL^2 + I_z}, \quad
+k_s = \frac{k_{sp}}{mL^2 + I_z}, \\
+k_b &= \frac{b}{mL^2 + I_z}, \quad
+k_j = \frac{K_{joy}}{mL^2 + I_z}
+\end{aligned}
+\]
+
+\subsection{Physical Interpretation}
+\begin{enumerate}
+  \item Gravitational: $k_a \sin(\theta)$
+  \item Spring: $-k_s \theta$
+  \item Damping: $-k_b \dot{\theta}$
+  \item Control input: $k_j u(t)$
+\end{enumerate}
+
+\section{Numerical Integration}
+
+\subsection{State-Space Form}
+\[
+\dot{\theta} = \omega, \quad
+\dot{\omega} = k_a \sin(\theta) - k_s \theta - k_b \omega + k_j u(t)
+\]
+
+\subsection{RK4 Algorithm}
+\[
+\begin{aligned}
+k_1 &= h f(t_n, y_n) \\
+k_2 &= h f(t_n + \frac{h}{2}, y_n + \frac{k_1}{2}) \\
+k_3 &= h f(t_n + \frac{h}{2}, y_n + \frac{k_2}{2}) \\
+k_4 &= h f(t_n + h, y_n + k_3) \\
+y_{n+1} &= y_n + \frac{1}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\end{aligned}
+\]
+
+\section{Key Parameters}
+
+\begin{tabular}{@{}lll@{}}
+\toprule
+Parameter & Symbol & Effect \\
+\midrule
+Mass & $m$ & Inertia, slower but stable \\
+Length & $L$ & Harder to stabilize \\
+Spring Const & $k_{sp}$ & Centering force \\
+Damping & $b$ & Reduces oscillations \\
+Force Scale & $k_j$ & Increases control responsiveness \\
+\bottomrule
+\end{tabular}
+
+\section{Visualization Equations}
+\[
+x_{\text{bob}} = x_{\text{pivot}} + L \sin(\theta), \quad
+y_{\text{bob}} = y_{\text{pivot}} - L \cos(\theta)
+\]
+
+\section{Implementation}
+
+\subsection{Fall Boundary Condition}
+\begin{verbatim}
+if abs(position) > fallBoundary:
+    position = fallBoundary if position > 0 else -fallBoundary
+    velocity = 0
+\end{verbatim}
+
+\subsection{Time Step}
+Fixed: 1/60 s (60 Hz)
+
+\section{Future Work}
+\begin{itemize}
+  \item Adaptive difficulty
+  \item Perturbation modeling
+  \item Impulse response analysis
+  \item Multiple control schemes
+\end{itemize}
+
+\end{document}

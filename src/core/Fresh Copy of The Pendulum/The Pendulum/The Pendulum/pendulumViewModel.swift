@@ -1,8 +1,9 @@
 // PendulumViewModel.swift
 import SwiftUI
 import SpriteKit
+import CoreData
 
-class PendulumViewModel: ObservableObject {
+class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var currentState = PendulumState(theta: Double.pi + 0.1, thetaDot: 0, time: 0)
     @Published var simulationError: Double = 0
     @Published var isSimulating = false // Changed from isRunning to isSimulating
@@ -11,23 +12,44 @@ class PendulumViewModel: ObservableObject {
     @Published var score: Int = 0
     @Published var highScore: Int = 0
     @Published var isGameActive: Bool = false
+    @Published var isPaused: Bool = false
     @Published var gameOverReason: String?
     @Published var balanceStartTime: Date?
     @Published var totalBalanceTime: TimeInterval = 0
     
     // Level system properties
     @Published var currentLevel: Int = 1
-    @Published var levelPerturbation: Double = 0.1
+    @Published var balanceThreshold: Double = 0.15  // Will be replaced by level manager
     @Published var consecutiveBalanceTime: TimeInterval = 0 // Time spent continuously balanced
     @Published var levelSuccessTime: TimeInterval = 3.0 // Time required to pass a level (seconds)
     @Published var levelStats: [String: Double] = [:] // Statistics for dashboard
+    @Published var currentLevelDescription: String = ""
+    
+    // Level manager
+    private let levelManager = LevelManager()
+    
+    // Score multiplier system
+    @Published var scoreMultiplier: Double = 1.0
+    @Published var multiplierTimeRemaining: Double = 0.0
+    @Published var perfectBalanceStreak: Int = 0
+    
+    // Achievement tracking
+    @Published var unlockedAchievements: [String] = []
+    @Published var recentAchievement: (String, String)? // (name, description) for UI display
+    @Published var achievementPoints: Int = 0
+    
+    // Time tracking for no-force achievement
+    private var lastForcePressTime: Date?
+    private var currentSessionId: UUID?
     
     // Constants for balance detection
-    private let balanceAngleThreshold = 0.15  // Radians from vertical considered "balanced" (~8.6 degrees)
-    private let failureAngleThreshold = 1.57  // Radians from vertical considered "fallen" (~90 degrees)
-    private let scoreUpdateInterval: TimeInterval = 0.1  // How often to update score
+    // balanceThreshold is now controlled by LevelManager
+    private let perfectBalanceThreshold = 0.07 // Radians for "perfect" balance (~4 degrees) - more forgiving
+    private let failureAngleThreshold = 1.65  // Radians from vertical considered "fallen" (~95 degrees) - more forgiving
+    private let scoreUpdateInterval: TimeInterval = 0.05  // How often to update score - more responsive
     private var lastScoreUpdate: Date?
     private var lastForceAppliedTime: Double = 0
+    private var maxAngleRecovered: Double = 0.0 // Track max angle successfully recovered from
     
     // Parameter properties with reactive updating
     @Published var mass: Double = 1.0 {
@@ -69,40 +91,127 @@ class PendulumViewModel: ObservableObject {
     }
     
     // Force strength parameter for push buttons
-    @Published var forceStrength: Double = 5.0  // Further increased force strength for immediate visual effect
+    @Published var forceStrength: Double = 3.0  // Increased force strength but with better control scaling
     
     // Initial perturbation amount (in degrees)
-    @Published var initialPerturbation: Double = 20.0  // Default ~20 degrees of initial perturbation
+    @Published var initialPerturbation: Double = 15.0  // Default ~15 degrees of initial perturbation
     
     private let simulation = PendulumSimulation()
     var timer: Timer? // Changed from private for use in extensions
+    private var multiplierTimer: Timer?
     
     // Reference to the scene for visual updates
     weak var scene: PendulumScene?
+    
+    // Core Data manager
+    private let coreDataManager = CoreDataManager.shared
     
     init() {
         // Set initial default values before loading from simulation
         // This ensures UI displays non-zero values even before loadInitialParameters completes
         mass = 1.0
         length = 1.0
-        damping = 0.1  // Small damping for better playability
-        gravity = 15.0
-        springConstant = 0.1  // Small spring constant for slight stabilization
-        momentOfInertia = 0.5
-        forceStrength = 5.0
-        initialPerturbation = 20.0
+        damping = 0.4  // Even more damping for better controllability at start
+        gravity = 9.81 // Standard gravity
+        springConstant = 0.2  // Stronger stabilizing force for easier start
+        momentOfInertia = 1.0  // Further increased inertia for more stability
+        forceStrength = 3.0    // Higher force strength but with better control scaling
+        initialPerturbation = 10.0  // Even smaller initial perturbation for easier start
         
-        // Initial state setup for inverted pendulum
-        currentState = PendulumState(theta: Double.pi + 0.05, thetaDot: 0, time: 0)
+        // Initial state setup for inverted pendulum - very small perturbation to make it easier to start
+        currentState = PendulumState(theta: Double.pi + 0.02, thetaDot: 0, time: 0)
         
-        // Load high score from UserDefaults if available
-        highScore = UserDefaults.standard.integer(forKey: "PendulumHighScore")
+        // Load high score from Core Data
+        highScore = coreDataManager.getHighestScore()
+        
+        // Setup achievements if needed
+        setupAchievements()
+        
+        // Set up level manager
+        levelManager.delegate = self
         
         // Initialize based on simulation's defaults
         loadInitialParameters()
         
+        // Get the level configuration from level manager
+        applyLevelConfiguration(levelManager.getConfigForLevel(currentLevel))
+        
         // Ensure the simulation has our values
         updateSimulationParameters()
+    }
+    
+    // MARK: - LevelProgressionDelegate Methods
+    
+    func didCompleteLevel(_ level: Int, config: LevelConfig) {
+        // Celebration animation should be handled in view controller
+        print("Level \(level) completed with config: \(config.description)")
+    }
+    
+    func didStartNewLevel(_ level: Int, config: LevelConfig) {
+        currentLevel = level
+        currentLevelDescription = config.description
+        
+        // Update the published properties
+        balanceThreshold = config.balanceThreshold
+        levelSuccessTime = config.balanceRequiredTime
+        
+        print("Starting level \(level): \(config.description)")
+        print("Balance threshold: \(config.balanceThresholdDegrees) degrees")
+        print("Required balance time: \(config.balanceRequiredTime) seconds")
+    }
+    
+    func updateDifficultyParameters(config: LevelConfig) {
+        // Apply the difficulty parameters from the level configuration
+        mass = LevelManager.baseMass * config.massMultiplier
+        length = LevelManager.baseLength * config.lengthMultiplier
+        damping = config.dampingValue
+        gravity = LevelManager.baseGravity * config.gravityMultiplier
+        springConstant = config.springConstantValue
+        initialPerturbation = config.initialPerturbation
+        
+        // Update the simulation parameters
+        updateSimulationParameters()
+        
+        print("Updated parameters for level \(config.number):")
+        print("Mass: \(mass)")
+        print("Length: \(length)")
+        print("Damping: \(damping)")
+        print("Gravity: \(gravity)")
+        print("Spring Constant: \(springConstant)")
+        print("Initial Perturbation: \(initialPerturbation) degrees")
+    }
+    
+    private func applyLevelConfiguration(_ config: LevelConfig) {
+        // Update level properties
+        currentLevel = config.number
+        balanceThreshold = config.balanceThreshold
+        levelSuccessTime = config.balanceRequiredTime
+        currentLevelDescription = config.description
+        
+        // Update physics parameters
+        mass = LevelManager.baseMass * config.massMultiplier
+        length = LevelManager.baseLength * config.lengthMultiplier
+        damping = config.dampingValue
+        gravity = LevelManager.baseGravity * config.gravityMultiplier
+        springConstant = config.springConstantValue
+        initialPerturbation = config.initialPerturbation
+    }
+    
+    private func setupAchievements() {
+        // Initialize achievements in Core Data if needed
+        coreDataManager.setupInitialAchievements()
+        
+        // Load unlocked achievements
+        loadUnlockedAchievements()
+    }
+    
+    private func loadUnlockedAchievements() {
+        // Get all unlocked achievements from Core Data
+        let achievements = coreDataManager.getUnlockedAchievements()
+        
+        // Track achievement IDs and total points
+        unlockedAchievements = achievements.compactMap { $0.id }
+        achievementPoints = achievements.reduce(0) { $0 + Int($1.points) }
     }
     
     private func loadInitialParameters() {
@@ -164,19 +273,33 @@ class PendulumViewModel: ObservableObject {
     }
     
     func startGame() {
+        // Start a new play session in Core Data
+        currentSessionId = coreDataManager.startPlaySession()
+        
         // Reset game state
         score = 0
         gameOverReason = nil
         isGameActive = true
+        isPaused = false
         balanceStartTime = Date()
         lastScoreUpdate = Date()
         totalBalanceTime = 0
         consecutiveBalanceTime = 0
         
-        // Reset level information
-        currentLevel = 1
-        levelPerturbation = 0.1 
-        levelSuccessTime = 3.0
+        // Reset score multiplier
+        scoreMultiplier = 1.0
+        multiplierTimeRemaining = 0.0
+        perfectBalanceStreak = 0
+        
+        // Reset achievement tracking for this session
+        lastForcePressTime = Date()
+        maxAngleRecovered = 0.0
+        
+        // Reset to level 1
+        levelManager.resetToLevel1()
+        
+        // Get level configuration
+        let config = levelManager.getConfigForLevel(1)
         
         // Initialize stats dictionary
         levelStats = [
@@ -187,8 +310,8 @@ class PendulumViewModel: ObservableObject {
             "lastAttemptTime": 0.0
         ]
         
-        // Create an initial perturbation based on the level and adjustable parameter
-        let degreesOffset = initialPerturbation * levelPerturbation
+        // Create an initial perturbation based on the level configuration
+        let degreesOffset = config.initialPerturbation
         let radianOffset = degreesOffset * Double.pi / 180.0
         
         // Randomly decide left or right tilt
@@ -205,7 +328,7 @@ class PendulumViewModel: ObservableObject {
         simulation.setInitialState(state: currentState)
         
         // Display level
-        gameOverReason = "Level \(currentLevel)"
+        gameOverReason = "Level \(currentLevel): \(config.description)"
         
         // Print debug info
         print("Starting game with perturbation:")
@@ -213,7 +336,7 @@ class PendulumViewModel: ObservableObject {
         print("Perturbation: \(degreesOffset) degrees (\(radianOffset) radians)")
         print("Initial position: theta = \(initialTheta) (\(initialTheta * 180/Double.pi - 180) degrees from vertical)")
         print("Initial velocity: thetaDot = \(initialThetaDot)")
-        print("Balance threshold: \(balanceAngleThreshold) radians (\(balanceAngleThreshold * 180/Double.pi) degrees)")
+        print("Balance threshold: \(balanceThreshold) radians (\(balanceThreshold * 180/Double.pi) degrees)")
         print("Failure threshold: \(failureAngleThreshold) radians (\(failureAngleThreshold * 180/Double.pi) degrees)")
         print("Level success time: \(levelSuccessTime) seconds")
         
@@ -225,76 +348,185 @@ class PendulumViewModel: ObservableObject {
     
     // Function called when a level is completed successfully
     private func levelCompleted() {
-        // Increase level
-        currentLevel += 1
+        // Check achievement: reach level X
+        checkLevelAchievements()
         
         // Add bonus points for completing level
-        score += currentLevel * 100
+        let levelBonus = currentLevel * 100
+        score += levelBonus
+        
+        // Show bonus points notification
+        print("Level \(currentLevel) completed! Bonus: \(levelBonus) points")
         
         // Reset consecutive balance time
         consecutiveBalanceTime = 0
         
-        // Increase difficulty with each level
-        levelPerturbation = min(0.1 * Double(currentLevel), 0.5) // Increase perturbation with level, max 0.5
-        
-        // Update level success time (gets shorter with each level)
-        levelSuccessTime = max(5.0 - (Double(currentLevel) * 0.3), 1.5) 
-        
         // Update stats
-        levelStats["levelsCompleted"] = Double(currentLevel - 1)
+        levelStats["levelsCompleted"] = Double(currentLevel)
         levelStats["currentLevel"] = Double(currentLevel)
         
+        // Update Core Data session
+        if let sessionId = currentSessionId {
+            coreDataManager.updatePlaySession(
+                sessionId: sessionId,
+                score: score,
+                level: currentLevel,
+                duration: totalBalanceTime,
+                maxAngle: maxAngleRecovered
+            )
+        }
+        
         // Announce level completion
-        gameOverReason = "Level \(currentLevel-1) completed!"
+        gameOverReason = "Level \(currentLevel) completed!"
         
         // Brief pause before starting new level
         let wasSimulating = isSimulating
         stopSimulation()
         
-        // Restart with increased difficulty after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self = self else { return }
-            
-            self.gameOverReason = "Level \(self.currentLevel)"
-            
-            // Create a new perturbed state with increased difficulty
-            let degreesOffset = self.initialPerturbation * self.levelPerturbation
-            let radianOffset = degreesOffset * Double.pi / 180.0
-            let direction = Bool.random() ? 1.0 : -1.0
-            let initialTheta = Double.pi + (direction * radianOffset)
-            let initialThetaDot = direction * radianOffset * 0.02
-            
-            // Reset to new level state
-            self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
-            self.simulation.setInitialState(state: self.currentState)
-            
-            // Start new level
-            if wasSimulating {
-                self.startSimulation()
+        // Store completed level for celebration
+        let completedLevel = currentLevel
+        
+        // Trigger level manager to advance to next level
+        levelManager.advanceToNextLevel()
+        
+        // Get the config for the next level
+        let nextLevelConfig = levelManager.getConfigForLevel(currentLevel)
+        
+        // Show level completion animation and start new level
+        if let sceneView = self.scene?.view {
+            sceneView.levelCompletionAnimation {
+                // After completion animation finishes, show new level intro
+                sceneView.newLevelStartAnimation(
+                    level: self.currentLevel,
+                    description: nextLevelConfig.description
+                ) {
+                    // After the new level intro finishes, start the new level
+                    
+                    // Create a new perturbed state with increased difficulty from config
+                    let degreesOffset = nextLevelConfig.initialPerturbation
+                    let radianOffset = degreesOffset * Double.pi / 180.0
+                    let direction = Bool.random() ? 1.0 : -1.0
+                    let initialTheta = Double.pi + (direction * radianOffset)
+                    let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
+                    
+                    // Reset to new level state
+                    self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                    self.simulation.setInitialState(state: self.currentState)
+                    
+                    // Update game over message to show current level
+                    self.gameOverReason = "Level \(self.currentLevel): \(nextLevelConfig.description)"
+                    
+                    // Start new level
+                    if wasSimulating {
+                        self.startSimulation()
+                    }
+                }
+            }
+        } else {
+            // Fallback if no scene view available - just restart after a delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self = self else { return }
+                
+                // Get the next level configuration
+                let config = self.levelManager.getConfigForLevel(self.currentLevel)
+                
+                // Create a new perturbed state with increased difficulty from config
+                let degreesOffset = config.initialPerturbation
+                let radianOffset = degreesOffset * Double.pi / 180.0
+                let direction = Bool.random() ? 1.0 : -1.0
+                let initialTheta = Double.pi + (direction * radianOffset)
+                let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
+                
+                // Reset to new level state
+                self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                self.simulation.setInitialState(state: self.currentState)
+                
+                // Update game over message to show current level
+                self.gameOverReason = "Level \(self.currentLevel): \(config.description)"
+                
+                // Start new level
+                if wasSimulating {
+                    self.startSimulation()
+                }
             }
         }
     }
     
     func endGame(reason: String) {
-        isGameActive = false
-        gameOverReason = reason
-        stopSimulation()
-        
-        // Update high score if needed
-        if score > highScore {
-            highScore = score
-            // Save high score to UserDefaults
-            UserDefaults.standard.set(highScore, forKey: "PendulumHighScore")
+        // If not already ended
+        if isGameActive {
+            isGameActive = false
+            isPaused = false
+            gameOverReason = reason
+            stopSimulation()
+            
+            // Update high score if needed
+            if score > highScore {
+                highScore = score
+                
+                // Save high score to Core Data
+                coreDataManager.saveHighScore(
+                    score: score,
+                    level: currentLevel,
+                    timeBalanced: totalBalanceTime
+                )
+            }
+            
+            // Reset level on game end
+            levelStats["finalLevel"] = Double(currentLevel)
+            levelStats["finalScore"] = Double(score)
+            
+            // Update Core Data session
+            if let sessionId = currentSessionId {
+                coreDataManager.updatePlaySession(
+                    sessionId: sessionId,
+                    score: score,
+                    level: currentLevel,
+                    duration: totalBalanceTime,
+                    maxAngle: maxAngleRecovered
+                )
+                
+                // End session with unlocked achievements
+                coreDataManager.endPlaySession(
+                    sessionId: sessionId,
+                    achievements: unlockedAchievements
+                )
+            }
+            
+            // Reset level for next game
+            levelManager.resetToLevel1()
+            let config = levelManager.getConfigForLevel(1)
+            applyLevelConfiguration(config)
         }
-        
-        // Reset level on game end
-        levelStats["finalLevel"] = Double(currentLevel)
-        levelStats["finalScore"] = Double(score)
-        
-        // Reset level for next game
-        currentLevel = 1
-        levelPerturbation = 0.1
-        levelSuccessTime = 3.0
+    }
+    
+    // Toggle pause state
+    func togglePause() {
+        if isGameActive {
+            if isPaused {
+                resumeGame()
+            } else {
+                pauseGame()
+            }
+        }
+    }
+    
+    // Pause the current game
+    func pauseGame() {
+        if isGameActive && !isPaused {
+            isPaused = true
+            stopSimulation() // Stop the timer
+            gameOverReason = "Game Paused"
+        }
+    }
+    
+    // Resume from pause
+    func resumeGame() {
+        if isGameActive && isPaused {
+            isPaused = false
+            gameOverReason = nil
+            startSimulation() // Restart the timer
+        }
     }
     
     // Helper to normalize angle to [-π, π]
@@ -314,8 +546,17 @@ class PendulumViewModel: ObservableObject {
         currentState = simulation.step()
         simulationError = simulation.compareWithReference()
         
+        // Update score multiplier time remaining
+        if multiplierTimeRemaining > 0 {
+            multiplierTimeRemaining -= 0.002 // Same as simulation step time
+            if multiplierTimeRemaining <= 0 {
+                scoreMultiplier = 1.0
+                multiplierTimeRemaining = 0
+            }
+        }
+        
         // Add game logic
-        if isGameActive {
+        if isGameActive && !isPaused {
             // Calculate angle from top position (π) in a simple, reliable way
             // Break down the normalization calculation into steps
             let twoPi = 2 * Double.pi
@@ -327,6 +568,11 @@ class PendulumViewModel: ObservableObject {
             let diffFromPi = abs(normalizedAngle - Double.pi)
             let altDiffFromPi = twoPi - diffFromPi
             let angleFromTop = min(diffFromPi, altDiffFromPi)
+            
+            // Track max angle for recovery achievement
+            if angleFromTop > maxAngleRecovered && angleFromTop < failureAngleThreshold {
+                maxAngleRecovered = angleFromTop
+            }
             
             // Print debug info occasionally - reduced frequency
             if Int(currentState.time * 100) % 200 == 0 {  // Every 2 seconds instead of 0.5 seconds
@@ -353,12 +599,30 @@ class PendulumViewModel: ObservableObject {
                 // Reset consecutive balance time
                 consecutiveBalanceTime = 0
                 
-            } else if angleFromTop < balanceAngleThreshold {
+            } else if angleFromTop < balanceThreshold {
                 // Pendulum is balanced near vertical
                 if let lastUpdate = lastScoreUpdate, Date().timeIntervalSince(lastUpdate) >= scoreUpdateInterval {
+                    // Check for perfect balance (closer to vertical)
+                    let isPerfectBalance = angleFromTop < perfectBalanceThreshold
+                    
+                    // Update perfect balance streak
+                    if isPerfectBalance {
+                        perfectBalanceStreak += 1
+                        
+                        // Increase multiplier when reaching streak thresholds
+                        if perfectBalanceStreak % 10 == 0 {
+                            // Increase multiplier at 10, 20, 30... consecutive perfect balances
+                            increaseMultiplier(0.25) // Add 0.25x each time (1.25x, 1.5x, 1.75x...)
+                        }
+                    } else {
+                        // Not perfect - reset streak only if we drop below regular balance
+                        perfectBalanceStreak = 0
+                    }
+                    
                     // Update score based on balance quality - how close to perfectly vertical
-                    let balanceQuality = 1.0 - (angleFromTop / balanceAngleThreshold)
-                    let pointsToAdd = Int(10 * balanceQuality)
+                    let balanceQuality = 1.0 - (angleFromTop / balanceThreshold)
+                    let basePoints = Int(10 * balanceQuality)
+                    let pointsToAdd = Int(Double(basePoints) * scoreMultiplier)
                     score += pointsToAdd
                     
                     // Update balance time
@@ -371,15 +635,44 @@ class PendulumViewModel: ObservableObject {
                     // Update stats
                     levelStats["currentAngle"] = Double(angleFromTop)
                     
+                    // Check time balance achievements
+                    if totalBalanceTime >= 5.0 && !unlockedAchievements.contains("balance_5sec") {
+                        unlockAchievement(id: "balance_5sec")
+                    }
+                    if totalBalanceTime >= 30.0 && !unlockedAchievements.contains("balance_30sec") {
+                        unlockAchievement(id: "balance_30sec")
+                    }
+                    if totalBalanceTime >= 60.0 && !unlockedAchievements.contains("balance_60sec") {
+                        unlockAchievement(id: "balance_60sec")
+                    }
+                    
                     // Check if level is completed
                     if consecutiveBalanceTime >= levelSuccessTime {
+                        // Check for quick level achievement
+                        if levelSuccessTime - consecutiveBalanceTime < 10.0 && !unlockedAchievements.contains("quick_level") {
+                            unlockAchievement(id: "quick_level")
+                        }
                         levelCompleted()
+                    }
+                    
+                    // Check for no push time
+                    if let lastForce = lastForcePressTime, Date().timeIntervalSince(lastForce) >= 10.0 && !unlockedAchievements.contains("no_push_10sec") {
+                        unlockAchievement(id: "no_push_10sec")
                     }
                 }
             } else {
                 // Not balanced - reset consecutive balance time
                 consecutiveBalanceTime = 0
+                perfectBalanceStreak = 0
+                
+                // Check recovery achievement - if we recovered from a steep angle (more than 45 degrees)
+                if angleFromTop < balanceThreshold && maxAngleRecovered > 0.8 && !unlockedAchievements.contains("perfect_recovery") {
+                    unlockAchievement(id: "perfect_recovery")
+                }
             }
+            
+            // Check for score-based achievements
+            checkScoreAchievements()
         }
     }
     
@@ -392,10 +685,19 @@ class PendulumViewModel: ObservableObject {
     func applyForce(_ magnitude: Double) {
         print("*** FORCE BUTTON PRESSED ***")
         
+        // Update last force press time for achievements
+        lastForcePressTime = Date()
+        
         // If game is not active but there's a game over reason, restart on push
         if !isGameActive && gameOverReason != nil {
             print("Game not active, restarting...")
             resetAndStart()
+            return
+        }
+        
+        // If game is paused, resume it
+        if isPaused {
+            resumeGame()
             return
         }
         
@@ -434,6 +736,10 @@ class PendulumViewModel: ObservableObject {
         // Stop any existing simulation first
         stopSimulation()
         
+        // Cancel multiplier timer
+        multiplierTimer?.invalidate()
+        multiplierTimer = nil
+        
         // Reset to initial state for inverted pendulum
         currentState = PendulumState(theta: Double.pi + 0.1, thetaDot: 0, time: 0)
         simulationError = 0
@@ -442,38 +748,34 @@ class PendulumViewModel: ObservableObject {
         score = 0
         gameOverReason = nil
         isGameActive = false
+        isPaused = false
         totalBalanceTime = 0
         
-        // Get current parameters before reset for logging
-        let oldMass = mass
-        let oldLength = length
-        let oldDamping = damping
-        let oldGravity = gravity
-        let oldSpringConstant = springConstant
+        // Reset score multiplier
+        scoreMultiplier = 1.0
+        multiplierTimeRemaining = 0.0
+        perfectBalanceStreak = 0
         
-        // Reset parameters to default values ONLY if user wants default parameters
-        // Otherwise keep current parameter values that user has set via sliders
+        // Reset to level 1
+        levelManager.resetToLevel1()
         
-        // Reset parameters to recommended defaults for better balancing playability
-        mass = 1.0
-        length = 1.0
-        damping = 0.1  // Small damping for slight stabilization
-        gravity = 15.0  // High gravity for pronounced falling
-        springConstant = 0.1  // Small spring force to make balancing possible
-        momentOfInertia = 0.5  // Default moment of inertia
-        forceStrength = 5.0  // Increased force strength for immediate visual effect
-        initialPerturbation = 20.0  // Default initial perturbation in degrees
+        // Get level 1 configuration
+        let config = levelManager.getConfigForLevel(1)
         
-        // Log parameter values before and after reset
-        print("Reset parameters:")
-        print("  - Previous mass: \(oldMass), Current mass: \(mass)")
-        print("  - Previous length: \(oldLength), Current length: \(length)")
-        print("  - Previous damping: \(oldDamping), Current damping: \(damping)")
-        print("  - Previous gravity: \(oldGravity), Current gravity: \(gravity)")
-        print("  - Previous spring constant: \(oldSpringConstant), Current spring constant: \(springConstant)")
+        // Apply level 1 configuration
+        applyLevelConfiguration(config)
         
         // Make sure simulation has latest parameter values
         updateSimulationParameters()
+        
+        print("Reset to level 1:")
+        print("Balance threshold: \(balanceThreshold * 180 / Double.pi) degrees")
+        print("Level success time: \(levelSuccessTime) seconds")
+        print("Mass: \(mass)")
+        print("Length: \(length)")
+        print("Damping: \(damping)")
+        print("Gravity: \(gravity)")
+        print("Spring constant: \(springConstant)")
     }
     
     // Reset and immediately start a new game
@@ -512,5 +814,99 @@ class PendulumViewModel: ObservableObject {
         
         // Log that parameters were directly updated
         print("Parameters directly updated through updateSimulationParameters()")
+    }
+    
+    // MARK: - Score Multiplier System
+    
+    private func increaseMultiplier(_ amount: Double) {
+        // Add to current multiplier
+        scoreMultiplier = min(scoreMultiplier + amount, 3.0) // Cap at 3x
+        
+        // Set duration for multiplier (10 seconds)
+        multiplierTimeRemaining = 10.0
+        
+        print("Score multiplier increased to \(scoreMultiplier)x for 10 seconds")
+    }
+    
+    // MARK: - Achievement System
+    
+    private func unlockAchievement(id: String) {
+        // Check if achievement already unlocked
+        if unlockedAchievements.contains(id) {
+            return
+        }
+        
+        // Try to unlock via Core Data
+        if coreDataManager.unlockAchievement(id: id) {
+            // Success - add to our local list
+            unlockedAchievements.append(id)
+            
+            // Get achievement details for display
+            let achievements = coreDataManager.getAllAchievements()
+            if let achievement = achievements.first(where: { $0.id == id }) {
+                // Update achievement points
+                achievementPoints += Int(achievement.points)
+                
+                // Store achievement info for UI display
+                recentAchievement = (achievement.name ?? "Achievement Unlocked", achievement.achievementDescription ?? "")
+                
+                // Show achievement notification
+                print("Achievement unlocked: \(achievement.name ?? "Unknown") - \(achievement.achievementDescription ?? "")")
+                
+                // Add bonus points for achievement
+                let bonusPoints = Int(achievement.points) * 10
+                score += bonusPoints
+                print("Achievement bonus: +\(bonusPoints) points")
+                
+                // Clear achievement notification after 5 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+                    self?.recentAchievement = nil
+                }
+            }
+        }
+    }
+    
+    private func checkScoreAchievements() {
+        // Check score-based achievements
+        if score >= 500 && !unlockedAchievements.contains("score_500") {
+            unlockAchievement(id: "score_500")
+        }
+        if score >= 1000 && !unlockedAchievements.contains("score_1000") {
+            unlockAchievement(id: "score_1000")
+        }
+        if score >= 5000 && !unlockedAchievements.contains("score_5000") {
+            unlockAchievement(id: "score_5000")
+        }
+    }
+    
+    private func checkLevelAchievements() {
+        // Check level-based achievements
+        if currentLevel >= 3 && !unlockedAchievements.contains("reach_level_3") {
+            unlockAchievement(id: "reach_level_3")
+        }
+        if currentLevel >= 5 && !unlockedAchievements.contains("reach_level_5") {
+            unlockAchievement(id: "reach_level_5")
+        }
+        if currentLevel >= 10 && !unlockedAchievements.contains("reach_level_10") {
+            unlockAchievement(id: "reach_level_10")
+        }
+    }
+    
+    // MARK: - High Score Methods
+    
+    func getTopHighScores(count: Int = 10) -> [(String, Int, Int, TimeInterval)] {
+        let scores = coreDataManager.getTopHighScores(limit: count)
+        return scores.map { 
+            ($0.playerName ?? "Player", Int($0.score), Int($0.level), $0.timeBalanced)
+        }
+    }
+    
+    func saveHighScore(playerName: String = "Player") {
+        coreDataManager.saveHighScore(
+            score: score,
+            level: currentLevel,
+            timeBalanced: totalBalanceTime,
+            playerName: playerName
+        )
     }
 }
