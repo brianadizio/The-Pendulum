@@ -1,6 +1,6 @@
 import UIKit
-// Remove Charts import as it's not included by default
-// import Charts
+
+// Using our native chart implementation instead of external dependencies
 
 // Dashboard notification name
 let DashboardStatsUpdatedNotification = NSNotification.Name("PendulumStatsUpdated")
@@ -17,6 +17,13 @@ class DashboardViewController: UIViewController {
     private var levelCard: UIView!
     private var historyCard: UIView!
     private var performanceCard: UIView!
+    
+    // Analytics dashboard view
+    private var analyticsDashboardView: AnalyticsDashboardViewNative!
+    private var showDetailedAnalytics: Bool = false // Toggle between simple and detailed views
+    
+    // Import TimeRange from the native view for compatibility
+    typealias DashboardTimeRange = AnalyticsTimeRange
     
     // Header components
     private var headerView: UIView!
@@ -89,9 +96,22 @@ class DashboardViewController: UIViewController {
     
     private func setupViews() {
         // Set up the main view with Golden Enterprise theme
-        view.backgroundColor = .goldenBackground
+        view.backgroundColor = (UIColor.goldenBackground as UIColor)
         
-        // Setup scroll view
+        // Setup Analytics Dashboard view
+        analyticsDashboardView = AnalyticsDashboardViewNative(frame: view.bounds)
+        analyticsDashboardView.translatesAutoresizingMaskIntoConstraints = false
+        analyticsDashboardView.isHidden = true // Start with standard dashboard view
+        view.addSubview(analyticsDashboardView)
+        
+        NSLayoutConstraint.activate([
+            analyticsDashboardView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            analyticsDashboardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            analyticsDashboardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            analyticsDashboardView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+        
+        // Setup scroll view for standard dashboard
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
         
@@ -147,7 +167,7 @@ class DashboardViewController: UIViewController {
         // Create header container
         headerView = UIView()
         headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
+        headerView.backgroundColor = (UIColor.goldenPrimary as UIColor)
         contentView.addSubview(headerView)
         
         // Add gradient layer to header
@@ -164,9 +184,9 @@ class DashboardViewController: UIViewController {
         logoImageView.clipsToBounds = true
         if logoImageView.image == nil {
             // In case the image is nil, set a background color
-            logoImageView.backgroundColor = .goldenAccent
+            logoImageView.backgroundColor = (UIColor.goldenAccent as UIColor)
         }
-        logoImageView.tintColor = .goldenAccent // For the fallback symbol if used
+        logoImageView.tintColor = (UIColor.goldenAccent as UIColor) // For the fallback symbol if used
         headerView.addSubview(logoImageView)
         
         // Create title label
@@ -176,6 +196,16 @@ class DashboardViewController: UIViewController {
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .white
         headerView.addSubview(titleLabel)
+        
+        // Create view toggle button
+        let toggleButton = UIButton(type: .system)
+        toggleButton.translatesAutoresizingMaskIntoConstraints = false
+        toggleButton.setTitle("Detailed Analytics", for: .normal)
+        toggleButton.setTitleColor(.white, for: .normal)
+        toggleButton.backgroundColor = (UIColor.goldenAccent as UIColor)
+        toggleButton.layer.cornerRadius = 10
+        toggleButton.addTarget(self, action: #selector(toggleAnalyticsView), for: .touchUpInside)
+        headerView.addSubview(toggleButton)
         
         // Set constraints
         NSLayoutConstraint.activate([
@@ -192,7 +222,13 @@ class DashboardViewController: UIViewController {
             
             // Title centered in header
             titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            
+            // Toggle button on the right
+            toggleButton.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
+            toggleButton.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            toggleButton.widthAnchor.constraint(equalToConstant: 140),
+            toggleButton.heightAnchor.constraint(equalToConstant: 36)
         ])
     }
     
@@ -208,7 +244,7 @@ class DashboardViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = "Statistics"
         titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.textColor = (UIColor.goldenDark as UIColor)
         statisticsCard.addSubview(titleLabel)
         
         // Create statistics stack
@@ -274,16 +310,16 @@ class DashboardViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = "Level Progress"
         titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.textColor = (UIColor.goldenDark as UIColor)
         levelCard.addSubview(titleLabel)
         
         // Create level indicator
         let levelIndicator = UIView()
         levelIndicator.translatesAutoresizingMaskIntoConstraints = false
-        levelIndicator.backgroundColor = .goldenBackground
+        levelIndicator.backgroundColor = (UIColor.goldenBackground as UIColor)
         levelIndicator.layer.cornerRadius = 8
         levelIndicator.layer.borderWidth = 1
-        levelIndicator.layer.borderColor = UIColor.goldenPrimary.cgColor
+        levelIndicator.layer.borderColor = (UIColor.goldenPrimary as UIColor).cgColor
         levelCard.addSubview(levelIndicator)
         
         // Create level label
@@ -291,7 +327,7 @@ class DashboardViewController: UIViewController {
         levelLabel.translatesAutoresizingMaskIntoConstraints = false
         levelLabel.text = "Level \(viewModel.currentLevel)"
         levelLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        levelLabel.textColor = .goldenDark
+        levelLabel.textColor = (UIColor.goldenDark as UIColor)
         levelLabel.textAlignment = .center
         levelIndicator.addSubview(levelLabel)
         
@@ -300,7 +336,7 @@ class DashboardViewController: UIViewController {
         progressDescription.translatesAutoresizingMaskIntoConstraints = false
         progressDescription.text = "Balance time required: \(String(format: "%.1f", viewModel.levelSuccessTime)) seconds"
         progressDescription.font = UIFont.systemFont(ofSize: 16)
-        progressDescription.textColor = .goldenTextLight
+        progressDescription.textColor = (UIColor.goldenTextLight as UIColor)
         progressDescription.textAlignment = .center
         levelCard.addSubview(progressDescription)
         
@@ -341,7 +377,7 @@ class DashboardViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = "Balancing Performance"
         titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.textColor = (UIColor.goldenDark as UIColor)
         performanceCard.addSubview(titleLabel)
         
         // Create chart view placeholder
@@ -350,7 +386,7 @@ class DashboardViewController: UIViewController {
         chartView.backgroundColor = UIColor.white
         chartView.layer.cornerRadius = 8
         chartView.layer.borderWidth = 1
-        chartView.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.2).cgColor
+        chartView.layer.borderColor = (UIColor.goldenPrimary as UIColor).withAlphaComponent(0.2).cgColor
         performanceCard.addSubview(chartView)
         
         // Setup the chart placeholder
@@ -361,7 +397,7 @@ class DashboardViewController: UIViewController {
         chartLabel.translatesAutoresizingMaskIntoConstraints = false
         chartLabel.text = "Phase Space Visualization"
         chartLabel.font = UIFont.systemFont(ofSize: 14)
-        chartLabel.textColor = .goldenTextLight
+        chartLabel.textColor = (UIColor.goldenTextLight as UIColor)
         chartLabel.textAlignment = .center
         performanceCard.addSubview(chartLabel)
         
@@ -396,14 +432,14 @@ class DashboardViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        titleLabel.textColor = .goldenTextLight
+        titleLabel.textColor = (UIColor.goldenTextLight as UIColor)
         container.addSubview(titleLabel)
         
         let valueLabel = UILabel()
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
         valueLabel.text = value
         valueLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        valueLabel.textColor = .goldenDark
+        valueLabel.textColor = (UIColor.goldenDark as UIColor)
         valueLabel.textAlignment = .right
         container.addSubview(valueLabel)
         
@@ -445,6 +481,38 @@ class DashboardViewController: UIViewController {
         // Update the phase space view with the current state
         phaseSpaceView?.clearPoints()
         phaseSpaceView?.addPoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
+        
+        // Also update the detailed analytics view
+        if showDetailedAnalytics {
+            analyticsDashboardView.updateDashboard(timeRange: AnalyticsTimeRange.session, sessionId: viewModel.currentSessionId)
+        }
+    }
+    
+    @objc private func toggleAnalyticsView() {
+        // Toggle between simple dashboard and detailed analytics
+        showDetailedAnalytics = !showDetailedAnalytics
+        
+        // Update UI based on selected view
+        if showDetailedAnalytics {
+            scrollView.isHidden = true
+            analyticsDashboardView.isHidden = false
+            
+            // Force update of the analytics dashboard when toggling
+            analyticsDashboardView.updateDashboard(timeRange: AnalyticsTimeRange.session, sessionId: viewModel.currentSessionId)
+            
+            // Update button text
+            if let button = headerView.subviews.last as? UIButton {
+                button.setTitle("Simple Dashboard", for: .normal)
+            }
+        } else {
+            scrollView.isHidden = false
+            analyticsDashboardView.isHidden = true
+            
+            // Update button text
+            if let button = headerView.subviews.last as? UIButton {
+                button.setTitle("Detailed Analytics", for: .normal)
+            }
+        }
     }
 }
 

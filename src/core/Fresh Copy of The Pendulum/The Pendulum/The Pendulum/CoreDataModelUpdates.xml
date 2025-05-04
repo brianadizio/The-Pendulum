@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- This file contains the updates that need to be added to the PendulumScoreData.xcdatamodeld model -->
+<!-- Copy these entity definitions into the Core Data Model editor in Xcode -->
+
+<entity name="InteractionEvent" representedClassName="InteractionEvent" syncable="YES" codeGenerationType="class">
+    <attribute name="angle" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="angleVelocity" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="direction" optional="YES" attributeType="String"/>
+    <attribute name="eventType" optional="YES" attributeType="String"/>
+    <attribute name="magnitude" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="reactionTime" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession" inverseName="interactions" inverseEntity="PlaySession"/>
+</entity>
+
+<entity name="PerformanceMetrics" representedClassName="PerformanceMetrics" syncable="YES" codeGenerationType="class">
+    <attribute name="averageCorrectionTime" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="directionalBias" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="efficiencyRating" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="overcorrectionRate" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="playerStyle" optional="YES" attributeType="String"/>
+    <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    <attribute name="stabilityScore" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <relationship name="aggregatedAnalytics" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AggregatedAnalytics" inverseName="metrics" inverseEntity="AggregatedAnalytics"/>
+    <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession" inverseName="metrics" inverseEntity="PlaySession"/>
+</entity>
+
+<entity name="AggregatedAnalytics" representedClassName="AggregatedAnalytics" syncable="YES" codeGenerationType="class">
+    <attribute name="averageEfficiencyRating" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="averageStabilityScore" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="learningCurveSlope" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <attribute name="period" optional="YES" attributeType="String"/>
+    <attribute name="playerStyleTrend" optional="YES" attributeType="String"/>
+    <attribute name="sessionCount" optional="NO" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    <attribute name="totalPlayTime" optional="NO" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <relationship name="metrics" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="aggregatedAnalytics" inverseEntity="PerformanceMetrics"/>
+</entity>
+
+<!-- Update the PlaySession entity with new relationships -->
+<relationship name="interactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="InteractionEvent" inverseName="playSession" inverseEntity="InteractionEvent"/>
+<relationship name="metrics" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="PerformanceMetrics" inverseName="playSession" inverseEntity="PerformanceMetrics"/>

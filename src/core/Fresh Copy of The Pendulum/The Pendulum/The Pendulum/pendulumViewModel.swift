@@ -40,12 +40,14 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     
     // Time tracking for no-force achievement
     private var lastForcePressTime: Date?
-    private var currentSessionId: UUID?
+    
+    // Current session ID (made public for analytics dashboard)
+    var currentSessionId: UUID?
     
     // Constants for balance detection
     // balanceThreshold is now controlled by LevelManager
     private let perfectBalanceThreshold = 0.07 // Radians for "perfect" balance (~4 degrees) - more forgiving
-    private let failureAngleThreshold = 1.65  // Radians from vertical considered "fallen" (~95 degrees) - more forgiving
+    private let failureAngleThreshold = 1.57  // Radians from vertical considered "fallen" (90 degrees) - more challenging
     private let scoreUpdateInterval: TimeInterval = 0.05  // How often to update score - more responsive
     private var lastScoreUpdate: Date?
     private var lastForceAppliedTime: Double = 0
@@ -276,6 +278,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Start a new play session in Core Data
         currentSessionId = coreDataManager.startPlaySession()
         
+        // Start analytics tracking for this session
+        if let sessionId = currentSessionId {
+            AnalyticsManager.shared.startTracking(for: sessionId)
+        }
+        
         // Reset game state
         score = 0
         gameOverReason = nil
@@ -329,6 +336,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         
         // Display level
         gameOverReason = "Level \(currentLevel): \(config.description)"
+        
+        // Record game start in analytics
+        if let sessionId = currentSessionId {
+            let normalizedFromVertical = normalizeAngle(initialTheta - Double.pi)
+            AnalyticsManager.shared.trackInteraction(
+                eventType: "game_start",
+                angle: normalizedFromVertical,
+                angleVelocity: initialThetaDot,
+                magnitude: degreesOffset,
+                direction: direction > 0 ? "right" : "left"
+            )
+        }
         
         // Print debug info
         print("Starting game with perturbation:")
@@ -476,6 +495,27 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             levelStats["finalLevel"] = Double(currentLevel)
             levelStats["finalScore"] = Double(score)
             
+            // Record game end in analytics
+            if let sessionId = currentSessionId {
+                // Calculate normalized angle from vertical
+                let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                
+                // Track game end in analytics
+                AnalyticsManager.shared.trackInteraction(
+                    eventType: "game_end",
+                    angle: normalizedFromVertical,
+                    angleVelocity: currentState.thetaDot,
+                    magnitude: 0.0,
+                    direction: "none"
+                )
+                
+                // Calculate and save final analytics metrics
+                AnalyticsManager.shared.calculateAndSavePerformanceMetrics(for: sessionId)
+                
+                // Stop analytics tracking
+                AnalyticsManager.shared.stopTracking()
+            }
+            
             // Update Core Data session
             if let sessionId = currentSessionId {
                 coreDataManager.updatePlaySession(
@@ -569,6 +609,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             let altDiffFromPi = twoPi - diffFromPi
             let angleFromTop = min(diffFromPi, altDiffFromPi)
             
+            // Track angle in analytics system
+            if let sessionId = currentSessionId {
+                // Calculate angle from vertical (normalization handling different from angle from top)
+                let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                
+                // Track current pendulum state in analytics
+                AnalyticsManager.shared.trackPendulumState(
+                    angle: normalizedFromVertical,
+                    angleVelocity: currentState.thetaDot
+                )
+            }
+            
             // Track max angle for recovery achievement
             if angleFromTop > maxAngleRecovered && angleFromTop < failureAngleThreshold {
                 maxAngleRecovered = angleFromTop
@@ -589,6 +641,19 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             if currentState.time > 0.5 && angleFromTop > failureAngleThreshold && !isInGracePeriod {
                 // Pendulum has fallen too far from vertical
                 print("FALLEN! Angle from top: \(angleFromTop), threshold: \(failureAngleThreshold)")
+                
+                // Track this fall in analytics before ending game
+                if let sessionId = currentSessionId {
+                    let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                    AnalyticsManager.shared.trackInteraction(
+                        eventType: "fall",
+                        angle: normalizedFromVertical,
+                        angleVelocity: currentState.thetaDot,
+                        magnitude: 0.0,
+                        direction: normalizedFromVertical > 0 ? "right" : "left"
+                    )
+                }
+                
                 endGame(reason: "Pendulum fell!")
                 
                 // Update stats for dashboard
@@ -613,6 +678,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                         if perfectBalanceStreak % 10 == 0 {
                             // Increase multiplier at 10, 20, 30... consecutive perfect balances
                             increaseMultiplier(0.25) // Add 0.25x each time (1.25x, 1.5x, 1.75x...)
+                            
+                            // Track perfect balance streak milestone in analytics
+                            if let sessionId = currentSessionId {
+                                let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                                AnalyticsManager.shared.trackInteraction(
+                                    eventType: "perfect_streak_\(perfectBalanceStreak)",
+                                    angle: normalizedFromVertical,
+                                    angleVelocity: currentState.thetaDot,
+                                    magnitude: 0.0,
+                                    direction: "none"
+                                )
+                            }
                         }
                     } else {
                         // Not perfect - reset streak only if we drop below regular balance
@@ -652,6 +729,19 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                         if levelSuccessTime - consecutiveBalanceTime < 10.0 && !unlockedAchievements.contains("quick_level") {
                             unlockAchievement(id: "quick_level")
                         }
+                        
+                        // Track level completion in analytics
+                        if let sessionId = currentSessionId {
+                            let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                            AnalyticsManager.shared.trackInteraction(
+                                eventType: "level_complete_\(currentLevel)",
+                                angle: normalizedFromVertical,
+                                angleVelocity: currentState.thetaDot,
+                                magnitude: 0.0,
+                                direction: "none"
+                            )
+                        }
+                        
                         levelCompleted()
                     }
                     
@@ -668,6 +758,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 // Check recovery achievement - if we recovered from a steep angle (more than 45 degrees)
                 if angleFromTop < balanceThreshold && maxAngleRecovered > 0.8 && !unlockedAchievements.contains("perfect_recovery") {
                     unlockAchievement(id: "perfect_recovery")
+                    
+                    // Track recovery in analytics
+                    if let sessionId = currentSessionId {
+                        let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
+                        AnalyticsManager.shared.trackInteraction(
+                            eventType: "recovery",
+                            angle: normalizedFromVertical,
+                            angleVelocity: currentState.thetaDot,
+                            magnitude: maxAngleRecovered,
+                            direction: normalizedFromVertical > 0 ? "right" : "left"
+                        )
+                    }
                 }
             }
             
@@ -729,8 +831,28 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         )
         currentState = newState
         
+        // Track interaction in analytics system
+        if let sessionId = currentSessionId {
+            // Determine direction based on the sign of magnitude
+            let direction = magnitude > 0 ? "left" : "right"
+            
+            // Calculate angle from vertical (in radians)
+            let normalizedAngle = normalizeAngle(currentState.theta - Double.pi)
+            
+            // Track this push in the analytics system
+            AnalyticsManager.shared.trackInteraction(
+                eventType: "push",
+                angle: normalizedAngle,
+                angleVelocity: currentState.thetaDot,
+                magnitude: abs(scaledMagnitude),
+                direction: direction
+            )
+        }
+        
         print("AFTER force application - theta: \(currentState.theta), thetaDot: \(currentState.thetaDot)")
     }
+    
+    // normalizeAngle is already defined above
     
     func reset() {
         // Stop any existing simulation first

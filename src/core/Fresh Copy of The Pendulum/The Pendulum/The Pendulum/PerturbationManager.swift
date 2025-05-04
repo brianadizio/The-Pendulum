@@ -507,7 +507,8 @@ class PerturbationManager {
         let sinValue = sin(radians)
         
         // Apply profile strength as amplitude modifier
-        return sinValue * profile.strength * 0.3
+        // Note: Multiplier reduced from 0.3 to 0.225 (25% reduction) as requested
+        return sinValue * profile.strength * 0.225
     }
     
     // Process data-driven perturbation (from file)
@@ -523,7 +524,83 @@ class PerturbationManager {
         dataIndex = (dataIndex + 1) % perturbationData.count
         
         // Apply profile strength as scale factor
-        return value * profile.strength * 0.5
+        let result = value * profile.strength * 0.5
+        
+        // Generate a visualization for data-driven perturbation if significant
+        if abs(result) > 0.05 {
+            // Create data-specific visualization based on the current value
+            generateDataVisualization(magnitude: result)
+        }
+        
+        return result
+    }
+    
+    // Create a specific visualization for data-driven perturbations
+    private func generateDataVisualization(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Generate particles with distinct appearance for data-driven perturbations
+        let particleCount = Int(min(abs(magnitude) * 30, 50))
+        let dataParticles = SKNode()
+        dataParticles.position = CGPoint(x: scene.size.width / 2, y: scene.size.height / 2)
+        scene.addChild(dataParticles)
+        
+        // Set z-position to ensure visibility
+        dataParticles.zPosition = 50
+        
+        // Color based on magnitude (blue-white for positive, red-orange for negative)
+        let baseColor = magnitude > 0 
+            ? SKColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 0.7)
+            : SKColor(red: 1.0, green: 0.4, blue: 0.2, alpha: 0.7)
+        
+        // Create data visualization particles in a ring pattern
+        for i in 0..<particleCount {
+            let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3.5))
+            
+            // Calculate position in circle around pendulum
+            let angle = (CGFloat(i) / CGFloat(particleCount)) * CGFloat.pi * 2.0
+            let distance = CGFloat.random(in: 80...120)
+            let xPos = cos(angle) * distance
+            let yPos = sin(angle) * distance
+            
+            particle.position = CGPoint(x: xPos, y: yPos)
+            particle.fillColor = baseColor
+            particle.strokeColor = baseColor.withAlphaComponent(0.3)
+            particle.glowWidth = 2.0
+            
+            dataParticles.addChild(particle)
+            
+            // Add pulsing animation
+            let pulseAction = SKAction.sequence([
+                SKAction.scale(to: CGFloat.random(in: 1.5...2.5), duration: CGFloat.random(in: 0.2...0.5)),
+                SKAction.scale(to: CGFloat.random(in: 0.5...0.8), duration: CGFloat.random(in: 0.2...0.5))
+            ])
+            
+            // Move particles based on data value
+            let moveAction = SKAction.move(
+                to: CGPoint(x: xPos * 1.5, y: yPos * 1.5),
+                duration: CGFloat.random(in: 0.5...1.0)
+            )
+            
+            // Fade out
+            let fadeAction = SKAction.sequence([
+                SKAction.wait(forDuration: CGFloat.random(in: 0.2...0.5)),
+                SKAction.fadeOut(withDuration: CGFloat.random(in: 0.3...0.7))
+            ])
+            
+            // Run actions
+            particle.run(SKAction.group([
+                SKAction.repeat(pulseAction, count: 2),
+                moveAction,
+                fadeAction
+            ]))
+        }
+        
+        // Remove node after animation completes
+        dataParticles.run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.5),
+            SKAction.removeFromParent()
+        ]))
     }
     
     // Process random perturbation (noise)
@@ -562,7 +639,8 @@ class PerturbationManager {
             }
         }
         
-        return totalEffect
+        // Apply an additional 25% reduction to the total effect for compound perturbations
+        return totalEffect * 0.75
     }
     
     // Generate visual effects for perturbations
