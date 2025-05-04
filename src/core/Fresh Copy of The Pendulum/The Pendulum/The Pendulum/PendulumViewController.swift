@@ -14,7 +14,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let modesItem = UITabBarItem(title: "Modes", image: UIImage(systemName: "square.grid.2x2"), tag: 2)
     private let integrationItem = UITabBarItem(title: "Integration", image: UIImage(systemName: "link"), tag: 3)
     private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 4)
-    private let infoItem = UITabBarItem(title: "Info", image: UIImage(systemName: "info.circle"), tag: 5)
+    private let settingsItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 5)
     
     // Views for different tabs
     let simulationView = UIView()
@@ -22,7 +22,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     let modesView = UIView()
     let integrationView = UIView()
     let parametersView = UIView()
-    let infoView = UIView()
+    let settingsView = UIView()
     private var currentView: UIView?
     
     // Dashboard view controller
@@ -51,6 +51,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private var phaseSpaceLabel: UILabel!
     private var updateTimer: Timer?
     var dashboardUpdateTimer: Timer?
+    
+    // Status label for feedback
+    private var statusLabel: UILabel?
+    private var statusTimer: Timer?
     
     // Control buttons
     private lazy var startButton: UIButton = {
@@ -99,15 +103,87 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set up the main interface
         setupTabBar()
         setupViews()
+        setupStatusLabel()
+        
+        // Initialize settings
+        initializeSettings()
         
         // Start with simulation view
         showView(simulationView)
     }
     
+    private func setupStatusLabel() {
+        // Create status label for feedback
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .goldenDark
+        label.backgroundColor = .goldenAccent.withAlphaComponent(0.2)
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.layer.cornerRadius = 10
+        label.layer.masksToBounds = true
+        label.isHidden = true
+        label.alpha = 0
+        view.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.bottomAnchor.constraint(equalTo: tabBar.topAnchor, constant: -10),
+            label.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -40),
+            label.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        statusLabel = label
+    }
+    
+    private func updateStatusLabel(_ message: String) {
+        // Cancel any existing timer
+        statusTimer?.invalidate()
+        
+        // Update and show the status label
+        statusLabel?.text = message
+        statusLabel?.isHidden = false
+        
+        // Animate in
+        UIView.animate(withDuration: 0.3) {
+            self.statusLabel?.alpha = 1.0
+        }
+        
+        // Set timer to hide
+        statusTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            UIView.animate(withDuration: 0.3) {
+                self?.statusLabel?.alpha = 0.0
+            } completion: { _ in
+                self?.statusLabel?.isHidden = true
+            }
+        }
+    }
+    
+    private func initializeSettings() {
+        // Apply current settings
+        let settingsManager = SettingsManager.shared
+        let perturbationEffects = PerturbationEffects.shared
+        
+        // Initialize perturbation manager with first level profile
+        let perturbationManager = PerturbationManager(profile: PerturbationProfile.forLevel(1))
+        perturbationManager.viewModel = viewModel
+        
+        // Connect perturbation manager to the scene
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            perturbationManager.scene = self.scene
+            self.scene?.perturbationManager = perturbationManager
+            
+            // Apply settings once scene is ready
+            if let scene = self.scene {
+                settingsManager.applyAllSettings(to: self.viewModel, scene: scene, effects: perturbationEffects)
+            }
+        }
+    }
+    
     private func setupTabBar() {
         // Configure tab bar with Golden Enterprises theme
         tabBar.delegate = self
-        tabBar.items = [simulationItem, dashboardItem, modesItem, integrationItem, parametersItem, infoItem]
+        tabBar.items = [simulationItem, dashboardItem, modesItem, integrationItem, parametersItem, settingsItem]
         tabBar.selectedItem = simulationItem
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.tintColor = .goldenPrimary
@@ -139,10 +215,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         setupModesView()
         setupIntegrationView()
         setupParametersView()
-        setupInfoView()
+        setupSettingsView() // Changed from setupInfoView to setupSettingsView
         
         // Add views to main view
-        [simulationView, dashboardView, modesView, integrationView, parametersView, infoView].forEach { subview in
+        [simulationView, dashboardView, modesView, integrationView, parametersView, settingsView].forEach { subview in
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
             
@@ -951,7 +1027,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         case 1103, 1104, 1105:
             // These buttons have been disabled for perturbation functionality
             // and will be replaced with Matlab-processed modes
-            updateStatusLabel("This perturbation mode will be available soon")
+            updateGameMessageLabel("This perturbation mode will be available soon")
         
         // Standard modes
         case 101, 102, 106:
@@ -1243,15 +1319,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         print("Selected integration: \(buttonTitle) (tag: \(sender.tag))")
     }
     
-    private func setupInfoView() {
+    private func setupSettingsView() {
         // Set background to Golden Enterprises theme
-        infoView.backgroundColor = .goldenBackground
+        settingsView.backgroundColor = .goldenBackground
         
         // Add a header view
         let headerView = UIView()
         headerView.translatesAutoresizingMaskIntoConstraints = false
         headerView.backgroundColor = .goldenPrimary
-        infoView.addSubview(headerView)
+        settingsView.addSubview(headerView)
         
         // Add gradient to header
         DispatchQueue.main.async {
@@ -1262,103 +1338,406 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Add title to header
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "About The Pendulum"
+        titleLabel.text = "Settings"
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
         headerView.addSubview(titleLabel)
         
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: infoView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: infoView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: infoView.trailingAnchor),
+            headerView.topAnchor.constraint(equalTo: settingsView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 60),
             
             titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
         ])
         
-        // Create scroll view for content
+        // Create scroll view for settings content
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
-        infoView.addSubview(scrollView)
+        settingsView.addSubview(scrollView)
         
         // Create content view inside scroll view
         let contentView = UIView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentView)
         
-        // Content title (distinct from header)
-        let contentTitleLabel = UILabel()
-        contentTitleLabel.text = "Golden Enterprise Solutions"
-        contentTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-        contentTitleLabel.textColor = .goldenDark
-        contentTitleLabel.textAlignment = .center
-        contentTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(contentTitleLabel)
-        
-        // Description text
-        let descriptionTextView = UITextView()
-        descriptionTextView.text = """
-        The Pendulum Simulation
-        
-        This app demonstrates the physics of a pendulum, one of the most fundamental systems in classical mechanics.
-        
-        A pendulum consists of a mass (the bob) attached to a fixed point by a string or rod. When displaced from equilibrium, gravity causes the pendulum to swing back and forth.
-        
-        The motion of a pendulum is governed by the following differential equation:
-        
-        θ'' + (g/L)sin(θ) + b·θ' = 0
-        
-        Where:
-        • θ is the angle from vertical
-        • g is the acceleration due to gravity
-        • L is the length of the pendulum
-        • b is the damping coefficient
-        
-        Features:
-        • Adjust parameters like mass, length, damping, and gravity
-        • Apply forces to see how the pendulum responds
-        • Observe the pendulum's motion trail
-        
-        The simulation uses a numerical method called Runge-Kutta (RK4) to solve the equations of motion with high accuracy.
-        
-        Experiment with different parameters to see how they affect the pendulum's behavior!
-        """
-        descriptionTextView.font = UIFont.systemFont(ofSize: 16)
-        descriptionTextView.textColor = .goldenText
-        descriptionTextView.backgroundColor = .clear
-        descriptionTextView.isEditable = false
-        descriptionTextView.isScrollEnabled = false
-        descriptionTextView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(descriptionTextView)
-        
-        // Layout constraints
+        // Layout scroll view and content view
         NSLayoutConstraint.activate([
-            // Scroll view
-            scrollView.topAnchor.constraint(equalTo: infoView.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: infoView.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: infoView.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: infoView.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: settingsView.bottomAnchor),
             
-            // Content view
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            
-            // Title
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            
-            // Description
-            descriptionTextView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            descriptionTextView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            descriptionTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            descriptionTextView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
+        
+        // Create stack view for settings sections
+        let settingsStack = UIStackView()
+        settingsStack.axis = .vertical
+        settingsStack.spacing = 30
+        settingsStack.distribution = .fill
+        settingsStack.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(settingsStack)
+        
+        NSLayoutConstraint.activate([
+            settingsStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            settingsStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            settingsStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            settingsStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+        ])
+        
+        // Define sections and their options
+        let settingsSections = [
+            (title: "Graphics", options: [
+                "Standard", "High Definition", "Low Power", "Simplified", "Detailed", "Experimental"
+            ]),
+            (title: "Metrics", options: [
+                "Basic", "Advanced", "Scientific", "Educational", "Detailed", "Performance"
+            ]),
+            (title: "Sounds", options: [
+                "Standard", "Enhanced", "Minimal", "Realistic", "None", "Educational"
+            ]),
+            (title: "Backgrounds", options: [
+                "Default", "Grid", "Dark", "Light", "Gradient", "None"
+            ])
+        ]
+        
+        // Add each section to the settings stack
+        for section in settingsSections {
+            // Create and add the section
+            let sectionView = createSettingsSection(title: section.title, options: section.options)
+            settingsStack.addArrangedSubview(sectionView)
+        }
+        
+        // Add about section at the bottom
+        let aboutButton = UIButton(type: .system)
+        aboutButton.setTitle("About The Pendulum", for: .normal)
+        aboutButton.setTitleColor(.goldenDark, for: .normal)
+        aboutButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        aboutButton.contentHorizontalAlignment = .left
+        aboutButton.addTarget(self, action: #selector(showAboutInfo), for: .touchUpInside)
+        
+        let versionLabel = UILabel()
+        versionLabel.text = "Version 1.0.0"
+        versionLabel.font = UIFont.systemFont(ofSize: 14)
+        versionLabel.textColor = .goldenTextLight
+        versionLabel.textAlignment = .left
+        
+        let aboutStack = UIStackView(arrangedSubviews: [aboutButton, versionLabel])
+        aboutStack.axis = .vertical
+        aboutStack.spacing = 5
+        aboutStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        let separator = UIView()
+        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        
+        let aboutSectionStack = UIStackView(arrangedSubviews: [separator, aboutStack])
+        aboutSectionStack.axis = .vertical
+        aboutSectionStack.spacing = 15
+        aboutSectionStack.translatesAutoresizingMaskIntoConstraints = false
+        aboutSectionStack.layoutMargins = UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0)
+        aboutSectionStack.isLayoutMarginsRelativeArrangement = true
+        
+        settingsStack.addArrangedSubview(aboutSectionStack)
+        
+        // Force a minimum content height
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 800).isActive = true
+    }
+    
+    private func createSettingsSection(title: String, options: [String]) -> UIView {
+        // Create section container
+        let sectionView = UIView()
+        sectionView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Section title
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textColor = .goldenDark
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        sectionView.addSubview(titleLabel)
+        
+        // Options container (shows current selection with dropdown indicator)
+        let optionsContainer = UIView()
+        optionsContainer.backgroundColor = .white
+        optionsContainer.layer.cornerRadius = 12
+        optionsContainer.layer.borderWidth = 1
+        optionsContainer.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        optionsContainer.translatesAutoresizingMaskIntoConstraints = false
+        sectionView.addSubview(optionsContainer)
+        
+        // Current selection label
+        let selectionLabel = UILabel()
+        selectionLabel.text = options[0] // Default to first option
+        selectionLabel.font = UIFont.systemFont(ofSize: 16)
+        selectionLabel.textColor = .black
+        selectionLabel.translatesAutoresizingMaskIntoConstraints = false
+        optionsContainer.addSubview(selectionLabel)
+        
+        // Dropdown icon
+        let dropdownImageView = UIImageView(image: UIImage(systemName: "chevron.down"))
+        dropdownImageView.tintColor = .goldenAccent
+        dropdownImageView.translatesAutoresizingMaskIntoConstraints = false
+        optionsContainer.addSubview(dropdownImageView)
+        
+        // Create options grid
+        let optionsStack = UIStackView()
+        optionsStack.axis = .vertical
+        optionsStack.spacing = 10
+        optionsStack.translatesAutoresizingMaskIntoConstraints = false
+        sectionView.addSubview(optionsStack)
+        
+        // First row of options (3 options)
+        let firstRowStack = UIStackView()
+        firstRowStack.axis = .horizontal
+        firstRowStack.spacing = 10
+        firstRowStack.distribution = .fillEqually
+        
+        // Second row of options (3 options)
+        let secondRowStack = UIStackView()
+        secondRowStack.axis = .horizontal
+        secondRowStack.spacing = 10
+        secondRowStack.distribution = .fillEqually
+        
+        // Add option buttons to rows
+        for i in 0..<options.count {
+            let optionButton = createOptionButton(title: options[i], section: title, isSelected: i == 0)
+            
+            if i < 3 {
+                firstRowStack.addArrangedSubview(optionButton)
+            } else {
+                secondRowStack.addArrangedSubview(optionButton)
+            }
+        }
+        
+        optionsStack.addArrangedSubview(firstRowStack)
+        optionsStack.addArrangedSubview(secondRowStack)
+        
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            // Title
+            titleLabel.topAnchor.constraint(equalTo: sectionView.topAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: sectionView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: sectionView.trailingAnchor),
+            
+            // Options container
+            optionsContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            optionsContainer.leadingAnchor.constraint(equalTo: sectionView.leadingAnchor),
+            optionsContainer.trailingAnchor.constraint(equalTo: sectionView.trailingAnchor),
+            optionsContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            // Selection label
+            selectionLabel.leadingAnchor.constraint(equalTo: optionsContainer.leadingAnchor, constant: 15),
+            selectionLabel.centerYAnchor.constraint(equalTo: optionsContainer.centerYAnchor),
+            selectionLabel.trailingAnchor.constraint(lessThanOrEqualTo: dropdownImageView.leadingAnchor, constant: -10),
+            
+            // Dropdown icon
+            dropdownImageView.trailingAnchor.constraint(equalTo: optionsContainer.trailingAnchor, constant: -15),
+            dropdownImageView.centerYAnchor.constraint(equalTo: optionsContainer.centerYAnchor),
+            dropdownImageView.widthAnchor.constraint(equalToConstant: 15),
+            dropdownImageView.heightAnchor.constraint(equalToConstant: 15),
+            
+            // Options grid
+            optionsStack.topAnchor.constraint(equalTo: optionsContainer.bottomAnchor, constant: 15),
+            optionsStack.leadingAnchor.constraint(equalTo: sectionView.leadingAnchor),
+            optionsStack.trailingAnchor.constraint(equalTo: sectionView.trailingAnchor),
+            optionsStack.bottomAnchor.constraint(equalTo: sectionView.bottomAnchor)
+        ])
+        
+        // Make options container tappable to show/hide options
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(toggleOptionsVisibility(_:)))
+        optionsContainer.addGestureRecognizer(tapGesture)
+        optionsContainer.isUserInteractionEnabled = true
+        optionsContainer.tag = sectionView.hashValue
+        
+        // Store section title in the accessibilityIdentifier for reference
+        optionsContainer.accessibilityIdentifier = title
+        
+        // Hide options initially
+        optionsStack.isHidden = true
+        
+        return sectionView
+    }
+    
+    private func createOptionButton(title: String, section: String, isSelected: Bool) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.setTitleColor(isSelected ? .white : .goldenDark, for: .normal)
+        button.backgroundColor = isSelected ? .goldenAccent : .white
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        button.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        
+        // Store section in accessibilityIdentifier for reference
+        button.accessibilityIdentifier = section
+        
+        // Add action
+        button.addTarget(self, action: #selector(optionSelected(_:)), for: .touchUpInside)
+        
+        return button
+    }
+    
+    @objc private func toggleOptionsVisibility(_ sender: UITapGestureRecognizer) {
+        if let container = sender.view {
+            // Get the section view
+            if let sectionView = container.superview {
+                // Find the options stack
+                let optionsStack = sectionView.subviews.first { $0 is UIStackView } as? UIStackView
+                
+                // Toggle visibility with animation
+                UIView.animate(withDuration: 0.3) {
+                    optionsStack?.isHidden.toggle()
+                    
+                    // Rotate the dropdown icon
+                    if let dropdownIcon = container.subviews.first(where: { $0 is UIImageView }) as? UIImageView {
+                        dropdownIcon.transform = optionsStack?.isHidden ?? true ? .identity : CGAffineTransform(rotationAngle: .pi)
+                    }
+                }
+            }
+        }
+    }
+    
+    @objc private func optionSelected(_ sender: UIButton) {
+        // Get the section from the button's accessibilityIdentifier
+        if let section = sender.accessibilityIdentifier {
+            // Get the selected title
+            if let title = sender.title(for: .normal) {
+                // Update the selection in the UserDefaults
+                UserDefaults.standard.set(title, forKey: "setting_\(section)")
+                
+                // Update UI
+                updateSettingSelection(section: section, selection: title)
+                
+                // Show visual feedback
+                UIView.animate(withDuration: 0.1, animations: {
+                    sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+                }) { _ in
+                    UIView.animate(withDuration: 0.1) {
+                        sender.transform = .identity
+                    }
+                }
+                
+                // Apply the updated setting using SettingsManager
+                applyUpdatedSettings(section: section, selection: title)
+                
+                // Show confirmation using the status label (not the game message)
+                // This uses the dedicated status label created for settings feedback
+                updateStatusLabel("\(section) set to \(title)")
+            }
+        }
+    }
+    
+    private func applyUpdatedSettings(section: String, selection: String) {
+        // Get our relevant objects
+        let settingsManager = SettingsManager.shared
+        let perturbationEffects = PerturbationEffects.shared
+        
+        // Apply the appropriate setting based on the section
+        switch section {
+        case "Graphics":
+            settingsManager.graphics = selection
+            settingsManager.applyGraphicsSettings(to: perturbationEffects)
+            
+        case "Metrics":
+            settingsManager.metrics = selection
+            settingsManager.applyMetricsSettings(to: viewModel)
+            
+        case "Sounds":
+            settingsManager.sounds = selection
+            if let scene = self.scene {
+                settingsManager.applySoundSettings(to: scene)
+            }
+            
+        case "Backgrounds":
+            settingsManager.backgrounds = selection
+            if let scene = self.scene {
+                settingsManager.applyBackgroundSettings(to: scene)
+            }
+            
+        default:
+            break
+        }
+    }
+    
+    private func updateSettingSelection(section: String, selection: String) {
+        // Find the section view
+        for subview in settingsView.subviews {
+            if let scrollView = subview as? UIScrollView {
+                for contentView in scrollView.subviews {
+                    if let stackView = contentView.subviews.first(where: { $0 is UIStackView }) as? UIStackView {
+                        for sectionView in stackView.arrangedSubviews {
+                            // Check if this is the right section
+                            if let optionsContainer = sectionView.subviews.first(where: { 
+                                $0.accessibilityIdentifier == section 
+                            }) {
+                                // Update the selection label
+                                if let selectionLabel = optionsContainer.subviews.first(where: { $0 is UILabel }) as? UILabel {
+                                    selectionLabel.text = selection
+                                }
+                                
+                                // Update button states
+                                if let optionsStack = sectionView.subviews.first(where: { $0 is UIStackView }) as? UIStackView {
+                                    updateOptionButtonStates(optionsStack, selectedOption: selection)
+                                }
+                                
+                                // Hide options
+                                toggleOptionsVisibility(UITapGestureRecognizer(target: optionsContainer, action: nil))
+                                
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func updateOptionButtonStates(_ optionsStack: UIStackView, selectedOption: String) {
+        // Go through all rows in the options stack
+        for i in 0..<optionsStack.arrangedSubviews.count {
+            let rowStack = optionsStack.arrangedSubviews[i] as? UIStackView
+            
+            // Go through all buttons in the row
+            for j in 0..<(rowStack?.arrangedSubviews.count ?? 0) {
+                if let button = rowStack?.arrangedSubviews[j] as? UIButton,
+                   let title = button.title(for: .normal) {
+                    // Update button state based on selection
+                    let isSelected = title == selectedOption
+                    button.backgroundColor = isSelected ? .goldenAccent : .white
+                    button.setTitleColor(isSelected ? .white : .goldenDark, for: .normal)
+                }
+            }
+        }
+    }
+    
+    @objc private func showAboutInfo() {
+        // Create and show an alert with app information
+        let alert = UIAlertController(
+            title: "About The Pendulum",
+            message: """
+            The Pendulum Simulation
+            Golden Enterprise Solutions
+            
+            A physics-based pendulum simulation with dynamic perturbations and comprehensive visualizations.
+            
+            Version: 1.0.0
+            """,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     private func createParameterControl(title: String, slider: UISlider) -> UIView {
@@ -1435,7 +1814,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         modesView.isHidden = true
         integrationView.isHidden = true
         parametersView.isHidden = true
-        infoView.isHidden = true
+        settingsView.isHidden = true
         
         // Show selected view
         view.isHidden = false
@@ -1729,7 +2108,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         viewModel.isGameActive = false
         
         // Show message that game is paused
-        updateStatusLabel("Game paused")
+        updateGameMessageLabel("Game paused")
         
         // Change button text to reflect state
         startButton.setTitle("▶ Resume", for: .normal)
@@ -1878,46 +2257,46 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     @objc private func massSliderChanged() {
         viewModel.mass = Double(massSlider.value)
-        updateStatusLabel("Mass updated to \(String(format: "%.2f", massSlider.value)) kg")
+        updateGameMessageLabel("Mass updated to \(String(format: "%.2f", massSlider.value)) kg")
     }
     
     @objc private func lengthSliderChanged() {
         viewModel.length = Double(lengthSlider.value)
-        updateStatusLabel("Length updated to \(String(format: "%.2f", lengthSlider.value)) m")
+        updateGameMessageLabel("Length updated to \(String(format: "%.2f", lengthSlider.value)) m")
     }
     
     @objc private func dampingSliderChanged() {
         viewModel.damping = Double(dampingSlider.value)
-        updateStatusLabel("Damping updated to \(String(format: "%.3f", dampingSlider.value)) Ns/m")
+        updateGameMessageLabel("Damping updated to \(String(format: "%.3f", dampingSlider.value)) Ns/m")
     }
     
     @objc private func gravitySliderChanged() {
         viewModel.gravity = Double(gravitySlider.value)
-        updateStatusLabel("Gravity updated to \(String(format: "%.2f", gravitySlider.value)) m/s²")
+        updateGameMessageLabel("Gravity updated to \(String(format: "%.2f", gravitySlider.value)) m/s²")
     }
     
     @objc private func forceStrengthSliderChanged() {
         viewModel.forceStrength = Double(forceStrengthSlider.value)
-        updateStatusLabel("Force strength updated to \(String(format: "%.2f", forceStrengthSlider.value))x")
+        updateGameMessageLabel("Force strength updated to \(String(format: "%.2f", forceStrengthSlider.value))x")
     }
     
     @objc private func springConstantSliderChanged() {
         viewModel.springConstant = Double(springConstantSlider.value)
-        updateStatusLabel("Spring constant updated to \(String(format: "%.2f", springConstantSlider.value)) N/m")
+        updateGameMessageLabel("Spring constant updated to \(String(format: "%.2f", springConstantSlider.value)) N/m")
     }
     
     @objc private func momentOfInertiaSliderChanged() {
         viewModel.momentOfInertia = Double(momentOfInertiaSlider.value)
-        updateStatusLabel("Moment of inertia updated to \(String(format: "%.2f", momentOfInertiaSlider.value)) kg·m²")
+        updateGameMessageLabel("Moment of inertia updated to \(String(format: "%.2f", momentOfInertiaSlider.value)) kg·m²")
     }
     
     @objc private func initialPerturbationSliderChanged() {
         viewModel.setInitialPerturbation(Double(initialPerturbationSlider.value))
-        updateStatusLabel("Initial perturbation set to \(String(format: "%.1f", initialPerturbationSlider.value))°")
+        updateGameMessageLabel("Initial perturbation set to \(String(format: "%.1f", initialPerturbationSlider.value))°")
     }
     
-    // Show a temporary status message with visual feedback
-    private func updateStatusLabel(_ message: String) {
+    // Show a temporary game message with visual feedback
+    private func updateGameMessageLabel(_ message: String) {
         // Show a game message temporarily with visual styling
         gameMessageLabel.text = message
         gameMessageLabel.isHidden = false
@@ -1978,8 +2357,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             showView(integrationView)
         case 4: // Parameters
             showView(parametersView)
-        case 5: // Info
-            showView(infoView)
+        case 5: // Settings
+            showView(settingsView)
         default:
             break
         }
@@ -2046,7 +2425,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Show confirmation
         let modeName = profile.name
-        updateStatusLabel("Activated \(modeName) mode")
+        updateGameMessageLabel("Activated \(modeName) mode")
     }
     
     private func activateSpecialPerturbation(_ type: String) {
@@ -2130,7 +2509,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         perturbationManager?.activateProfile(profile)
         
         // Show confirmation
-        updateStatusLabel("Activated \(profile.name) perturbation")
+        updateGameMessageLabel("Activated \(profile.name) perturbation")
     }
     
     private func deactivatePerturbation() {
@@ -2149,6 +2528,6 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         perturbationManager?.activateProfile(emptyProfile)
         
         // Show confirmation
-        updateStatusLabel("Perturbations disabled")
+        updateGameMessageLabel("Perturbations disabled")
     }
 }

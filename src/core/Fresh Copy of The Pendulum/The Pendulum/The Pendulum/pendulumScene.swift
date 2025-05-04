@@ -29,6 +29,9 @@ class PendulumScene: SKScene {
     
     var viewModel: PendulumViewModel?
     
+    // Perturbation manager
+    var perturbationManager: PerturbationManager?
+    
     // Background types
     enum BackgroundType {
         case plain
@@ -423,10 +426,7 @@ class PendulumScene: SKScene {
         }
     }
     
-    // MARK: - Perturbation Manager
-    
-    // Property to hold the perturbation manager
-    var perturbationManager: PerturbationManager?
+    // MARK: - Visualization Updates
     
     // Enhanced trail visualization based on UI designs
     private func updateTrailVisualization(with viewModel: PendulumViewModel) {
