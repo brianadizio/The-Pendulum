@@ -108,6 +108,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Initialize settings
         initializeSettings()
         
+        // Initialize analytics if a session is already active
+        if let sessionId = viewModel.currentSessionId {
+            AnalyticsManager.shared.startTracking(for: sessionId)
+        }
+        
         // Start with simulation view
         showView(simulationView)
     }
@@ -652,11 +657,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Unified perturbation button data
         let perturbationData: [(String, String, String, String)] = [
+            ("No Perturbation", "none", "Standard pendulum with gravity only", "xmark.circle"),
             ("Random Impulses", "impulse", "Random forces applied at unpredictable intervals", "wind"),
             ("Sine Wave", "sine", "Smooth oscillating forces with adjustable frequency", "waveform"),
             ("Data-Driven", "data", "Forces from external datasets or recordings", "doc.text"),
-            ("Compound", "compound", "Complex combination of multiple perturbation types", "function"),
-            ("No Perturbation", "none", "Standard pendulum with gravity only", "xmark.circle")
+            ("Compound", "compound", "Complex combination of multiple perturbation types", "function")
         ]
         
         // Create and add unified perturbation buttons
@@ -1175,16 +1180,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             deactivatePerturbation()
             
         // Original unified perturbation buttons (300-304)
-        case 300: // Random Impulses (new)
-            activateSpecialPerturbation("impulse")
-        case 301: // Sine Wave (new)
-            activateSpecialPerturbation("sine")
-        case 302: // Data-Driven (new)
-            activateSpecialPerturbation("data")
-        case 303: // Compound (new)
-            activateSpecialPerturbation("compound")
-        case 304: // No Perturbation (new)
+        case 300: // No Perturbation (now first)
             deactivatePerturbation()
+        case 301: // Random Impulses
+            activateSpecialPerturbation("impulse")
+        case 302: // Sine Wave
+            activateSpecialPerturbation("sine")
+        case 303: // Data-Driven
+            activateSpecialPerturbation("data")
+        case 304: // Compound
+            activateSpecialPerturbation("compound")
             
         default:
             // By default, deactivate perturbations
@@ -2741,7 +2746,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             profile = PerturbationProfile(
                 name: "Random Impulses",
                 types: [.impulse],
-                strength: 1.0,
+                strength: 1.5, // Increased from 1.0 to 1.5 for more pronounced effect
                 frequency: 0.0,
                 randomInterval: 2.0...4.0,
                 dataSource: nil,
@@ -2751,7 +2756,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             profile = PerturbationProfile(
                 name: "Sine Wave",
                 types: [.sine],
-                strength: 0.8,
+                strength: 0.6, // Reduced from 0.8 to 0.6 (25% reduction)
                 frequency: 0.5,
                 randomInterval: 0...0,
                 dataSource: nil,
@@ -2771,7 +2776,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             profile = PerturbationProfile(
                 name: "Compound",
                 types: [.compound],
-                strength: 1.0,
+                strength: 0.75, // Reduced from 1.0 to 0.75 (25% reduction)
                 frequency: 0.4,
                 randomInterval: 2.0...4.0,
                 dataSource: "PerturbationData.csv",
@@ -2780,7 +2785,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                     PerturbationProfile(
                         name: "Base Sine",
                         types: [.sine],
-                        strength: 0.7,
+                        strength: 0.525, // Reduced from 0.7 to 0.525 (25% reduction)
                         frequency: 0.3,
                         randomInterval: 0...0,
                         dataSource: nil,
@@ -2789,7 +2794,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                     PerturbationProfile(
                         name: "Random Impulses",
                         types: [.impulse],
-                        strength: 1.0,
+                        strength: 0.75, // Reduced from 1.0 to 0.75 (25% reduction)
                         frequency: 0.0,
                         randomInterval: 3.0...5.0,
                         dataSource: nil,

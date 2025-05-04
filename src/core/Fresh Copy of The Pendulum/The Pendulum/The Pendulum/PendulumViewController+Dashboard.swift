@@ -10,7 +10,7 @@ extension PendulumViewController {
     
     @objc func setupDashboardView() {
         // Set background color to match Golden Enterprises theme
-        dashboardView.backgroundColor = .goldenBackground
+        dashboardView.backgroundColor = (UIColor.goldenBackground as UIColor)
         
         // Create dashboard view controller
         dashboardViewController = DashboardViewController(viewModel: viewModel)

@@ -72,6 +72,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9E05BC58D0D93582DE905107 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		D67B2C842DBF2EDE00FC0011 = {
 			isa = PBXGroup;
 			children = (
@@ -79,6 +86,7 @@
 				D67B2C9D2DBF2EDF00FC0011 /* The PendulumTests */,
 				D67B2CA72DBF2EDF00FC0011 /* The PendulumUITests */,
 				D67B2C8E2DBF2EDE00FC0011 /* Products */,
+				9E05BC58D0D93582DE905107 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -111,8 +119,6 @@
 				D67B2C8F2DBF2EDE00FC0011 /* The Pendulum */,
 			);
 			name = "The Pendulum";
-			packageProductDependencies = (
-			);
 			productName = "The Pendulum";
 			productReference = D67B2C8D2DBF2EDE00FC0011 /* The Pendulum.app */;
 			productType = "com.apple.product-type.application";
@@ -134,8 +140,6 @@
 				D67B2C9D2DBF2EDF00FC0011 /* The PendulumTests */,
 			);
 			name = "The PendulumTests";
-			packageProductDependencies = (
-			);
 			productName = "The PendulumTests";
 			productReference = D67B2C9A2DBF2EDF00FC0011 /* The PendulumTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -157,8 +161,6 @@
 				D67B2CA72DBF2EDF00FC0011 /* The PendulumUITests */,
 			);
 			name = "The PendulumUITests";
-			packageProductDependencies = (
-			);
 			productName = "The PendulumUITests";
 			productReference = D67B2CA42DBF2EDF00FC0011 /* The PendulumUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";

@@ -3,20 +3,37 @@ import UIKit
 class PhaseSpaceView: UIView {
     private var points: [CGPoint] = []
     private let maxPoints = 500
-    private let pointColor = UIColor.goldenAccent.withAlphaComponent(0.7) // Golden theme color
-    private let axisColor = UIColor.goldenTextLight.withAlphaComponent(0.8) // Golden text light color
-    private let originColor = UIColor.goldenPrimary // Golden primary color
+    
+    // Define colors explicitly to avoid UIColor extension ambiguity
+    private let goldAccent = UIColor(red: 0.8, green: 0.5, blue: 0.1, alpha: 1.0)
+    private let goldTextLight = UIColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 1.0)
+    private let goldPrimary = UIColor(red: 0.85, green: 0.7, blue: 0.2, alpha: 1.0)
+    
+    // Use locally defined colors
+    private let pointColor: UIColor
+    private let axisColor: UIColor
+    private let originColor: UIColor
     
     // Scaling factors
     private let thetaScale: CGFloat = 100.0 // pixels per radian
     private let omegaScale: CGFloat = 50.0  // pixels per radian/sec
     
     override init(frame: CGRect) {
+        // Initialize colors before super.init
+        pointColor = goldAccent.withAlphaComponent(0.7)
+        axisColor = goldTextLight.withAlphaComponent(0.8)
+        originColor = goldPrimary
+        
         super.init(frame: frame)
         commonInit()
     }
     
     required init?(coder: NSCoder) {
+        // Initialize colors before super.init
+        pointColor = goldAccent.withAlphaComponent(0.7)
+        axisColor = goldTextLight.withAlphaComponent(0.8)
+        originColor = goldPrimary
+        
         super.init(coder: coder)
         commonInit()
     }
@@ -25,7 +42,7 @@ class PhaseSpaceView: UIView {
         backgroundColor = UIColor(white: 0.98, alpha: 1.0) // Lighter background for aesthetics
         layer.cornerRadius = 12
         layer.borderWidth = 1
-        layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        layer.borderColor = goldPrimary.withAlphaComponent(0.3).cgColor
         
         // Subtle shadow for depth
         layer.shadowColor = UIColor.black.cgColor

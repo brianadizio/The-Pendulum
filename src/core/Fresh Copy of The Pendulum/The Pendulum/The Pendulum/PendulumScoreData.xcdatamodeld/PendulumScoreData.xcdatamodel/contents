@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22G90" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24D60" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Achievement" representedClassName="Achievement" syncable="YES" codeGenerationType="class">
         <attribute name="achievedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="achievementDescription" optional="YES" attributeType="String"/>
@@ -8,12 +8,47 @@
         <attribute name="points" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="unlocked" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
     </entity>
+    <entity name="AggregatedAnalytics" representedClassName="AggregatedAnalytics" syncable="YES" codeGenerationType="class">
+        <attribute name="averageEfficiencyRating" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="averageStabilityScore" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="learningCurveSlope" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="period" optional="YES" attributeType="String"/>
+        <attribute name="playerStyleTrend" optional="YES" attributeType="String"/>
+        <attribute name="sessionCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalPlayTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="metrics" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="aggregatedAnalytics" inverseEntity="PerformanceMetrics"/>
+    </entity>
     <entity name="HighScore" representedClassName="HighScore" syncable="YES" codeGenerationType="class">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="level" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="playerName" optional="YES" attributeType="String"/>
         <attribute name="score" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="timeBalanced" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="InteractionEvent" representedClassName="InteractionEvent" syncable="YES" codeGenerationType="class">
+        <attribute name="angle" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="angleVelocity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="direction" optional="YES" attributeType="String"/>
+        <attribute name="eventType" optional="YES" attributeType="String"/>
+        <attribute name="magnitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="reactionTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession" inverseName="interactions" inverseEntity="PlaySession"/>
+    </entity>
+    <entity name="PerformanceMetrics" representedClassName="PerformanceMetrics" syncable="YES" codeGenerationType="class">
+        <attribute name="averageCorrectionTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="directionalBias" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="efficiencyRating" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="overcorrectionRate" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="playerStyle" optional="YES" attributeType="String"/>
+        <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="stabilityScore" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="aggregatedAnalytics" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AggregatedAnalytics" inverseName="metrics" inverseEntity="AggregatedAnalytics"/>
+        <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession" inverseName="metrics" inverseEntity="PlaySession"/>
     </entity>
     <entity name="PlaySession" representedClassName="PlaySession" syncable="YES" codeGenerationType="class">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -23,5 +58,7 @@
         <attribute name="score" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="achievements" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Achievement"/>
+        <relationship name="interactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="InteractionEvent" inverseName="playSession" inverseEntity="InteractionEvent"/>
+        <relationship name="metrics" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="playSession" inverseEntity="PerformanceMetrics"/>
     </entity>
 </model>
