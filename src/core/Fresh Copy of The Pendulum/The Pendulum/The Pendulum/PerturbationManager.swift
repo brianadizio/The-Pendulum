@@ -1,0 +1,695 @@
+import Foundation
+import SpriteKit
+
+// MARK: - Perturbation Types
+
+enum PerturbationType {
+    case impulse           // Instant force applied at random intervals
+    case sine              // Continuous sinusoidal perturbation
+    case dataSet           // Perturbation from loaded data files
+    case random            // Random variation (noise-like)
+    case compound          // Combination of multiple perturbation types
+}
+
+// MARK: - Perturbation Profile
+
+struct PerturbationProfile {
+    let name: String
+    let types: [PerturbationType]
+    let strength: Double       // Base strength multiplier
+    let frequency: Double      // For periodic perturbations (Hz)
+    let randomInterval: ClosedRange<Double>  // Time range between random perturbations (seconds)
+    let dataSource: String?    // Filename for data-driven perturbations
+    let showWarnings: Bool     // Whether to show warnings for upcoming perturbations
+    
+    // Additional parameters for compound perturbations
+    var subProfiles: [PerturbationProfile]?
+    
+    // Factory method for level-specific profiles
+    static func forLevel(_ level: Int) -> PerturbationProfile {
+        switch level {
+        case 1:
+            // Beginner level - gentle, predictable impulses
+            return PerturbationProfile(
+                name: "Gentle Breeze",
+                types: [.impulse],
+                strength: 0.3,
+                frequency: 0.0,
+                randomInterval: 4.0...6.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 2:
+            // Level 2 - slightly stronger impulses
+            return PerturbationProfile(
+                name: "Moderate Wind",
+                types: [.impulse],
+                strength: 0.5,
+                frequency: 0.0,
+                randomInterval: 3.0...5.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 3:
+            // Level 3 - gentle sine wave added
+            return PerturbationProfile(
+                name: "Rhythmic Current",
+                types: [.impulse, .sine],
+                strength: 0.6,
+                frequency: 0.2,
+                randomInterval: 3.0...5.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 4:
+            // Level 4 - more pronounced sine wave
+            return PerturbationProfile(
+                name: "Ocean Waves",
+                types: [.sine],
+                strength: 0.7,
+                frequency: 0.3,
+                randomInterval: 3.0...4.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 5:
+            // Level 5 - sine wave with occasional impulses
+            return PerturbationProfile(
+                name: "Stormy Waters",
+                types: [.sine, .impulse],
+                strength: 0.8,
+                frequency: 0.4,
+                randomInterval: 2.5...4.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 6:
+            // Level 6 - introduce data-driven perturbations
+            return PerturbationProfile(
+                name: "Seismic Tremors",
+                types: [.dataSet, .impulse],
+                strength: 0.9,
+                frequency: 0.0,
+                randomInterval: 2.0...3.5,
+                dataSource: "PerturbationData.csv",
+                showWarnings: false
+            )
+            
+        case 7:
+            // Level 7 - random perturbations
+            return PerturbationProfile(
+                name: "Chaotic Turbulence",
+                types: [.random],
+                strength: 1.0,
+                frequency: 0.0,
+                randomInterval: 1.5...3.0,
+                dataSource: nil,
+                showWarnings: false
+            )
+            
+        case 8...10:
+            // Higher levels - compound perturbations
+            return PerturbationProfile(
+                name: "Perfect Storm",
+                types: [.compound],
+                strength: 1.0 + Double(level - 8) * 0.2,
+                frequency: 0.5,
+                randomInterval: 1.0...2.0,
+                dataSource: "PerturbationData.csv",
+                showWarnings: false,
+                subProfiles: [
+                    PerturbationProfile(
+                        name: "Base Sine",
+                        types: [.sine],
+                        strength: 0.8,
+                        frequency: 0.3,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Random Gusts",
+                        types: [.impulse],
+                        strength: 1.2,
+                        frequency: 0.0,
+                        randomInterval: 1.5...3.0,
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Background Noise",
+                        types: [.random],
+                        strength: 0.4,
+                        frequency: 0.0,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    )
+                ]
+            )
+            
+        default:
+            // For levels beyond 10, procedurally generate
+            let baseStrength = min(1.0 + Double(level - 10) * 0.1, 2.0)
+            let baseFrequency = min(0.5 + Double(level - 10) * 0.05, 1.0)
+            
+            return PerturbationProfile(
+                name: "Extreme Challenge \(level)",
+                types: [.compound],
+                strength: baseStrength,
+                frequency: baseFrequency,
+                randomInterval: max(0.5, 3.0 - Double(level - 10) * 0.1)...max(1.0, 3.5 - Double(level - 10) * 0.1),
+                dataSource: "PerturbationData.csv",
+                showWarnings: false,
+                subProfiles: [
+                    PerturbationProfile(
+                        name: "Primary Wave",
+                        types: [.sine],
+                        strength: baseStrength * 0.8,
+                        frequency: baseFrequency,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Secondary Wave",
+                        types: [.sine],
+                        strength: baseStrength * 0.4,
+                        frequency: baseFrequency * 2.0,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Impulse Bursts",
+                        types: [.impulse],
+                        strength: baseStrength * 1.2,
+                        frequency: 0.0,
+                        randomInterval: max(0.5, 2.0 - Double(level - 10) * 0.1)...max(1.0, 3.0 - Double(level - 10) * 0.1),
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Noise Layer",
+                        types: [.random],
+                        strength: baseStrength * 0.3,
+                        frequency: 0.0,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    )
+                ]
+            )
+        }
+    }
+    
+    // Factory method for perturbation modes
+    static func forMode(_ mode: Int) -> PerturbationProfile {
+        switch mode {
+        case 1:
+            // Mode 1 - Joshua Tree (gravitational perturbations)
+            return PerturbationProfile(
+                name: "Joshua Tree",
+                types: [.sine, .random],
+                strength: 0.8,
+                frequency: 0.3,
+                randomInterval: 2.0...4.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        case 2:
+            // Mode 2 - Zero-G Space (microgravity perturbations)
+            return PerturbationProfile(
+                name: "Zero-G Space",
+                types: [.impulse, .random],
+                strength: 0.4,
+                frequency: 0.0,
+                randomInterval: 3.0...7.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+            
+        default:
+            // Default experiment mode
+            return PerturbationProfile(
+                name: "Experiment",
+                types: [.dataSet],
+                strength: 1.0,
+                frequency: 0.0,
+                randomInterval: 0...0,
+                dataSource: "PerturbationData.csv",
+                showWarnings: true
+            )
+        }
+    }
+}
+
+// MARK: - Perturbation Manager
+
+class PerturbationManager {
+    // Current active profile
+    private(set) var activeProfile: PerturbationProfile?
+    
+    // Data source for data-driven perturbations
+    private var perturbationData: [Double] = []
+    private var dataIndex: Int = 0
+    
+    // Timing variables
+    private var lastUpdateTime: TimeInterval = 0
+    private var elapsedTime: TimeInterval = 0
+    private var timeUntilNextImpulse: TimeInterval = 0
+    
+    // View model reference
+    weak var viewModel: PendulumViewModel?
+    
+    // Scene reference for visual effects
+    weak var scene: PendulumScene?
+    
+    // Warning indicator node
+    private var warningIndicator: SKNode?
+    
+    // Initialize with optional profile
+    init(profile: PerturbationProfile? = nil) {
+        if let profile = profile {
+            activateProfile(profile)
+        }
+    }
+    
+    // Activate a perturbation profile
+    func activateProfile(_ profile: PerturbationProfile) {
+        activeProfile = profile
+        
+        // Reset timing
+        elapsedTime = 0
+        lastUpdateTime = 0
+        resetImpulseTiming()
+        
+        // Load data if needed
+        if let dataSource = profile.dataSource {
+            loadPerturbationData(from: dataSource)
+        }
+        
+        print("Activated perturbation profile: \(profile.name)")
+        print("Types: \(profile.types)")
+        print("Strength: \(profile.strength)")
+        
+        // Create warning indicator if needed
+        if profile.showWarnings {
+            setupWarningIndicator()
+        }
+    }
+    
+    // Reset impulse timing
+    private func resetImpulseTiming() {
+        if let profile = activeProfile {
+            // Set random time for next impulse within the specified interval
+            timeUntilNextImpulse = Double.random(in: profile.randomInterval)
+        }
+    }
+    
+    // Set up warning indicator
+    private func setupWarningIndicator() {
+        guard let scene = scene else { return }
+        
+        // Remove any existing warning indicator
+        warningIndicator?.removeFromParent()
+        
+        // Create new warning indicator (arrow pointing in perturbation direction)
+        let warningNode = SKNode()
+        
+        // Arrow shape
+        let arrowPath = CGMutablePath()
+        arrowPath.move(to: CGPoint(x: -15, y: 0))
+        arrowPath.addLine(to: CGPoint(x: 15, y: 0))
+        arrowPath.move(to: CGPoint(x: 15, y: 0))
+        arrowPath.addLine(to: CGPoint(x: 5, y: 10))
+        arrowPath.move(to: CGPoint(x: 15, y: 0))
+        arrowPath.addLine(to: CGPoint(x: 5, y: -10))
+        
+        let arrow = SKShapeNode(path: arrowPath)
+        arrow.strokeColor = .red
+        arrow.lineWidth = 3
+        arrow.alpha = 0
+        warningNode.addChild(arrow)
+        
+        // Add exclamation mark
+        let exclamation = SKLabelNode(text: "!")
+        exclamation.fontColor = .red
+        exclamation.fontSize = 24
+        exclamation.fontName = "Helvetica-Bold"
+        exclamation.alpha = 0
+        exclamation.position = CGPoint(x: 0, y: -40)
+        warningNode.addChild(exclamation)
+        
+        // Set initial position off-screen
+        warningNode.position = CGPoint(x: scene.size.width / 2, y: scene.size.height / 2)
+        warningNode.isHidden = true
+        warningNode.zPosition = 100
+        
+        scene.addChild(warningNode)
+        warningIndicator = warningNode
+    }
+    
+    // Show warning before perturbation
+    private func showWarning(direction: CGFloat) {
+        guard let warningIndicator = warningIndicator else { return }
+        
+        warningIndicator.isHidden = false
+        
+        // Set arrow direction based on perturbation direction
+        warningIndicator.zRotation = direction > 0 ? 0 : .pi
+        
+        // Animate warning indicator
+        let fadeIn = SKAction.fadeIn(withDuration: 0.2)
+        let wait = SKAction.wait(forDuration: 0.8)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.2)
+        let pulse = SKAction.sequence([
+            SKAction.scale(to: 1.2, duration: 0.2),
+            SKAction.scale(to: 1.0, duration: 0.2)
+        ])
+        
+        // Apply animations to children
+        for child in warningIndicator.children {
+            child.run(SKAction.sequence([fadeIn, SKAction.repeat(pulse, count: 2), wait, fadeOut]))
+        }
+        
+        // Hide after animation
+        warningIndicator.run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.4),
+            SKAction.run { [weak self] in
+                self?.warningIndicator?.isHidden = true
+            }
+        ]))
+    }
+    
+    // Load perturbation data from a file
+    private func loadPerturbationData(from filename: String) {
+        guard let fileURL = Bundle.main.url(forResource: filename, withExtension: nil) else {
+            print("Failed to find perturbation data file: \(filename)")
+            return
+        }
+        
+        do {
+            let contents = try String(contentsOf: fileURL)
+            let lines = contents.split(separator: "\n")
+            
+            perturbationData = lines.compactMap { line in
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                return Double(trimmed)
+            }
+            
+            print("Loaded \(perturbationData.count) data points from \(filename)")
+            dataIndex = 0
+        } catch {
+            print("Error loading perturbation data: \(error)")
+        }
+    }
+    
+    // Update the perturbation manager
+    func update(currentTime: TimeInterval) {
+        guard let profile = activeProfile, let viewModel = viewModel else { return }
+        
+        // Calculate delta time
+        let deltaTime: TimeInterval
+        if lastUpdateTime == 0 {
+            deltaTime = 0
+        } else {
+            deltaTime = currentTime - lastUpdateTime
+        }
+        lastUpdateTime = currentTime
+        
+        // Update elapsed time
+        elapsedTime += deltaTime
+        
+        // Process all perturbation types in the profile
+        var totalPerturbation: Double = 0
+        
+        for type in profile.types {
+            switch type {
+            case .impulse:
+                totalPerturbation += processImpulsePerturbation(deltaTime, profile: profile)
+                
+            case .sine:
+                totalPerturbation += processSinePerturbation(profile: profile)
+                
+            case .dataSet:
+                totalPerturbation += processDataSetPerturbation(profile: profile)
+                
+            case .random:
+                totalPerturbation += processRandomPerturbation(profile: profile)
+                
+            case .compound:
+                totalPerturbation += processCompoundPerturbation(deltaTime, profile: profile)
+            }
+        }
+        
+        // Apply the total perturbation if non-zero
+        if abs(totalPerturbation) > 0.001 {
+            // Apply force through the view model
+            viewModel.applyForce(totalPerturbation)
+            
+            // Generate visual effect if significant perturbation
+            if abs(totalPerturbation) > 0.1 {
+                generateVisualEffect(magnitude: totalPerturbation)
+            }
+        }
+    }
+    
+    // Process impulse perturbation (random interval strong forces)
+    private func processImpulsePerturbation(_ deltaTime: TimeInterval, profile: PerturbationProfile) -> Double {
+        // Countdown to next impulse
+        timeUntilNextImpulse -= deltaTime
+        
+        // Check if it's time for an impulse
+        if timeUntilNextImpulse <= 0 {
+            // Calculate impulse magnitude (with random direction)
+            let direction: Double = Bool.random() ? 1.0 : -1.0
+            let magnitude = direction * profile.strength * Double.random(in: 0.8...1.2)
+            
+            // Show warning if enabled (gives player time to react)
+            if profile.showWarnings {
+                showWarning(direction: CGFloat(direction))
+                
+                // Delay the actual impulse application
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.viewModel?.applyForce(magnitude)
+                    self?.generateVisualEffect(magnitude: magnitude)
+                }
+                
+                // Reset for next impulse
+                resetImpulseTiming()
+                
+                // Return 0 since the force will be applied later after warning
+                return 0
+            } else {
+                // Reset for next impulse
+                resetImpulseTiming()
+                
+                // Return the impulse magnitude to apply immediately
+                return magnitude
+            }
+        }
+        
+        // No impulse this update
+        return 0
+    }
+    
+    // Process sine wave perturbation (smooth oscillating forces)
+    private func processSinePerturbation(profile: PerturbationProfile) -> Double {
+        // Calculate sine wave based on elapsed time and frequency
+        let radians = 2.0 * Double.pi * profile.frequency * elapsedTime
+        let sinValue = sin(radians)
+        
+        // Apply profile strength as amplitude modifier
+        return sinValue * profile.strength * 0.3
+    }
+    
+    // Process data-driven perturbation (from file)
+    private func processDataSetPerturbation(profile: PerturbationProfile) -> Double {
+        guard !perturbationData.isEmpty else {
+            return 0
+        }
+        
+        // Get current data point
+        let value = perturbationData[dataIndex]
+        
+        // Move to next data point (loop if at end)
+        dataIndex = (dataIndex + 1) % perturbationData.count
+        
+        // Apply profile strength as scale factor
+        return value * profile.strength * 0.5
+    }
+    
+    // Process random perturbation (noise)
+    private func processRandomPerturbation(profile: PerturbationProfile) -> Double {
+        // Generate random noise
+        let noise = Double.random(in: -1.0...1.0)
+        
+        // Scale by profile strength but make it smaller than other perturbations
+        return noise * profile.strength * 0.1
+    }
+    
+    // Process compound perturbation (combination)
+    private func processCompoundPerturbation(_ deltaTime: TimeInterval, profile: PerturbationProfile) -> Double {
+        guard let subProfiles = profile.subProfiles else {
+            return 0
+        }
+        
+        // Process each sub-profile and sum the results
+        var totalEffect: Double = 0
+        
+        for subProfile in subProfiles {
+            for type in subProfile.types {
+                switch type {
+                case .impulse:
+                    totalEffect += processImpulsePerturbation(deltaTime, profile: subProfile)
+                case .sine:
+                    totalEffect += processSinePerturbation(profile: subProfile)
+                case .dataSet:
+                    totalEffect += processDataSetPerturbation(profile: subProfile)
+                case .random:
+                    totalEffect += processRandomPerturbation(profile: subProfile)
+                case .compound:
+                    // Avoid infinite recursion by not handling nested compounds
+                    break
+                }
+            }
+        }
+        
+        return totalEffect
+    }
+    
+    // Generate visual effects for perturbations
+    func generateVisualEffect(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Determine which particle effect to use based on magnitude and direction
+        let effectType: String = abs(magnitude) > 0.5 ? "impulse" : "wind"
+        let direction: CGFloat = magnitude < 0 ? -1.0 : 1.0
+        
+        // Create particle system based on type
+        let particles: SKEmitterNode
+        if effectType == "impulse" {
+            if let impulseParticles = SKEmitterNode(fileNamed: "ImpulseParticle") {
+                particles = impulseParticles
+            } else {
+                // Fallback if file doesn't exist
+                particles = createImpulseParticles()
+            }
+        } else {
+            if let windParticles = SKEmitterNode(fileNamed: "WindParticle") {
+                particles = windParticles
+            } else {
+                // Fallback if file doesn't exist
+                particles = createWindParticles()
+            }
+        }
+        
+        // Configure particle position - start from side based on direction
+        let xPosition = direction < 0 ? scene.size.width + 10 : -10
+        let yPosition = scene.size.height / 2
+        particles.position = CGPoint(x: xPosition, y: yPosition)
+        
+        // Configure particle direction
+        particles.emissionAngle = direction < 0 ? .pi : 0
+        
+        // Scale particles based on magnitude
+        let scale = min(1.0 + abs(magnitude), 2.0)
+        particles.particleScale = particles.particleScale * CGFloat(scale)
+        
+        // Set particle lifetime
+        particles.particleLifetime = effectType == "impulse" ? 0.5 : 1.0
+        
+        // Add to scene with auto-removal
+        scene.addChild(particles)
+        
+        // Remove particle system after effect completes
+        particles.run(SKAction.sequence([
+            SKAction.wait(forDuration: effectType == "impulse" ? 0.8 : 1.5),
+            SKAction.removeFromParent()
+        ]))
+        
+        // Add screen shake for strong impacts
+        if abs(magnitude) > 0.7 {
+            addScreenShake(magnitude: magnitude)
+        }
+    }
+    
+    // Add screen shake effect
+    private func addScreenShake(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Calculate shake amount based on magnitude
+        let shakeAmount = CGFloat(min(abs(magnitude) * 5, 10))
+        
+        // Create shake actions
+        let shake = SKAction.sequence([
+            SKAction.moveBy(x: -shakeAmount, y: -shakeAmount, duration: 0.05),
+            SKAction.moveBy(x: shakeAmount * 2, y: 0, duration: 0.05),
+            SKAction.moveBy(x: -shakeAmount * 2, y: shakeAmount * 2, duration: 0.05),
+            SKAction.moveBy(x: 0, y: -shakeAmount * 2, duration: 0.05),
+            SKAction.moveBy(x: shakeAmount, y: shakeAmount, duration: 0.05)
+        ])
+        
+        // Apply shake to scene's camera if available, otherwise to scene itself
+        if let camera = scene.camera {
+            camera.run(shake)
+        } else {
+            scene.run(shake)
+        }
+    }
+    
+    // Create impulse particles fallback
+    private func createImpulseParticles() -> SKEmitterNode {
+        let emitter = SKEmitterNode()
+        
+        emitter.particleBirthRate = 200
+        emitter.numParticlesToEmit = 50
+        emitter.particleLifetime = 0.5
+        emitter.particleLifetimeRange = 0.2
+        emitter.particleSize = CGSize(width: 4, height: 4)
+        emitter.particleColor = SKColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
+        emitter.particleColorBlendFactor = 1.0
+        emitter.particleSpeed = 150
+        emitter.particleSpeedRange = 50
+        emitter.particleAlpha = 0.8
+        emitter.particleAlphaRange = 0.2
+        emitter.particleAlphaSpeed = -1.0
+        emitter.xAcceleration = 0
+        emitter.yAcceleration = 0
+        emitter.emissionAngle = 0
+        emitter.emissionAngleRange = 0.5
+        
+        return emitter
+    }
+    
+    // Create wind particles fallback
+    private func createWindParticles() -> SKEmitterNode {
+        let emitter = SKEmitterNode()
+        
+        emitter.particleBirthRate = 50
+        emitter.numParticlesToEmit = 30
+        emitter.particleLifetime = 1.0
+        emitter.particleLifetimeRange = 0.3
+        emitter.particleSize = CGSize(width: 2, height: 2)
+        emitter.particleColor = SKColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 0.5)
+        emitter.particleColorBlendFactor = 1.0
+        emitter.particleSpeed = 100
+        emitter.particleSpeedRange = 30
+        emitter.particleAlpha = 0.5
+        emitter.particleAlphaRange = 0.2
+        emitter.particleAlphaSpeed = -0.5
+        emitter.xAcceleration = 0
+        emitter.yAcceleration = 0
+        emitter.emissionAngle = 0
+        emitter.emissionAngleRange = 0.3
+        
+        return emitter
+    }
+}

@@ -496,8 +496,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create buttons for additional modes
         setupAdditionalModesButtons(in: contentView)
         
-        // Set a minimum height for the content
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 650).isActive = true
+        // Set a minimum height for the content - increased to accommodate all buttons
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1000).isActive = true
     }
     
     private func setupModesGrid(in containerView: UIView) {
@@ -542,8 +542,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         ])
         
         // Add buttons to middle row
-        let experimentButton = createModeButton(title: "Experiment", tag: 103)
-        let timeButton = createModeButton(title: "Joshua Tree", tag: 104)
+        // These titles are kept the same, but we'll disable their perturbation functionality
+        let experimentButton = createModeButton(title: "Experiment", tag: 1103) // Changed tag to 1103
+        let timeButton = createModeButton(title: "Joshua Tree", tag: 1104) // Changed tag to 1104
         middleRowStack.addArrangedSubview(experimentButton)
         middleRowStack.addArrangedSubview(timeButton)
         
@@ -560,58 +561,301 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         ])
         
         // Add buttons to bottom row
-        let zerosSpaceButton = createModeButton(title: "Zero-G Space", tag: 105)
+        // These titles are kept the same, but we'll disable their perturbation functionality
+        let zerosSpaceButton = createModeButton(title: "Zero-G Space", tag: 1105) // Changed tag to 1105
         let focalButton = createModeButton(title: "The Focal Calculator", tag: 106)
         bottomRowStack.addArrangedSubview(zerosSpaceButton)
         bottomRowStack.addArrangedSubview(focalButton)
         
-        // Mode buttons row
-        let modeButtonsStack = createGridRow()
-        containerView.addSubview(modeButtonsStack)
+        // Add a label to indicate these buttons will have custom perturbations later
+        let placeholderLabel = UILabel()
+        placeholderLabel.text = "Future Matlab-Processed Perturbation Modes"
+        placeholderLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        placeholderLabel.textColor = .goldenDark
+        placeholderLabel.textAlignment = .center
+        placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(placeholderLabel)
+        
+        // Add a visual separator
+        let separator = UIView()
+        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(separator)
         
         NSLayoutConstraint.activate([
-            modeButtonsStack.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 15),
-            modeButtonsStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            modeButtonsStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            modeButtonsStack.heightAnchor.constraint(equalToConstant: 50)
+            placeholderLabel.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 20),
+            placeholderLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            placeholderLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            // Add separator line below the label
+            separator.topAnchor.constraint(equalTo: placeholderLabel.bottomAnchor, constant: 10),
+            separator.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
+            separator.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
+            separator.heightAnchor.constraint(equalToConstant: 1)
         ])
-        
-        // Add buttons to mode buttons row
-        let mode1Button = createCompactModeButton(title: "Mode 1", tag: 107)
-        let mode2Button = createCompactModeButton(title: "Mode 2", tag: 108)
-        modeButtonsStack.addArrangedSubview(mode1Button)
-        modeButtonsStack.addArrangedSubview(mode2Button)
     }
     
     private func setupAdditionalModesButtons(in containerView: UIView) {
-        // Create buttons for additional modes
-        let buttonTitles = ["Chaotic+Mass Mode Graph", "Pendulum Model", "Pendulum+Data Sources"]
-        let buttonTags = [201, 202, 203]
-        
-        // Create stack view for buttons
-        let buttonStack = UIStackView()
-        buttonStack.axis = .vertical
-        buttonStack.spacing = 15
-        buttonStack.distribution = .fillEqually
-        buttonStack.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(buttonStack)
-        
-        // Find the bottom of the modes grid
-        // (Assuming the grid has been added to the container in setupModesGrid)
-        let previousBottomAnchor = containerView.subviews.count > 1 ? 
-            containerView.subviews[1].bottomAnchor : containerView.topAnchor
+        // This now relies on the separator line from previous section
+        // Get the appropriate subview - the separator should be the last element added
+        let separator = containerView.subviews.last(where: { $0 is UIView && $0.backgroundColor == .goldenAccent.withAlphaComponent(0.3) })
+        let previousAnchor = separator?.bottomAnchor ?? containerView.topAnchor
+
+        // Add Perturbation Modes header
+        let perturbationHeader = UILabel()
+        perturbationHeader.translatesAutoresizingMaskIntoConstraints = false
+        perturbationHeader.text = "Available Perturbation Modes"
+        perturbationHeader.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        perturbationHeader.textColor = .goldenDark
+        perturbationHeader.textAlignment = .center
+        containerView.addSubview(perturbationHeader)
         
         NSLayoutConstraint.activate([
-            buttonStack.topAnchor.constraint(equalTo: previousBottomAnchor, constant: 25),
-            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            buttonStack.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
+            // Increase the top spacing to ensure no overlap
+            perturbationHeader.topAnchor.constraint(equalTo: previousAnchor, constant: 60),
+            perturbationHeader.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            perturbationHeader.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20)
         ])
         
-        // Create and add buttons
-        for (index, title) in buttonTitles.enumerated() {
-            let button = createLargeButton(title: title, tag: buttonTags[index])
-            buttonStack.addArrangedSubview(button)
+        // Create Perturbation Mode buttons
+        let perturbationsStack = UIStackView()
+        perturbationsStack.axis = .vertical
+        perturbationsStack.spacing = 15
+        perturbationsStack.distribution = .fillEqually
+        perturbationsStack.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(perturbationsStack)
+        
+        NSLayoutConstraint.activate([
+            perturbationsStack.topAnchor.constraint(equalTo: perturbationHeader.bottomAnchor, constant: 15),
+            perturbationsStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            perturbationsStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            perturbationsStack.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
+        ])
+        
+        // Unified perturbation button data
+        let perturbationData: [(String, String, String, String)] = [
+            ("Random Impulses", "impulse", "Random forces applied at unpredictable intervals", "wind"),
+            ("Sine Wave", "sine", "Smooth oscillating forces with adjustable frequency", "waveform"),
+            ("Data-Driven", "data", "Forces from external datasets or recordings", "doc.text"),
+            ("Compound", "compound", "Complex combination of multiple perturbation types", "function"),
+            ("No Perturbation", "none", "Standard pendulum with gravity only", "xmark.circle")
+        ]
+        
+        // Create and add unified perturbation buttons
+        for (index, data) in perturbationData.enumerated() {
+            let button = createUnifiedPerturbationButton(
+                title: data.0,
+                description: data.2,
+                perturbationType: data.1,
+                iconName: data.3,
+                tag: 300 + index
+            )
+            perturbationsStack.addArrangedSubview(button)
+        }
+    }
+    
+    private func createUnifiedPerturbationButton(title: String, description: String, perturbationType: String, iconName: String, tag: Int) -> UIView {
+        // Container for the button with description
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .goldenBackground
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        container.tag = tag
+        
+        // Add shadow for depth
+        container.layer.shadowColor = UIColor.black.cgColor
+        container.layer.shadowOffset = CGSize(width: 0, height: 2)
+        container.layer.shadowOpacity = 0.1
+        container.layer.shadowRadius = 3
+        
+        // Icon
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = .goldenPrimary
+        iconContainer.layer.cornerRadius = 20
+        container.addSubview(iconContainer)
+        
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .white
+        iconContainer.addSubview(iconImageView)
+        
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        titleLabel.textColor = .goldenDark
+        container.addSubview(titleLabel)
+        
+        // Description label
+        let descriptionLabel = UILabel()
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.text = description
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.textColor = .goldenText
+        descriptionLabel.numberOfLines = 2
+        container.addSubview(descriptionLabel)
+        
+        // Activate button
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Activate", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .goldenAccent
+        button.layer.cornerRadius = 10
+        button.tag = tag
+        
+        // Store perturbation type in button's accessibilityIdentifier
+        button.accessibilityIdentifier = perturbationType
+        
+        // Add target action
+        button.addTarget(self, action: #selector(specialPerturbationButtonTapped(_:)), for: .touchUpInside)
+        
+        container.addSubview(button)
+        
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 80),
+            
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 40),
+            iconContainer.heightAnchor.constraint(equalToConstant: 40),
+            
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20),
+            
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            descriptionLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -12),
+            
+            button.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            button.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            button.widthAnchor.constraint(equalToConstant: 80),
+            button.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        // Add tap gesture to container
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(specialPerturbationContainerTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    private func createSpecialPerturbationButton(title: String, description: String, perturbationType: String, tag: Int) -> UIView {
+        // Container for the button with description
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .goldenBackground
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        container.tag = tag
+        
+        // Add shadow for depth
+        container.layer.shadowColor = UIColor.black.cgColor
+        container.layer.shadowOffset = CGSize(width: 0, height: 2)
+        container.layer.shadowOpacity = 0.1
+        container.layer.shadowRadius = 3
+        
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        titleLabel.textColor = .goldenDark
+        container.addSubview(titleLabel)
+        
+        // Description label
+        let descriptionLabel = UILabel()
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.text = description
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.textColor = .goldenText
+        descriptionLabel.numberOfLines = 2
+        container.addSubview(descriptionLabel)
+        
+        // Activate button
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Activate", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .goldenAccent
+        button.layer.cornerRadius = 10
+        button.tag = tag
+        
+        // Store perturbation type in button's accessibilityIdentifier
+        button.accessibilityIdentifier = perturbationType
+        
+        // Add target action
+        button.addTarget(self, action: #selector(specialPerturbationButtonTapped(_:)), for: .touchUpInside)
+        
+        container.addSubview(button)
+        
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 80),
+            
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            descriptionLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -12),
+            
+            button.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            button.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            button.widthAnchor.constraint(equalToConstant: 80),
+            button.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        // Add tap gesture to container
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(specialPerturbationContainerTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    @objc private func specialPerturbationButtonTapped(_ sender: UIButton) {
+        // Get perturbation type from accessibilityIdentifier
+        if let perturbationType = sender.accessibilityIdentifier {
+            // Activate the selected perturbation type
+            activateSpecialPerturbation(perturbationType)
+            
+            // Show visual feedback
+            UIView.animate(withDuration: 0.1, animations: {
+                sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            }) { _ in
+                UIView.animate(withDuration: 0.1) {
+                    sender.transform = .identity
+                }
+            }
+        }
+    }
+    
+    @objc private func specialPerturbationContainerTapped(_ sender: UITapGestureRecognizer) {
+        if let container = sender.view,
+           let button = container.subviews.first(where: { $0 is UIButton }) as? UIButton {
+            // Forward the tap to the button
+            specialPerturbationButtonTapped(button)
         }
     }
     
@@ -693,8 +937,43 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             }
         }
         
-        // For now just print the selection
+        // Print the selection
         print("Selected mode: \(sender.titleLabel?.text ?? "Unknown") (tag: \(sender.tag))")
+        
+        // Set up perturbation system if not already done
+        if perturbationManager == nil {
+            setupPerturbationSystem()
+        }
+        
+        // Handle specific mode selections based on tag
+        switch sender.tag {
+        // Old tags, disabled and changed
+        case 1103, 1104, 1105:
+            // These buttons have been disabled for perturbation functionality
+            // and will be replaced with Matlab-processed modes
+            updateStatusLabel("This perturbation mode will be available soon")
+        
+        // Standard modes
+        case 101, 102, 106:
+            // Primary, Dashboard, and Focal Calculator - no perturbation
+            deactivatePerturbation()
+            
+        // Original unified perturbation buttons (300-304)
+        case 300: // Random Impulses (new)
+            activateSpecialPerturbation("impulse")
+        case 301: // Sine Wave (new)
+            activateSpecialPerturbation("sine")
+        case 302: // Data-Driven (new)
+            activateSpecialPerturbation("data")
+        case 303: // Compound (new)
+            activateSpecialPerturbation("compound")
+        case 304: // No Perturbation (new)
+            deactivatePerturbation()
+            
+        default:
+            // By default, deactivate perturbations
+            deactivatePerturbation()
+        }
     }
     
     // MARK: - Integration View Setup
@@ -1690,6 +1969,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             updateDashboardStats() // Update stats before showing (this will start the timer)
             showView(dashboardView)
         case 2: // Modes
+            // Set up perturbation system if not already done
+            if perturbationManager == nil {
+                setupPerturbationSystem()
+            }
             showView(modesView)
         case 3: // Integration
             showView(integrationView)
@@ -1700,5 +1983,172 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         default:
             break
         }
+    }
+    
+    // MARK: - Perturbation Management
+    
+    private var perturbationManager: PerturbationManager?
+    
+    private func setupPerturbationSystem() {
+        // Create perturbation manager
+        perturbationManager = PerturbationManager()
+        perturbationManager?.viewModel = viewModel
+        perturbationManager?.scene = scene
+        
+        // Connect perturbation manager to scene
+        scene?.perturbationManager = perturbationManager
+        
+        // Register for notifications from SwiftUI interface
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePerturbationModeChange(_:)),
+            name: Notification.Name("ActivatePerturbationMode"),
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSpecialPerturbation(_:)),
+            name: Notification.Name("ActivateSpecialPerturbation"),
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeactivatePerturbation),
+            name: Notification.Name("DeactivatePerturbation"),
+            object: nil
+        )
+    }
+    
+    @objc private func handlePerturbationModeChange(_ notification: Notification) {
+        if let modeNumber = notification.object as? Int {
+            activatePerturbationMode(modeNumber)
+        }
+    }
+    
+    @objc private func handleSpecialPerturbation(_ notification: Notification) {
+        if let perturbationType = notification.object as? String {
+            activateSpecialPerturbation(perturbationType)
+        }
+    }
+    
+    @objc private func handleDeactivatePerturbation() {
+        deactivatePerturbation()
+    }
+    
+    private func activatePerturbationMode(_ mode: Int) {
+        // Get profile for the specified mode
+        let profile = PerturbationProfile.forMode(mode)
+        
+        // Activate the profile
+        perturbationManager?.activateProfile(profile)
+        
+        // Show confirmation
+        let modeName = profile.name
+        updateStatusLabel("Activated \(modeName) mode")
+    }
+    
+    private func activateSpecialPerturbation(_ type: String) {
+        // Create custom profile based on perturbation type
+        var profile: PerturbationProfile
+        
+        switch type {
+        case "impulse":
+            profile = PerturbationProfile(
+                name: "Random Impulses",
+                types: [.impulse],
+                strength: 1.0,
+                frequency: 0.0,
+                randomInterval: 2.0...4.0,
+                dataSource: nil,
+                showWarnings: true
+            )
+        case "sine":
+            profile = PerturbationProfile(
+                name: "Sine Wave",
+                types: [.sine],
+                strength: 0.8,
+                frequency: 0.5,
+                randomInterval: 0...0,
+                dataSource: nil,
+                showWarnings: false
+            )
+        case "data":
+            profile = PerturbationProfile(
+                name: "Data-Driven",
+                types: [.dataSet],
+                strength: 1.0,
+                frequency: 0.0,
+                randomInterval: 0...0,
+                dataSource: "PerturbationData.csv",
+                showWarnings: true
+            )
+        case "compound":
+            profile = PerturbationProfile(
+                name: "Compound",
+                types: [.compound],
+                strength: 1.0,
+                frequency: 0.4,
+                randomInterval: 2.0...4.0,
+                dataSource: "PerturbationData.csv",
+                showWarnings: true,
+                subProfiles: [
+                    PerturbationProfile(
+                        name: "Base Sine",
+                        types: [.sine],
+                        strength: 0.7,
+                        frequency: 0.3,
+                        randomInterval: 0...0,
+                        dataSource: nil,
+                        showWarnings: false
+                    ),
+                    PerturbationProfile(
+                        name: "Random Impulses",
+                        types: [.impulse],
+                        strength: 1.0,
+                        frequency: 0.0,
+                        randomInterval: 3.0...5.0,
+                        dataSource: nil,
+                        showWarnings: true
+                    )
+                ]
+            )
+        default:
+            profile = PerturbationProfile(
+                name: "Custom",
+                types: [.random],
+                strength: 0.5,
+                frequency: 0.0,
+                randomInterval: 1.0...3.0,
+                dataSource: nil,
+                showWarnings: false
+            )
+        }
+        
+        // Activate the profile
+        perturbationManager?.activateProfile(profile)
+        
+        // Show confirmation
+        updateStatusLabel("Activated \(profile.name) perturbation")
+    }
+    
+    private func deactivatePerturbation() {
+        // Create a minimal profile that does essentially nothing
+        let emptyProfile = PerturbationProfile(
+            name: "None",
+            types: [],
+            strength: 0.0,
+            frequency: 0.0,
+            randomInterval: 0...0,
+            dataSource: nil,
+            showWarnings: false
+        )
+        
+        // Set the empty profile
+        perturbationManager?.activateProfile(emptyProfile)
+        
+        // Show confirmation
+        updateStatusLabel("Perturbations disabled")
     }
 }

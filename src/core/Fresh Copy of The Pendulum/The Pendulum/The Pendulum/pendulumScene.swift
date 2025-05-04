@@ -416,7 +416,17 @@ class PendulumScene: SKScene {
         
         // Update phase space visualization
         updatePhaseSpaceVisualization(with: viewModel.currentState)
+        
+        // Update perturbation manager if it exists
+        if let perturbationManager = self.perturbationManager {
+            perturbationManager.update(currentTime: currentTime)
+        }
     }
+    
+    // MARK: - Perturbation Manager
+    
+    // Property to hold the perturbation manager
+    var perturbationManager: PerturbationManager?
     
     // Enhanced trail visualization based on UI designs
     private func updateTrailVisualization(with viewModel: PendulumViewModel) {
