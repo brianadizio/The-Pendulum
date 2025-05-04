@@ -1,0 +1,86 @@
+# The Pendulum - Perturbation System Tutorial
+
+## Overview
+The perturbation system adds dynamic forces to the pendulum simulation that challenge the player to maintain balance despite unpredictable disturbances. This system simulates real-world conditions like wind gusts, seismic activity, or other environmental factors.
+
+## Types of Perturbations
+
+1. **Impulse Perturbations**
+   - Sudden, brief forces applied in either direction
+   - Visual effect: Orange/blue particle burst
+   - May show warning indicator before triggering
+   - Best for simulating impact events
+
+2. **Sine Wave Perturbations**
+   - Smooth, periodic forces following a sine pattern
+   - Visual effect: Gentle flowing particles
+   - Good for simulating rhythmic disturbances like ocean waves
+
+3. **Data-Driven Perturbations**
+   - Forces based on pre-recorded or generated data sets
+   - Loaded from CSV files in the app bundle
+   - Good for simulating real-world recordings or specific sequences
+
+4. **Random Perturbations**
+   - Unpredictable, noise-like forces
+   - Lower magnitude but constant variation
+   - Good for simulating environmental noise
+
+5. **Compound Perturbations**
+   - Combination of multiple perturbation types
+   - Creates complex, realistic disturbance patterns
+   - Used in higher levels for greater challenge
+
+## How to Use the System
+
+### Level-Based Perturbations
+- Each game level has a specific perturbation profile
+- Higher levels introduce more complex perturbation combinations
+- Level 1-3: Simple impulses and gentle waves
+- Level 4-7: More intense sine waves and data patterns
+- Level 8+: Complex compound perturbations
+
+### Mode-Based Perturbations
+The Modes tab lets you select different perturbation scenarios:
+- **Joshua Tree**: Gravitational perturbations (sine + random)
+- **Zero-G Space**: Microgravity perturbations (impulse + random)
+- **Experiment**: Custom data-driven perturbations
+
+### Visual Feedback
+The system provides visual feedback to help players anticipate and react:
+- **Warning Indicators**: Arrows showing direction of upcoming forces
+- **Particle Effects**: Visual representation of force type and magnitude
+- **Screen Shake**: For severe perturbations above certain thresholds
+- **Haptic Feedback**: On supported devices
+
+## For Developers
+
+### Integration Points
+- **PendulumViewModel**: Control point for applying forces
+- **PendulumScene**: Visual effects and particle systems
+- **LevelManager**: Progression and difficulty scaling
+
+### Adding New Perturbation Types
+1. Add new case to `PerturbationType` enum
+2. Implement processing function in `PerturbationManager`
+3. Create visual effects in `PerturbationEffects`
+4. Define profiles in the factory methods
+
+### Creating Custom Data Files
+- Create CSV files with single column of force values
+- Place in app bundle
+- Reference in perturbation profiles with `dataSource` parameter
+
+## Settings and Customization
+
+Use the Settings tab to control perturbation visuals:
+- **Graphics**: Controls particle effect detail
+- **Metrics**: Shows or hides perturbation data visualization
+- **Sounds**: Controls audio feedback for perturbations
+- **Backgrounds**: Changes how perturbations affect the environment
+
+## Tips for Players
+- Watch for warning indicators to prepare for impulse perturbations
+- Learn to anticipate the rhythm of sine wave perturbations
+- Use small, frequent corrections rather than large movements
+- Higher levels require quicker reactions - practice timing!
