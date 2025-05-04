@@ -156,6 +156,19 @@ class DashboardViewController: UIViewController {
             self.headerView.layer.insertSublayer(gradientLayer, at: 0)
         }
         
+        // Add logo to header - using the appLogo extension
+        let logoImageView = UIImageView(image: UIImage.appLogo)
+        logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        logoImageView.contentMode = .scaleAspectFit
+        logoImageView.layer.cornerRadius = 15
+        logoImageView.clipsToBounds = true
+        if logoImageView.image == nil {
+            // In case the image is nil, set a background color
+            logoImageView.backgroundColor = .goldenAccent
+        }
+        logoImageView.tintColor = .goldenAccent // For the fallback symbol if used
+        headerView.addSubview(logoImageView)
+        
         // Create title label
         titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -164,8 +177,6 @@ class DashboardViewController: UIViewController {
         titleLabel.textColor = .white
         headerView.addSubview(titleLabel)
         
-        // Add logo or icon if needed
-        
         // Set constraints
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -173,6 +184,13 @@ class DashboardViewController: UIViewController {
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 100),
             
+            // Logo on the left side of header
+            logoImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
+            logoImageView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 40),
+            logoImageView.heightAnchor.constraint(equalToConstant: 40),
+            
+            // Title centered in header
             titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
         ])

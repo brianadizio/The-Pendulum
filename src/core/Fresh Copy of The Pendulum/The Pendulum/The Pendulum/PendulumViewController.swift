@@ -239,36 +239,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Apply Golden Enterprises theme
         simulationView.backgroundColor = .goldenBackground
         
-        // Add a header view at the top
-        let headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
-        simulationView.addSubview(headerView)
-        
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "The Pendulum"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: simulationView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // Add a header view with logo
+        let headerView = createHeaderWithLogo(title: "The Pendulum", for: simulationView)
         
         // Create a container for the SpriteKit view with proper constraints
         let skViewContainer = UIView()
@@ -344,36 +316,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set background to Golden Enterprises theme
         parametersView.backgroundColor = .goldenBackground
         
-        // Add a header view
-        let headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
-        parametersView.addSubview(headerView)
-        
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Pendulum Parameters"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: parametersView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // Add a header view with logo
+        let headerView = createHeaderWithLogo(title: "Pendulum Parameters", for: parametersView)
         
         // Create a subtitle label
         let subtitleLabel = UILabel()
@@ -388,22 +332,33 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let sliders = [massSlider, lengthSlider, dampingSlider, gravitySlider, springConstantSlider, momentOfInertiaSlider, forceStrengthSlider, initialPerturbationSlider]
         let sliderTitles = ["Mass", "Length", "Damping", "Gravity", "Spring Constant", "Moment of Inertia", "Force Strength", "Initial Perturbation"]
         
+        // Create a scrollView to contain all parameters
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .clear
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.bounces = true
+        parametersView.addSubview(scrollView)
+        
         // Create a container for parameter controls
         let parametersContainer = UIView()
-        parametersContainer.backgroundColor = .white
+        parametersContainer.backgroundColor = .goldenBackground
         parametersContainer.layer.cornerRadius = 16
+        parametersContainer.layer.borderWidth = 1
+        parametersContainer.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
         parametersContainer.layer.shadowColor = UIColor.black.cgColor
         parametersContainer.layer.shadowOffset = CGSize(width: 0, height: 3)
         parametersContainer.layer.shadowOpacity = 0.1
         parametersContainer.layer.shadowRadius = 4
         parametersContainer.translatesAutoresizingMaskIntoConstraints = false
-        parametersView.addSubview(parametersContainer)
+        scrollView.addSubview(parametersContainer)
         
         // Create a stack for all parameter controls
         let parametersStack = UIStackView()
         parametersStack.axis = .vertical
-        parametersStack.spacing = 20
-        parametersStack.distribution = .fillEqually
+        parametersStack.spacing = 30 // Increased spacing to provide more room between parameters
+        parametersStack.distribution = .fill // Changed from fillEqually to allow variable heights
         parametersStack.translatesAutoresizingMaskIntoConstraints = false
         parametersContainer.addSubview(parametersStack)
         
@@ -420,12 +375,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let resetContainer = UIView()
         resetContainer.translatesAutoresizingMaskIntoConstraints = false
         
-        // Style the reset button
-        resetButton.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1.0)
-        resetButton.setTitleColor(UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0), for: .normal)
+        // Style the reset button with Golden theme
+        resetButton.backgroundColor = .goldenPrimary
+        resetButton.setTitleColor(.white, for: .normal)
         resetButton.layer.cornerRadius = 10
         resetButton.layer.borderWidth = 1
-        resetButton.layer.borderColor = UIColor(red: 0.8, green: 0.8, blue: 0.9, alpha: 1.0).cgColor
+        resetButton.layer.borderColor = UIColor.goldenAccent.cgColor
+        resetButton.layer.shadowColor = UIColor.black.cgColor
+        resetButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        resetButton.layer.shadowOpacity = 0.1
+        resetButton.layer.shadowRadius = 3
+        resetButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         
         resetContainer.addSubview(resetButton)
         resetButton.translatesAutoresizingMaskIntoConstraints = false
@@ -446,11 +406,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             subtitleLabel.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
             subtitleLabel.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
             
+            // ScrollView
+            scrollView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
+            scrollView.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
+            scrollView.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
+            scrollView.bottomAnchor.constraint(equalTo: parametersView.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            
             // Parameters container
-            parametersContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
-            parametersContainer.leadingAnchor.constraint(equalTo: parametersView.leadingAnchor, constant: 20),
-            parametersContainer.trailingAnchor.constraint(equalTo: parametersView.trailingAnchor, constant: -20),
-            parametersContainer.bottomAnchor.constraint(lessThanOrEqualTo: parametersView.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            parametersContainer.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            parametersContainer.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            parametersContainer.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            parametersContainer.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            parametersContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor), // Equal width to scrollView
             
             // Parameters stack
             parametersStack.topAnchor.constraint(equalTo: parametersContainer.topAnchor, constant: 20),
@@ -509,36 +476,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set background to Golden Enterprises theme
         modesView.backgroundColor = .goldenBackground
         
-        // Add a header view
-        let headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
-        modesView.addSubview(headerView)
-        
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Pendulum Modes"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: modesView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: modesView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: modesView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // Add a header view with logo
+        let headerView = createHeaderWithLogo(title: "Pendulum Modes", for: modesView)
         
         // Create a scroll view for the content
         let scrollView = UIScrollView()
@@ -572,8 +511,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create buttons for additional modes
         setupAdditionalModesButtons(in: contentView)
         
+        // Add information buttons at the bottom
+        setupInformationButtons(in: contentView)
+        
         // Set a minimum height for the content - increased to accommodate all buttons
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1000).isActive = true
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1200).isActive = true
     }
     
     private func setupModesGrid(in containerView: UIView) {
@@ -832,6 +774,204 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return container
     }
     
+    // MARK: - Information Buttons
+    
+    private func setupInformationButtons(in containerView: UIView) {
+        // Find the perturbationsStack (the last stack view added)
+        let perturbationsStack = containerView.subviews.last(where: { $0 is UIStackView }) as? UIStackView
+        
+        // Create a separator line
+        let separator = UIView()
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        containerView.addSubview(separator)
+        
+        NSLayoutConstraint.activate([
+            separator.topAnchor.constraint(equalTo: perturbationsStack?.bottomAnchor ?? containerView.topAnchor, constant: 50),
+            separator.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            separator.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            separator.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        
+        // Information section header
+        let infoHeader = UILabel()
+        infoHeader.translatesAutoresizingMaskIntoConstraints = false
+        infoHeader.text = "Additional Information"
+        infoHeader.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        infoHeader.textColor = .goldenDark
+        infoHeader.textAlignment = .center
+        containerView.addSubview(infoHeader)
+        
+        NSLayoutConstraint.activate([
+            infoHeader.topAnchor.constraint(equalTo: separator.bottomAnchor, constant: 30),
+            infoHeader.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            infoHeader.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20)
+        ])
+        
+        // Create stack for information buttons
+        let infoButtonsStack = UIStackView()
+        infoButtonsStack.axis = .vertical
+        infoButtonsStack.spacing = 15
+        infoButtonsStack.distribution = .fillEqually
+        infoButtonsStack.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(infoButtonsStack)
+        
+        NSLayoutConstraint.activate([
+            infoButtonsStack.topAnchor.constraint(equalTo: infoHeader.bottomAnchor, constant: 20),
+            infoButtonsStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            infoButtonsStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            infoButtonsStack.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
+        ])
+        
+        // Create and add the information buttons
+        let pendulumModelButton = createInfoButton(
+            title: "Inverted Pendulum Model",
+            description: "Learn about the mathematics and physics behind the inverted pendulum model",
+            iconName: "function",
+            tag: 400
+        )
+        
+        let dataSourcesButton = createInfoButton(
+            title: "Data Sources for Modes",
+            description: "Information about the data used in different pendulum modes and perturbations",
+            iconName: "chart.xyaxis.line",
+            tag: 401
+        )
+        
+        infoButtonsStack.addArrangedSubview(pendulumModelButton)
+        infoButtonsStack.addArrangedSubview(dataSourcesButton)
+    }
+    
+    private func createInfoButton(title: String, description: String, iconName: String, tag: Int) -> UIView {
+        // Container for the info button
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .goldenSecondary.withAlphaComponent(0.5)
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        container.tag = tag
+        
+        // Add shadow for depth
+        container.layer.shadowColor = UIColor.black.cgColor
+        container.layer.shadowOffset = CGSize(width: 0, height: 2)
+        container.layer.shadowOpacity = 0.1
+        container.layer.shadowRadius = 3
+        
+        // Icon
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = .goldenPrimary
+        iconContainer.layer.cornerRadius = 20
+        container.addSubview(iconContainer)
+        
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .white
+        iconContainer.addSubview(iconImageView)
+        
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        titleLabel.textColor = .goldenDark
+        container.addSubview(titleLabel)
+        
+        // Description label
+        let descriptionLabel = UILabel()
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.text = description
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.textColor = .goldenText
+        descriptionLabel.numberOfLines = 2
+        container.addSubview(descriptionLabel)
+        
+        // Learn More button
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Learn More", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .goldenPrimary
+        button.layer.cornerRadius = 10
+        button.tag = tag
+        
+        // Add target action
+        button.addTarget(self, action: #selector(infoButtonTapped(_:)), for: .touchUpInside)
+        
+        container.addSubview(button)
+        
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 100),
+            
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 40),
+            iconContainer.heightAnchor.constraint(equalToConstant: 40),
+            
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20),
+            
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 15),
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            descriptionLabel.trailingAnchor.constraint(equalTo: button.leadingAnchor, constant: -12),
+            descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -15),
+            
+            button.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            button.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            button.widthAnchor.constraint(equalToConstant: 100),
+            button.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        // Add tap gesture recognizer to the container
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(infoContainerTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    @objc private func infoButtonTapped(_ sender: UIButton) {
+        showPlaceholderInfoView(for: sender.tag)
+    }
+    
+    @objc private func infoContainerTapped(_ sender: UITapGestureRecognizer) {
+        if let container = sender.view {
+            showPlaceholderInfoView(for: container.tag)
+        }
+    }
+    
+    private func showPlaceholderInfoView(for tag: Int) {
+        let alertTitle: String
+        let alertMessage: String
+        
+        switch tag {
+        case 400:
+            alertTitle = "Inverted Pendulum Model"
+            alertMessage = "This page will contain detailed information about the physics and mathematics behind the inverted pendulum model, including equations of motion, stability analysis, and control theory applications. It will provide explanations of relevant concepts such as angular momentum, torque, and differential equations for pendulum dynamics."
+        case 401:
+            alertTitle = "Data Sources for Modes"
+            alertMessage = "This page will provide information about the data sources used for different pendulum modes, including real-world environmental data, synthetic datasets, and advanced perturbation techniques. It will describe how data is collected, processed, and applied to create realistic pendulum behaviors under various conditions."
+        default:
+            alertTitle = "Information"
+            alertMessage = "More information will be available in a future update."
+        }
+        
+        let alert = UIAlertController(title: alertTitle, message: alertMessage, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     private func createSpecialPerturbationButton(title: String, description: String, perturbationType: String, tag: Int) -> UIView {
         // Container for the button with description
         let container = UIView()
@@ -1058,36 +1198,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set background to Golden Enterprises theme
         integrationView.backgroundColor = .goldenBackground
         
-        // Add a header view
-        let headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
-        integrationView.addSubview(headerView)
-        
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Pendulum Integrations"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: integrationView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: integrationView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: integrationView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // Add a header view with logo
+        let headerView = createHeaderWithLogo(title: "Pendulum Integrations", for: integrationView)
         
         // Create scroll view for content
         let scrollView = UIScrollView()
@@ -1323,36 +1435,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Set background to Golden Enterprises theme
         settingsView.backgroundColor = .goldenBackground
         
-        // Add a header view
-        let headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
-        settingsView.addSubview(headerView)
-        
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Settings"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: settingsView.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // Add a header view with logo
+        let headerView = createHeaderWithLogo(title: "Settings", for: settingsView)
         
         // Create scroll view for settings content
         let scrollView = UIScrollView()
@@ -1743,6 +1827,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func createParameterControl(title: String, slider: UISlider) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .goldenSecondary.withAlphaComponent(0.7)
+        container.layer.cornerRadius = 10
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        container.layer.shadowColor = UIColor.black.cgColor
+        container.layer.shadowOffset = CGSize(width: 0, height: 2)
+        container.layer.shadowOpacity = 0.1
+        container.layer.shadowRadius = 3
         
         // Get units for the parameter
         let units = getUnitsForParameter(title)
@@ -1750,8 +1842,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Title label with units
         let titleLabel = UILabel()
         titleLabel.text = "\(title) (\(units))"
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        titleLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.6, alpha: 1.0)
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = .goldenDark
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
         
@@ -1760,19 +1852,35 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Use a non-zero initial value even before slider is set
         let initialValue = getDefaultValueForParameter(title)
         valueLabel.text = formatParameterValue(title, value: initialValue)
-        valueLabel.font = UIFont.systemFont(ofSize: 16)
+        valueLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         valueLabel.textAlignment = .right
-        valueLabel.textColor = UIColor(red: 0.4, green: 0.4, blue: 0.6, alpha: 1.0)
+        valueLabel.textColor = .goldenAccentBlue
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(valueLabel)
+        
+        // Add description label between title and slider
+        let descriptionLabel = UILabel()
+        descriptionLabel.text = getDescriptionForParameter(title)
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.textColor = .goldenText
+        descriptionLabel.numberOfLines = 0 // Allow multiple lines
+        descriptionLabel.lineBreakMode = .byWordWrapping
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(descriptionLabel)
         
         // Store the value label for updates
         slider.tag = Int(bitPattern: Unmanaged.passUnretained(valueLabel).toOpaque())
         
         // Configure slider appearance
         slider.translatesAutoresizingMaskIntoConstraints = false
-        slider.tintColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
-        slider.thumbTintColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
+        slider.tintColor = .goldenPrimary
+        slider.thumbTintColor = .goldenAccent
+        slider.maximumTrackTintColor = UIColor.goldenBackgroundAlt
+        
+        // Create custom track height appearance
+        slider.setMinimumTrackImage(createSliderTrackImage(color: .goldenPrimary), for: .normal)
+        slider.setMaximumTrackImage(createSliderTrackImage(color: .goldenBackgroundAlt), for: .normal)
+        
         container.addSubview(slider)
         
         // Add action to update value label when slider changes
@@ -1780,29 +1888,104 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Layout constraints
         NSLayoutConstraint.activate([
-            // Title
-            titleLabel.topAnchor.constraint(equalTo: container.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            // Title - keep at top with more padding
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
             
-            // Value
-            valueLabel.topAnchor.constraint(equalTo: container.topAnchor),
-            valueLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            valueLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8),
+            // Value - align with title
+            valueLabel.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            valueLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            valueLabel.leadingAnchor.constraint(greaterThanOrEqualTo: titleLabel.trailingAnchor, constant: 8),
             valueLabel.widthAnchor.constraint(equalToConstant: 60),
             
-            // Slider
-            slider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            slider.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            slider.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            slider.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            // Description - below title with more spacing
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            descriptionLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            descriptionLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            
+            // Slider - below description with more spacing
+            slider.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 12),
+            slider.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            slider.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            slider.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12)
         ])
         
+        // Set a minimum height for each parameter control
+        container.heightAnchor.constraint(greaterThanOrEqualToConstant: 130).isActive = true
+        
         return container
+    }
+    
+    // Create custom slider track height
+    private func createSliderTrackImage(color: UIColor) -> UIImage {
+        let rect = CGRect(x: 0, y: 0, width: 1, height: 6) // Thicker track (6 points)
+        UIGraphicsBeginImageContextWithOptions(rect.size, false, 0)
+        color.setFill()
+        UIRectFill(rect)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!.resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0))
     }
     
     // Force layout update
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+    }
+    
+    // Create a header view with the Golden Enterprises logo
+    private func createHeaderWithLogo(title: String, for containerView: UIView) -> UIView {
+        let headerView = UIView()
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.backgroundColor = .goldenPrimary
+        containerView.addSubview(headerView)
+        
+        // Add gradient to header
+        DispatchQueue.main.async {
+            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
+            headerView.layer.insertSublayer(gradientLayer, at: 0)
+        }
+        
+        // Add logo to header - using the appLogo extension
+        let logoImageView = UIImageView(image: UIImage.appLogo)
+        logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        logoImageView.contentMode = .scaleAspectFit
+        logoImageView.layer.cornerRadius = 15
+        logoImageView.clipsToBounds = true
+        if logoImageView.image == nil {
+            // In case the image is nil, set a background color
+            logoImageView.backgroundColor = .goldenAccent
+        }
+        logoImageView.tintColor = .goldenAccent // For the fallback symbol if used
+        headerView.addSubview(logoImageView)
+        
+        // Add title to header
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        headerView.addSubview(titleLabel)
+        
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Logo on the left side of header
+            logoImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
+            logoImageView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 40),
+            logoImageView.heightAnchor.constraint(equalToConstant: 40),
+            
+            // Title centered in header
+            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
+        
+        return headerView
     }
     
     // MARK: - View Management
@@ -2090,25 +2273,83 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Actions
     
     @objc private func startButtonTapped() {
+        // If the game is paused, handle resuming
+        if viewModel.isPaused {
+            // Resume the simulation
+            viewModel.isPaused = false
+            
+            // Restore any previously active perturbation profile
+            if let profile = pendingPerturbationProfile, let perturbationManager = perturbationManager {
+                perturbationManager.activateProfile(profile)
+                pendingPerturbationProfile = nil
+            }
+            
+            // Restart the simulation timer
+            viewModel.startSimulation()
+            
+            // Update UI
+            updateGameMessageLabel("Game resumed")
+            startButton.setTitle("Restart", for: .normal)
+            return
+        }
+        
         // If game is over, clear phase space and restart
         if viewModel.gameOverReason != nil {
+            // Apply any pending perturbation profile before restarting
+            if let profile = pendingPerturbationProfile, let perturbationManager = perturbationManager {
+                perturbationManager.activateProfile(profile)
+                updateGameMessageLabel("Applied \(profile.name) perturbation mode")
+                pendingPerturbationProfile = nil
+            }
+            
             phaseSpaceView.clearPoints()
             viewModel.resetAndStart()
         } else {
             // Start the game normally
             viewModel.startGame()
+            startButton.setTitle("Restart", for: .normal)
         }
     }
     
     @objc private func stopButtonTapped() {
-        // Stop the simulation
+        // First check if we're already paused
+        if viewModel.isPaused {
+            return // Already paused, don't do anything
+        }
+        
+        // Set the view model to paused state (this will be checked by the game logic)
+        viewModel.isPaused = true
+        
+        // Stop the simulation timer but keep the game active
         viewModel.stopSimulation()
         
-        // Make the game inactive but don't reset score
-        viewModel.isGameActive = false
+        // Ensure the game remains marked as active
+        viewModel.isGameActive = true
+        
+        // Also pause any active perturbations
+        if let perturbationManager = perturbationManager {
+            // Create a temporary empty profile to pause perturbations
+            let tempEmptyProfile = PerturbationProfile(
+                name: "Paused",
+                types: [],
+                strength: 0.0,
+                frequency: 0.0,
+                randomInterval: 0...0,
+                dataSource: nil,
+                showWarnings: false
+            )
+            
+            // Store the currently active profile to restore later
+            if pendingPerturbationProfile == nil && perturbationManager.activeProfile != nil {
+                pendingPerturbationProfile = perturbationManager.activeProfile
+            }
+            
+            // Temporarily disable perturbations
+            perturbationManager.activateProfile(tempEmptyProfile)
+        }
         
         // Show message that game is paused
-        updateGameMessageLabel("Game paused")
+        updateGameMessageLabel("Game paused - Return to Simulation tab and press Resume or Push to continue")
         
         // Change button text to reflect state
         startButton.setTitle("▶ Resume", for: .normal)
@@ -2117,6 +2358,25 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     @objc private func pushLeftButtonTapped() {
         // Apply a leftward force (positive value for inverted pendulum)
         print("Push left button tapped")
+        
+        // If game is paused, resume it first
+        if viewModel.isPaused {
+            // Resume the game
+            viewModel.isPaused = false
+            
+            // Restore any previously active perturbation profile
+            if let profile = pendingPerturbationProfile, let perturbationManager = perturbationManager {
+                perturbationManager.activateProfile(profile)
+                pendingPerturbationProfile = nil
+            }
+            
+            // Restart the simulation timer
+            viewModel.startSimulation()
+            
+            // Update UI
+            updateGameMessageLabel("Game resumed")
+            startButton.setTitle("Restart", for: .normal)
+        }
         
         // Use a fixed baseline for the push direction with increased magnitude
         viewModel.applyForce(2.0) // Positive force pushes left (matches pendulumButtonControls.swift)
@@ -2134,6 +2394,25 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     @objc private func pushRightButtonTapped() {
         // Apply a rightward force (negative value for inverted pendulum)
         print("Push right button tapped")
+        
+        // If game is paused, resume it first
+        if viewModel.isPaused {
+            // Resume the game
+            viewModel.isPaused = false
+            
+            // Restore any previously active perturbation profile
+            if let profile = pendingPerturbationProfile, let perturbationManager = perturbationManager {
+                perturbationManager.activateProfile(profile)
+                pendingPerturbationProfile = nil
+            }
+            
+            // Restart the simulation timer
+            viewModel.startSimulation()
+            
+            // Update UI
+            updateGameMessageLabel("Game resumed")
+            startButton.setTitle("Restart", for: .normal)
+        }
         
         // Use a fixed baseline for the push direction with increased magnitude
         viewModel.applyForce(-2.0) // Negative force pushes right (matches pendulumButtonControls.swift)
@@ -2210,6 +2489,30 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             return "multiplier"
         case "Initial Perturbation":
             return "degrees"
+        default:
+            return ""
+        }
+    }
+    
+    // Get description for each parameter
+    private func getDescriptionForParameter(_ title: String) -> String {
+        switch title {
+        case "Mass":
+            return "The weight of the pendulum bob, affecting inertia and momentum"
+        case "Length":
+            return "Distance from pivot to center of mass, affects oscillation period"
+        case "Damping":
+            return "Energy dissipation due to friction, higher values slow the pendulum faster"
+        case "Gravity":
+            return "Acceleration due to gravity, affects the restoring force"
+        case "Spring Constant":
+            return "Stiffness of the restoring force, higher values create stronger spring forces"
+        case "Moment of Inertia":
+            return "Resistance to rotational motion, affects angular acceleration"
+        case "Force Strength":
+            return "Magnitude of external forces applied to the pendulum"
+        case "Initial Perturbation":
+            return "Starting angle deviation from equilibrium position"
         default:
             return ""
         }
@@ -2367,6 +2670,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Perturbation Management
     
     private var perturbationManager: PerturbationManager?
+    private var pendingPerturbationProfile: PerturbationProfile?
     
     private func setupPerturbationSystem() {
         // Create perturbation manager
@@ -2420,12 +2724,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Get profile for the specified mode
         let profile = PerturbationProfile.forMode(mode)
         
-        // Activate the profile
-        perturbationManager?.activateProfile(profile)
+        // Store the profile but don't activate it yet
+        pendingPerturbationProfile = profile
         
         // Show confirmation
         let modeName = profile.name
-        updateGameMessageLabel("Activated \(modeName) mode")
+        updateGameMessageLabel("\(modeName) mode ready. Click Restart to apply.")
     }
     
     private func activateSpecialPerturbation(_ type: String) {
@@ -2505,11 +2809,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             )
         }
         
-        // Activate the profile
-        perturbationManager?.activateProfile(profile)
+        // Store the profile but don't activate it yet
+        pendingPerturbationProfile = profile
         
         // Show confirmation
-        updateGameMessageLabel("Activated \(profile.name) perturbation")
+        updateGameMessageLabel("\(profile.name) perturbation ready. Click Restart to apply.")
     }
     
     private func deactivatePerturbation() {
@@ -2524,10 +2828,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             showWarnings: false
         )
         
-        // Set the empty profile
-        perturbationManager?.activateProfile(emptyProfile)
+        // Store the empty profile but don't activate it yet
+        pendingPerturbationProfile = emptyProfile
         
         // Show confirmation
-        updateGameMessageLabel("Perturbations disabled")
+        updateGameMessageLabel("Perturbations will be disabled on restart")
     }
 }
