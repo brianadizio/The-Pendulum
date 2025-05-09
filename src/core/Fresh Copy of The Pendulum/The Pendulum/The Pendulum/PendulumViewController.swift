@@ -243,32 +243,36 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func setupSimulationView() {
         // Apply Golden Enterprises theme
         simulationView.backgroundColor = .goldenBackground
-        
-        // Add a header view with logo
+
+        // Add a header view with logo - ensure it's positioned below the status bar
         let headerView = createHeaderWithLogo(title: "The Pendulum", for: simulationView)
-        
+
+        // Setup the HUD first so we can position other elements relative to it
+        setupGameHUD()
+
         // Create a container for the SpriteKit view with proper constraints
         let skViewContainer = UIView()
         skViewContainer.translatesAutoresizingMaskIntoConstraints = false
         skViewContainer.backgroundColor = .white
         skViewContainer.applyGoldenStyle() // Apply the Golden theme styling
         simulationView.addSubview(skViewContainer)
-        
-        // Position the SKView container to take most of the screen space below the header
-        // Leave space at the bottom for controls
+
+        // Position the SKView container below the game HUD with proper spacing
+        // Reduce height to make the pendulum area more compact - focus on the upper region
         NSLayoutConstraint.activate([
-            skViewContainer.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
+            skViewContainer.topAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: 15),
             skViewContainer.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 20),
             skViewContainer.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
-            skViewContainer.heightAnchor.constraint(equalTo: simulationView.heightAnchor, multiplier: 0.45)
+            // Reduced height to make the container more compact - we don't need to see below 90 degrees
+            skViewContainer.heightAnchor.constraint(equalTo: simulationView.heightAnchor, multiplier: 0.32)
         ])
-        
+
         // Add the SpriteKit view
         let skView = SKView(frame: .zero)
         skView.translatesAutoresizingMaskIntoConstraints = false
         skView.backgroundColor = .white
         skViewContainer.addSubview(skView)
-        
+
         // Make the SKView fill its container
         NSLayoutConstraint.activate([
             skView.topAnchor.constraint(equalTo: skViewContainer.topAnchor),
@@ -276,44 +280,41 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             skView.trailingAnchor.constraint(equalTo: skViewContainer.trailingAnchor),
             skView.bottomAnchor.constraint(equalTo: skViewContainer.bottomAnchor)
         ])
-        
+
         // Configure the SpriteKit view
         skView.showsFPS = true
         skView.showsNodeCount = true
         skView.ignoresSiblingOrder = true
-        
+
         // Add a border to the SKView for visibility
         skView.layer.borderColor = UIColor.lightGray.cgColor
         skView.layer.borderWidth = 1.0
-        
+
+        // Add control buttons next
+        setupSimulationControls(in: simulationView)
+
         // Wait for the view to layout before creating the scene
         DispatchQueue.main.async {
             // Create and present the pendulum scene once view is sized
             let sceneSize = skView.bounds.size
             print("Creating scene with size: \(sceneSize)")
-            
+
             self.scene = PendulumScene(size: sceneSize)
             self.scene?.scaleMode = .aspectFill
             self.scene?.viewModel = self.viewModel
             self.scene?.backgroundColor = .white
-            
+
             // Set the scene in the viewModel for bidirectional communication
             self.viewModel.scene = self.scene
-            
+
             // Present the scene
             if let theScene = self.scene {
                 skView.presentScene(theScene, transition: SKTransition.fade(withDuration: 0.5))
                 print("Scene presented. SKView size: \(skView.bounds.size)")
             }
         }
-        
-        // Add control buttons
-        setupSimulationControls(in: simulationView)
-        
-        // Setup game HUD
-        setupGameHUD()
-        
-        // Setup phase space view
+
+        // Setup phase space view last
         setupPhaseSpaceView()
     }
     
@@ -1943,13 +1944,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         headerView.translatesAutoresizingMaskIntoConstraints = false
         headerView.backgroundColor = .goldenPrimary
         containerView.addSubview(headerView)
-        
+
         // Add gradient to header
         DispatchQueue.main.async {
             let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
             headerView.layer.insertSublayer(gradientLayer, at: 0)
         }
-        
+
         // Add logo to header - using the appLogo extension
         let logoImageView = UIImageView(image: UIImage.appLogo)
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -1962,7 +1963,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         }
         logoImageView.tintColor = .goldenAccent // For the fallback symbol if used
         headerView.addSubview(logoImageView)
-        
+
         // Add title to header
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -1971,25 +1972,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
         headerView.addSubview(titleLabel)
-        
-        // Layout constraints
+
+        // Layout constraints - adjusted to add more space at the top
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            // Move header down from the top edge to avoid system status bar
+            headerView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
             headerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
+            headerView.heightAnchor.constraint(equalToConstant: 50), // Slightly smaller height
+
             // Logo on the left side of header
             logoImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
             logoImageView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 40),
-            logoImageView.heightAnchor.constraint(equalToConstant: 40),
-            
+            logoImageView.widthAnchor.constraint(equalToConstant: 35), // Slightly smaller logo
+            logoImageView.heightAnchor.constraint(equalToConstant: 35),
+
             // Title centered in header
             titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
         ])
-        
+
         return headerView
     }
     
@@ -2018,75 +2020,109 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         hudContainer.applyGoldenCard() // Apply Golden Enterprise styling
         hudContainer.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(hudContainer)
-        
+
+        // Get header view to position the HUD properly
+        let headerView = simulationView.subviews.first { $0.backgroundColor == .goldenPrimary }
+
         // Score label - moved to the top
         scoreLabel = UILabel()
         scoreLabel.text = "Score: 0"
-        scoreLabel.textAlignment = .center
-        scoreLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        scoreLabel.textAlignment = .left
+        scoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
         scoreLabel.textColor = .goldenDark
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(scoreLabel)
-        
+
         // Level label
         levelLabel = UILabel()
         levelLabel.text = "Level: 1"
         levelLabel.textAlignment = .center
-        levelLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        levelLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
         levelLabel.textColor = .goldenDark
         levelLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(levelLabel)
-        
+
         // Time label
         timeLabel = UILabel()
         timeLabel.text = "Time: 0.0s"
-        timeLabel.textAlignment = .center
-        timeLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        timeLabel.textAlignment = .right
+        timeLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
         timeLabel.textColor = .goldenDark
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
-        
+
+        // Balance time label - Add a dedicated label for balance time
+        let balanceLabel = UILabel()
+        balanceLabel.text = "Balance: 0.0s / 0.0s"
+        balanceLabel.textAlignment = .center
+        balanceLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
+        balanceLabel.textColor = .goldenAccentGreen
+        balanceLabel.translatesAutoresizingMaskIntoConstraints = false
+        hudContainer.addSubview(balanceLabel)
+
         // Game message label (for game over messages)
         gameMessageLabel = UILabel()
         gameMessageLabel.text = "Balance the Inverted Pendulum!"
         gameMessageLabel.textAlignment = .center
-        gameMessageLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        gameMessageLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
         gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
         gameMessageLabel.translatesAutoresizingMaskIntoConstraints = false
         gameMessageLabel.isHidden = true
         hudContainer.addSubview(gameMessageLabel)
-        
-        // Position HUD at top of screen - make it larger to fit level info
+
+        // Position HUD below the header with proper spacing
         NSLayoutConstraint.activate([
-            hudContainer.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 5),
+            // Position HUD properly below the header with more space
+            hudContainer.topAnchor.constraint(equalTo: headerView?.bottomAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 10),
             hudContainer.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             hudContainer.trailingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            // Increase height to fit 3 elements
-            hudContainer.heightAnchor.constraint(equalToConstant: 80),
-            
-            // Move score to top left
-            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
-            scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 16),
-            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
-            
-            // Level in center
+            // Increased height to fit all elements with proper spacing
+            hudContainer.heightAnchor.constraint(equalToConstant: 100),
+
+            // First row with score, level, and time - properly spaced with margins
+            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
+            scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
+            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+
+            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
             levelLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
-            
-            // Time at top right
-            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
-            timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -16),
-            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.5, constant: -16),
-            
-            // Game message below stats
+            levelLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+
+            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
+            timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
+            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+
+            // Balance time centered in second row with more space from the top row
+            balanceLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20), // Increased spacing
+            balanceLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
+            balanceLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
+            balanceLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
+
+            // Game message is now shown in place of the balance label when needed
             gameMessageLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -10),
-            gameMessageLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, constant: -32)
+            gameMessageLabel.centerYAnchor.constraint(equalTo: balanceLabel.centerYAnchor),
+            gameMessageLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
+            gameMessageLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20)
         ])
-        
+
         // Start update timer for HUD
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             self?.updateGameHUD()
+
+            // Update balance time label
+            if let targetTime = self?.viewModel.levelSuccessTime {
+                let currentTime = self?.viewModel.totalBalanceTime ?? 0.0
+                balanceLabel.text = "Balance: \(String(format: "%.1fs", currentTime)) / \(String(format: "%.1fs", targetTime))"
+
+                // Change color based on progress
+                if currentTime >= targetTime * 0.75 {
+                    balanceLabel.textColor = .goldenAccentGreen
+                } else if currentTime >= targetTime * 0.5 {
+                    balanceLabel.textColor = .goldenAccent
+                } else {
+                    balanceLabel.textColor = .goldenDark
+                }
+            }
         }
     }
     
@@ -2096,44 +2132,58 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create a container view for the phase space
         let phaseSpaceContainer = UIView()
         phaseSpaceContainer.translatesAutoresizingMaskIntoConstraints = false
-        phaseSpaceContainer.backgroundColor = UIColor.clear
+        phaseSpaceContainer.backgroundColor = UIColor.white
+        phaseSpaceContainer.layer.cornerRadius = 10
+        phaseSpaceContainer.layer.borderWidth = 1
+        phaseSpaceContainer.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
         simulationView.addSubview(phaseSpaceContainer)
-        
-        // Position the container at the bottom third of the screen, after the controls
-        NSLayoutConstraint.activate([
-            // Position below the controls button panel
-            phaseSpaceContainer.topAnchor.constraint(equalTo: simulationView.centerYAnchor, constant: 160),
-            phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
-            phaseSpaceContainer.widthAnchor.constraint(equalToConstant: 180),
-            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 200) // Reduced height for container
-        ])
-        
+
         // Create a label for the phase space
         phaseSpaceLabel = UILabel()
         phaseSpaceLabel.text = "Phase Space"
         phaseSpaceLabel.textAlignment = .center
-        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        phaseSpaceLabel.textColor = UIColor.darkGray
+        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        phaseSpaceLabel.textColor = .goldenDark
         phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
-        phaseSpaceContainer.addSubview(phaseSpaceLabel)
-        
+        simulationView.addSubview(phaseSpaceLabel)
+
         // Create phase space view
         phaseSpaceView = PhaseSpaceView(frame: .zero)
         phaseSpaceView.translatesAutoresizingMaskIntoConstraints = false
         phaseSpaceContainer.addSubview(phaseSpaceView)
-        
-        // Position phase space and label
+
+        // Position the phase space below the controls with proper constraints
+        // Give more vertical space to the phase space view now that pendulum area is smaller
         NSLayoutConstraint.activate([
-            phaseSpaceLabel.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor),
-            phaseSpaceLabel.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
-            phaseSpaceLabel.widthAnchor.constraint(equalTo: phaseSpaceContainer.widthAnchor),
-            phaseSpaceLabel.heightAnchor.constraint(equalToConstant: 20),
-            
-            phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
-            phaseSpaceView.centerXAnchor.constraint(equalTo: phaseSpaceContainer.centerXAnchor),
-            phaseSpaceView.widthAnchor.constraint(equalToConstant: 170),
-            phaseSpaceView.heightAnchor.constraint(equalToConstant: 170)
+            // Position label below the control panel with reduced spacing
+            phaseSpaceLabel.topAnchor.constraint(equalTo: controlPanel.bottomAnchor, constant: 10),
+            phaseSpaceLabel.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
+
+            // Position container below the label with increased height
+            phaseSpaceContainer.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
+            phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
+            phaseSpaceContainer.widthAnchor.constraint(equalTo: simulationView.widthAnchor, multiplier: 0.85),
+            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 230), // Increased height
+            // Make sure it doesn't go beyond the bottom of the screen
+            phaseSpaceContainer.bottomAnchor.constraint(lessThanOrEqualTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+
+            // Position the phase space view within its container
+            phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor, constant: 10),
+            phaseSpaceView.leadingAnchor.constraint(equalTo: phaseSpaceContainer.leadingAnchor, constant: 10),
+            phaseSpaceView.trailingAnchor.constraint(equalTo: phaseSpaceContainer.trailingAnchor, constant: -10),
+            phaseSpaceView.bottomAnchor.constraint(equalTo: phaseSpaceContainer.bottomAnchor, constant: -10)
         ])
+
+        // Start update timer for phase space
+        dashboardUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+
+            // Add the current state as a moving point
+            self.phaseSpaceView.addPoint(
+                theta: self.viewModel.currentState.theta,
+                omega: self.viewModel.currentState.thetaDot
+            )
+        }
     }
 
     private func updateGameHUD() {
@@ -2193,85 +2243,90 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func setupSimulationControls(in parentView: UIView) {
         // Remove title labels per feedback
         // We'll use just the score and time from the HUD at the top
-        
+
         // Style buttons with Golden Enterprises theme
         let buttonStyle: (UIButton) -> Void = { button in
             button.applyGoldenButtonStyle(isPrimary: false)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         }
-        
+
         // Apply styles to buttons
         [startButton, stopButton, pushLeftButton, pushRightButton].forEach(buttonStyle)
-        
+
         // Special styling for Start/Stop buttons using Golden theme
         startButton.applyGoldenButtonStyle(isPrimary: true)
         startButton.backgroundColor = .goldenAccentGreen
-        
+
         stopButton.applyGoldenButtonStyle(isPrimary: true)
         stopButton.backgroundColor = .goldenError
-        
-        
-        // Add custom icons to buttons
-        startButton.setTitle("▶ Start", for: .normal)
-        stopButton.setTitle("◼ Stop", for: .normal)
-        pushLeftButton.setTitle("◄ Push", for: .normal)
-        pushRightButton.setTitle("Push ►", for: .normal)
-        
+
+        // Set plain text button titles to avoid symbol confusion
+        startButton.setTitle("Start", for: .normal)
+        stopButton.setTitle("Stop", for: .normal)
+        pushLeftButton.setTitle("← Push", for: .normal)
+        pushRightButton.setTitle("Push →", for: .normal)
+
         // Create a container for the buttons with Golden Enterprises styling
         controlPanel = UIView()
         controlPanel.backgroundColor = .goldenSecondary
         controlPanel.applyGoldenCard() // Apply Golden Enterprise styling
         controlPanel.translatesAutoresizingMaskIntoConstraints = false
         parentView.addSubview(controlPanel)
-        
-        // Create button stacks for better organization
+
+        // Create button stacks for better organization - using vertical layout
+        // Row 1: Start/Stop buttons
         let simulationControlsStack = UIStackView()
         simulationControlsStack.axis = .horizontal
         simulationControlsStack.distribution = .fillEqually
-        simulationControlsStack.spacing = 10
+        simulationControlsStack.spacing = 20 // Increased spacing between buttons
         simulationControlsStack.translatesAutoresizingMaskIntoConstraints = false
         simulationControlsStack.addArrangedSubview(startButton)
         simulationControlsStack.addArrangedSubview(stopButton)
-        
+
+        // Row 2: Push buttons
         let forceControlsStack = UIStackView()
         forceControlsStack.axis = .horizontal
         forceControlsStack.distribution = .fillEqually
-        forceControlsStack.spacing = 10
+        forceControlsStack.spacing = 20 // Increased spacing between buttons
         forceControlsStack.translatesAutoresizingMaskIntoConstraints = false
         forceControlsStack.addArrangedSubview(pushLeftButton)
         forceControlsStack.addArrangedSubview(pushRightButton)
-        
-        
-        // Main control stack
+
+        // Main control stack - vertical layout with tighter spacing
         let controlStack = UIStackView()
         controlStack.axis = .vertical
-        controlStack.spacing = 12
+        controlStack.spacing = 10 // Reduced spacing between rows for a more compact layout
+        controlStack.distribution = .fillEqually // Ensure equal height for both rows
         controlStack.translatesAutoresizingMaskIntoConstraints = false
         controlStack.addArrangedSubview(simulationControlsStack)
         controlStack.addArrangedSubview(forceControlsStack)
-        
+
         controlPanel.addSubview(controlStack)
-        
+
+        // Get the SKView container to position controls relative to it
+        let skViewContainer = parentView.subviews.first { $0.backgroundColor == .white && $0.layer.cornerRadius > 0 }
+
         // Layout constraints
         NSLayoutConstraint.activate([
-            
-            // Control panel - positioned to leave space for phase space below
-            controlPanel.centerYAnchor.constraint(equalTo: parentView.centerYAnchor, constant: 50),
+            // Position control panel immediately below the SpriteKit view with minimal spacing
+            controlPanel.topAnchor.constraint(equalTo: skViewContainer?.bottomAnchor ?? parentView.centerYAnchor, constant: 10), // Reduced spacing
             controlPanel.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             controlPanel.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            controlPanel.heightAnchor.constraint(lessThanOrEqualToConstant: 140), // Ensure fixed max height
-            
-            // Control stack
-            controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 16),
-            controlStack.leadingAnchor.constraint(equalTo: controlPanel.leadingAnchor, constant: 16),
-            controlStack.trailingAnchor.constraint(equalTo: controlPanel.trailingAnchor, constant: -16),
-            controlStack.bottomAnchor.constraint(equalTo: controlPanel.bottomAnchor, constant: -16),
-            
-            // Control stacks height
-            simulationControlsStack.heightAnchor.constraint(equalToConstant: 50),
-            forceControlsStack.heightAnchor.constraint(equalToConstant: 50)
+            controlPanel.heightAnchor.constraint(equalToConstant: 100), // Slightly reduced height to be more compact
+
+            // Control stack - fill the container with a bit more padding
+            controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 10), // Increased padding
+            controlStack.leadingAnchor.constraint(equalTo: controlPanel.leadingAnchor, constant: 15), // Increased padding
+            controlStack.trailingAnchor.constraint(equalTo: controlPanel.trailingAnchor, constant: -15), // Increased padding
+            controlStack.bottomAnchor.constraint(equalTo: controlPanel.bottomAnchor, constant: -10), // Increased padding
+
+            // Make buttons have a minimum height
+            startButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
+            stopButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
+            pushLeftButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
+            pushRightButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40)
         ])
-        
+
         // We now position the phase space in setupPhaseSpaceView
     }
     
