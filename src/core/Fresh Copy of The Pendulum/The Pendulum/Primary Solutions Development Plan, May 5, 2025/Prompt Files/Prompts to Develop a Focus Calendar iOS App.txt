@@ -1,0 +1,141 @@
+Prompts to Develop a Focus Calendar iOS App
+Conversation by  Brian Abraham DiZio
+Last updated: 2025-05-02
+
+
+User:
+
+Hey Claude, can you help me form some prompts to bring the existing code, knowledge, and ideas I have to life in an Xcode project, an application, for iOS with Claude Code? 
+The Focus Calendar
+Brian DiZio’s Written Description: The Focus Calendar is a quasiperiodic, time-invariant calendar made for people of all backgrounds, meant to abstractly model one’s psychology, life, and allow for optimal, minimal difficulty monitoring of key trends, Goals, Foci, physiology, and other aspects of one’s life.  The idea is to set initial and approximate distributions the detail the entire view of one’s life, and then act accordingly to this calendar as best possible over the time span the user specifies.  Then, at when one intuitive feels they are going to change their habits, or their day to day, life, then they modify their Flow, the distributions and graph of Foci and Goals over the next time span they specify.  It also include other data inclusion and labeling, day by day, or in a more global, less intrusive way, like labeling approximate data for the previous three months, or previous Flow. It connects directly to The Bodies, and one day will model so many Types (Foci, Goals, Flows, Associations, Physiology, etc.) that the model can be applied to non-living Bodies, and other organisms, consciousnesses and spirits.
+Also attached is some initial code I'd written in Matlab, allowing users to select Foci, connect Types, and write percentages.
+
+Claude:
+
+I'd be happy to help you formulate prompts to bring The Focus Calendar to life as an iOS app using Claude Code! Based on the materials you've shared and your description, I'll create a series of prompts that can guide the development process step by step.
+Here are some prompts you can use with Claude Code to build your Focus Calendar iOS application:
+1. Project Setup and Core Data Model
+I've created a new iOS SwiftUI project named "The Focus Calendar".  Can you add Core Data integration. Design a data model that supports the following key entities:
+
+1. Focus - representing areas of focus with attributes like name, percentage, and description
+2. Goal - representing objectives with attributes like name and description  
+3. Flow - representing time periods with distributions of Foci and their connections to Goals
+4. Type - a flexible entity that can represent different categories (Tools, Articles, Gear, etc.)
+
+Include appropriate relationships between these entities, especially the many-to-many relationships between Foci and Goals, and the ability to track connections between different Types.
+
+Finally, create a simple initial view that displays the app name and a brief description.
+
+2. UI for Focus and Goal Management
+Create a set of SwiftUI views for managing Foci and Goals in the Focus Calendar app:
+
+1. A main tab view with sections for "View", "Edit", and "Dashboard"
+2. Under the "Edit" tab, create:
+   - A view for adding/editing Foci with sliders to set percentages
+   - A view for adding/editing Goals
+   - A connection interface for linking Foci to Goals
+
+Make sure the UI is clean, intuitive, and follows iOS design guidelines. Use appropriate SwiftUI components like List, Form, Slider, and Picker. Implement basic CRUD operations for these entities using Core Data.
+
+3. Flow Visualization Graph
+Create a network graph visualization for the Focus Calendar app that:
+
+1. Displays Foci as nodes with size proportional to their percentage
+2. Shows Goals as differently shaped nodes (perhaps diamonds)
+3. Draws lines connecting related Foci and Goals
+4. Uses a force-directed layout for natural positioning
+
+Implement touch interactions to:
+- Select nodes to see details
+- Drag nodes to adjust the layout
+- Pinch to zoom in/out of the graph
+
+The graph should update in real-time as the user modifies percentages or connections.
+
+4. Data Import and Export
+Implement data import and export functionality for the Focus Calendar app:
+
+1. Create a CSV parser that can import:
+   - Lists of Foci with percentage distributions
+   - Lists of Goals
+   - Connection matrices between different Types
+
+2. Add an export feature that generates:
+   - CSV files with the current Flow configuration
+   - Image snapshots of the current graph visualization
+   - JSON data for backup purposes
+
+Include appropriate UI elements for these features in a Settings view.
+
+5. Timeline and Flow Management
+Create a Flow management system for the Focus Calendar app:
+
+1. Implement a timeline interface that shows past, current, and planned Flows
+2. Add the ability to:
+   - Create a new Flow for a specific time period
+   - Copy an existing Flow as a starting point
+   - Transition between Flows with animations showing the changes
+
+3. Design a statistics view that shows:
+   - Changes in Focus percentages over time
+   - Goal completion metrics
+   - Trends and patterns in the data
+
+6. Type System Implementation
+Implement the extensible Type system for the Focus Calendar app:
+
+1. Create a flexible data structure that handles all the Type categories mentioned (Tools, Articles, Gear, Anatomy, Physiology, etc.)
+2. Design a UI for:
+   - Adding new Types and instances of each Type
+   - Connecting Types to each other
+   - Filtering and viewing connections between different Types
+
+3. Create a visualization that shows:
+   - Different Type categories with distinct colors/shapes
+   - Connections between Types
+   - The ability to focus on specific Type networks
+
+Use appropriate SwiftUI components and animations to make this interface intuitive and engaging.
+
+7. Settings and Customization
+Create a settings and customization system for the Focus Calendar app:
+
+1. Implement user preferences for:
+   - Visual themes (light/dark mode, color schemes)
+   - Graph layout options
+   - Default view configurations
+   - Notification preferences
+
+2. Add customization options for:
+   - Node appearances (shapes, colors, sizes)
+   - Connection visualizations (line styles, colors)
+   - Background designs or patterns
+   - Animation speeds and effects
+
+Store these preferences securely using UserDefaults or the Core Data model as appropriate.
+
+
+Stopped Here on May 2, 2025.
+
+
+8. Data Analysis and Insights
+Implement data analysis features for the Focus Calendar app:
+
+1. Create statistical calculations for:
+   - Focus distribution patterns
+   - Goal connections analysis
+   - Type relationship networks
+   - Temporal patterns in Flow transitions
+
+2. Design visualizations for these insights:
+   - Charts showing Focus percentage changes
+   - Heatmaps of Type connections
+   - Progress indicators for Goals
+   - Prediction graphs for future Flows
+
+Use SwiftUI's built-in visualization capabilities and/or integrate a charting library like SwiftUICharts.
+
+These prompts should help you get started with building The Focus Calendar as an iOS application. You can present them to Claude Code one at a time as you progress through the development process. Each prompt builds on the previous ones, gradually adding more functionality to the app.
+Would you like me to adjust any of these prompts or create additional ones for specific features you're particularly interested in implementing?
+
+This document was created using Claudify⚡ – Your smart solution for turning chats into PDFs. Download Claudify now to preserve and organize your conversations effortlessly!

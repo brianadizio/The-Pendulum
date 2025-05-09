@@ -20,7 +20,7 @@ class DashboardViewController: UIViewController {
     
     // Analytics dashboard view
     private var analyticsDashboardView: AnalyticsDashboardViewNative!
-    private var showDetailedAnalytics: Bool = false // Toggle between simple and detailed views
+    private var showDetailedAnalytics: Bool = true // Default to advanced dashboard
     
     // Import TimeRange from the native view for compatibility
     typealias DashboardTimeRange = AnalyticsTimeRange
@@ -65,6 +65,12 @@ class DashboardViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateStats()
+
+        // Don't automatically update the dashboard when the view appears
+        // This was likely resetting the time range selection
+        // if showDetailedAnalytics {
+        //     analyticsDashboardView.updateDashboard(sessionId: viewModel.currentSessionId)
+        // }
     }
     
     override func viewDidLayoutSubviews() {
@@ -101,7 +107,7 @@ class DashboardViewController: UIViewController {
         // Setup Analytics Dashboard view
         analyticsDashboardView = AnalyticsDashboardViewNative(frame: view.bounds)
         analyticsDashboardView.translatesAutoresizingMaskIntoConstraints = false
-        analyticsDashboardView.isHidden = true // Start with standard dashboard view
+        analyticsDashboardView.isHidden = false // Start with advanced dashboard view
         view.addSubview(analyticsDashboardView)
         
         NSLayoutConstraint.activate([
@@ -111,8 +117,9 @@ class DashboardViewController: UIViewController {
             analyticsDashboardView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         
-        // Setup scroll view for standard dashboard
+        // Setup scroll view for standard dashboard (initially hidden)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.isHidden = true
         view.addSubview(scrollView)
         
         NSLayoutConstraint.activate([
@@ -192,7 +199,7 @@ class DashboardViewController: UIViewController {
         // Create title label
         titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "The Pendulum Dashboard"
+        titleLabel.text = "Pendulum Analytics"
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .white
         headerView.addSubview(titleLabel)
@@ -200,7 +207,7 @@ class DashboardViewController: UIViewController {
         // Create view toggle button
         let toggleButton = UIButton(type: .system)
         toggleButton.translatesAutoresizingMaskIntoConstraints = false
-        toggleButton.setTitle("Detailed Analytics", for: .normal)
+        toggleButton.setTitle("Simple Dashboard", for: .normal)
         toggleButton.setTitleColor(.white, for: .normal)
         toggleButton.backgroundColor = (UIColor.goldenAccent as UIColor)
         toggleButton.layer.cornerRadius = 10
@@ -482,24 +489,27 @@ class DashboardViewController: UIViewController {
         phaseSpaceView?.clearPoints()
         phaseSpaceView?.addPoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
         
-        // Also update the detailed analytics view
+        // Also update the detailed analytics view while preserving time range selection
         if showDetailedAnalytics {
-            analyticsDashboardView.updateDashboard(timeRange: AnalyticsTimeRange.session, sessionId: viewModel.currentSessionId)
+            // Don't update the dashboard from here - it might be causing the time range reset
+            // analyticsDashboardView.updateDashboard(sessionId: viewModel.currentSessionId)
+
+            // Instead, let the analytics view stay as-is with the user's selected time range
         }
     }
     
     @objc private func toggleAnalyticsView() {
         // Toggle between simple dashboard and detailed analytics
         showDetailedAnalytics = !showDetailedAnalytics
-        
+
         // Update UI based on selected view
         if showDetailedAnalytics {
             scrollView.isHidden = true
             analyticsDashboardView.isHidden = false
-            
-            // Force update of the analytics dashboard when toggling
-            analyticsDashboardView.updateDashboard(timeRange: AnalyticsTimeRange.session, sessionId: viewModel.currentSessionId)
-            
+
+            // Don't force an update when toggling views
+            // analyticsDashboardView.updateDashboard(sessionId: viewModel.currentSessionId)
+
             // Update button text
             if let button = headerView.subviews.last as? UIButton {
                 button.setTitle("Simple Dashboard", for: .normal)
@@ -507,7 +517,7 @@ class DashboardViewController: UIViewController {
         } else {
             scrollView.isHidden = false
             analyticsDashboardView.isHidden = true
-            
+
             // Update button text
             if let button = headerView.subviews.last as? UIButton {
                 button.setTitle("Detailed Analytics", for: .normal)

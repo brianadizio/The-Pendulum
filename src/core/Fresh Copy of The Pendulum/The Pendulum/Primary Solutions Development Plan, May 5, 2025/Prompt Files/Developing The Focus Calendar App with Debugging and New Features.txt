@@ -1,0 +1,137 @@
+Developing The Focus Calendar App with Debugging and New Features
+Conversation by  Brian Abraham DiZio
+Last updated: 2025-05-03
+
+
+User:
+
+Hey Claude... I have been and am going to be developing my application The Focus Calendar this weekend with you, Claude Code.  Can you write me some prompts based on the state of the application to get it where I want it to be? Please reference The Maze UI Draft Combined.pdf in the project knowledge for UI information, please reference the attached STATUS.md document, please reference the attached images from the build, please reference the older attached The Focus Calendar prompts document but take it with a grain of salt as it is from previous development. I want a flourishing application with debugging capability, ability to import mazes generated on my website, export maze gameplay data and topological data analysis. I need these prompts to be formatted as prompts I can input the my terminal, for using Claude Code. I don't have any images of screens as I had build errors to resolve.
+
+Claude:
+
+I understand you're working on The Focus Calendar iOS application and need help with debugging build errors and implementing additional features like maze imports and topological data analysis. Based on the STATUS.md document and your requirements, here are prompts formatted for Claude Code that will help you resolve current issues and implement new features.
+Build Error Resolution Prompts
+Prompt 1: Fix ModesViewRefactored Build Errors
+Fix the build errors in ModesViewRefactored.swift by:
+1. Resolving generic parameter inference errors
+2. Fixing property access issues in SettingsManager
+3. Implementing the missing customModeSettings functionality
+4. Breaking down complex view structures into smaller components to prevent compiler timeouts
+
+Additionally, create a proper implementation for the SettingsManager class that includes storage for custom mode settings.
+
+
+  The next steps would be to implement the completed entity relationships
+  between Focus, Goal, Flow, and Type, and enhance the flow visualizations
+  and network graph functionality.
+
+
+Prompt 2: Simplify Complex Views
+Refactor overly complex views in the project to improve build times and reduce compiler errors:
+1. Break down views with excessive nesting into smaller, reusable components
+2. Extract visualization logic into dedicated files
+3. Implement proper view modifiers to reduce code repetition
+4. Apply @ViewBuilder for complex conditional rendering
+5. Utilize lazy loading with LazyVStack and LazyHStack for performance-intensive views
+
+Focus especially on views that might be causing compiler timeouts, although we did get it to build. What I want to focus on now, is that there is somewhat of an embedded UI, rather than explicit, one-step, clear, as I planned.  But, you got extreme functionality in there.  So what I'm thinking, is that the Home Tab needs to actually show a visualization of The Focus Calendar, like the Active Flow visualization View, the Network View, the Heatmap View, the Connections View, or the Flow Details View.  These options, that are currently embedded in the 'More' Tab, should be implanted on the Home Screen, which we could change to the view screen for now.  Then, the remaining Editor views, like Type Edit, Distribution, Bar Edit, and Connection Edit, should be on the Edit Tab.  Then, as a second major reorganization, all of the settings on the More Tab, also somewhat embedded, should go to a completely new tab, called 'Settings'. So I suppose we can keep the Home Tab, a View tab, but both with the views embedded in 'More', an Edit tab with the added editing functionality from the 'More' Tab, and a Dashboard Tab.  Also add two place holder tabs, for Mode, and Integration.  This should smooth out the degrees of freedom, complexity in the UI, as there seem to be many layers of embedded views and such, especially in the 'More' tab.
+
+
+STOPPED HERE. May 3, 2025 at 12:45 PM for building and debugging
+
+Prompt 3: Standardize Manager Classes
+Standardize the pattern across all manager classes to improve consistency and reduce conflicts:
+1. Create a common protocol or base class for manager functionality
+2. Ensure all managers follow consistent naming conventions
+3. Implement proper singleton patterns where appropriate
+4. Add comprehensive error handling
+5. Standardize initialization patterns
+6. Apply proper access control modifiers
+
+Focus on DistributionManager, SettingsManager, and FlowDistributionController.
+
+Core Functionality Completion Prompts
+Prompt 4: Complete Core Data Relationships
+Complete and verify all Core Data entity relationships:
+1. Ensure proper relationships between Focus, Goal, Flow, and Type entities
+2. Implement cascade deletion rules to prevent orphaned records
+3. Add validation logic for entity attributes
+4. Create convenience methods for common operations on these entities
+5. Implement proper error handling for Core Data operations
+6. Add unit tests to verify relationship functionality
+
+Focus on many-to-many relationships between Foci and Goals.
+
+Prompt 5: Enhance Flow Visualization
+Enhance the network graph visualization for Flow:
+1. Improve performance of the network graph
+2. Add smooth animations for Flow transitions 
+3. Implement touch gestures for interaction (pinch to zoom, drag to reposition)
+4. Add visual indicators for Focus percentages
+5. Implement node highlighting for connected elements
+6. Create a legend to explain visual elements
+
+Use SwiftUI's Canvas or integrate with a third-party visualization library if needed.
+
+Feature Implementation Prompts
+Prompt 6: Maze Import Functionality
+Implement functionality to import mazes generated from your website:
+1. Create a data model for maze representations
+2. Add a file picker interface to select maze files
+3. Implement a parser for your maze file format
+4. Create a visualization component to display imported mazes
+5. Add validation to ensure imported mazes are valid
+6. Implement error handling for the import process
+
+Make sure the UI provides clear feedback during the import process.
+
+Prompt 7: Maze Gameplay Data Export
+Implement export functionality for maze gameplay data:
+1. Design a data structure to capture gameplay metrics (time, moves, completion rate)
+2. Create a mechanism to record user interactions with mazes
+3. Implement export options for CSV, JSON, and other common formats
+4. Add a UI for selecting which data to export
+5. Include metadata (date, user info, maze version) in exports
+6. Implement share functionality to easily send exported data
+
+Ensure exported data follows a consistent format for later analysis.
+
+Prompt 8: Topological Data Analysis
+Implement topological data analysis features for maze gameplay:
+1. Create methods to calculate persistence diagrams from maze structures
+2. Implement algorithms to identify topological features in user gameplay paths
+3. Add visualization components to display topological analyses
+4. Create a comparison tool to analyze different solving strategies
+5. Implement data filtering options for the analysis
+6. Add export functionality specifically for topological analysis results
+
+Use appropriate mathematical libraries or implement custom algorithms as needed.
+
+Prompt 9: Debug Console Implementation
+Create a developer debug console for the application:
+1. Implement a hidden gesture to access the debug interface
+2. Add logging functionality to capture app events
+3. Create tools to inspect Core Data entities and relationships
+4. Add performance metrics tracking (memory usage, render times)
+5. Implement tools to simulate different user scenarios
+6. Add network request monitoring if applicable
+7. Create a mechanism to export debug logs
+
+Make sure the debug console is only available in development builds.
+
+Prompt 10: Full Testing Suite
+Implement a comprehensive testing suite for the application:
+1. Create unit tests for all model classes and manager functionality
+2. Implement UI tests for critical user flows
+3. Add performance tests for visualization components
+4. Create snapshot tests for UI components
+5. Implement stress tests for data handling with large datasets
+6. Add integration tests for the complete application flow
+7. Create automated tests for import/export functionality
+
+Ensure tests run both locally and in a CI environment if available.
+
+These prompts are designed to systematically address the current build issues and implement the features you've requested. They follow a logical progression starting with fixing immediate build errors, then completing core functionality, and finally implementing new features like maze import and topological analysis.
+Would you like me to adjust any of these prompts or create additional ones for specific features you're particularly interested in?
+
+This document was created using Claudify⚡ – Your smart solution for turning chats into PDFs. Download Claudify now to preserve and organize your conversations effortlessly!

@@ -575,6 +575,10 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     }
     
     func startSimulation() {
+        // If there's already a timer running, invalidate it first to prevent multiple timers
+        stopSimulation()
+        
+        // Now start a fresh timer
         isSimulating = true
         timer = Timer.scheduledTimer(withTimeInterval: 0.002, repeats: true) { [weak self] _ in
             self?.step()

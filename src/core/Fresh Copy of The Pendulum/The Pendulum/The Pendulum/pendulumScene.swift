@@ -411,18 +411,22 @@ class PendulumScene: SKScene {
         // Update animation time
         pendulumAnimationTime = currentTime
         
-        // Update pendulum position
-        updatePendulumPosition(with: viewModel.currentState)
-        
-        // Update trail visualization
-        updateTrailVisualization(with: viewModel)
-        
-        // Update phase space visualization
-        updatePhaseSpaceVisualization(with: viewModel.currentState)
-        
-        // Update perturbation manager if it exists
-        if let perturbationManager = self.perturbationManager {
-            perturbationManager.update(currentTime: currentTime)
+        // IMPORTANT: Only update visual elements if simulation is actually running
+        // This ensures the pendulum completely stops when stopSimulation() is called
+        if viewModel.isSimulating {
+            // Update pendulum position
+            updatePendulumPosition(with: viewModel.currentState)
+            
+            // Update trail visualization
+            updateTrailVisualization(with: viewModel)
+            
+            // Update phase space visualization
+            updatePhaseSpaceVisualization(with: viewModel.currentState)
+            
+            // Update perturbation manager if it exists
+            if let perturbationManager = self.perturbationManager {
+                perturbationManager.update(currentTime: currentTime)
+            }
         }
     }
     
