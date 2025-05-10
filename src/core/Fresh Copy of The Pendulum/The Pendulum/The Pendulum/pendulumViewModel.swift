@@ -124,27 +124,30 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         momentOfInertia = 1.0  // Further increased inertia for more stability
         forceStrength = 3.0    // Higher force strength but with better control scaling
         initialPerturbation = 10.0  // Even smaller initial perturbation for easier start
-        
+
         // Initial state setup for inverted pendulum - very small perturbation to make it easier to start
         currentState = PendulumState(theta: Double.pi + 0.02, thetaDot: 0, time: 0)
-        
+
         // Load high score from Core Data
         highScore = coreDataManager.getHighestScore()
-        
+
         // Setup achievements if needed
         setupAchievements()
-        
+
         // Set up level manager
         levelManager.delegate = self
-        
+
         // Initialize based on simulation's defaults
         loadInitialParameters()
-        
+
         // Get the level configuration from level manager
         applyLevelConfiguration(levelManager.getConfigForLevel(currentLevel))
-        
+
         // Ensure the simulation has our values
         updateSimulationParameters()
+
+        // Set quasi-periodic mode (Primary mode) as the default
+        enableQuasiPeriodicMode()
     }
     
     // MARK: - LevelProgressionDelegate Methods
@@ -981,6 +984,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
 
         // Ensure current display reflects Level 1
         currentLevel = 1
+
+        // Increase the initial perturbation to prevent auto-balancing
+        initialPerturbation = 15.0 // Make the pendulum start further from vertical
     }
 
     /// Handles level completion in quasi-periodic mode (Primary mode)
