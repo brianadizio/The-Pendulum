@@ -609,4 +609,100 @@ class PendulumScene: SKScene {
         // Update the pendulum position to reflect the new length
         updatePendulumPosition(with: viewModel.currentState)
     }
+
+    // MARK: - Particle Effects
+
+    /// Shows a level completion particle effect
+    func showLevelCompletionEffect(at position: CGPoint? = nil) {
+        // Use the center of the scene if no position is provided
+        let effectPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
+
+        // Create the particle effect from the pre-designed SKS file
+        if let levelCompletionParticle = SKEmitterNode(fileNamed: "LevelCompletionParticle") {
+            levelCompletionParticle.position = effectPosition
+            levelCompletionParticle.zPosition = 100 // Above all other elements
+            addChild(levelCompletionParticle)
+
+            // Set a lifetime for the particle effect
+            let particleLifetime: TimeInterval = 2.0
+
+            // Remove after particles finish emitting
+            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
+                levelCompletionParticle.removeFromParent()
+            }
+        }
+    }
+
+    /// Shows a new level start particle effect
+    func showNewLevelEffect(at position: CGPoint? = nil) {
+        // Use the center of the scene if no position is provided
+        let effectPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
+
+        // Create the particle effect from the pre-designed SKS file
+        if let newLevelParticle = SKEmitterNode(fileNamed: "NewLevelParticle") {
+            newLevelParticle.position = effectPosition
+            newLevelParticle.zPosition = 100 // Above all other elements
+            addChild(newLevelParticle)
+
+            // Set a lifetime for the particle effect
+            let particleLifetime: TimeInterval = 2.0
+
+            // Remove after particles finish emitting
+            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
+                newLevelParticle.removeFromParent()
+            }
+        }
+    }
+
+    /// Shows an achievement unlocked particle effect
+    func showAchievementEffect(at position: CGPoint? = nil) {
+        // Use the center of the scene if no position is provided
+        let effectPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
+
+        // Create the particle effect from the pre-designed SKS file
+        if let achievementParticle = SKEmitterNode(fileNamed: "GoldenAchievementParticle") {
+            achievementParticle.position = effectPosition
+            achievementParticle.zPosition = 100 // Above all other elements
+            addChild(achievementParticle)
+
+            // Set a lifetime for the particle effect
+            let particleLifetime: TimeInterval = 3.0
+
+            // Remove after particles finish emitting
+            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
+                achievementParticle.removeFromParent()
+            }
+        }
+    }
+
+    /// Shows a balance maintained particle effect around the pendulum bob
+    func showBalanceEffect() {
+        // Create the particle effect at the bob position
+        if let balanceParticle = SKEmitterNode(fileNamed: "BalanceParticle") {
+            balanceParticle.position = pendulumBob.position
+            balanceParticle.zPosition = 14 // Just below the bob
+            balanceParticle.targetNode = self // Set the scene as the target
+            addChild(balanceParticle)
+
+            // Set a lifetime for the particle effect
+            let particleLifetime: TimeInterval = 1.0
+
+            // Remove after particles finish emitting
+            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
+                balanceParticle.removeFromParent()
+            }
+        }
+    }
+
+    /// Clears the phase space visualization for mode changes
+    func clearPhaseSpace() {
+        // Reset phase space data
+        phaseSpacePoints.removeAll()
+
+        // Clear the phase trajectory path if it exists
+        if let phaseSpaceNode = phaseSpaceNode,
+           let trajectoryNode = phaseSpaceNode.childNode(withName: "phaseTrajectory") as? SKShapeNode {
+            trajectoryNode.path = nil
+        }
+    }
 }

@@ -16,6 +16,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var gameOverReason: String?
     @Published var balanceStartTime: Date?
     @Published var totalBalanceTime: TimeInterval = 0
+
+    // Game mode properties
+    @Published var isQuasiPeriodicMode: Bool = false // For Primary mode
+    @Published var isProgressiveMode: Bool = false // For Progressive mode
+    @Published var totalLevelsCompleted: Int = 0 // Track total levels completed in quasi-periodic mode
     
     // Level system properties
     @Published var currentLevel: Int = 1
@@ -369,21 +374,25 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     private func levelCompleted() {
         // Check achievement: reach level X
         checkLevelAchievements()
-        
+
         // Add bonus points for completing level
         let levelBonus = currentLevel * 100
         score += levelBonus
-        
+
         // Show bonus points notification
         print("Level \(currentLevel) completed! Bonus: \(levelBonus) points")
-        
+
         // Reset consecutive balance time
         consecutiveBalanceTime = 0
-        
+
         // Update stats
         levelStats["levelsCompleted"] = Double(currentLevel)
         levelStats["currentLevel"] = Double(currentLevel)
-        
+
+        // Increment total levels completed counter for stats
+        totalLevelsCompleted += 1
+        levelStats["totalLevelsCompleted"] = Double(totalLevelsCompleted)
+
         // Update Core Data session
         if let sessionId = currentSessionId {
             coreDataManager.updatePlaySession(
@@ -394,78 +403,98 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 maxAngle: maxAngleRecovered
             )
         }
-        
+
         // Announce level completion
-        gameOverReason = "Level \(currentLevel) completed!"
-        
+        if isQuasiPeriodicMode {
+            gameOverReason = "Level completed! Total: \(totalLevelsCompleted)"
+        } else {
+            gameOverReason = "Level \(currentLevel) completed!"
+        }
+
         // Brief pause before starting new level
         let wasSimulating = isSimulating
         stopSimulation()
-        
+
         // Store completed level for celebration
         let completedLevel = currentLevel
-        
-        // Trigger level manager to advance to next level
-        levelManager.advanceToNextLevel()
-        
-        // Get the config for the next level
-        let nextLevelConfig = levelManager.getConfigForLevel(currentLevel)
-        
-        // Show level completion animation and start new level
-        if let sceneView = self.scene?.view {
-            sceneView.levelCompletionAnimation {
-                // After completion animation finishes, show new level intro
-                sceneView.newLevelStartAnimation(
-                    level: self.currentLevel,
-                    description: nextLevelConfig.description
-                ) {
-                    // After the new level intro finishes, start the new level
-                    
+
+        // Handle level progression based on game mode
+        if isQuasiPeriodicMode {
+            // In quasi-periodic mode, we reset to level 1 after completion
+            // This allows the player to keep completing the same level and tracking stats
+            handleQuasiPeriodicLevelCompletion()
+        } else if isProgressiveMode {
+            // In progressive mode, we advance to next level with increasing difficulty
+            handleProgressiveLevelCompletion()
+        } else {
+            // In standard mode, just advance to next level
+            levelManager.advanceToNextLevel()
+
+            // Get the config for the next level
+            let nextLevelConfig = levelManager.getConfigForLevel(currentLevel)
+
+            // Show level completion animation and start new level - with faster transitions
+            if let sceneView = self.scene?.view {
+                // Add level completion particle effect
+                self.scene?.showLevelCompletionEffect()
+
+                sceneView.levelCompletionAnimation {
+                    // After completion animation finishes, show new level intro
+                    // Add new level particle effect
+                    self.scene?.showNewLevelEffect()
+
+                    sceneView.newLevelStartAnimation(
+                        level: self.currentLevel,
+                        description: nextLevelConfig.description
+                    ) {
+                        // After the new level intro finishes, start the new level
+
+                        // Create a new perturbed state with increased difficulty from config
+                        let degreesOffset = nextLevelConfig.initialPerturbation
+                        let radianOffset = degreesOffset * Double.pi / 180.0
+                        let direction = Bool.random() ? 1.0 : -1.0
+                        let initialTheta = Double.pi + (direction * radianOffset)
+                        let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
+
+                        // Reset to new level state
+                        self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                        self.simulation.setInitialState(state: self.currentState)
+
+                        // Update game over message to show current level
+                        self.gameOverReason = "Level \(self.currentLevel): \(nextLevelConfig.description)"
+
+                        // Start new level
+                        if wasSimulating {
+                            self.startSimulation()
+                        }
+                    }
+                }
+            } else {
+                // Fallback if no scene view available - just restart after a delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                    guard let self = self else { return }
+
+                    // Get the next level configuration
+                    let config = self.levelManager.getConfigForLevel(self.currentLevel)
+
                     // Create a new perturbed state with increased difficulty from config
-                    let degreesOffset = nextLevelConfig.initialPerturbation
+                    let degreesOffset = config.initialPerturbation
                     let radianOffset = degreesOffset * Double.pi / 180.0
                     let direction = Bool.random() ? 1.0 : -1.0
                     let initialTheta = Double.pi + (direction * radianOffset)
                     let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
-                    
+
                     // Reset to new level state
                     self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
                     self.simulation.setInitialState(state: self.currentState)
-                    
+
                     // Update game over message to show current level
-                    self.gameOverReason = "Level \(self.currentLevel): \(nextLevelConfig.description)"
-                    
+                    self.gameOverReason = "Level \(self.currentLevel): \(config.description)"
+
                     // Start new level
                     if wasSimulating {
                         self.startSimulation()
                     }
-                }
-            }
-        } else {
-            // Fallback if no scene view available - just restart after a delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                guard let self = self else { return }
-                
-                // Get the next level configuration
-                let config = self.levelManager.getConfigForLevel(self.currentLevel)
-                
-                // Create a new perturbed state with increased difficulty from config
-                let degreesOffset = config.initialPerturbation
-                let radianOffset = degreesOffset * Double.pi / 180.0
-                let direction = Bool.random() ? 1.0 : -1.0
-                let initialTheta = Double.pi + (direction * radianOffset)
-                let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
-                
-                // Reset to new level state
-                self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
-                self.simulation.setInitialState(state: self.currentState)
-                
-                // Update game over message to show current level
-                self.gameOverReason = "Level \(self.currentLevel): \(config.description)"
-                
-                // Start new level
-                if wasSimulating {
-                    self.startSimulation()
                 }
             }
         }
@@ -673,10 +702,15 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 if let lastUpdate = lastScoreUpdate, Date().timeIntervalSince(lastUpdate) >= scoreUpdateInterval {
                     // Check for perfect balance (closer to vertical)
                     let isPerfectBalance = angleFromTop < perfectBalanceThreshold
-                    
+
                     // Update perfect balance streak
                     if isPerfectBalance {
                         perfectBalanceStreak += 1
+
+                        // Show balance particle effect every 5 perfect balances
+                        if perfectBalanceStreak % 5 == 0 {
+                            scene?.showBalanceEffect()
+                        }
                         
                         // Increase multiplier when reaching streak thresholds
                         if perfectBalanceStreak % 10 == 0 {
@@ -733,7 +767,10 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                         if levelSuccessTime - consecutiveBalanceTime < 10.0 && !unlockedAchievements.contains("quick_level") {
                             unlockAchievement(id: "quick_level")
                         }
-                        
+
+                        // Show an additional balance effect on level completion
+                        scene?.showBalanceEffect()
+
                         // Track level completion in analytics
                         if let sessionId = currentSessionId {
                             let normalizedFromVertical = normalizeAngle(currentState.theta - Double.pi)
@@ -920,12 +957,225 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     func setForceStrength(_ strength: Double) {
         forceStrength = strength
         print("Set force strength to \(forceStrength)")
-        
+
         // Immediately update any running simulations
         if isSimulating {
             // Force a parameter update to active simulation
             updateSimulationParameters()
         }
+    }
+
+    // MARK: - Game Mode Methods
+
+    /// Enables quasi-periodic mode (Primary mode)
+    /// In this mode, the player resets to level 1 after completion, but we track total levels beaten
+    func enableQuasiPeriodicMode() {
+        isQuasiPeriodicMode = true
+        isProgressiveMode = false
+
+        // Reset to level 1
+        levelManager.resetToLevel1()
+
+        // Update game state
+        gameOverReason = "Primary Mode: Beat level 1 repeatedly"
+
+        // Ensure current display reflects Level 1
+        currentLevel = 1
+    }
+
+    /// Handles level completion in quasi-periodic mode (Primary mode)
+    private func handleQuasiPeriodicLevelCompletion() {
+        // Reset to level 1
+        levelManager.resetToLevel1()
+
+        // Show enhanced celebration animation
+        if let sceneView = self.scene?.view {
+            // Customized animation for quasi-periodic mode
+            // Add level completion particle effect
+            self.scene?.showLevelCompletionEffect()
+
+            sceneView.levelCompletionAnimation {
+                // Show a customized message with total levels completed
+                // Add new level particle effect
+                self.scene?.showNewLevelEffect()
+
+                sceneView.newLevelStartAnimation(
+                    level: 1,
+                    description: "Total Levels Completed: \(self.totalLevelsCompleted)"
+                ) {
+                    // After animation, restart level 1
+                    let config = self.levelManager.getConfigForLevel(1)
+
+                    // Create a new perturbed state for level 1
+                    let degreesOffset = config.initialPerturbation
+                    let radianOffset = degreesOffset * Double.pi / 180.0
+                    let direction = Bool.random() ? 1.0 : -1.0
+                    let initialTheta = Double.pi + (direction * radianOffset)
+                    let initialThetaDot = direction * radianOffset * 0.02
+
+                    // Reset to level 1 state
+                    self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                    self.simulation.setInitialState(state: self.currentState)
+
+                    // Update game message to show quasi-periodic mode stats
+                    self.gameOverReason = "Primary Mode: Level 1 (Total: \(self.totalLevelsCompleted))"
+
+                    // Start simulation
+                    self.startSimulation()
+                }
+            }
+        } else {
+            // Fallback if no scene view - just restart after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                guard let self = self else { return }
+
+                let config = self.levelManager.getConfigForLevel(1)
+
+                // Create a new perturbed state for level 1
+                let degreesOffset = config.initialPerturbation
+                let radianOffset = degreesOffset * Double.pi / 180.0
+                let direction = Bool.random() ? 1.0 : -1.0
+                let initialTheta = Double.pi + (direction * radianOffset)
+                let initialThetaDot = direction * radianOffset * 0.02
+
+                // Reset to level 1 state
+                self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                self.simulation.setInitialState(state: self.currentState)
+
+                // Update game message
+                self.gameOverReason = "Primary Mode: Level 1 (Total: \(self.totalLevelsCompleted))"
+
+                // Start simulation
+                self.startSimulation()
+            }
+        }
+    }
+
+    /// Enables progressive difficulty mode (Progressive mode)
+    /// In this mode, difficulty continuously increases with each level completion
+    func enableProgressiveMode() {
+        isProgressiveMode = true
+        isQuasiPeriodicMode = false
+
+        // Reset to level 1
+        levelManager.resetToLevel1()
+
+        // Update game state
+        gameOverReason = "Progressive Mode: Increasing difficulty"
+
+        // Ensure current display reflects Level 1
+        currentLevel = 1
+    }
+
+    /// Handles level completion in progressive mode
+    private func handleProgressiveLevelCompletion() {
+        // Advance to next level with increased difficulty
+        levelManager.advanceToNextLevel()
+
+        // Get the next level configuration
+        let nextLevelConfig = levelManager.getConfigForLevel(currentLevel)
+
+        // Show enhanced celebration animation
+        if let sceneView = self.scene?.view {
+            // Customized animation for progressive mode
+            // Add level completion particle effect
+            self.scene?.showLevelCompletionEffect()
+
+            sceneView.levelCompletionAnimation {
+                // Show a level intro with progressive mode indicator
+                // Add new level particle effect
+                self.scene?.showNewLevelEffect()
+
+                sceneView.newLevelStartAnimation(
+                    level: self.currentLevel,
+                    description: nextLevelConfig.description + " (Progressive)"
+                ) {
+                    // After animation, start the new level
+
+                    // Create a new perturbed state with increased difficulty from config
+                    let degreesOffset = nextLevelConfig.initialPerturbation
+                    let radianOffset = degreesOffset * Double.pi / 180.0
+                    let direction = Bool.random() ? 1.0 : -1.0
+                    let initialTheta = Double.pi + (direction * radianOffset)
+                    let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
+
+                    // Reset to new level state
+                    self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                    self.simulation.setInitialState(state: self.currentState)
+
+                    // Update game message
+                    self.gameOverReason = "Progressive Mode: Level \(self.currentLevel)"
+
+                    // Start simulation
+                    self.startSimulation()
+                }
+            }
+        } else {
+            // Fallback if no scene view - just restart after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                guard let self = self else { return }
+
+                // Create a new perturbed state with increased difficulty from config
+                let degreesOffset = nextLevelConfig.initialPerturbation
+                let radianOffset = degreesOffset * Double.pi / 180.0
+                let direction = Bool.random() ? 1.0 : -1.0
+                let initialTheta = Double.pi + (direction * radianOffset)
+                let initialThetaDot = direction * radianOffset * 0.05  // Increased initial velocity for higher levels
+
+                // Reset to new level state
+                self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
+                self.simulation.setInitialState(state: self.currentState)
+
+                // Update game message
+                self.gameOverReason = "Progressive Mode: Level \(self.currentLevel)"
+
+                // Start simulation
+                self.startSimulation()
+            }
+        }
+    }
+
+    /// Reset to level 1 while keeping statistics (for Primary mode)
+    func resetToLevel1KeepingStats() {
+        // Enable quasi-periodic mode
+        enableQuasiPeriodicMode()
+
+        // Reset game state but don't reset totalLevelsCompleted
+        resetGame(resetStats: false)
+    }
+
+    /// Reset to level 1 with progressive difficulty (for Progressive mode)
+    func resetToLevel1WithProgressiveDifficulty() {
+        // Enable progressive mode
+        enableProgressiveMode()
+
+        // Reset game state
+        resetGame()
+    }
+
+    /// Reset game state, optionally preserving statistics
+    func resetGame(resetStats: Bool = true) {
+        // Reset game state
+        score = 0
+        consecutiveBalanceTime = 0
+
+        // Reset the level to 1
+        levelManager.resetToLevel1()
+
+        // Clear phase space tracking
+        scene?.clearPhaseSpace()
+
+        // Reset total stats only if requested
+        if resetStats {
+            totalLevelsCompleted = 0
+            totalBalanceTime = 0
+            levelStats = [:]
+        }
+
+        // Reset the pendulum to a slightly perturbed upright position
+        let initialTheta = Double.pi + 0.1
+        currentState = PendulumState(theta: initialTheta, thetaDot: 0, time: 0)
+        simulation.setInitialState(state: currentState)
     }
     
     // Apply parameter changes immediately to active simulation
@@ -978,7 +1228,10 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 
                 // Show achievement notification
                 print("Achievement unlocked: \(achievement.name ?? "Unknown") - \(achievement.achievementDescription ?? "")")
-                
+
+                // Show achievement particle effect
+                scene?.showAchievementEffect()
+
                 // Add bonus points for achievement
                 let bonusPoints = Int(achievement.points) * 10
                 score += bonusPoints

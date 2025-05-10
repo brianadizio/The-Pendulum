@@ -1,0 +1,33 @@
+{
+    "particleTexture" : "spark.png",
+    "particleColor" : "#3498dbff",
+    "particleColorSequence" : [
+        {"color": "#3498dbff", "time": 0.0},
+        {"color": "#2ecc71ff", "time": 0.5},
+        {"color": "#f1c40fff", "time": 1.0}
+    ],
+    "particleColorBlendFactor" : 1,
+    "particleColorBlendFactorSequence" : null,
+    "particleScale" : 0.5,
+    "particleScaleRange" : 0.3,
+    "particleScaleSpeed" : -0.1,
+    "particleAlphaSequence" : [
+        {"alpha": 0.0, "time": 0.0},
+        {"alpha": 0.8, "time": 0.1},
+        {"alpha": 0.4, "time": 0.7},
+        {"alpha": 0.0, "time": 1.0}
+    ],
+    "birthRate" : 20,
+    "lifetime" : 1.2,
+    "lifetimeRange" : 0.4,
+    "particleSpeed" : 30,
+    "particleSpeedRange" : 15,
+    "particleAngularVelocity" : 0,
+    "particleAngularVelocityRange" : 180,
+    "emissionAngle" : 0,
+    "emissionAngleRange" : 360,
+    "xAcceleration" : 0,
+    "yAcceleration" : 0,
+    "emitterType" : 0,
+    "particleBlendMode" : "add"
+}
