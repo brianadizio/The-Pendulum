@@ -341,42 +341,63 @@ class LevelManager {
 
 extension UIView {
     func levelCompletionAnimation(completion: @escaping () -> Void) {
+        // Create a container for the animation
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        container.layer.cornerRadius = 20
+        container.alpha = 0
+
+        // Add to view
+        self.addSubview(container)
+
+        // Center constraints and size
+        NSLayoutConstraint.activate([
+            container.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            container.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            container.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
+            container.heightAnchor.constraint(equalToConstant: 120)
+        ])
+
         // Create a "Level Complete" label
         let levelCompleteLabel = UILabel()
         levelCompleteLabel.text = "Level Complete!"
         levelCompleteLabel.textAlignment = .center
         levelCompleteLabel.textColor = .white
         levelCompleteLabel.font = UIFont.boldSystemFont(ofSize: 32)
-        levelCompleteLabel.alpha = 0
         levelCompleteLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        // Add to view
-        self.addSubview(levelCompleteLabel)
+        // Add to container
+        container.addSubview(levelCompleteLabel)
 
         // Center constraints
         NSLayoutConstraint.activate([
-            levelCompleteLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            levelCompleteLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+            levelCompleteLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            levelCompleteLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
 
-        // Flash animation with scale - faster than before
+        // Fade in container
         UIView.animate(withDuration: 0.2, animations: {
-            levelCompleteLabel.alpha = 1.0
-            levelCompleteLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+            container.alpha = 1.0
         }, completion: { _ in
-            UIView.animate(withDuration: 0.15, animations: {
-                levelCompleteLabel.transform = CGAffineTransform.identity
+            // Flash animation with scale - faster than before
+            UIView.animate(withDuration: 0.2, animations: {
+                levelCompleteLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             }, completion: { _ in
-                // Hold for shorter time - 0.5 second instead of 1 second
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    // Fade out faster
-                    UIView.animate(withDuration: 0.3, animations: {
-                        levelCompleteLabel.alpha = 0
-                    }, completion: { _ in
-                        levelCompleteLabel.removeFromSuperview()
-                        completion()
-                    })
-                }
+                UIView.animate(withDuration: 0.15, animations: {
+                    levelCompleteLabel.transform = CGAffineTransform.identity
+                }, completion: { _ in
+                    // Hold for shorter time - 0.5 second instead of 1 second
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        // Fade out faster
+                        UIView.animate(withDuration: 0.3, animations: {
+                            container.alpha = 0
+                        }, completion: { _ in
+                            container.removeFromSuperview()
+                            completion()
+                        })
+                    }
+                })
             })
         })
     }
@@ -400,12 +421,20 @@ extension UIView {
         descriptionLabel.alpha = 0
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        // Container view for labels
+        // Container view for labels - improved appearance
         let containerView = UIView()
         containerView.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        containerView.layer.cornerRadius = 10
+        containerView.layer.cornerRadius = 15
+        containerView.layer.borderWidth = 2
+        containerView.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         containerView.alpha = 0
         containerView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Add a subtle glow effect
+        containerView.layer.shadowColor = UIColor.yellow.cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 0)
+        containerView.layer.shadowOpacity = 0.3
+        containerView.layer.shadowRadius = 10
 
         // Add to view hierarchy
         self.addSubview(containerView)
@@ -417,30 +446,34 @@ extension UIView {
             containerView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             containerView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
-            containerView.heightAnchor.constraint(equalToConstant: 120),
+            containerView.heightAnchor.constraint(equalToConstant: 140), // Slightly taller for better spacing
 
-            levelLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 20),
+            levelLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 25),
             levelLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             levelLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             levelLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
 
-            descriptionLabel.topAnchor.constraint(equalTo: levelLabel.bottomAnchor, constant: 10),
+            descriptionLabel.topAnchor.constraint(equalTo: levelLabel.bottomAnchor, constant: 15),
             descriptionLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             descriptionLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             descriptionLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20)
         ])
 
-        // Animate in faster
-        UIView.animate(withDuration: 0.3, animations: {
+        // Animate in with more dynamic motion - small zoom and fade
+        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.3, options: [], animations: {
             containerView.alpha = 1
+            containerView.transform = CGAffineTransform.identity
             levelLabel.alpha = 1
             descriptionLabel.alpha = 1
         }, completion: { _ in
             // Hold for 1 second instead of 2 seconds
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                // Animate out faster
+                // Animate out with slight upward motion
                 UIView.animate(withDuration: 0.3, animations: {
                     containerView.alpha = 0
+                    containerView.transform = CGAffineTransform(translationX: 0, y: -20)
                 }, completion: { _ in
                     containerView.removeFromSuperview()
                     completion()
