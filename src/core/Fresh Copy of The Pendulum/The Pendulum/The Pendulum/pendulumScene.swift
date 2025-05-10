@@ -623,13 +623,78 @@ class PendulumScene: SKScene {
             levelCompletionParticle.zPosition = 100 // Above all other elements
             addChild(levelCompletionParticle)
 
+            // Enhance the effect
+            levelCompletionParticle.particleBirthRate = 400
+            levelCompletionParticle.particleLifetime = 2.0
+            levelCompletionParticle.particleScale = 1.5
+
+            // Create a mini explosion effect
+            let expandAction = SKAction.scale(to: 1.2, duration: 0.2)
+            let contractAction = SKAction.scale(to: 1.0, duration: 0.2)
+            let pulseSequence = SKAction.sequence([expandAction, contractAction])
+            let repeatPulse = SKAction.repeat(pulseSequence, count: 3)
+            levelCompletionParticle.run(repeatPulse)
+
             // Set a lifetime for the particle effect
-            let particleLifetime: TimeInterval = 2.0
+            let particleLifetime: TimeInterval = 2.5
 
             // Remove after particles finish emitting
             DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
-                levelCompletionParticle.removeFromParent()
+                levelCompletionParticle.run(SKAction.fadeOut(withDuration: 0.3), completion: {
+                    levelCompletionParticle.removeFromParent()
+                })
             }
+
+            // Debug print to confirm effect is triggered
+            print("Level completion particle effect shown")
+        } else {
+            print("Failed to load LevelCompletionParticle.sks")
+
+            // Fallback effect using shape nodes if particle system isn't working
+            createFallbackCompletionEffect(at: effectPosition)
+        }
+    }
+
+    // Fallback effect using SKShapeNodes for level completion if particle system fails
+    private func createFallbackCompletionEffect(at position: CGPoint) {
+        print("Creating fallback level completion effect")
+
+        // Create multiple circles that expand outward
+        for i in 0..<12 {
+            let circle = SKShapeNode(circleOfRadius: 20)
+            circle.position = position
+            circle.fillColor = .clear
+            circle.strokeColor = UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0) // Golden color
+            circle.lineWidth = 3
+            circle.zPosition = 100
+            addChild(circle)
+
+            // Random direction and distance
+            let angle = CGFloat.random(in: 0..<CGFloat.pi * 2)
+            let distance = CGFloat.random(in: 50..<150)
+            let destinationX = position.x + cos(angle) * distance
+            let destinationY = position.y + sin(angle) * distance
+
+            // Actions
+            let fadeIn = SKAction.fadeIn(withDuration: 0.1)
+            let expand = SKAction.scale(to: CGFloat.random(in: 1.5..<3.0), duration: 0.7)
+            let move = SKAction.move(to: CGPoint(x: destinationX, y: destinationY), duration: 0.7)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+
+            // Sequence
+            let sequence = SKAction.sequence([
+                fadeIn,
+                SKAction.group([expand, move]),
+                fadeOut,
+                SKAction.removeFromParent()
+            ])
+
+            // Delay each particle slightly
+            let delay = CGFloat(i) * 0.05
+            circle.run(SKAction.sequence([
+                SKAction.wait(forDuration: TimeInterval(delay)),
+                sequence
+            ]))
         }
     }
 
@@ -644,13 +709,105 @@ class PendulumScene: SKScene {
             newLevelParticle.zPosition = 100 // Above all other elements
             addChild(newLevelParticle)
 
+            // Enhance the effect
+            newLevelParticle.particleBirthRate = 350
+            newLevelParticle.particleLifetime = 2.0
+            newLevelParticle.particleScale = 1.5
+
+            // Add a radial burst effect
+            let expandAction = SKAction.scale(to: 1.5, duration: 0.3)
+            let contractAction = SKAction.scale(to: 1.0, duration: 0.2)
+            let pulseSequence = SKAction.sequence([expandAction, contractAction])
+            newLevelParticle.run(pulseSequence)
+
             // Set a lifetime for the particle effect
             let particleLifetime: TimeInterval = 2.0
 
             // Remove after particles finish emitting
             DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
-                newLevelParticle.removeFromParent()
+                newLevelParticle.run(SKAction.fadeOut(withDuration: 0.3), completion: {
+                    newLevelParticle.removeFromParent()
+                })
+
+                // Debug print to confirm effect is triggered
+                print("New level particle effect completed")
             }
+        } else {
+            print("Failed to load NewLevelParticle.sks")
+
+            // Fallback effect if particle system isn't working
+            createFallbackNewLevelEffect(at: effectPosition)
+        }
+    }
+
+    // Fallback effect using SKShapeNodes for new level if particle system fails
+    private func createFallbackNewLevelEffect(at position: CGPoint) {
+        print("Creating fallback new level effect")
+
+        // Create a series of expanding rings
+        for i in 0..<6 {
+            let ring = SKShapeNode(circleOfRadius: 25)
+            ring.position = position
+            ring.fillColor = .clear
+            ring.strokeColor = UIColor(red: 0.0, green: 0.6, blue: 1.0, alpha: 0.8) // Blue color
+            ring.lineWidth = 4
+            ring.zPosition = 100
+            ring.alpha = 0
+            addChild(ring)
+
+            // Delay based on ring index
+            let delay = Double(i) * 0.15
+
+            // Actions
+            let fadeIn = SKAction.fadeIn(withDuration: 0.1)
+            let expand = SKAction.scale(to: 3.5, duration: 0.7)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+
+            // Sequence
+            let sequence = SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                fadeIn,
+                expand,
+                fadeOut,
+                SKAction.removeFromParent()
+            ])
+
+            ring.run(sequence)
+        }
+
+        // Add some sparkles at the center
+        for _ in 0..<15 {
+            let sparkle = SKShapeNode(circleOfRadius: 3)
+            sparkle.position = position
+            sparkle.fillColor = UIColor(red: 1.0, green: 1.0, blue: 0.8, alpha: 1.0) // Bright yellow
+            sparkle.strokeColor = .clear
+            sparkle.zPosition = 101
+            addChild(sparkle)
+
+            // Random direction and distance
+            let angle = CGFloat.random(in: 0..<CGFloat.pi * 2)
+            let distance = CGFloat.random(in: 30..<120)
+            let destinationX = position.x + cos(angle) * distance
+            let destinationY = position.y + sin(angle) * distance
+
+            // Actions
+            let move = SKAction.move(to: CGPoint(x: destinationX, y: destinationY), duration: 0.6)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+
+            // Sequence
+            let sequence = SKAction.sequence([
+                move,
+                fadeOut,
+                SKAction.removeFromParent()
+            ])
+
+            // Random delay
+            let delay = CGFloat.random(in: 0..<0.3)
+
+            sparkle.run(SKAction.sequence([
+                SKAction.wait(forDuration: TimeInterval(delay)),
+                sequence
+            ]))
         }
     }
 
