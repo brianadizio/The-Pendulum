@@ -610,48 +610,92 @@ class PendulumScene: SKScene {
         updatePendulumPosition(with: viewModel.currentState)
     }
 
-    // MARK: - Particle Effects
+    // MARK: - Particle Effects (Note: These effects are confined to the SpriteKit scene, not the entire UI)
 
     /// Shows a level completion particle effect
     func showLevelCompletionEffect(at position: CGPoint? = nil) {
-        // Use the center of the scene if no position is provided
-        let effectPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
+        // Instead of single position, create multiple particle systems at various positions
+        // This creates a more immersive effect across the screen
 
-        // Create the particle effect from the pre-designed SKS file
-        if let levelCompletionParticle = SKEmitterNode(fileNamed: "LevelCompletionParticle") {
-            levelCompletionParticle.position = effectPosition
-            levelCompletionParticle.zPosition = 100 // Above all other elements
-            addChild(levelCompletionParticle)
+        let mainPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
 
-            // Enhance the effect
-            levelCompletionParticle.particleBirthRate = 400
-            levelCompletionParticle.particleLifetime = 2.0
-            levelCompletionParticle.particleScale = 1.5
+        // Create multiple particle emission points for immersive effect
+        let emissionPoints = [
+            mainPosition, // Center
+            CGPoint(x: frame.midX * 0.5, y: frame.midY * 0.7), // Lower left
+            CGPoint(x: frame.midX * 1.5, y: frame.midY * 0.7), // Lower right
+            CGPoint(x: frame.midX * 0.6, y: frame.midY * 1.3), // Upper left
+            CGPoint(x: frame.midX * 1.4, y: frame.midY * 1.3), // Upper right
+            pendulumBob.position // At the pendulum bob
+        ]
 
-            // Create a mini explosion effect
-            let expandAction = SKAction.scale(to: 1.2, duration: 0.2)
-            let contractAction = SKAction.scale(to: 1.0, duration: 0.2)
-            let pulseSequence = SKAction.sequence([expandAction, contractAction])
-            let repeatPulse = SKAction.repeat(pulseSequence, count: 3)
-            levelCompletionParticle.run(repeatPulse)
+        // Different sizes for variety
+        let particleSizes = [1.0, 0.8, 0.7, 0.9, 0.6, 1.2]
 
-            // Set a lifetime for the particle effect
-            let particleLifetime: TimeInterval = 2.5
+        // Create effects at each point
+        for (index, point) in emissionPoints.enumerated() {
+            createRockyFluidParticleEffect(at: point,
+                                          scale: particleSizes[min(index, particleSizes.count-1)],
+                                          delay: Double(index) * 0.05)
+        }
 
-            // Remove after particles finish emitting
-            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
-                levelCompletionParticle.run(SKAction.fadeOut(withDuration: 0.3), completion: {
-                    levelCompletionParticle.removeFromParent()
-                })
+        // Debug print to confirm effect is triggered
+        print("Immersive level completion particle effects shown")
+    }
+
+    /// Creates a more realistic rocky/fluid particle effect
+    private func createRockyFluidParticleEffect(at position: CGPoint, scale: CGFloat, delay: TimeInterval) {
+        // Try to load the base particle system
+        if let particleSystem = SKEmitterNode(fileNamed: "LevelCompletionParticle") {
+            particleSystem.position = position
+            particleSystem.zPosition = 100
+            addChild(particleSystem)
+
+            // Make it more rocky/realistic by adjusting parameters
+            particleSystem.particleBirthRate = 300 * scale // Slightly fewer but more distinct particles
+            particleSystem.particleLifetime = 1.5 * scale
+            particleSystem.particleScale = 1.2 * scale
+
+            // More jagged/rocky movement
+            particleSystem.particleSpeed = 150 * scale
+            particleSystem.particleSpeedRange = 100 * scale
+            particleSystem.particleRotationRange = 4.0 // Full rotation for sizzling effect
+            particleSystem.particleRotationSpeed = 2.0 // Fast rotation
+
+            // Add gravity for a more natural falling effect
+            particleSystem.yAcceleration = -150 // Gravity pulling particles down
+
+            // Add random X acceleration for fluid-like turbulence
+            particleSystem.xAcceleration = CGFloat.random(in: -30...30) // Random lateral movement
+
+            // More alpha variance for sparkle effect
+            particleSystem.particleAlphaRange = 0.6
+            particleSystem.particleAlphaSpeed = -0.8 // Faster fade
+
+            // Add a slight delayed start if specified
+            if delay > 0 {
+                particleSystem.particleBirthRate = 0
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    particleSystem.particleBirthRate = 300 * scale
+                }
             }
 
-            // Debug print to confirm effect is triggered
-            print("Level completion particle effect shown")
-        } else {
-            print("Failed to load LevelCompletionParticle.sks")
+            // Extremely short lifetime to prevent overlap between level transitions
+            particleSystem.particleLifetime = 0.6 // Shorter particle lifetime
 
-            // Fallback effect using shape nodes if particle system isn't working
-            createFallbackCompletionEffect(at: effectPosition)
+            // Stop emission very quickly
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                // Stop emitting new particles
+                particleSystem.particleBirthRate = 0
+
+                // Force cleanup immediately
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    particleSystem.removeFromParent()
+                }
+            }
+        } else {
+            // Fallback to creating manual particles if the SKS file isn't available
+            createFallbackCompletionEffect(at: position)
         }
     }
 
@@ -700,43 +744,138 @@ class PendulumScene: SKScene {
 
     /// Shows a new level start particle effect
     func showNewLevelEffect(at position: CGPoint? = nil) {
-        // Use the center of the scene if no position is provided
-        let effectPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
+        // Create a scene-wide fluid-like effect to indicate a new level
 
-        // Create the particle effect from the pre-designed SKS file
-        if let newLevelParticle = SKEmitterNode(fileNamed: "NewLevelParticle") {
-            newLevelParticle.position = effectPosition
-            newLevelParticle.zPosition = 100 // Above all other elements
-            addChild(newLevelParticle)
+        // Define quadrants for particle emission
+        let quadrants = [
+            CGPoint(x: frame.width * 0.25, y: frame.height * 0.25), // Bottom left
+            CGPoint(x: frame.width * 0.75, y: frame.height * 0.25), // Bottom right
+            CGPoint(x: frame.width * 0.25, y: frame.height * 0.75), // Top left
+            CGPoint(x: frame.width * 0.75, y: frame.height * 0.75), // Top right
+            CGPoint(x: frame.midX, y: frame.midY),                  // Center
+            pendulumBob.position                                     // Pendulum bob
+        ]
 
-            // Enhance the effect
-            newLevelParticle.particleBirthRate = 350
-            newLevelParticle.particleLifetime = 2.0
-            newLevelParticle.particleScale = 1.5
+        // Create flowing particles in each quadrant with different colors and behaviors
+        for (index, quadPoint) in quadrants.enumerated() {
+            // Slightly staggered creation for more natural flow
+            let delay = Double(index) * 0.08
 
-            // Add a radial burst effect
-            let expandAction = SKAction.scale(to: 1.5, duration: 0.3)
-            let contractAction = SKAction.scale(to: 1.0, duration: 0.2)
-            let pulseSequence = SKAction.sequence([expandAction, contractAction])
-            newLevelParticle.run(pulseSequence)
+            // Create primary fluid effect
+            createRockyFluidNewLevelEffect(
+                at: quadPoint,
+                scale: CGFloat.random(in: 0.8...1.2),
+                delay: delay
+            )
 
-            // Set a lifetime for the particle effect
-            let particleLifetime: TimeInterval = 2.0
+            // Create some secondary scattered effects
+            for _ in 0..<3 {
+                let randomOffset = CGPoint(
+                    x: CGFloat.random(in: -50...50),
+                    y: CGFloat.random(in: -50...50)
+                )
+                let scatteredPosition = CGPoint(
+                    x: quadPoint.x + randomOffset.x,
+                    y: quadPoint.y + randomOffset.y
+                )
 
-            // Remove after particles finish emitting
-            DispatchQueue.main.asyncAfter(deadline: .now() + particleLifetime) {
-                newLevelParticle.run(SKAction.fadeOut(withDuration: 0.3), completion: {
-                    newLevelParticle.removeFromParent()
-                })
+                createRockyFluidNewLevelEffect(
+                    at: scatteredPosition,
+                    scale: CGFloat.random(in: 0.4...0.7),
+                    delay: delay + Double.random(in: 0.05...0.2)
+                )
+            }
+        }
 
-                // Debug print to confirm effect is triggered
-                print("New level particle effect completed")
+        // Create a special effect at the pendulum bob (tracking its movement)
+        createBobTrackingEffect()
+
+        // Debug print to confirm effect is triggered
+        print("Immersive new level particle effects shown")
+    }
+
+    /// Creates a more rock/fluid-like particle effect for new level
+    private func createRockyFluidNewLevelEffect(at position: CGPoint, scale: CGFloat, delay: TimeInterval) {
+        // Try to load the base particle system
+        if let particleSystem = SKEmitterNode(fileNamed: "NewLevelParticle") {
+            particleSystem.position = position
+            particleSystem.zPosition = 100
+            addChild(particleSystem)
+
+            // Make it more rock-like with jagged movements - but much shorter lifetime
+            particleSystem.particleBirthRate = 300 * scale  // Higher birth rate for quicker effect
+            particleSystem.particleLifetime = 0.5 * scale  // Drastically shorter lifetime
+            particleSystem.particleScale = 1.0 * scale
+
+            // More sizzling, sparkling movement
+            particleSystem.particleSpeed = 100 * scale
+            particleSystem.particleSpeedRange = 80 * scale
+            particleSystem.particleRotationRange = 2 * .pi // Full rotation range
+            particleSystem.particleRotationSpeed = 2.5 // Faster rotation for sizzling feel
+
+            // Physics simulation for more realistic movement
+            particleSystem.particleAction = SKAction.sequence([
+                SKAction.scale(by: CGFloat.random(in: 0.7...1.3), duration: 0.3),
+                SKAction.scale(by: CGFloat.random(in: 0.8...1.2), duration: 0.3)
+            ])
+
+            // Natural forces
+            particleSystem.yAcceleration = -80 // Gentle gravity
+            particleSystem.xAcceleration = CGFloat.random(in: -40...40) // Random drift
+
+            // Color variance for more natural, rocky appearance
+            particleSystem.particleColorBlendFactor = 0.8
+            particleSystem.particleColorBlendFactorRange = 0.3
+
+            // Add a slight delayed start if specified
+            if delay > 0 {
+                particleSystem.particleBirthRate = 0
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    particleSystem.particleBirthRate = 250 * scale
+                }
+            }
+
+            // Extremely short duration to avoid overlap during quick level transitions
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                // Stop emitting new particles immediately
+                particleSystem.particleBirthRate = 0
+
+                // Forcefully remove with minimal delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    particleSystem.removeFromParent()
+                }
             }
         } else {
             print("Failed to load NewLevelParticle.sks")
+            createFallbackNewLevelEffect(at: position)
+        }
+    }
 
-            // Fallback effect if particle system isn't working
-            createFallbackNewLevelEffect(at: effectPosition)
+    /// Creates a particle effect that follows the pendulum bob
+    private func createBobTrackingEffect() {
+        // Create an extremely brief particle burst attached to the bob
+        if let trackingEffect = SKEmitterNode(fileNamed: "NewLevelParticle") {
+            pendulumBob.addChild(trackingEffect)
+            trackingEffect.position = CGPoint.zero // Relative to bob
+            trackingEffect.particleBirthRate = 80  // Higher birth rate for quicker effect
+            trackingEffect.particleLifetime = 0.4  // Very short lifetime
+            trackingEffect.particleScale = 0.6
+            trackingEffect.particleAlphaSpeed = -1.5 // Very fast fade
+
+            // Make particles fall away from the bob
+            trackingEffect.emissionAngle = .pi / 2 // Downward
+            trackingEffect.emissionAngleRange = .pi / 3
+
+            // Extremely short burst - almost immediate stop
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                // Stop emission immediately
+                trackingEffect.particleBirthRate = 0
+
+                // Force removal quickly
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    trackingEffect.removeFromParent()
+                }
+            }
         }
     }
 

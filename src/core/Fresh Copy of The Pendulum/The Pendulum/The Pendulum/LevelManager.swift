@@ -31,7 +31,7 @@ protocol LevelProgressionDelegate: AnyObject {
 class LevelManager {
     // Constants for base configuration
     static let baseBalanceThreshold = 0.35      // About 20 degrees in radians - extremely forgiving to start
-    static let baseBalanceRequiredTime = 0.75   // Just 0.75 second to complete level 1 - much easier
+    static let baseBalanceRequiredTime = 1.5    // Increased from 0.75 to 1.5 seconds to make it harder to auto-complete
     static let baseMass = 1.0
     static let baseLength = 1.0
     static let baseDamping = 0.4                // Higher damping for much easier control
@@ -341,144 +341,18 @@ class LevelManager {
 
 extension UIView {
     func levelCompletionAnimation(completion: @escaping () -> Void) {
-        // Create a container for the animation
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        container.layer.cornerRadius = 20
-        container.alpha = 0
-
-        // Add to view
-        self.addSubview(container)
-
-        // Center constraints and size
-        NSLayoutConstraint.activate([
-            container.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            container.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            container.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
-            container.heightAnchor.constraint(equalToConstant: 120)
-        ])
-
-        // Create a "Level Complete" label
-        let levelCompleteLabel = UILabel()
-        levelCompleteLabel.text = "Level Complete!"
-        levelCompleteLabel.textAlignment = .center
-        levelCompleteLabel.textColor = .white
-        levelCompleteLabel.font = UIFont.boldSystemFont(ofSize: 32)
-        levelCompleteLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // Add to container
-        container.addSubview(levelCompleteLabel)
-
-        // Center constraints
-        NSLayoutConstraint.activate([
-            levelCompleteLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            levelCompleteLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-        ])
-
-        // Fade in container
-        UIView.animate(withDuration: 0.2, animations: {
-            container.alpha = 1.0
-        }, completion: { _ in
-            // Flash animation with scale - faster than before
-            UIView.animate(withDuration: 0.2, animations: {
-                levelCompleteLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
-            }, completion: { _ in
-                UIView.animate(withDuration: 0.15, animations: {
-                    levelCompleteLabel.transform = CGAffineTransform.identity
-                }, completion: { _ in
-                    // Hold for shorter time - 0.5 second instead of 1 second
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        // Fade out faster
-                        UIView.animate(withDuration: 0.3, animations: {
-                            container.alpha = 0
-                        }, completion: { _ in
-                            container.removeFromSuperview()
-                            completion()
-                        })
-                    }
-                })
-            })
-        })
+        // Introduce a longer pause between level completion and next level start
+        // This gives particle effects time to complete and prevents them from appearing continuous
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            completion()
+        }
     }
 
     func newLevelStartAnimation(level: Int, description: String, completion: @escaping () -> Void) {
-        // Create level label
-        let levelLabel = UILabel()
-        levelLabel.text = "Level \(level)"
-        levelLabel.textAlignment = .center
-        levelLabel.textColor = .white
-        levelLabel.font = UIFont.boldSystemFont(ofSize: 36)
-        levelLabel.alpha = 0
-        levelLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // Create description label
-        let descriptionLabel = UILabel()
-        descriptionLabel.text = description
-        descriptionLabel.textAlignment = .center
-        descriptionLabel.textColor = .white
-        descriptionLabel.font = UIFont.systemFont(ofSize: 20)
-        descriptionLabel.alpha = 0
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // Container view for labels - improved appearance
-        let containerView = UIView()
-        containerView.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        containerView.layer.cornerRadius = 15
-        containerView.layer.borderWidth = 2
-        containerView.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        containerView.alpha = 0
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-
-        // Add a subtle glow effect
-        containerView.layer.shadowColor = UIColor.yellow.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 0)
-        containerView.layer.shadowOpacity = 0.3
-        containerView.layer.shadowRadius = 10
-
-        // Add to view hierarchy
-        self.addSubview(containerView)
-        containerView.addSubview(levelLabel)
-        containerView.addSubview(descriptionLabel)
-
-        // Constraints
-        NSLayoutConstraint.activate([
-            containerView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            containerView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
-            containerView.heightAnchor.constraint(equalToConstant: 140), // Slightly taller for better spacing
-
-            levelLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 25),
-            levelLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            levelLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            levelLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-
-            descriptionLabel.topAnchor.constraint(equalTo: levelLabel.bottomAnchor, constant: 15),
-            descriptionLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            descriptionLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            descriptionLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20)
-        ])
-
-        // Animate in with more dynamic motion - small zoom and fade
-        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-
-        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.3, options: [], animations: {
-            containerView.alpha = 1
-            containerView.transform = CGAffineTransform.identity
-            levelLabel.alpha = 1
-            descriptionLabel.alpha = 1
-        }, completion: { _ in
-            // Hold for 1 second instead of 2 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                // Animate out with slight upward motion
-                UIView.animate(withDuration: 0.3, animations: {
-                    containerView.alpha = 0
-                    containerView.transform = CGAffineTransform(translationX: 0, y: -20)
-                }, completion: { _ in
-                    containerView.removeFromSuperview()
-                    completion()
-                })
-            }
-        })
+        // Add another delay between showing the new level effect and actually starting gameplay
+        // This ensures the player gets to see the effect and prepares for the next level
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            completion()
+        }
     }
 }
