@@ -9,12 +9,41 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     // Tab bar for navigation
     private let tabBar = UITabBar()
-    private let simulationItem = UITabBarItem(title: "Simulation", image: UIImage(systemName: "waveform.path"), tag: 0)
-    private let dashboardItem = UITabBarItem(title: "Dashboard", image: UIImage(systemName: "chart.bar"), tag: 1)
-    private let modesItem = UITabBarItem(title: "Modes", image: UIImage(systemName: "square.grid.2x2"), tag: 2)
-    private let integrationItem = UITabBarItem(title: "Integration", image: UIImage(systemName: "link"), tag: 3)
-    private let parametersItem = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 4)
-    private let settingsItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 5)
+    private let simulationItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Simulation", image: UIImage(systemName: "waveform.path"), tag: 0)
+        item.selectedImage = UIImage(systemName: "waveform.path.fill")
+        return item
+    }()
+
+    private let dashboardItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Dashboard", image: UIImage(systemName: "chart.bar"), tag: 1)
+        item.selectedImage = UIImage(systemName: "chart.bar.fill")
+        return item
+    }()
+
+    private let modesItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Modes", image: UIImage(systemName: "square.grid.2x2"), tag: 2)
+        item.selectedImage = UIImage(systemName: "square.grid.2x2.fill")
+        return item
+    }()
+
+    private let integrationItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Integration", image: UIImage(systemName: "link"), tag: 3)
+        item.selectedImage = UIImage(systemName: "link.circle.fill")
+        return item
+    }()
+
+    private let parametersItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 4)
+        item.selectedImage = UIImage(systemName: "slider.horizontal.3.fill")
+        return item
+    }()
+
+    private let settingsItem: UITabBarItem = {
+        let item = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 5)
+        item.selectedImage = UIImage(systemName: "gearshape.fill")
+        return item
+    }()
     
     // Views for different tabs
     let simulationView = UIView()
@@ -99,23 +128,24 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         // Set up the main interface
         setupTabBar()
         setupViews()
         setupStatusLabel()
-        
+
         // Initialize settings
         initializeSettings()
-        
+
         // Initialize analytics if a session is already active
         if let sessionId = viewModel.currentSessionId {
             AnalyticsManager.shared.startTracking(for: sessionId)
         }
-        
+
         // Start with simulation view
         showView(simulationView)
     }
+
     
     private func setupStatusLabel() {
         // Create status label for feedback
@@ -192,21 +222,41 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         tabBar.selectedItem = simulationItem
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.tintColor = .goldenPrimary
-        tabBar.unselectedItemTintColor = .goldenTextLight
+        tabBar.unselectedItemTintColor = .darkGray // Darker color for better visibility
         tabBar.backgroundColor = .goldenBackground
-        
-        // Add subtle top border
-        tabBar.layer.borderWidth = 0.5
-        tabBar.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
-        
+
+        // Make tab bar and icons more visible
+        tabBar.itemPositioning = .centered
+        tabBar.itemWidth = 80 // Wider items for more space
+
+        // Remove the bottom border (darker colored line)
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .goldenBackground
+        appearance.shadowColor = nil
+        appearance.shadowImage = nil
+        tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = appearance
+        }
+
+        // Use custom styling for the top border only
+        tabBar.layer.borderWidth = 0.0 // Remove the full border
+        // Add a custom top border only
+        let topBorder = CALayer()
+        topBorder.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 0.5)
+        topBorder.backgroundColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        tabBar.layer.addSublayer(topBorder)
+
         // Add tab bar to view
         view.addSubview(tabBar)
-        
-        // Position tab bar at bottom of screen
+
+        // Position tab bar at bottom of screen with fixed height
         NSLayoutConstraint.activate([
             tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tabBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            tabBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            tabBar.heightAnchor.constraint(equalToConstant: 50) // Fixed height for tab bar
         ])
     }
     
@@ -227,12 +277,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
             
-            // Position each view to fill the space above the tab bar
+            // Position each view to fill the space above the tab bar with padding
             NSLayoutConstraint.activate([
                 subview.topAnchor.constraint(equalTo: view.topAnchor),
                 subview.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                 subview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                subview.bottomAnchor.constraint(equalTo: tabBar.topAnchor)
+                subview.bottomAnchor.constraint(equalTo: tabBar.topAnchor, constant: -5) // Small gap for separation
             ])
             
             // Hide all views initially
@@ -2005,7 +2055,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         integrationView.isHidden = true
         parametersView.isHidden = true
         settingsView.isHidden = true
-        
+
         // Show selected view
         view.isHidden = false
         currentView = view
@@ -2028,7 +2078,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         scoreLabel = UILabel()
         scoreLabel.text = "Score: 0"
         scoreLabel.textAlignment = .left
-        scoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
+        scoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         scoreLabel.textColor = .goldenDark
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(scoreLabel)
@@ -2037,7 +2087,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         levelLabel = UILabel()
         levelLabel.text = "Level: 1"
         levelLabel.textAlignment = .center
-        levelLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
+        levelLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         levelLabel.textColor = .goldenDark
         levelLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(levelLabel)
@@ -2046,25 +2096,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         timeLabel = UILabel()
         timeLabel.text = "Time: 0.0s"
         timeLabel.textAlignment = .right
-        timeLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
+        timeLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         timeLabel.textColor = .goldenDark
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
-
-        // Balance time label - Add a dedicated label for balance time
-        let balanceLabel = UILabel()
-        balanceLabel.text = "Balance: 0.0s / 0.0s"
-        balanceLabel.textAlignment = .center
-        balanceLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
-        balanceLabel.textColor = .goldenAccentGreen
-        balanceLabel.translatesAutoresizingMaskIntoConstraints = false
-        hudContainer.addSubview(balanceLabel)
 
         // Game message label (for game over messages)
         gameMessageLabel = UILabel()
         gameMessageLabel.text = "Balance the Inverted Pendulum!"
         gameMessageLabel.textAlignment = .center
-        gameMessageLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold) // Reduced font size
+        gameMessageLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
         gameMessageLabel.translatesAutoresizingMaskIntoConstraints = false
         gameMessageLabel.isHidden = true
@@ -2076,31 +2117,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             hudContainer.topAnchor.constraint(equalTo: headerView?.bottomAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 10),
             hudContainer.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             hudContainer.trailingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            // Increased height to fit all elements with proper spacing
-            hudContainer.heightAnchor.constraint(equalToConstant: 100),
+            // Increased height to accommodate both level label and game message without overlap
+            hudContainer.heightAnchor.constraint(equalToConstant: 65),
 
-            // First row with score, level, and time - properly spaced with margins
-            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
+            // Single row with score, level, and time evenly spaced
+            scoreLabel.centerYAnchor.constraint(equalTo: hudContainer.centerYAnchor),
             scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
-            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
 
-            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
+            // Reposition level label to the top part of the container to prevent overlap
+            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 5),
             levelLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            levelLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+            levelLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
 
-            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 16),
+            timeLabel.centerYAnchor.constraint(equalTo: hudContainer.centerYAnchor),
             timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
-            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.25), // Reduced width slightly
+            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
 
-            // Balance time centered in second row with more space from the top row
-            balanceLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20), // Increased spacing
-            balanceLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            balanceLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
-            balanceLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
-
-            // Game message is now shown in place of the balance label when needed
+            // Position game message in the bottom part of the container
             gameMessageLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            gameMessageLabel.centerYAnchor.constraint(equalTo: balanceLabel.centerYAnchor),
+            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -5),
             gameMessageLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
             gameMessageLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20)
         ])
@@ -2108,21 +2144,6 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Start update timer for HUD
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             self?.updateGameHUD()
-
-            // Update balance time label
-            if let targetTime = self?.viewModel.levelSuccessTime {
-                let currentTime = self?.viewModel.totalBalanceTime ?? 0.0
-                balanceLabel.text = "Balance: \(String(format: "%.1fs", currentTime)) / \(String(format: "%.1fs", targetTime))"
-
-                // Change color based on progress
-                if currentTime >= targetTime * 0.75 {
-                    balanceLabel.textColor = .goldenAccentGreen
-                } else if currentTime >= targetTime * 0.5 {
-                    balanceLabel.textColor = .goldenAccent
-                } else {
-                    balanceLabel.textColor = .goldenDark
-                }
-            }
         }
     }
     
@@ -2163,9 +2184,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             phaseSpaceContainer.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
             phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
             phaseSpaceContainer.widthAnchor.constraint(equalTo: simulationView.widthAnchor, multiplier: 0.85),
-            phaseSpaceContainer.heightAnchor.constraint(equalToConstant: 230), // Increased height
-            // Make sure it doesn't go beyond the bottom of the screen
-            phaseSpaceContainer.bottomAnchor.constraint(lessThanOrEqualTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+            // Connect to the simulationView's bottom instead (which is already constrained to the tab bar)
+            phaseSpaceContainer.bottomAnchor.constraint(equalTo: simulationView.bottomAnchor, constant: -5), // Small gap at bottom
 
             // Position the phase space view within its container
             phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor, constant: 10),
@@ -2191,15 +2211,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         scoreLabel.text = "Score: \(viewModel.score)"
         levelLabel.text = "Level: \(viewModel.currentLevel)"
         timeLabel.text = String(format: "Time: %.1fs", viewModel.totalBalanceTime)
-        
-        // Calculate time needed to complete level
-        let timeRemaining = max(0, viewModel.levelSuccessTime - viewModel.consecutiveBalanceTime)
-        
+
         // Update message based on game state
         if !viewModel.isGameActive && viewModel.gameOverReason != nil {
             gameMessageLabel.text = viewModel.gameOverReason
             gameMessageLabel.isHidden = false
-            
+
             // For level completion, use special formatting
             if viewModel.gameOverReason!.contains("completed") {
                 gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
