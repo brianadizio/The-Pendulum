@@ -590,19 +590,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Top row - 1x2 grid
         let topRowStack = createGridRow()
         gridContainer.addSubview(topRowStack)
-        
+
         NSLayoutConstraint.activate([
             topRowStack.topAnchor.constraint(equalTo: gridContainer.topAnchor),
             topRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
             topRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
             topRowStack.heightAnchor.constraint(equalToConstant: 120)
         ])
-        
-        // Add buttons to top row
-        let primaryButton = createModeButton(title: "Primary", tag: 101)
-        let dashboardButton = createModeButton(title: "Dashboard", tag: 102)
+
+        // Add buttons to top row - Update "Primary" to be a quasi-periodic constant difficulty mode
+        // and rename "Dashboard" to "Progressive" for increasing difficulty
+        let primaryButton = createModeButton(title: "Primary", tag: 201) // Changed tag to 201 for quasi-periodic mode
+        let progressiveButton = createModeButton(title: "Progressive", tag: 202) // Changed from "Dashboard" to "Progressive" and tag to 202
         topRowStack.addArrangedSubview(primaryButton)
-        topRowStack.addArrangedSubview(dashboardButton)
+        topRowStack.addArrangedSubview(progressiveButton)
         
         // Middle row - 1x2 grid
         let middleRowStack = createGridRow()
@@ -673,7 +674,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // This now relies on the separator line from previous section
         // Get the appropriate subview - the separator should be the last element added
         let separator = containerView.subviews.last(where: { $0 is UIView && $0.backgroundColor == .goldenAccent.withAlphaComponent(0.3) })
-        let previousAnchor = separator?.bottomAnchor ?? containerView.topAnchor
+        var previousAnchor = separator?.bottomAnchor ?? containerView.topAnchor
+
+        // Add explanatory text for the game modes
+        let modesDescriptionLabel = UILabel()
+        modesDescriptionLabel.text = "Game Modes:\n• Primary Mode: Constant difficulty, beat the same level repeatedly while tracking total completions\n• Progressive: Increasing difficulty with each level completion"
+        modesDescriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        modesDescriptionLabel.textColor = .goldenDark
+        modesDescriptionLabel.numberOfLines = 0
+        modesDescriptionLabel.textAlignment = .left
+        modesDescriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(modesDescriptionLabel)
+
+        NSLayoutConstraint.activate([
+            modesDescriptionLabel.topAnchor.constraint(equalTo: previousAnchor, constant: 20),
+            modesDescriptionLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
+            modesDescriptionLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10),
+        ])
+
+        // Update previousAnchor for the rest of the layout
+        previousAnchor = modesDescriptionLabel.bottomAnchor
 
         // Add Perturbation Modes header
         let perturbationHeader = UILabel()
@@ -1224,10 +1244,31 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             // These buttons have been disabled for perturbation functionality
             // and will be replaced with Matlab-processed modes
             updateGameMessageLabel("This perturbation mode will be available soon")
-        
-        // Standard modes
+
+        // Game modes
+        case 201: // Primary mode (quasi-periodic constant difficulty)
+            // Enable quasi-periodic mode where the player beats the same level repeatedly
+            viewModel.enableQuasiPeriodicMode()
+            // Reset the game but keep stats
+            viewModel.resetToLevel1KeepingStats()
+            // Update label to reflect the mode
+            updateGameMessageLabel("Primary Mode: Beat level 1 repeatedly")
+            // Deactivate perturbation for game modes
+            deactivatePerturbation()
+
+        case 202: // Progressive mode (increasing difficulty)
+            // Enable progressive mode where difficulty increases with each level
+            viewModel.enableProgressiveMode()
+            // Reset the game with progressive difficulty
+            viewModel.resetToLevel1WithProgressiveDifficulty()
+            // Update label to reflect the mode
+            updateGameMessageLabel("Progressive Mode: Increasing difficulty")
+            // Deactivate perturbation for game modes
+            deactivatePerturbation()
+
+        // Legacy standard modes (no longer active for game modes)
         case 101, 102, 106:
-            // Primary, Dashboard, and Focal Calculator - no perturbation
+            // Now just deactivate perturbation but don't change game mode
             deactivatePerturbation()
             
         // Original unified perturbation buttons (300-304)
