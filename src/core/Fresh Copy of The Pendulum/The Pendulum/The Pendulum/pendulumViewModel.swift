@@ -422,7 +422,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         let completedLevel = currentLevel
         
         // Show level completion effect ONCE here before mode-specific handling
-        self.scene?.showLevelCompletionEffect()
+        self.scene?.showLevelCompletionEffect(at: nil, level: completedLevel)
 
         // Handle level progression based on game mode
         if isQuasiPeriodicMode {
