@@ -613,12 +613,12 @@ class PendulumScene: SKScene {
     // MARK: - Particle Effects (Note: These effects are confined to the SpriteKit scene, not the entire UI)
 
     /// Shows a level completion particle effect
-    func showLevelCompletionEffect(at position: CGPoint? = nil) {
-        // Create an immersive full-screen golden explosion effect
-        createImmersiveExplosionEffect()
+    func showLevelCompletionEffect(at position: CGPoint? = nil, level: Int = 1) {
+        print("🔥 showLevelCompletionEffect called for level \(level)")
         
-        // Debug print to confirm effect is triggered
-        print("Immersive explosion effect shown")
+        // Use the new dynamic particle manager for colorful firework effects
+        let effectPosition = position ?? pendulumBob.position
+        DynamicParticleManager.createLevelCompletionEffect(for: level, at: effectPosition, in: self)
     }
 
     /// Creates an immersive full-screen explosion effect
@@ -658,58 +658,78 @@ class PendulumScene: SKScene {
     
     /// Creates a single explosion burst at a specific position
     private func createExplosionBurst(at position: CGPoint, scale: CGFloat) {
+        print("🌟 Creating burst at \(position) with scale \(scale)")
+        
         let explosionEmitter = SKEmitterNode()
         explosionEmitter.position = position
         explosionEmitter.zPosition = 100
         
-        // Create multiple pre-colored star textures for variety
-        let textures = (0..<5).map { _ in createColoredStarTexture() }
+        // Use simple circle texture
+        let size: CGFloat = 32
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: size, height: size), false, 0)
+        let context = UIGraphicsGetCurrentContext()!
+        context.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
+        let circleImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        explosionEmitter.particleTexture = SKTexture(image: circleImage)
         
-        // Apply random texture from our sunset-colored variations
-        let starTexture = textures.randomElement() ?? createColoredStarTexture()
-        explosionEmitter.particleTexture = starTexture
+        // Explosion properties
+        explosionEmitter.particleBirthRate = 2500 * scale
+        explosionEmitter.particleLifetime = 1.45
+        explosionEmitter.particleLifetimeRange = 0.6
         
-        // Explosion properties - massive burst
-        explosionEmitter.particleBirthRate = 1200 * scale  // Higher birth rate for denser effect
-        explosionEmitter.particleLifetime = 1.65  // Reduced by 0.35
-        explosionEmitter.particleLifetimeRange = 0.8
+        // Use direct particle colors with variation
+        let particleColors = [
+            UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0),   // Golden
+            UIColor(red: 1.0, green: 0.5, blue: 0.3, alpha: 1.0),   // Orange
+            UIColor(red: 0.9, green: 0.3, blue: 0.4, alpha: 1.0),   // Red-pink
+            UIColor(red: 0.7, green: 0.3, blue: 0.6, alpha: 1.0),   // Purple
+            UIColor(red: 0.5, green: 0.5, blue: 0.9, alpha: 1.0)    // Blue
+        ]
+        explosionEmitter.particleColor = particleColors.randomElement()!
+        explosionEmitter.particleColorBlendFactor = 1.0  // Full color blend
+        explosionEmitter.particleColorSequence = nil
         
-        // Remove color blending since texture is pre-colored
-        explosionEmitter.particleColorBlendFactor = 0.0
-        
-        // Size variation - larger particles
-        explosionEmitter.particleScale = 0.8 * scale
-        explosionEmitter.particleScaleRange = 0.4 * scale
+        // Small particles
+        explosionEmitter.particleScale = 0.15 * scale
+        explosionEmitter.particleScaleRange = 0.08 * scale
         explosionEmitter.particleScaleSpeed = -0.4
         
-        // Radial explosion in all directions
+        // Radial explosion
         explosionEmitter.emissionAngle = 0
-        explosionEmitter.emissionAngleRange = CGFloat.pi * 2  // Full 360 degrees
-        explosionEmitter.particleSpeed = 350 * scale
-        explosionEmitter.particleSpeedRange = 150 * scale
+        explosionEmitter.emissionAngleRange = CGFloat.pi * 2
+        explosionEmitter.particleSpeed = 500 * scale
+        explosionEmitter.particleSpeedRange = 200 * scale
         
-        // Physics - outward explosion then gravity
-        explosionEmitter.yAcceleration = -150  // More gravity
+        // Physics
+        explosionEmitter.yAcceleration = -200
         
-        // Rotation for sparkle
-        explosionEmitter.particleRotationRange = CGFloat.pi * 2
-        explosionEmitter.particleRotationSpeed = 8.0
+        // Rotation
+        explosionEmitter.particleRotationRange = CGFloat.pi / 4
+        explosionEmitter.particleRotationSpeed = 2.0
         
         // Alpha fade
         explosionEmitter.particleAlpha = 1.0
-        explosionEmitter.particleAlphaRange = 0.3
-        explosionEmitter.particleAlphaSpeed = -0.7
+        explosionEmitter.particleAlphaRange = 0.0
+        explosionEmitter.particleAlphaSpeed = -0.65
         
-        // Use alpha blend mode for better color visibility
-        explosionEmitter.particleBlendMode = .alpha
+        // Additive blending
+        explosionEmitter.particleBlendMode = .add
         
         addChild(explosionEmitter)
+        print("🌟 Added emitter to scene. emitter.particleTexture: \(explosionEmitter.particleTexture != nil)")
+        print("🌟 Emitter position: \(explosionEmitter.position)")
+        print("🌟 Emitter birthRate: \(explosionEmitter.particleBirthRate)")
         
         // Single burst - stop emitting immediately
-        explosionEmitter.numParticlesToEmit = Int(300 * scale)
+        explosionEmitter.numParticlesToEmit = Int(500 * scale)  // More particles for denser fire effect
+        
+        // Debug the particle count
+        print("🌟 Number of particles to emit: \(explosionEmitter.numParticlesToEmit)")
         
         // Remove after particles finish
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.15) {  // Reduced by 0.35
+            print("🌟 Removing emitter from scene")
             explosionEmitter.removeFromParent()
         }
     }
@@ -731,6 +751,60 @@ class PendulumScene: SKScene {
         let remove = SKAction.removeFromParent()
         
         flashLayer.run(SKAction.sequence([flashIn, flashOut, remove]))
+    }
+    
+    /// Creates a glowing orb texture for fire particles
+    private func createFireOrbTexture() -> SKTexture {
+        let size = CGSize(width: 64, height: 64)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Create radial gradient for glowing orb
+            let colors = [
+                UIColor.white.withAlphaComponent(1.0).cgColor,
+                UIColor.white.withAlphaComponent(0.8).cgColor,
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.3, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates fire color sequence for glowing particles
+    private func createFireColorSequence() -> SKKeyframeSequence {
+        let colors = [
+            UIColor(red: 1.0, green: 1.0, blue: 0.8, alpha: 1.0),     // Bright white-yellow center
+            UIColor(red: 1.0, green: 0.95, blue: 0.5, alpha: 1.0),    // Hot yellow
+            UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0),     // Orange
+            UIColor(red: 1.0, green: 0.5, blue: 0.25, alpha: 0.9),    // Deep orange
+            UIColor(red: 0.9, green: 0.3, blue: 0.2, alpha: 0.7),     // Red-orange
+            UIColor(red: 0.7, green: 0.2, blue: 0.15, alpha: 0.4),    // Dark red
+            UIColor(red: 0.3, green: 0.1, blue: 0.1, alpha: 0.1)      // Smoke fade
+        ]
+        
+        let times: [NSNumber] = [0.0, 0.1, 0.25, 0.4, 0.6, 0.8, 1.0]
+        
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
     }
     
     /// Creates explosion color sequence based on desert sunset palette
@@ -831,6 +905,257 @@ class PendulumScene: SKScene {
             // Use a white star that can be tinted by particle color
             ctx.setFillColor(UIColor.white.cgColor)
             ctx.fillPath()
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates a simple but effective golden explosion
+    private func createSimpleGoldenExplosion() {
+        // Create multiple emission points for full-screen coverage
+        let emissionPoints: [CGPoint] = [
+            pendulumBob.position,
+            CGPoint(x: frame.width * 0.2, y: frame.height * 0.2),
+            CGPoint(x: frame.width * 0.8, y: frame.height * 0.2),
+            CGPoint(x: frame.width * 0.2, y: frame.height * 0.8),
+            CGPoint(x: frame.width * 0.8, y: frame.height * 0.8),
+            CGPoint(x: frame.width * 0.5, y: frame.height * 0.1),
+            CGPoint(x: frame.width * 0.5, y: frame.height * 0.9),
+            CGPoint(x: frame.width * 0.1, y: frame.height * 0.5),
+            CGPoint(x: frame.width * 0.9, y: frame.height * 0.5),
+        ]
+        
+        for (index, point) in emissionPoints.enumerated() {
+            let delay = Double(index) * 0.05
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                self.createGoldenBurst(at: point)
+            }
+        }
+    }
+    
+    /// Creates a golden burst at a specific position
+    private func createGoldenBurst(at position: CGPoint) {
+        // Create a single emitter with color sequence for variety
+        let explosionEmitter = SKEmitterNode()
+        explosionEmitter.position = position
+        explosionEmitter.zPosition = 100
+        
+        // Use simple circle texture
+        let size: CGFloat = 32
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: size, height: size), false, 0)
+        let context = UIGraphicsGetCurrentContext()!
+        context.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
+        let circleImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        explosionEmitter.particleTexture = SKTexture(image: circleImage)
+        
+        // Configure for firework explosion
+        explosionEmitter.particleBirthRate = 800
+        explosionEmitter.particleLifetime = 1.3
+        explosionEmitter.particleLifetimeRange = 0.4
+        
+        // Use actual sunset colors with full blending
+        let sunsetColors = [
+            UIColor(red: 1.0, green: 0.95, blue: 0.8, alpha: 1.0),  // Light peach
+            UIColor(red: 1.0, green: 0.85, blue: 0.6, alpha: 1.0),  // Peach
+            UIColor(red: 1.0, green: 0.7, blue: 0.5, alpha: 1.0),   // Orange
+            UIColor(red: 0.95, green: 0.6, blue: 0.6, alpha: 1.0),  // Coral
+            UIColor(red: 0.85, green: 0.5, blue: 0.7, alpha: 1.0),  // Pink-purple
+            UIColor(red: 0.7, green: 0.6, blue: 0.85, alpha: 1.0)   // Blue-purple
+        ]
+        
+        // Create color sequence
+        let colorSequence = SKKeyframeSequence(keyframeValues: sunsetColors, times: [0, 0.2, 0.4, 0.5, 0.7, 1.0])
+        explosionEmitter.particleColorSequence = colorSequence
+        explosionEmitter.particleColorBlendFactor = 1.0  // Use full color blending
+        
+        // Small particles
+        explosionEmitter.particleScale = 0.12
+        explosionEmitter.particleScaleRange = 0.06
+        explosionEmitter.particleScaleSpeed = -0.3
+        
+        // Full 360 degree emission
+        explosionEmitter.emissionAngle = 0
+        explosionEmitter.emissionAngleRange = CGFloat.pi * 2
+        explosionEmitter.particleSpeed = 400
+        explosionEmitter.particleSpeedRange = 150
+        
+        // Physics
+        explosionEmitter.yAcceleration = -200
+        
+        // Rotation for sparkle
+        explosionEmitter.particleRotationRange = CGFloat.pi / 4
+        explosionEmitter.particleRotationSpeed = 2.0
+        
+        // Fading
+        explosionEmitter.particleAlpha = 1.0
+        explosionEmitter.particleAlphaRange = 0.1
+        explosionEmitter.particleAlphaSpeed = -0.8
+        
+        // Additive blending for bright effect
+        explosionEmitter.particleBlendMode = .add
+        
+        // Single burst
+        explosionEmitter.numParticlesToEmit = 200
+        
+        addChild(explosionEmitter)
+        
+        // Remove after particles finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.3) {
+            explosionEmitter.removeFromParent()
+        }
+    }
+    
+    /// Creates a simple golden color sequence
+    private func createSimpleGoldenColorSequence() -> SKKeyframeSequence {
+        let colors = [
+            UIColor(red: 1.0, green: 0.9, blue: 0.6, alpha: 1.0),   // Bright golden
+            UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0),   // Orange-gold
+            UIColor(red: 0.9, green: 0.5, blue: 0.2, alpha: 0.7),   // Deep orange
+            UIColor(red: 0.7, green: 0.3, blue: 0.1, alpha: 0.3)    // Dark fade
+        ]
+        
+        let times: [NSNumber] = [0.0, 0.3, 0.7, 1.0]
+        
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
+    }
+    
+    /// Creates a colored orb texture with golden hues
+    private func createColoredOrbTexture() -> SKTexture {
+        let size = CGSize(width: 32, height: 32)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Create a radial gradient with sunset colors
+            let colors = [
+                UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0).cgColor,  // Bright golden center
+                UIColor(red: 1.0, green: 0.6, blue: 0.3, alpha: 0.8).cgColor,  // Orange-gold
+                UIColor(red: 0.9, green: 0.4, blue: 0.2, alpha: 0.4).cgColor,  // Deep orange
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.4, 0.8, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates a simple glowing orb texture
+    private func createGlowingOrbTexture() -> SKTexture {
+        let size = CGSize(width: 32, height: 32)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Simple radial gradient
+            let colors = [
+                UIColor.white.cgColor,
+                UIColor.white.withAlphaComponent(0.5).cgColor,
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.5, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates an enhanced sunset orb texture with vibrant desert colors
+    private func createEnhancedSunsetOrbTexture() -> SKTexture {
+        let size = CGSize(width: 64, height: 64)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Create a vibrant radial gradient with desert sunset colors
+            let colors = [
+                UIColor(red: 1.0, green: 0.95, blue: 0.8, alpha: 1.0).cgColor,  // Bright yellow-white center
+                UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0).cgColor,   // Golden yellow
+                UIColor(red: 1.0, green: 0.65, blue: 0.3, alpha: 1.0).cgColor,  // Bright orange
+                UIColor(red: 0.95, green: 0.5, blue: 0.25, alpha: 0.8).cgColor, // Deep orange-red
+                UIColor(red: 0.8, green: 0.3, blue: 0.2, alpha: 0.5).cgColor,   // Dark red-orange
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+            
+            // Add a subtle bright spot at the center for extra luminosity
+            ctx.saveGState()
+            ctx.setBlendMode(.screen)
+            
+            let innerColors = [
+                UIColor(red: 1.0, green: 1.0, blue: 0.9, alpha: 0.6).cgColor,
+                UIColor.clear.cgColor
+            ]
+            let innerLocations: [CGFloat] = [0.0, 0.3]
+            
+            if let innerGradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: innerColors as CFArray,
+                locations: innerLocations
+            ) {
+                ctx.drawRadialGradient(
+                    innerGradient,
+                    startCenter: center,
+                    startRadius: 0,
+                    endCenter: center,
+                    endRadius: radius * 0.5,
+                    options: []
+                )
+            }
+            ctx.restoreGState()
         }
         
         return SKTexture(image: image)
@@ -975,9 +1300,37 @@ class PendulumScene: SKScene {
     }
 
     /// Shows a new level start particle effect
-    func showNewLevelEffect(at position: CGPoint? = nil) {
-        // Don't show a second effect - the balance explosion is enough
-        print("New level effect disabled - using only the balance explosion")
+    func showNewLevelEffect(at position: CGPoint? = nil, level: Int = 1) {
+        // Add sparkling trail to pendulum bob for visual interest
+        addSparklingTrailToBob(for: level)
+        
+        // Create a subtle level start effect
+        let effectPosition = position ?? pendulumBob.position
+        
+        // Create a simple shimmer effect to indicate new level start
+        let shimmerEmitter = SKEmitterNode()
+        shimmerEmitter.position = effectPosition
+        shimmerEmitter.particleBirthRate = 200  // More particles for initial burst
+        shimmerEmitter.numParticlesToEmit = 100  // Limited burst
+        shimmerEmitter.particleLifetime = 1.0
+        shimmerEmitter.particleSize = CGSize(width: 8, height: 8)
+        shimmerEmitter.particleScale = 1.0
+        shimmerEmitter.particleScaleRange = 0.5
+        shimmerEmitter.particleScaleSpeed = -0.8
+        shimmerEmitter.emissionAngle = -CGFloat.pi / 2
+        shimmerEmitter.emissionAngleRange = CGFloat.pi / 4
+        shimmerEmitter.particleSpeed = 50
+        shimmerEmitter.particleSpeedRange = 30
+        shimmerEmitter.particleAlpha = 0.8
+        shimmerEmitter.particleAlphaSpeed = -0.8
+        shimmerEmitter.particleColor = UIColor.white
+        shimmerEmitter.particleColorBlendFactor = 1.0
+        addChild(shimmerEmitter)
+        
+        // Remove after short time
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            shimmerEmitter.removeFromParent()
+        }
     }
 
     /// Creates a comet trail effect rising upward
@@ -1292,6 +1645,34 @@ class PendulumScene: SKScene {
             }
         }
     }
+    
+    /// Adds a sparkling trail effect to the pendulum bob
+    func addSparklingTrailToBob(for level: Int) {
+        // Remove any existing trail
+        pendulumBob.removeAllChildren()
+        
+        // Create a simple sparkling trail
+        let sparklingTrail = SKEmitterNode()
+        sparklingTrail.particleBirthRate = 50
+        sparklingTrail.particleLifetime = 0.8
+        sparklingTrail.particleLifetimeRange = 0.3
+        sparklingTrail.particleSize = CGSize(width: 6, height: 6)
+        sparklingTrail.particleScale = 1.0
+        sparklingTrail.particleScaleRange = 0.5
+        sparklingTrail.particleScaleSpeed = -0.8
+        sparklingTrail.emissionAngle = CGFloat.pi / 2  // Downward
+        sparklingTrail.emissionAngleRange = CGFloat.pi / 6
+        sparklingTrail.particleSpeed = 40
+        sparklingTrail.particleSpeedRange = 20
+        sparklingTrail.particleAlpha = 0.7
+        sparklingTrail.particleAlphaSpeed = -0.9
+        sparklingTrail.yAcceleration = -50
+        sparklingTrail.particleColor = UIColor(white: 1.0, alpha: 1.0)
+        sparklingTrail.particleColorBlendFactor = 1.0
+        sparklingTrail.targetNode = self // Particles remain in scene
+        sparklingTrail.zPosition = pendulumBob.zPosition - 1
+        pendulumBob.addChild(sparklingTrail)
+    }
 
     /// Clears the phase space visualization for mode changes
     func clearPhaseSpace() {
@@ -1303,5 +1684,126 @@ class PendulumScene: SKScene {
            let trajectoryNode = phaseSpaceNode.childNode(withName: "phaseTrajectory") as? SKShapeNode {
             trajectoryNode.path = nil
         }
+    }
+    
+    /// Creates a sunset gradient texture
+    private func createSunsetGradientTexture() -> SKTexture {
+        let size = CGSize(width: 64, height: 64)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Create gradient with sunset colors from the desert image
+            let colors = [
+                UIColor(red: 1.0, green: 0.95, blue: 0.8, alpha: 1.0).cgColor,  // Light peach
+                UIColor(red: 1.0, green: 0.85, blue: 0.6, alpha: 1.0).cgColor,  // Peach
+                UIColor(red: 1.0, green: 0.7, blue: 0.5, alpha: 0.9).cgColor,   // Orange-peach
+                UIColor(red: 0.95, green: 0.6, blue: 0.6, alpha: 0.8).cgColor,  // Coral
+                UIColor(red: 0.85, green: 0.5, blue: 0.7, alpha: 0.7).cgColor,  // Pink-purple
+                UIColor(red: 0.7, green: 0.6, blue: 0.85, alpha: 0.5).cgColor,  // Soft blue-purple
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.15, 0.3, 0.45, 0.6, 0.8, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+            
+            // Add bright center spot
+            ctx.setFillColor(UIColor(white: 1.0, alpha: 0.9).cgColor)
+            ctx.fillEllipse(in: CGRect(x: center.x - 3, y: center.y - 3, width: 6, height: 6))
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates a firework particle texture with wider range of colors
+    private func createFireworkParticleTexture() -> SKTexture {
+        let size = CGSize(width: 32, height: 32)  // Smaller for firework particles
+        let textures: [SKTexture] = [
+            createFireworkParticleWithColor(
+                center: UIColor(red: 1.0, green: 0.95, blue: 0.7, alpha: 1.0),  // Light yellow
+                edge: UIColor(red: 1.0, green: 0.7, blue: 0.2, alpha: 0.3),    // Golden
+                size: size
+            ),
+            createFireworkParticleWithColor(
+                center: UIColor(red: 1.0, green: 0.8, blue: 0.9, alpha: 1.0),   // Pink-white
+                edge: UIColor(red: 1.0, green: 0.5, blue: 0.7, alpha: 0.3),    // Pink
+                size: size
+            ),
+            createFireworkParticleWithColor(
+                center: UIColor(red: 0.9, green: 0.85, blue: 1.0, alpha: 1.0),  // Light purple
+                edge: UIColor(red: 0.6, green: 0.4, blue: 0.9, alpha: 0.3),    // Purple
+                size: size
+            ),
+            createFireworkParticleWithColor(
+                center: UIColor(red: 1.0, green: 0.85, blue: 0.6, alpha: 1.0),  // Peach
+                edge: UIColor(red: 0.9, green: 0.4, blue: 0.1, alpha: 0.3),    // Orange
+                size: size
+            ),
+            createFireworkParticleWithColor(
+                center: UIColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 1.0),   // Blue-white  
+                edge: UIColor(red: 0.5, green: 0.7, blue: 1.0, alpha: 0.3),    // Sky blue
+                size: size
+            )
+        ]
+        
+        // Return random texture for variety
+        return textures.randomElement()!
+    }
+    
+    /// Creates a single firework particle with given colors
+    private func createFireworkParticleWithColor(center: UIColor, edge: UIColor, size: CGSize) -> SKTexture {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let centerPoint = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = size.width / 2
+            
+            // Create radial gradient
+            let colors = [
+                center.cgColor,
+                center.withAlphaComponent(0.8).cgColor,
+                edge.cgColor,
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.3, 0.7, 1.0]
+            
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            )!
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: centerPoint,
+                startRadius: 0,
+                endCenter: centerPoint,
+                endRadius: radius,
+                options: []
+            )
+            
+            // Add bright center spot for sparkle
+            ctx.setFillColor(UIColor.white.withAlphaComponent(0.9).cgColor)
+            ctx.fillEllipse(in: CGRect(x: centerPoint.x - 2, y: centerPoint.y - 2, width: 4, height: 4))
+        }
+        
+        return SKTexture(image: image)
     }
 }

@@ -656,6 +656,9 @@ class PerturbationManager {
         if effectType == "impulse" {
             if let impulseParticles = SKEmitterNode(fileNamed: "ImpulseParticle") {
                 particles = impulseParticles
+                // Override color settings to fix white particle issue
+                particles.particleColorBlendFactor = 0.0
+                particles.particleTexture = createSunsetParticleTexture()
             } else {
                 // Fallback if file doesn't exist
                 particles = createImpulseParticles()
@@ -663,6 +666,9 @@ class PerturbationManager {
         } else {
             if let windParticles = SKEmitterNode(fileNamed: "WindParticle") {
                 particles = windParticles
+                // Override color settings to fix white particle issue
+                particles.particleColorBlendFactor = 0.0
+                particles.particleTexture = createSunsetParticleTexture(useLighterColors: true)
             } else {
                 // Fallback if file doesn't exist
                 particles = createWindParticles()
@@ -670,26 +676,32 @@ class PerturbationManager {
         }
         
         // Configure particle position - start from side based on direction
-        let xPosition = direction < 0 ? scene.size.width + 10 : -10
-        let yPosition = scene.size.height / 2
+        // Position particles at pendulum height (15% from bottom)
+        let xPosition = direction < 0 ? scene.size.width + 50 : -50
+        let yPosition = scene.size.height * 0.15  // Same height as pendulum pivot
         particles.position = CGPoint(x: xPosition, y: yPosition)
         
-        // Configure particle direction
+        // Configure particle direction and spread
         particles.emissionAngle = direction < 0 ? .pi : 0
+        particles.emissionAngleRange = .pi / 4  // 45-degree spread
         
         // Scale particles based on magnitude
-        let scale = min(1.0 + abs(magnitude), 2.0)
+        let scale = min(0.8 + abs(magnitude) * 0.5, 1.5)
         particles.particleScale = particles.particleScale * CGFloat(scale)
         
-        // Set particle lifetime
-        particles.particleLifetime = effectType == "impulse" ? 0.5 : 1.0
+        // Set particle lifetime based on effect type
+        particles.particleLifetime = effectType == "impulse" ? 0.8 : 1.5
         
-        // Add to scene with auto-removal
+        // Add horizontal movement to particles
+        particles.xAcceleration = direction * -100 * CGFloat(abs(magnitude))
+        
+        // Add to scene with higher z-position for visibility
+        particles.zPosition = 20
         scene.addChild(particles)
         
         // Remove particle system after effect completes
         particles.run(SKAction.sequence([
-            SKAction.wait(forDuration: effectType == "impulse" ? 0.8 : 1.5),
+            SKAction.wait(forDuration: effectType == "impulse" ? 1.0 : 2.0),
             SKAction.removeFromParent()
         ]))
         
@@ -727,22 +739,36 @@ class PerturbationManager {
     private func createImpulseParticles() -> SKEmitterNode {
         let emitter = SKEmitterNode()
         
-        emitter.particleBirthRate = 200
-        emitter.numParticlesToEmit = 50
-        emitter.particleLifetime = 0.5
-        emitter.particleLifetimeRange = 0.2
-        emitter.particleSize = CGSize(width: 4, height: 4)
-        emitter.particleColor = SKColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
-        emitter.particleColorBlendFactor = 1.0
-        emitter.particleSpeed = 150
-        emitter.particleSpeedRange = 50
-        emitter.particleAlpha = 0.8
+        emitter.particleBirthRate = 300
+        emitter.numParticlesToEmit = 100
+        emitter.particleLifetime = 0.8
+        emitter.particleLifetimeRange = 0.3
+        emitter.particleSize = CGSize(width: 8, height: 8)
+        
+        // Create sunset colored texture programmatically
+        let sunsetTexture = createSunsetParticleTexture()
+        emitter.particleTexture = sunsetTexture
+        
+        // Set color blend factor to 0 to use texture colors directly
+        emitter.particleColorBlendFactor = 0.0
+        
+        emitter.particleSpeed = 200
+        emitter.particleSpeedRange = 80
+        emitter.particleAlpha = 1.0
         emitter.particleAlphaRange = 0.2
-        emitter.particleAlphaSpeed = -1.0
+        emitter.particleAlphaSpeed = -1.2
         emitter.xAcceleration = 0
         emitter.yAcceleration = 0
         emitter.emissionAngle = 0
-        emitter.emissionAngleRange = 0.5
+        emitter.emissionAngleRange = 0.8
+        
+        // Add scale animations for more dynamic effect
+        emitter.particleScale = 0.2  // Much smaller for firework effect
+        emitter.particleScaleRange = 0.1
+        emitter.particleScaleSpeed = -0.3
+        
+        // Set blend mode for better visibility
+        emitter.particleBlendMode = .add
         
         return emitter
     }
@@ -751,23 +777,95 @@ class PerturbationManager {
     private func createWindParticles() -> SKEmitterNode {
         let emitter = SKEmitterNode()
         
-        emitter.particleBirthRate = 50
-        emitter.numParticlesToEmit = 30
-        emitter.particleLifetime = 1.0
-        emitter.particleLifetimeRange = 0.3
-        emitter.particleSize = CGSize(width: 2, height: 2)
-        emitter.particleColor = SKColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 0.5)
-        emitter.particleColorBlendFactor = 1.0
-        emitter.particleSpeed = 100
-        emitter.particleSpeedRange = 30
-        emitter.particleAlpha = 0.5
-        emitter.particleAlphaRange = 0.2
+        emitter.particleBirthRate = 80
+        emitter.numParticlesToEmit = 60
+        emitter.particleLifetime = 1.5
+        emitter.particleLifetimeRange = 0.5
+        emitter.particleSize = CGSize(width: 6, height: 6)
+        
+        // Create sunset colored texture
+        let sunsetTexture = createSunsetParticleTexture(useLighterColors: true)
+        emitter.particleTexture = sunsetTexture
+        
+        // Set color blend factor to 0 to use texture colors directly
+        emitter.particleColorBlendFactor = 0.0
+        
+        emitter.particleSpeed = 150
+        emitter.particleSpeedRange = 50
+        emitter.particleAlpha = 0.8
+        emitter.particleAlphaRange = 0.3
         emitter.particleAlphaSpeed = -0.5
         emitter.xAcceleration = 0
         emitter.yAcceleration = 0
         emitter.emissionAngle = 0
-        emitter.emissionAngleRange = 0.3
+        emitter.emissionAngleRange = 0.5
+        
+        // Add gentle scale animation
+        emitter.particleScale = 0.15  // Much smaller for firework effect
+        emitter.particleScaleRange = 0.08
+        emitter.particleScaleSpeed = -0.2
+        
+        // Set blend mode for better visibility
+        emitter.particleBlendMode = .alpha
         
         return emitter
+    }
+    
+    // Create sunset colored particle texture
+    private func createSunsetParticleTexture(useLighterColors: Bool = false) -> SKTexture {
+        let size = CGSize(width: 16, height: 16)
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        guard let context = UIGraphicsGetCurrentContext() else {
+            UIGraphicsEndImageContext()
+            return SKTexture()
+        }
+        
+        // Define sunset colors
+        let colors: [UIColor]
+        if useLighterColors {
+            colors = [
+                UIColor(red: 1.0, green: 0.8, blue: 0.6, alpha: 1.0),  // Light peach
+                UIColor(red: 1.0, green: 0.7, blue: 0.5, alpha: 1.0),  // Light coral
+                UIColor(red: 0.9, green: 0.6, blue: 0.7, alpha: 1.0),  // Light pink
+                UIColor(red: 0.8, green: 0.7, blue: 0.9, alpha: 1.0)   // Light lavender
+            ]
+        } else {
+            colors = [
+                UIColor(red: 1.0, green: 0.5, blue: 0.2, alpha: 1.0),  // Orange
+                UIColor(red: 1.0, green: 0.3, blue: 0.4, alpha: 1.0),  // Coral
+                UIColor(red: 0.9, green: 0.4, blue: 0.6, alpha: 1.0),  // Pink
+                UIColor(red: 0.7, green: 0.3, blue: 0.8, alpha: 1.0)   // Purple
+            ]
+        }
+        
+        // Create gradient
+        let gradient = CGGradient(
+            colorsSpace: CGColorSpaceCreateDeviceRGB(),
+            colors: colors.map { $0.cgColor } as CFArray,
+            locations: [0.0, 0.33, 0.66, 1.0]
+        )!
+        
+        // Draw radial gradient
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+        context.drawRadialGradient(
+            gradient,
+            startCenter: center,
+            startRadius: 0,
+            endCenter: center,
+            endRadius: size.width / 2,
+            options: []
+        )
+        
+        // Add soft glow effect
+        context.setBlendMode(.screen)
+        context.setFillColor(UIColor.white.withAlphaComponent(0.3).cgColor)
+        context.fillEllipse(in: CGRect(x: 2, y: 2, width: 12, height: 12))
+        
+        // Get image and create texture
+        let image = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        return SKTexture(image: image)
     }
 }
