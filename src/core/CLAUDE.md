@@ -18,6 +18,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Access Control**: Specify access modifiers (private, internal, public) for all properties and methods
 - **Whitespace**: Use 2-space indentation, blank line between methods
 
+## Key Files to Read
+When analyzing this codebase, be sure to read these critical files using offset 0 and chunks of 7500 tokens:
+- PendulumViewController.swift
+- pendulumModel.swift
+- AnalyticsDashboardViewNative.swift
+- AnalyticsDashboardView.swift
+
 ## Project Focus
 - This core functionality of The Pendulum, the scientific modeling, and base controls and application are important to making it a rigorous research tool and for making it a living topology solution.
 - Remember this state of the application, as it's almost completely ready with UI, the physics is right, and only some Modes and Settings need to be precomputed, analyzed in Matlab and uploaded.
