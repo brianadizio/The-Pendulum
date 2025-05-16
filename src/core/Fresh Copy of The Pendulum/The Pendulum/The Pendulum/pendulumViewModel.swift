@@ -420,6 +420,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
 
         // Store completed level for celebration
         let completedLevel = currentLevel
+        
+        // Show level completion effect ONCE here before mode-specific handling
+        self.scene?.showLevelCompletionEffect()
 
         // Handle level progression based on game mode
         if isQuasiPeriodicMode {
@@ -438,13 +441,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
 
             // Show level completion animation and start new level - with faster transitions
             if let sceneView = self.scene?.view {
-                // Add level completion particle effect
-                self.scene?.showLevelCompletionEffect()
+                // Particle effect already shown in levelCompleted()
 
                 sceneView.levelCompletionAnimation {
                     // After completion animation finishes, show new level intro
-                    // Add new level particle effect
-                    self.scene?.showNewLevelEffect()
+                    // No new level effect needed - the explosion is sufficient
 
                     sceneView.newLevelStartAnimation(
                         level: self.currentLevel,
@@ -997,13 +998,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Show enhanced celebration animation
         if let sceneView = self.scene?.view {
             // Customized animation for quasi-periodic mode
-            // Add level completion particle effect
-            self.scene?.showLevelCompletionEffect()
+            // Particle effect already shown in levelCompleted()
 
             sceneView.levelCompletionAnimation {
                 // Show a customized message with total levels completed
-                // Add new level particle effect
-                self.scene?.showNewLevelEffect()
+                // No new level effect needed - the explosion is sufficient
 
                 sceneView.newLevelStartAnimation(
                     level: 1,
@@ -1084,13 +1083,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Show enhanced celebration animation
         if let sceneView = self.scene?.view {
             // Customized animation for progressive mode
-            // Add level completion particle effect
-            self.scene?.showLevelCompletionEffect()
+            // Particle effect already shown in levelCompleted()
 
             sceneView.levelCompletionAnimation {
                 // Show a level intro with progressive mode indicator
-                // Add new level particle effect
-                self.scene?.showNewLevelEffect()
+                // No new level effect needed - the explosion is sufficient
 
                 sceneView.newLevelStartAnimation(
                     level: self.currentLevel,

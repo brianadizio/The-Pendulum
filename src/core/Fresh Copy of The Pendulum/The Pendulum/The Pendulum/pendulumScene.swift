@@ -614,89 +614,321 @@ class PendulumScene: SKScene {
 
     /// Shows a level completion particle effect
     func showLevelCompletionEffect(at position: CGPoint? = nil) {
-        // Instead of single position, create multiple particle systems at various positions
-        // This creates a more immersive effect across the screen
-
-        let mainPosition = position ?? CGPoint(x: frame.midX, y: frame.midY)
-
-        // Create multiple particle emission points for immersive effect
-        let emissionPoints = [
-            mainPosition, // Center
-            CGPoint(x: frame.midX * 0.5, y: frame.midY * 0.7), // Lower left
-            CGPoint(x: frame.midX * 1.5, y: frame.midY * 0.7), // Lower right
-            CGPoint(x: frame.midX * 0.6, y: frame.midY * 1.3), // Upper left
-            CGPoint(x: frame.midX * 1.4, y: frame.midY * 1.3), // Upper right
-            pendulumBob.position // At the pendulum bob
-        ]
-
-        // Different sizes for variety
-        let particleSizes = [1.0, 0.8, 0.7, 0.9, 0.6, 1.2]
-
-        // Create effects at each point
-        for (index, point) in emissionPoints.enumerated() {
-            createRockyFluidParticleEffect(at: point,
-                                          scale: particleSizes[min(index, particleSizes.count-1)],
-                                          delay: Double(index) * 0.05)
-        }
-
+        // Create an immersive full-screen golden explosion effect
+        createImmersiveExplosionEffect()
+        
         // Debug print to confirm effect is triggered
-        print("Immersive level completion particle effects shown")
+        print("Immersive explosion effect shown")
     }
 
-    /// Creates a more realistic rocky/fluid particle effect
-    private func createRockyFluidParticleEffect(at position: CGPoint, scale: CGFloat, delay: TimeInterval) {
-        // Try to load the base particle system
-        if let particleSystem = SKEmitterNode(fileNamed: "LevelCompletionParticle") {
-            particleSystem.position = position
-            particleSystem.zPosition = 100
-            addChild(particleSystem)
-
-            // Make it more rocky/realistic by adjusting parameters
-            particleSystem.particleBirthRate = 300 * scale // Slightly fewer but more distinct particles
-            particleSystem.particleLifetime = 1.5 * scale
-            particleSystem.particleScale = 1.2 * scale
-
-            // More jagged/rocky movement
-            particleSystem.particleSpeed = 150 * scale
-            particleSystem.particleSpeedRange = 100 * scale
-            particleSystem.particleRotationRange = 4.0 // Full rotation for sizzling effect
-            particleSystem.particleRotationSpeed = 2.0 // Fast rotation
-
-            // Add gravity for a more natural falling effect
-            particleSystem.yAcceleration = -150 // Gravity pulling particles down
-
-            // Add random X acceleration for fluid-like turbulence
-            particleSystem.xAcceleration = CGFloat.random(in: -30...30) // Random lateral movement
-
-            // More alpha variance for sparkle effect
-            particleSystem.particleAlphaRange = 0.6
-            particleSystem.particleAlphaSpeed = -0.8 // Faster fade
-
-            // Add a slight delayed start if specified
-            if delay > 0 {
-                particleSystem.particleBirthRate = 0
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    particleSystem.particleBirthRate = 300 * scale
-                }
+    /// Creates an immersive full-screen explosion effect
+    private func createImmersiveExplosionEffect() {
+        // Create multiple emission points across the entire screen
+        let emissionPoints: [CGPoint] = [
+            CGPoint(x: frame.midX, y: frame.midY),  // Center
+            CGPoint(x: frame.width * 0.15, y: frame.height * 0.15),
+            CGPoint(x: frame.width * 0.85, y: frame.height * 0.15),
+            CGPoint(x: frame.width * 0.15, y: frame.height * 0.85),
+            CGPoint(x: frame.width * 0.85, y: frame.height * 0.85),
+            CGPoint(x: frame.width * 0.5, y: frame.height * 0.05),
+            CGPoint(x: frame.width * 0.5, y: frame.height * 0.95),
+            CGPoint(x: frame.width * 0.05, y: frame.height * 0.5),
+            CGPoint(x: frame.width * 0.95, y: frame.height * 0.5),
+            // Additional points for more coverage
+            CGPoint(x: frame.width * 0.3, y: frame.height * 0.3),
+            CGPoint(x: frame.width * 0.7, y: frame.height * 0.3),
+            CGPoint(x: frame.width * 0.3, y: frame.height * 0.7),
+            CGPoint(x: frame.width * 0.7, y: frame.height * 0.7),
+            // Pendulum position
+            pendulumBob.position
+        ]
+        
+        // Create the main explosion effect at each point
+        for (index, point) in emissionPoints.enumerated() {
+            // Slight random delay for wave effect
+            let delay = Double(index) * 0.02 + Double.random(in: 0...0.05)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                self.createExplosionBurst(at: point, scale: CGFloat.random(in: 0.8...1.2))
             }
-
-            // Extremely short lifetime to prevent overlap between level transitions
-            particleSystem.particleLifetime = 0.6 // Shorter particle lifetime
-
-            // Stop emission very quickly
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                // Stop emitting new particles
-                particleSystem.particleBirthRate = 0
-
-                // Force cleanup immediately
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    particleSystem.removeFromParent()
-                }
-            }
-        } else {
-            // Fallback to creating manual particles if the SKS file isn't available
-            createFallbackCompletionEffect(at: position)
         }
+        
+        // Removed screen flash - just use particles
+    }
+    
+    /// Creates a single explosion burst at a specific position
+    private func createExplosionBurst(at position: CGPoint, scale: CGFloat) {
+        let explosionEmitter = SKEmitterNode()
+        explosionEmitter.position = position
+        explosionEmitter.zPosition = 100
+        
+        // Create multiple pre-colored star textures for variety
+        let textures = (0..<5).map { _ in createColoredStarTexture() }
+        
+        // Apply random texture from our sunset-colored variations
+        let starTexture = textures.randomElement() ?? createColoredStarTexture()
+        explosionEmitter.particleTexture = starTexture
+        
+        // Explosion properties - massive burst
+        explosionEmitter.particleBirthRate = 1200 * scale  // Higher birth rate for denser effect
+        explosionEmitter.particleLifetime = 1.65  // Reduced by 0.35
+        explosionEmitter.particleLifetimeRange = 0.8
+        
+        // Remove color blending since texture is pre-colored
+        explosionEmitter.particleColorBlendFactor = 0.0
+        
+        // Size variation - larger particles
+        explosionEmitter.particleScale = 0.8 * scale
+        explosionEmitter.particleScaleRange = 0.4 * scale
+        explosionEmitter.particleScaleSpeed = -0.4
+        
+        // Radial explosion in all directions
+        explosionEmitter.emissionAngle = 0
+        explosionEmitter.emissionAngleRange = CGFloat.pi * 2  // Full 360 degrees
+        explosionEmitter.particleSpeed = 350 * scale
+        explosionEmitter.particleSpeedRange = 150 * scale
+        
+        // Physics - outward explosion then gravity
+        explosionEmitter.yAcceleration = -150  // More gravity
+        
+        // Rotation for sparkle
+        explosionEmitter.particleRotationRange = CGFloat.pi * 2
+        explosionEmitter.particleRotationSpeed = 8.0
+        
+        // Alpha fade
+        explosionEmitter.particleAlpha = 1.0
+        explosionEmitter.particleAlphaRange = 0.3
+        explosionEmitter.particleAlphaSpeed = -0.7
+        
+        // Use alpha blend mode for better color visibility
+        explosionEmitter.particleBlendMode = .alpha
+        
+        addChild(explosionEmitter)
+        
+        // Single burst - stop emitting immediately
+        explosionEmitter.numParticlesToEmit = Int(300 * scale)
+        
+        // Remove after particles finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.15) {  // Reduced by 0.35
+            explosionEmitter.removeFromParent()
+        }
+    }
+    
+    /// Creates a screen flash effect for impact
+    private func createScreenFlash() {
+        let flashLayer = SKShapeNode(rectOf: frame.size)
+        flashLayer.position = CGPoint(x: frame.midX, y: frame.midY)
+        flashLayer.fillColor = UIColor(red: 1.0, green: 0.85, blue: 0.75, alpha: 0.5)  // Soft sunset peach
+        flashLayer.strokeColor = .clear
+        flashLayer.zPosition = 99  // Just below particles
+        flashLayer.alpha = 0
+        
+        addChild(flashLayer)
+        
+        // Quick flash animation
+        let flashIn = SKAction.fadeAlpha(to: 0.8, duration: 0.05)
+        let flashOut = SKAction.fadeAlpha(to: 0, duration: 0.3)
+        let remove = SKAction.removeFromParent()
+        
+        flashLayer.run(SKAction.sequence([flashIn, flashOut, remove]))
+    }
+    
+    /// Creates explosion color sequence based on desert sunset palette
+    private func createExplosionColorSequence() -> SKKeyframeSequence {
+        let colors = [
+            UIColor(red: 1.0, green: 0.95, blue: 0.9, alpha: 1.0),      // Soft white with warm tint
+            UIColor(red: 1.0, green: 0.9, blue: 0.75, alpha: 1.0),      // Pale sunset yellow
+            UIColor(red: 1.0, green: 0.8, blue: 0.65, alpha: 1.0),      // Warm peach
+            UIColor(red: 0.95, green: 0.7, blue: 0.55, alpha: 0.9),     // Soft coral
+            UIColor(red: 0.9, green: 0.6, blue: 0.5, alpha: 0.7),       // Muted sunset orange
+            UIColor(red: 0.7, green: 0.5, blue: 0.5, alpha: 0.4),       // Dusty rose fade
+            UIColor(red: 0.5, green: 0.4, blue: 0.45, alpha: 0.2)       // Soft purple-gray fade
+        ]
+        
+        let times: [NSNumber] = [0.0, 0.1, 0.25, 0.4, 0.6, 0.8, 1.0]
+        
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
+    }
+    
+    /// Creates a subtle spark effect for accents
+    private func createSubtleSparkEffect(at position: CGPoint, scale: CGFloat) {
+        let sparkEmitter = SKEmitterNode()
+        sparkEmitter.position = position
+        sparkEmitter.zPosition = 99
+        
+        // Small point texture for sparks
+        sparkEmitter.particleTexture = SKTexture(imageNamed: "spark")  // If unavailable, will be white square
+        
+        // Fewer, more distinct sparks
+        sparkEmitter.particleBirthRate = 50 * scale
+        sparkEmitter.particleLifetime = 0.8
+        sparkEmitter.particleLifetimeRange = 0.2
+        
+        // Bright white-gold color
+        sparkEmitter.particleColor = UIColor(red: 1.0, green: 0.95, blue: 0.7, alpha: 1.0)
+        sparkEmitter.particleColorBlendFactor = 1.0
+        
+        // Very small particles
+        sparkEmitter.particleScale = 0.1 * scale
+        sparkEmitter.particleScaleRange = 0.05 * scale
+        sparkEmitter.particleScaleSpeed = -0.1
+        
+        // Random directions
+        sparkEmitter.emissionAngle = 0
+        sparkEmitter.emissionAngleRange = CGFloat.pi * 2
+        sparkEmitter.particleSpeed = 150 * scale
+        sparkEmitter.particleSpeedRange = 50
+        
+        // Gravity
+        sparkEmitter.yAcceleration = -100
+        
+        // Sparkle rotation
+        sparkEmitter.particleRotationSpeed = 10.0
+        
+        // Alpha
+        sparkEmitter.particleAlpha = 1.0
+        sparkEmitter.particleAlphaSpeed = -1.2
+        
+        addChild(sparkEmitter)
+        
+        // Very short emission
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            sparkEmitter.particleBirthRate = 0
+        }
+        
+        // Remove after particles finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            sparkEmitter.removeFromParent()
+        }
+    }
+    
+    /// Creates a star-shaped texture for particles
+    private func createStarTexture() -> SKTexture {
+        let size = CGSize(width: 32, height: 32)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            ctx.translateBy(x: size.width / 2, y: size.height / 2)
+            
+            // Create a 6-pointed star
+            let outerRadius: CGFloat = 14
+            let innerRadius: CGFloat = 6
+            let points = 6
+            
+            ctx.move(to: CGPoint(x: 0, y: -outerRadius))
+            
+            for i in 0..<points * 2 {
+                let angle = CGFloat(i) * CGFloat.pi / CGFloat(points)
+                let radius = i % 2 == 0 ? outerRadius : innerRadius
+                let x = sin(angle) * radius
+                let y = -cos(angle) * radius
+                ctx.addLine(to: CGPoint(x: x, y: y))
+            }
+            
+            ctx.closePath()
+            
+            // Use a white star that can be tinted by particle color
+            ctx.setFillColor(UIColor.white.cgColor)
+            ctx.fillPath()
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates pre-colored star textures with sunset gradient
+    private func createColoredStarTexture() -> SKTexture {
+        let size = CGSize(width: 48, height: 48)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            ctx.translateBy(x: size.width / 2, y: size.height / 2)
+            
+            // Pick a random sunset color for this star - more vibrant colors
+            let colors = [
+                UIColor(red: 1.0, green: 0.6, blue: 0.3, alpha: 1.0),     // Bright orange
+                UIColor(red: 1.0, green: 0.45, blue: 0.35, alpha: 1.0),   // Deep coral
+                UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0),     // Golden yellow
+                UIColor(red: 0.95, green: 0.4, blue: 0.35, alpha: 1.0),   // Red-orange
+                UIColor(red: 0.9, green: 0.35, blue: 0.45, alpha: 1.0),   // Deep rose  
+                UIColor(red: 1.0, green: 0.65, blue: 0.45, alpha: 1.0),   // Peach
+                UIColor(red: 0.85, green: 0.45, blue: 0.55, alpha: 1.0)   // Dusky pink
+            ]
+            let randomColor = colors.randomElement()!
+            
+            // Create a 5-pointed star with sharper points
+            let outerRadius: CGFloat = 20
+            let innerRadius: CGFloat = 8
+            let points = 5
+            
+            // Draw a filled star
+            let path = UIBezierPath()
+            
+            for i in 0..<points * 2 {
+                let angle = CGFloat(i) * CGFloat.pi / CGFloat(points) - CGFloat.pi / 2
+                let radius = i % 2 == 0 ? outerRadius : innerRadius
+                let x = cos(angle) * radius
+                let y = sin(angle) * radius
+                
+                if i == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            path.close()
+            
+            // Fill with solid color first
+            randomColor.setFill()
+            path.fill()
+            
+            // Add inner glow for brightness
+            ctx.saveGState()
+            let innerGradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [
+                    UIColor.white.withAlphaComponent(0.6).cgColor,
+                    randomColor.cgColor
+                ] as CFArray,
+                locations: [0.0, 0.8]
+            )!
+            
+            path.addClip()
+            ctx.drawRadialGradient(
+                innerGradient,
+                startCenter: CGPoint.zero,
+                startRadius: 0,
+                endCenter: CGPoint.zero,
+                endRadius: outerRadius * 0.6,
+                options: []
+            )
+            ctx.restoreGState()
+            
+            // Add outer glow
+            ctx.setShadow(offset: .zero, blur: 3, color: randomColor.cgColor)
+            randomColor.setStroke()
+            path.lineWidth = 0.5
+            path.stroke()
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates a sunset color sequence matching the desert theme
+    private func createGoldenColorSequence() -> SKKeyframeSequence {
+        let colors = [
+            UIColor(red: 1.0, green: 0.92, blue: 0.85, alpha: 1.0),  // Soft peachy white
+            UIColor(red: 1.0, green: 0.85, blue: 0.7, alpha: 1.0),   // Warm sunset peach
+            UIColor(red: 0.98, green: 0.75, blue: 0.6, alpha: 1.0),  // Soft coral
+            UIColor(red: 0.9, green: 0.65, blue: 0.55, alpha: 0.8),  // Muted rose-orange
+            UIColor(red: 0.7, green: 0.5, blue: 0.5, alpha: 0.4)     // Dusty desert fade
+        ]
+        
+        let times: [NSNumber] = [0.0, 0.2, 0.5, 0.8, 1.0]
+        
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
     }
 
     // Fallback effect using SKShapeNodes for level completion if particle system fails
@@ -744,111 +976,182 @@ class PendulumScene: SKScene {
 
     /// Shows a new level start particle effect
     func showNewLevelEffect(at position: CGPoint? = nil) {
-        // Create a scene-wide fluid-like effect to indicate a new level
-
-        // Define quadrants for particle emission
-        let quadrants = [
-            CGPoint(x: frame.width * 0.25, y: frame.height * 0.25), // Bottom left
-            CGPoint(x: frame.width * 0.75, y: frame.height * 0.25), // Bottom right
-            CGPoint(x: frame.width * 0.25, y: frame.height * 0.75), // Top left
-            CGPoint(x: frame.width * 0.75, y: frame.height * 0.75), // Top right
-            CGPoint(x: frame.midX, y: frame.midY),                  // Center
-            pendulumBob.position                                     // Pendulum bob
-        ]
-
-        // Create flowing particles in each quadrant with different colors and behaviors
-        for (index, quadPoint) in quadrants.enumerated() {
-            // Slightly staggered creation for more natural flow
-            let delay = Double(index) * 0.08
-
-            // Create primary fluid effect
-            createRockyFluidNewLevelEffect(
-                at: quadPoint,
-                scale: CGFloat.random(in: 0.8...1.2),
-                delay: delay
-            )
-
-            // Create some secondary scattered effects
-            for _ in 0..<3 {
-                let randomOffset = CGPoint(
-                    x: CGFloat.random(in: -50...50),
-                    y: CGFloat.random(in: -50...50)
-                )
-                let scatteredPosition = CGPoint(
-                    x: quadPoint.x + randomOffset.x,
-                    y: quadPoint.y + randomOffset.y
-                )
-
-                createRockyFluidNewLevelEffect(
-                    at: scatteredPosition,
-                    scale: CGFloat.random(in: 0.4...0.7),
-                    delay: delay + Double.random(in: 0.05...0.2)
-                )
-            }
-        }
-
-        // Create a special effect at the pendulum bob (tracking its movement)
-        createBobTrackingEffect()
-
-        // Debug print to confirm effect is triggered
-        print("Immersive new level particle effects shown")
+        // Don't show a second effect - the balance explosion is enough
+        print("New level effect disabled - using only the balance explosion")
     }
 
-    /// Creates a more rock/fluid-like particle effect for new level
-    private func createRockyFluidNewLevelEffect(at position: CGPoint, scale: CGFloat, delay: TimeInterval) {
-        // Try to load the base particle system
-        if let particleSystem = SKEmitterNode(fileNamed: "NewLevelParticle") {
-            particleSystem.position = position
-            particleSystem.zPosition = 100
-            addChild(particleSystem)
-
-            // Make it more rock-like with jagged movements - but much shorter lifetime
-            particleSystem.particleBirthRate = 300 * scale  // Higher birth rate for quicker effect
-            particleSystem.particleLifetime = 0.5 * scale  // Drastically shorter lifetime
-            particleSystem.particleScale = 1.0 * scale
-
-            // More sizzling, sparkling movement
-            particleSystem.particleSpeed = 100 * scale
-            particleSystem.particleSpeedRange = 80 * scale
-            particleSystem.particleRotationRange = 2 * .pi // Full rotation range
-            particleSystem.particleRotationSpeed = 2.5 // Faster rotation for sizzling feel
-
-            // Physics simulation for more realistic movement
-            particleSystem.particleAction = SKAction.sequence([
-                SKAction.scale(by: CGFloat.random(in: 0.7...1.3), duration: 0.3),
-                SKAction.scale(by: CGFloat.random(in: 0.8...1.2), duration: 0.3)
-            ])
-
-            // Natural forces
-            particleSystem.yAcceleration = -80 // Gentle gravity
-            particleSystem.xAcceleration = CGFloat.random(in: -40...40) // Random drift
-
-            // Color variance for more natural, rocky appearance
-            particleSystem.particleColorBlendFactor = 0.8
-            particleSystem.particleColorBlendFactorRange = 0.3
-
-            // Add a slight delayed start if specified
-            if delay > 0 {
-                particleSystem.particleBirthRate = 0
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    particleSystem.particleBirthRate = 250 * scale
-                }
-            }
-
-            // Extremely short duration to avoid overlap during quick level transitions
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                // Stop emitting new particles immediately
-                particleSystem.particleBirthRate = 0
-
-                // Forcefully remove with minimal delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    particleSystem.removeFromParent()
-                }
-            }
-        } else {
-            print("Failed to load NewLevelParticle.sks")
-            createFallbackNewLevelEffect(at: position)
+    /// Creates a comet trail effect rising upward
+    private func createCometTrailEffect(at position: CGPoint) {
+        let cometEmitter = SKEmitterNode()
+        cometEmitter.position = position
+        cometEmitter.zPosition = 100
+        
+        // Diamond/crystal texture for comet particles
+        let diamondTexture = createDiamondTexture()
+        cometEmitter.particleTexture = diamondTexture
+        
+        // Comet properties - dense trail
+        cometEmitter.particleBirthRate = 300
+        cometEmitter.particleLifetime = 1.0
+        cometEmitter.particleLifetimeRange = 0.3
+        
+        // Blue-white gradient colors
+        cometEmitter.particleColor = UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
+        cometEmitter.particleColorBlendFactor = 1.0
+        cometEmitter.particleColorSequence = createCometColorSequence()
+        
+        // Size variation
+        cometEmitter.particleScale = 0.4
+        cometEmitter.particleScaleRange = 0.2
+        cometEmitter.particleScaleSpeed = -0.3
+        
+        // Upward movement with spread
+        cometEmitter.emissionAngle = -CGFloat.pi / 2  // Straight up
+        cometEmitter.emissionAngleRange = CGFloat.pi / 6  // Narrow spread
+        cometEmitter.particleSpeed = 300
+        cometEmitter.particleSpeedRange = 50
+        
+        // Physics - strong upward movement
+        cometEmitter.yAcceleration = 200  // Accelerate upward
+        cometEmitter.xAcceleration = 0
+        
+        // Rotation for shimmer
+        cometEmitter.particleRotationRange = CGFloat.pi
+        cometEmitter.particleRotationSpeed = 8.0
+        
+        // Alpha fade
+        cometEmitter.particleAlpha = 0.9
+        cometEmitter.particleAlphaRange = 0.1
+        cometEmitter.particleAlphaSpeed = -0.6
+        
+        // Add glow effect
+        cometEmitter.particleBlendMode = .add
+        
+        addChild(cometEmitter)
+        
+        // Move the emitter upward while emitting
+        let moveUp = SKAction.moveBy(x: 0, y: frame.height * 0.6, duration: 0.8)
+        moveUp.timingMode = .easeIn
+        cometEmitter.run(moveUp)
+        
+        // Stop emission after brief period
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            cometEmitter.particleBirthRate = 0
         }
+        
+        // Remove after particles finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            cometEmitter.removeFromParent()
+        }
+    }
+    
+    /// Creates a starburst effect
+    private func createStarburstEffect(at position: CGPoint, scale: CGFloat) {
+        let burstEmitter = SKEmitterNode()
+        burstEmitter.position = position
+        burstEmitter.zPosition = 101
+        
+        // Use star texture
+        burstEmitter.particleTexture = createStarTexture()
+        
+        // Burst properties
+        burstEmitter.particleBirthRate = 200 * scale
+        burstEmitter.particleLifetime = 0.6
+        burstEmitter.particleLifetimeRange = 0.1
+        
+        // Bright silver-blue color
+        burstEmitter.particleColor = UIColor(red: 0.9, green: 0.95, blue: 1.0, alpha: 1.0)
+        burstEmitter.particleColorBlendFactor = 1.0
+        
+        // Size
+        burstEmitter.particleScale = 0.3 * scale
+        burstEmitter.particleScaleRange = 0.1 * scale
+        burstEmitter.particleScaleSpeed = -0.5
+        
+        // Radial burst in all directions
+        burstEmitter.emissionAngle = 0
+        burstEmitter.emissionAngleRange = CGFloat.pi * 2
+        burstEmitter.particleSpeed = 250 * scale
+        burstEmitter.particleSpeedRange = 50
+        
+        // Deceleration
+        burstEmitter.yAcceleration = -50
+        
+        // Sparkle rotation
+        burstEmitter.particleRotationSpeed = 12.0
+        
+        // Alpha
+        burstEmitter.particleAlpha = 1.0
+        burstEmitter.particleAlphaSpeed = -1.5
+        
+        // Additive blend for brightness
+        burstEmitter.particleBlendMode = .add
+        
+        addChild(burstEmitter)
+        
+        // Single burst
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            burstEmitter.particleBirthRate = 0
+        }
+        
+        // Remove after particles finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            burstEmitter.removeFromParent()
+        }
+    }
+    
+    /// Creates a diamond/crystal texture
+    private func createDiamondTexture() -> SKTexture {
+        let size = CGSize(width: 24, height: 24)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            ctx.translateBy(x: size.width / 2, y: size.height / 2)
+            
+            // Create a diamond shape
+            let path = UIBezierPath()
+            path.move(to: CGPoint(x: 0, y: -10))
+            path.addLine(to: CGPoint(x: 8, y: 0))
+            path.addLine(to: CGPoint(x: 0, y: 10))
+            path.addLine(to: CGPoint(x: -8, y: 0))
+            path.close()
+            
+            // Fill with gradient
+            ctx.saveGState()
+            let colors = [UIColor.white.cgColor, UIColor(white: 0.8, alpha: 0.5).cgColor]
+            let locations: [CGFloat] = [0.0, 1.0]
+            
+            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: locations) {
+                ctx.addPath(path.cgPath)
+                ctx.clip()
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: -8, y: -10), end: CGPoint(x: 8, y: 10), options: [])
+            }
+            ctx.restoreGState()
+            
+            // Add bright edge
+            ctx.setStrokeColor(UIColor.white.cgColor)
+            ctx.setLineWidth(1)
+            ctx.addPath(path.cgPath)
+            ctx.strokePath()
+        }
+        
+        return SKTexture(image: image)
+    }
+    
+    /// Creates a comet color sequence
+    private func createCometColorSequence() -> SKKeyframeSequence {
+        let colors = [
+            UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),       // Pure white
+            UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0),      // Light blue
+            UIColor(red: 0.4, green: 0.6, blue: 0.9, alpha: 0.8),       // Medium blue
+            UIColor(red: 0.2, green: 0.3, blue: 0.8, alpha: 0.5),       // Dark blue
+            UIColor(red: 0.1, green: 0.1, blue: 0.4, alpha: 0.2)        // Very dark blue
+        ]
+        
+        let times: [NSNumber] = [0.0, 0.2, 0.5, 0.8, 1.0]
+        
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
     }
 
     /// Creates a particle effect that follows the pendulum bob
