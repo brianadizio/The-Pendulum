@@ -10,38 +10,56 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // Tab bar for navigation
     private let tabBar = UITabBar()
     private let simulationItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Simulation", image: UIImage(systemName: "waveform.path"), tag: 0)
-        item.selectedImage = UIImage(systemName: "waveform.path.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "simulationTabPendulum-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Simulation", image: resizedImage, tag: 0)
+        item.selectedImage = resizedImage
         return item
     }()
 
     private let dashboardItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Dashboard", image: UIImage(systemName: "chart.bar"), tag: 1)
-        item.selectedImage = UIImage(systemName: "chart.bar.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "dashboardTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Dashboard", image: resizedImage, tag: 1)
+        item.selectedImage = resizedImage
         return item
     }()
 
     private let modesItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Modes", image: UIImage(systemName: "square.grid.2x2"), tag: 2)
-        item.selectedImage = UIImage(systemName: "square.grid.2x2.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "modesTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Modes", image: resizedImage, tag: 2)
+        item.selectedImage = resizedImage
         return item
     }()
 
     private let integrationItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Integration", image: UIImage(systemName: "link"), tag: 3)
-        item.selectedImage = UIImage(systemName: "link.circle.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "integrationTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Integration", image: resizedImage, tag: 3)
+        item.selectedImage = resizedImage
         return item
     }()
 
     private let parametersItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Parameters", image: UIImage(systemName: "slider.horizontal.3"), tag: 4)
-        item.selectedImage = UIImage(systemName: "slider.horizontal.3.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "parametersTabPendulum-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Parameters", image: resizedImage, tag: 4)
+        item.selectedImage = resizedImage
         return item
     }()
 
     private let settingsItem: UITabBarItem = {
-        let item = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 5)
-        item.selectedImage = UIImage(systemName: "gearshape.fill")
+        // Create the image with original rendering mode to preserve colors
+        let image = UIImage(named: "settingsTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
+        let item = UITabBarItem(title: "Settings", image: resizedImage, tag: 5)
+        item.selectedImage = resizedImage
         return item
     }()
     
@@ -136,6 +154,23 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
         // Initialize settings
         initializeSettings()
+        
+        // Initialize sound mode from saved settings
+        if let savedSoundMode = UserDefaults.standard.string(forKey: "setting_Sounds") {
+            PendulumSoundManager.shared.updateSoundMode(savedSoundMode)
+        } else {
+            // Default to Standard sound mode
+            PendulumSoundManager.shared.updateSoundMode("Standard")
+        }
+        
+        // Initialize background mode from saved settings
+        if let savedBackgroundMode = UserDefaults.standard.string(forKey: "setting_Backgrounds") {
+            BackgroundManager.shared.updateBackgroundMode(savedBackgroundMode)
+        } else {
+            // Default to AI background mode for testing
+            BackgroundManager.shared.updateBackgroundMode("AI")
+            UserDefaults.standard.set("AI", forKey: "setting_Backgrounds")
+        }
 
         // Initialize analytics if a session is already active
         if let sessionId = viewModel.currentSessionId {
@@ -144,6 +179,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
         // Start with simulation view
         showView(simulationView)
+        
+        // Initialize backgrounds for all tabs after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
+        }
     }
 
     
@@ -221,8 +261,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         tabBar.items = [simulationItem, dashboardItem, modesItem, integrationItem, parametersItem, settingsItem]
         tabBar.selectedItem = simulationItem
         tabBar.translatesAutoresizingMaskIntoConstraints = false
-        tabBar.tintColor = .goldenPrimary
-        tabBar.unselectedItemTintColor = .darkGray // Darker color for better visibility
+        // Don't set tintColor to preserve original icon colors
+        // tabBar.tintColor = .goldenPrimary
+        // tabBar.unselectedItemTintColor = .darkGray // Darker color for better visibility
         tabBar.backgroundColor = .goldenBackground
 
         // Make tab bar and icons more visible
@@ -235,6 +276,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         appearance.backgroundColor = .goldenBackground
         appearance.shadowColor = nil
         appearance.shadowImage = nil
+        
+        // Configure stack appearance to preserve original icon colors
+        appearance.stackedLayoutAppearance.normal.iconColor = nil  // Don't override icon color
+        appearance.stackedLayoutAppearance.selected.iconColor = nil  // Don't override icon color
+        
         tabBar.standardAppearance = appearance
         if #available(iOS 15.0, *) {
             tabBar.scrollEdgeAppearance = appearance
@@ -1216,6 +1262,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func modeButtonTapped(_ sender: UIButton) {
+        // Play button tap sound
+        PendulumSoundManager.shared.playButtonTapSound()
+        
         // Handle mode button tap
         let title = "Mode Selected"
         let message = "You selected mode: \(sender.titleLabel?.text ?? "Unknown")"
@@ -1390,34 +1439,43 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             stackView.heightAnchor.constraint(equalToConstant: 100)
         ])
         
-        // Add Instagram button
-        let instagramButton = UIButton(type: .system)
-        instagramButton.setTitle("Instagram", for: .normal)
-        instagramButton.tag = 302
-        instagramButton.backgroundColor = .white
-        instagramButton.setTitleColor(.goldenDark, for: .normal)
-        instagramButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        instagramButton.layer.cornerRadius = 15
-        instagramButton.layer.borderWidth = 1
-        instagramButton.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
-        instagramButton.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        // Add Instagram button with icon
+        let instagramButton = createSocialButton(title: "Instagram", iconName: "instagram-removebg-preview", tag: 302)
         
-        // Add Facebook button
-        let facebookButton = UIButton(type: .system)
-        facebookButton.setTitle("Facebook", for: .normal)
-        facebookButton.tag = 303
-        facebookButton.backgroundColor = .white
-        facebookButton.setTitleColor(.goldenDark, for: .normal)
-        facebookButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        facebookButton.layer.cornerRadius = 15
-        facebookButton.layer.borderWidth = 1
-        facebookButton.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
-        facebookButton.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        // Add Facebook button with icon
+        let facebookButton = createSocialButton(title: "Facebook", iconName: "facebook-removebg-preview", tag: 303)
         
         stackView.addArrangedSubview(instagramButton)
         stackView.addArrangedSubview(facebookButton)
         
         return stackView
+    }
+    
+    private func createSocialButton(title: String, iconName: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.tag = tag
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 15
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        // Create icon image
+        if let icon = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+            let resizedIcon = PendulumViewController.resizeImage(icon, targetSize: CGSize(width: 24, height: 24))
+            button.setImage(resizedIcon, for: .normal)
+        }
+        
+        // Configure title
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        
+        // Adjust button layout
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        
+        return button
     }
     
     private func createDataViewButtons(in containerView: UIView, topAnchor: NSLayoutYAxisAnchor) -> UIStackView {
@@ -1435,34 +1493,54 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
         ])
         
-        // Data view button titles and tags
+        // Data view button titles, tags, and icons
         let buttonData = [
-            ("View Data", 304),
-            ("View Metadata", 305),
-            ("View Statistics", 306),
-            ("View Focus", 307),
-            ("View Street", 308),
-            ("View Category", 309)
+            ("View Data", 304, "general1-removebg-preview"),
+            ("View Manifolds", 305, "general14-removebg-preview"),
+            ("View Surjective Submersions", 306, "general4-removebg-preview"),
+            ("View Sheaf", 307, "general7-removebg-preview"),
+            ("View Morphisms", 308, "general8-removebg-preview"),
+            ("View Category", 309, "fibonacciColor"),
+            ("View Functor", 400, "tesseract")
         ]
         
         // Create data view buttons
-        for (title, tag) in buttonData {
-            let button = UIButton(type: .system)
-            button.setTitle(title, for: .normal)
-            button.tag = tag
-            button.backgroundColor = .goldenBackground.withAlphaComponent(0.8)
-            button.setTitleColor(.goldenDark, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 12
-            button.layer.borderWidth = 1
-            button.layer.borderColor = UIColor.goldenTextLight.withAlphaComponent(0.3).cgColor
-            button.heightAnchor.constraint(equalToConstant: 45).isActive = true
-            button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
-            
+        for (title, tag, iconName) in buttonData {
+            let button = createDataButton(title: title, iconName: iconName, tag: tag)
             stackView.addArrangedSubview(button)
         }
         
         return stackView
+    }
+    
+    private func createDataButton(title: String, iconName: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.tag = tag
+        button.backgroundColor = .goldenBackground.withAlphaComponent(0.8)
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.goldenTextLight.withAlphaComponent(0.3).cgColor
+        button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        // Create icon image
+        if let icon = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+            let resizedIcon = PendulumViewController.resizeImage(icon, targetSize: CGSize(width: 20, height: 20))
+            button.setImage(resizedIcon, for: .normal)
+        }
+        
+        // Configure title
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        
+        // Adjust button layout
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        
+        // Set height constraint
+        button.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        
+        return button
     }
     
     private func createConnectionButtons(in containerView: UIView, topAnchor: NSLayoutYAxisAnchor) -> UIStackView {
@@ -1481,37 +1559,57 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             stackView.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -20)
         ])
         
-        // Connection button titles and tags
+        // Connection button titles, tags, and icons
         let buttonData = [
-            ("Connect The Pendulum", 310),
-            ("Connect The Focus Calendar", 311)
+            ("Connect The Maze", 310, "TheMazeLogo-removebg-preview"),
+            ("Connect The Focus Calendar", 311, "FocusCalendarLogo-removebg-preview")
         ]
         
         // Create connection buttons
-        for (title, tag) in buttonData {
-            let button = UIButton(type: .system)
-            button.setTitle(title, for: .normal)
-            button.tag = tag
-            button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
-            button.setTitleColor(.goldenDark, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 15
-            button.heightAnchor.constraint(equalToConstant: 60).isActive = true
-            button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
-            
-            // Add shadow
-            button.layer.shadowColor = UIColor.black.cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowOpacity = 0.1
-            button.layer.shadowRadius = 4
-            
+        for (title, tag, iconName) in buttonData {
+            let button = createConnectionButton(title: title, iconName: iconName, tag: tag)
             stackView.addArrangedSubview(button)
         }
         
         return stackView
     }
     
+    private func createConnectionButton(title: String, iconName: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.tag = tag
+        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
+        button.layer.cornerRadius = 15
+        button.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
+        
+        // Add shadow
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowRadius = 4
+        
+        // Create icon image
+        if let icon = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+            let resizedIcon = PendulumViewController.resizeImage(icon, targetSize: CGSize(width: 28, height: 28))
+            button.setImage(resizedIcon, for: .normal)
+        }
+        
+        // Configure title
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.goldenDark, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        
+        // Adjust button layout
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        
+        return button
+    }
+    
     @objc private func integrationButtonTapped(_ sender: UIButton) {
+        // Play button tap sound
+        PendulumSoundManager.shared.playButtonTapSound()
+        
         // Handle integration button tap
         let buttonTitle = sender.titleLabel?.text ?? "Unknown"
         
@@ -1586,7 +1684,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                 "Standard", "Enhanced", "Minimal", "Realistic", "None", "Educational"
             ]),
             (title: "Backgrounds", options: [
-                "Default", "Grid", "Dark", "Light", "Gradient", "None"
+                "None", "AI", "Acadia", "Fluid", "Immersive Topology", "Joshua Tree", 
+                "Outer Space", "Parchment", "Sachuest", "The Maze Guide", "The Portraits", "TSP"
             ])
         ]
         
@@ -1658,7 +1757,34 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Current selection label
         let selectionLabel = UILabel()
-        selectionLabel.text = options[0] // Default to first option
+        
+        // Get saved selection or appropriate default
+        let savedSelection = UserDefaults.standard.string(forKey: "setting_\(title)")
+        let defaultSelection: String
+        
+        // Set appropriate defaults for each section
+        switch title {
+        case "Graphics":
+            defaultSelection = "Standard"
+        case "Metrics":
+            defaultSelection = "Basic"
+        case "Sounds":
+            defaultSelection = "Standard"
+        case "Backgrounds":
+            defaultSelection = "AI"  // Changed from "None" to "AI" for testing
+        default:
+            defaultSelection = options[0]
+        }
+        
+        // Use saved selection if available and valid, otherwise use default
+        if let saved = savedSelection, options.contains(saved) {
+            selectionLabel.text = saved
+        } else {
+            selectionLabel.text = defaultSelection
+            // Save the default if nothing was saved
+            UserDefaults.standard.set(defaultSelection, forKey: "setting_\(title)")
+        }
+        
         selectionLabel.font = UIFont.systemFont(ofSize: 16)
         selectionLabel.textColor = .black
         selectionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -1677,31 +1803,35 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         optionsStack.translatesAutoresizingMaskIntoConstraints = false
         sectionView.addSubview(optionsStack)
         
-        // First row of options (3 options)
-        let firstRowStack = UIStackView()
-        firstRowStack.axis = .horizontal
-        firstRowStack.spacing = 10
-        firstRowStack.distribution = .fillEqually
+        // Determine number of buttons per row based on section
+        let buttonsPerRow = (title == "Backgrounds") ? 3 : 3  // 3 buttons per row for backgrounds too
+        let numberOfRows = Int(ceil(Double(options.count) / Double(buttonsPerRow)))
         
-        // Second row of options (3 options)
-        let secondRowStack = UIStackView()
-        secondRowStack.axis = .horizontal
-        secondRowStack.spacing = 10
-        secondRowStack.distribution = .fillEqually
-        
-        // Add option buttons to rows
-        for i in 0..<options.count {
-            let optionButton = createOptionButton(title: options[i], section: title, isSelected: i == 0)
+        // Create rows dynamically
+        for row in 0..<numberOfRows {
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.spacing = 10
+            rowStack.distribution = .fillEqually
             
-            if i < 3 {
-                firstRowStack.addArrangedSubview(optionButton)
-            } else {
-                secondRowStack.addArrangedSubview(optionButton)
+            let startIndex = row * buttonsPerRow
+            let endIndex = min(startIndex + buttonsPerRow, options.count)
+            
+            for i in startIndex..<endIndex {
+                let optionButton = createOptionButton(title: options[i], section: title, isSelected: i == 0)
+                rowStack.addArrangedSubview(optionButton)
             }
+            
+            // If this is the last row and it's not full, add spacer views
+            if endIndex < startIndex + buttonsPerRow {
+                for _ in endIndex..<(startIndex + buttonsPerRow) {
+                    let spacerView = UIView()
+                    rowStack.addArrangedSubview(spacerView)
+                }
+            }
+            
+            optionsStack.addArrangedSubview(rowStack)
         }
-        
-        optionsStack.addArrangedSubview(firstRowStack)
-        optionsStack.addArrangedSubview(secondRowStack)
         
         // Layout constraints
         NSLayoutConstraint.activate([
@@ -1790,6 +1920,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     @objc private func optionSelected(_ sender: UIButton) {
+        // Play button tap sound
+        PendulumSoundManager.shared.playButtonTapSound()
+        
         // Get the section from the button's accessibilityIdentifier
         if let section = sender.accessibilityIdentifier {
             // Get the selected title
@@ -1799,6 +1932,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                 
                 // Update UI
                 updateSettingSelection(section: section, selection: title)
+                
+                // If this is a sound setting, update the sound manager
+                if section == "Sounds" {
+                    PendulumSoundManager.shared.updateSoundMode(title)
+                } else if section == "Backgrounds" {
+                    BackgroundManager.shared.updateBackgroundMode(title)
+                    // Apply new background to all tabs after a small delay to ensure views are ready
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
+                    }
+                }
                 
                 // Show visual feedback
                 UIView.animate(withDuration: 0.1, animations: {
@@ -2029,58 +2173,32 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         super.viewDidLayoutSubviews()
     }
     
-    // Create a header view with the Golden Enterprises logo
+    // Helper function to resize images for tab bar
+    private static func resizeImage(_ image: UIImage?, targetSize: CGSize) -> UIImage? {
+        guard let image = image else { return nil }
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let resizedImage = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        // Preserve the original rendering mode
+        return resizedImage.withRenderingMode(.alwaysOriginal)
+    }
+    
+    // Create a header view with the Pendulum logo
     private func createHeaderWithLogo(title: String, for containerView: UIView) -> UIView {
-        let headerView = UIView()
+        // Create the styled header with consistent styling - use same method as Dashboard
+        let headerView = HeaderViewCreator.createHeaderView(title: title)
         headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .goldenPrimary
         containerView.addSubview(headerView)
 
-        // Add gradient to header
-        DispatchQueue.main.async {
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: headerView)
-            headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-
-        // Add logo to header - using the appLogo extension
-        let logoImageView = UIImageView(image: UIImage.appLogo)
-        logoImageView.translatesAutoresizingMaskIntoConstraints = false
-        logoImageView.contentMode = .scaleAspectFit
-        logoImageView.layer.cornerRadius = 15
-        logoImageView.clipsToBounds = true
-        if logoImageView.image == nil {
-            // In case the image is nil, set a background color
-            logoImageView.backgroundColor = .goldenAccent
-        }
-        logoImageView.tintColor = .goldenAccent // For the fallback symbol if used
-        headerView.addSubview(logoImageView)
-
-        // Add title to header
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        titleLabel.textAlignment = .center
-        headerView.addSubview(titleLabel)
-
-        // Layout constraints - adjusted to add more space at the top
+        // Layout constraints
         NSLayoutConstraint.activate([
             // Move header down from the top edge to avoid system status bar
             headerView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
-            headerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 50), // Slightly smaller height
-
-            // Logo on the left side of header
-            logoImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
-            logoImageView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 35), // Slightly smaller logo
-            logoImageView.heightAnchor.constraint(equalToConstant: 35),
-
-            // Title centered in header
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+            headerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            headerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            headerView.heightAnchor.constraint(equalToConstant: 40)
         ])
 
         return headerView
@@ -2112,8 +2230,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         hudContainer.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(hudContainer)
 
-        // Get header view to position the HUD properly
-        let headerView = simulationView.subviews.first { $0.backgroundColor == .goldenPrimary }
+        // Get header view to position the HUD properly - look for the header created by HeaderViewCreator
+        let headerView = simulationView.subviews.first { view in
+            // The header is a UIView containing a UILabel created by HeaderViewCreator
+            return view.subviews.contains(where: { $0 is UILabel || $0 is UIImageView })
+        }
 
         // Score label - moved to the top
         scoreLabel = UILabel()
@@ -2261,12 +2382,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             // For level completion, use special formatting
             if viewModel.gameOverReason!.contains("completed") {
                 gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+                // Play achievement sound for level completion
+                PendulumSoundManager.shared.playAchievementSound()
+                // Cycle background when level is completed
+                BackgroundManager.shared.cycleBackground(for: simulationView)
             } else if viewModel.gameOverReason!.contains("Level") && !viewModel.gameOverReason!.contains("completed") {
                 // For level announcement, use blue
                 gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.8, alpha: 1.0)
+                // Play level start sound
+                PendulumSoundManager.shared.playLevelStartSound()
             } else {
                 // For failure, use red
                 gameMessageLabel.textColor = UIColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+                // Play failure sound
+                PendulumSoundManager.shared.playFailureSound()
             }
             
             // Change Start button to Restart if game is over and not just paused
@@ -2422,6 +2551,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             
             phaseSpaceView.clearPoints()
             viewModel.resetAndStart()
+            
+            // Cycle background when restarting
+            BackgroundManager.shared.cycleBackground(for: simulationView)
         } else {
             // Start the game normally
             viewModel.startGame()
@@ -2759,29 +2891,46 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     // UITabBarDelegate method
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+        // Play tab selection sound
+        PendulumSoundManager.shared.playButtonTapSound()
+        
         // First stop any dashboard updates to avoid unnecessary refreshes
         stopDashboardUpdates()
         
+        // Get the view for the selected tab
+        var selectedView: UIView?
+        
         switch item.tag {
         case 0: // Simulation
+            selectedView = simulationView
             showView(simulationView)
         case 1: // Dashboard
+            selectedView = dashboardView
             updateDashboardStats() // Update stats before showing (this will start the timer)
             showView(dashboardView)
         case 2: // Modes
+            selectedView = modesView
             // Set up perturbation system if not already done
             if perturbationManager == nil {
                 setupPerturbationSystem()
             }
             showView(modesView)
         case 3: // Integration
+            selectedView = integrationView
             showView(integrationView)
         case 4: // Parameters
+            selectedView = parametersView
             showView(parametersView)
         case 5: // Settings
+            selectedView = settingsView
             showView(settingsView)
         default:
             break
+        }
+        
+        // Cycle background for the selected view
+        if let view = selectedView {
+            BackgroundManager.shared.cycleBackground(for: view)
         }
     }
     

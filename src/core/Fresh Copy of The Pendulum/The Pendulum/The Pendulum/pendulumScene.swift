@@ -464,6 +464,27 @@ class PendulumScene: SKScene {
             if let perturbationManager = self.perturbationManager {
                 perturbationManager.update(currentTime: currentTime)
             }
+            
+            // Play sound effects based on pendulum state
+            updatePendulumSounds(with: viewModel.currentState)
+        }
+    }
+    
+    // MARK: - Sound Effects
+    
+    private func updatePendulumSounds(with state: PendulumState) {
+        // Play swing sound based on angle and velocity
+        let angle = CGFloat(state.theta)
+        let velocity = CGFloat(state.thetaDot)
+        
+        // Only play sound at certain intervals to avoid overwhelming audio
+        if Int(pendulumAnimationTime * 10) % 5 == 0 {
+            PendulumSoundManager.shared.playSwingSound(angle: angle, velocity: velocity)
+        }
+        
+        // Play collision sound when pendulum hits extreme angles
+        if abs(angle) > CGFloat.pi * 0.9 {
+            PendulumSoundManager.shared.playCollisionSound()
         }
     }
     
