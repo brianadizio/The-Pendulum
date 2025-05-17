@@ -6,6 +6,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Apply Focus Calendar theme
+        FocusCalendarTheme.applyTheme()
+        
         // In iOS 13 and later, scene delegate will handle window creation
         if #available(iOS 13.0, *) {
             // SceneDelegate will handle window setup
@@ -14,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             window = UIWindow(frame: UIScreen.main.bounds)
             let pendulumVC = PendulumViewController()
             window?.rootViewController = pendulumVC
-            window?.backgroundColor = .white
+            window?.backgroundColor = FocusCalendarTheme.backgroundColor
             window?.makeKeyAndVisible()
         }
         

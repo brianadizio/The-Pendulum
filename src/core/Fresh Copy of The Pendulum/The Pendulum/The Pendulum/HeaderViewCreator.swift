@@ -19,8 +19,8 @@ class HeaderViewCreator {
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: fontSize, weight: .bold)
-        titleLabel.textColor = .goldenPrimary
+        titleLabel.font = FocusCalendarTheme.Fonts.titleFont(size: fontSize)
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         titleLabel.textAlignment = .left
         containerView.addSubview(titleLabel)
         
@@ -56,7 +56,7 @@ class HeaderViewCreator {
         // Add subtle separator line
         let separator = UIView()
         separator.translatesAutoresizingMaskIntoConstraints = false
-        separator.backgroundColor = UIColor.goldenPrimary.withAlphaComponent(0.3)
+        separator.backgroundColor = FocusCalendarTheme.lightBorderColor
         headerView.addSubview(separator)
         
         NSLayoutConstraint.activate([

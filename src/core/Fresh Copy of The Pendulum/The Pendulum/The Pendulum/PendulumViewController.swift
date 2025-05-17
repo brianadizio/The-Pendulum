@@ -147,6 +147,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Apply Focus Calendar theme to main view
+        view.backgroundColor = FocusCalendarTheme.backgroundColor
+        
         // Set up the main interface
         setupTabBar()
         setupViews()
@@ -191,10 +194,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create status label for feedback
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .goldenDark
-        label.backgroundColor = .goldenAccent.withAlphaComponent(0.2)
+        label.textColor = FocusCalendarTheme.primaryTextColor
+        label.backgroundColor = FocusCalendarTheme.accentGold.withAlphaComponent(0.2)
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.font = FocusCalendarTheme.Fonts.bodyFont(size: FocusCalendarTheme.Fonts.Size.subheadline)
         label.layer.cornerRadius = 10
         label.layer.masksToBounds = true
         label.isHidden = true
@@ -264,7 +267,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Don't set tintColor to preserve original icon colors
         // tabBar.tintColor = .goldenPrimary
         // tabBar.unselectedItemTintColor = .darkGray // Darker color for better visibility
-        tabBar.backgroundColor = .goldenBackground
+        tabBar.backgroundColor = FocusCalendarTheme.backgroundColor
 
         // Make tab bar and icons more visible
         tabBar.itemPositioning = .centered
@@ -273,13 +276,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Remove the bottom border (darker colored line)
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .goldenBackground
+        appearance.backgroundColor = FocusCalendarTheme.backgroundColor
         appearance.shadowColor = nil
         appearance.shadowImage = nil
         
-        // Configure stack appearance to preserve original icon colors
-        appearance.stackedLayoutAppearance.normal.iconColor = nil  // Don't override icon color
-        appearance.stackedLayoutAppearance.selected.iconColor = nil  // Don't override icon color
+        // Configure stack appearance with Focus Calendar colors
+        appearance.stackedLayoutAppearance.normal.iconColor = FocusCalendarTheme.tertiaryTextColor
+        appearance.stackedLayoutAppearance.selected.iconColor = FocusCalendarTheme.primaryTextColor
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: FocusCalendarTheme.tertiaryTextColor,
+            .font: FocusCalendarTheme.Fonts.bodyFont(size: FocusCalendarTheme.Fonts.Size.caption)
+        ]
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: FocusCalendarTheme.primaryTextColor,
+            .font: FocusCalendarTheme.Fonts.bodyFont(size: FocusCalendarTheme.Fonts.Size.caption)
+        ]
         
         tabBar.standardAppearance = appearance
         if #available(iOS 15.0, *) {
@@ -291,7 +302,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Add a custom top border only
         let topBorder = CALayer()
         topBorder.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 0.5)
-        topBorder.backgroundColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        topBorder.backgroundColor = FocusCalendarTheme.lightBorderColor.cgColor
         tabBar.layer.addSublayer(topBorder)
 
         // Add tab bar to view
@@ -307,8 +318,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupViews() {
-        // Apply Golden Enterprises theme to main view
-        view.backgroundColor = .goldenBackground
+        // Apply Focus Calendar theme to main view
+        view.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Setup all views
         setupSimulationView()
@@ -337,11 +348,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupSimulationView() {
-        // Apply Golden Enterprises theme
-        simulationView.backgroundColor = .goldenBackground
+        // Apply Focus Calendar theme
+        simulationView.backgroundColor = FocusCalendarTheme.backgroundColor
 
         // Add a header view with logo - ensure it's positioned below the status bar
-        let headerView = createHeaderWithLogo(title: "The Pendulum", for: simulationView)
+        _ = createHeaderWithLogo(title: "The Pendulum", for: simulationView)
 
         // Setup the HUD first so we can position other elements relative to it
         setupGameHUD()
@@ -349,8 +360,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create a container for the SpriteKit view with proper constraints
         let skViewContainer = UIView()
         skViewContainer.translatesAutoresizingMaskIntoConstraints = false
-        skViewContainer.backgroundColor = .white
-        skViewContainer.applyGoldenStyle() // Apply the Golden theme styling
+        skViewContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
+        FocusCalendarTheme.styleCard(skViewContainer) // Apply the Focus Calendar styling
         simulationView.addSubview(skViewContainer)
 
         // Position the SKView container below the game HUD with proper spacing
@@ -415,8 +426,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     }
     
     private func setupParametersView() {
-        // Set background to Golden Enterprises theme
-        parametersView.backgroundColor = .goldenBackground
+        // Set background to Focus Calendar theme
+        parametersView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
         let headerView = createHeaderWithLogo(title: "Pendulum Parameters", for: parametersView)
@@ -424,8 +435,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create a subtitle label
         let subtitleLabel = UILabel()
         subtitleLabel.text = "Adjust Parameters Below"
-        subtitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .medium)
-        subtitleLabel.textColor = .goldenDark
+        FocusCalendarTheme.styleLabel(subtitleLabel, style: .subheadline)
         subtitleLabel.textAlignment = .center
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         parametersView.addSubview(subtitleLabel)
@@ -445,14 +455,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Create a container for parameter controls
         let parametersContainer = UIView()
-        parametersContainer.backgroundColor = .goldenBackground
-        parametersContainer.layer.cornerRadius = 16
-        parametersContainer.layer.borderWidth = 1
-        parametersContainer.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
-        parametersContainer.layer.shadowColor = UIColor.black.cgColor
-        parametersContainer.layer.shadowOffset = CGSize(width: 0, height: 3)
-        parametersContainer.layer.shadowOpacity = 0.1
-        parametersContainer.layer.shadowRadius = 4
+        FocusCalendarTheme.styleCard(parametersContainer)
         parametersContainer.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(parametersContainer)
         
@@ -477,17 +480,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let resetContainer = UIView()
         resetContainer.translatesAutoresizingMaskIntoConstraints = false
         
-        // Style the reset button with Golden theme
-        resetButton.backgroundColor = .goldenPrimary
-        resetButton.setTitleColor(.white, for: .normal)
-        resetButton.layer.cornerRadius = 10
-        resetButton.layer.borderWidth = 1
-        resetButton.layer.borderColor = UIColor.goldenAccent.cgColor
-        resetButton.layer.shadowColor = UIColor.black.cgColor
-        resetButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        resetButton.layer.shadowOpacity = 0.1
-        resetButton.layer.shadowRadius = 3
-        resetButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        // Style the reset button with Focus Calendar theme
+        FocusCalendarTheme.styleButton(resetButton, isPrimary: true)
+        resetButton.titleLabel?.font = FocusCalendarTheme.Fonts.bodyFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
         
         resetContainer.addSubview(resetButton)
         resetButton.translatesAutoresizingMaskIntoConstraints = false
@@ -576,7 +571,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     private func setupModesView() {
         // Set background to Golden Enterprises theme
-        modesView.backgroundColor = .goldenBackground
+        modesView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
         let headerView = createHeaderWithLogo(title: "Pendulum Modes", for: modesView)
@@ -691,15 +686,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Add a label to indicate these buttons will have custom perturbations later
         let placeholderLabel = UILabel()
         placeholderLabel.text = "Future Matlab-Processed Perturbation Modes"
-        placeholderLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        placeholderLabel.textColor = .goldenDark
+        placeholderLabel.font = FocusCalendarTheme.titleFont
+        placeholderLabel.textColor = FocusCalendarTheme.primaryTextColor
         placeholderLabel.textAlignment = .center
         placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(placeholderLabel)
         
         // Add a visual separator
         let separator = UIView()
-        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        separator.backgroundColor = FocusCalendarTheme.borderColor
         separator.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(separator)
         
@@ -719,14 +714,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func setupAdditionalModesButtons(in containerView: UIView) {
         // This now relies on the separator line from previous section
         // Get the appropriate subview - the separator should be the last element added
-        let separator = containerView.subviews.last(where: { $0 is UIView && $0.backgroundColor == .goldenAccent.withAlphaComponent(0.3) })
+        let separator = containerView.subviews.last(where: { $0 is UIView && $0.backgroundColor == FocusCalendarTheme.borderColor })
         var previousAnchor = separator?.bottomAnchor ?? containerView.topAnchor
 
         // Add explanatory text for the game modes
         let modesDescriptionLabel = UILabel()
         modesDescriptionLabel.text = "Game Modes:\n• Primary Mode: Constant difficulty, beat the same level repeatedly while tracking total completions\n• Progressive: Increasing difficulty with each level completion"
-        modesDescriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        modesDescriptionLabel.textColor = .goldenDark
+        modesDescriptionLabel.font = FocusCalendarTheme.bodyFont
+        modesDescriptionLabel.textColor = FocusCalendarTheme.secondaryTextColor
         modesDescriptionLabel.numberOfLines = 0
         modesDescriptionLabel.textAlignment = .left
         modesDescriptionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -745,8 +740,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let perturbationHeader = UILabel()
         perturbationHeader.translatesAutoresizingMaskIntoConstraints = false
         perturbationHeader.text = "Available Perturbation Modes"
-        perturbationHeader.font = UIFont.systemFont(ofSize: 22, weight: .bold)
-        perturbationHeader.textColor = .goldenDark
+        perturbationHeader.font = FocusCalendarTheme.largeTitleFont
+        perturbationHeader.textColor = FocusCalendarTheme.primaryTextColor
         perturbationHeader.textAlignment = .center
         containerView.addSubview(perturbationHeader)
         
@@ -798,22 +793,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Container for the button with description
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = .goldenBackground
-        container.layer.cornerRadius = 12
-        container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
         container.tag = tag
-        
-        // Add shadow for depth
-        container.layer.shadowColor = UIColor.black.cgColor
-        container.layer.shadowOffset = CGSize(width: 0, height: 2)
-        container.layer.shadowOpacity = 0.1
-        container.layer.shadowRadius = 3
+        FocusCalendarTheme.styleCard(container)
         
         // Icon
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
-        iconContainer.backgroundColor = .goldenPrimary
+        iconContainer.backgroundColor = FocusCalendarTheme.primaryTextColor
         iconContainer.layer.cornerRadius = 20
         container.addSubview(iconContainer)
         
@@ -821,23 +807,23 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
+        iconImageView.tintColor = FocusCalendarTheme.backgroundColor
         iconContainer.addSubview(iconImageView)
         
         // Title label
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         container.addSubview(titleLabel)
         
         // Description label
         let descriptionLabel = UILabel()
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         descriptionLabel.text = description
-        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
-        descriptionLabel.textColor = .goldenText
+        descriptionLabel.font = FocusCalendarTheme.bodyFont
+        descriptionLabel.textColor = FocusCalendarTheme.secondaryTextColor
         descriptionLabel.numberOfLines = 2
         container.addSubview(descriptionLabel)
         
@@ -845,11 +831,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Activate", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .goldenAccent
-        button.layer.cornerRadius = 10
         button.tag = tag
+        FocusCalendarTheme.styleButton(button)
         
         // Store perturbation type in button's accessibilityIdentifier
         button.accessibilityIdentifier = perturbationType
@@ -905,7 +888,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create a separator line
         let separator = UIView()
         separator.translatesAutoresizingMaskIntoConstraints = false
-        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        separator.backgroundColor = FocusCalendarTheme.borderColor
         containerView.addSubview(separator)
         
         NSLayoutConstraint.activate([
@@ -919,8 +902,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let infoHeader = UILabel()
         infoHeader.translatesAutoresizingMaskIntoConstraints = false
         infoHeader.text = "Additional Information"
-        infoHeader.font = UIFont.systemFont(ofSize: 22, weight: .bold)
-        infoHeader.textColor = .goldenDark
+        infoHeader.font = FocusCalendarTheme.largeTitleFont
+        infoHeader.textColor = FocusCalendarTheme.primaryTextColor
         infoHeader.textAlignment = .center
         containerView.addSubview(infoHeader)
         
@@ -968,22 +951,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Container for the info button
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = .goldenSecondary.withAlphaComponent(0.5)
-        container.layer.cornerRadius = 12
-        container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
         container.tag = tag
-        
-        // Add shadow for depth
-        container.layer.shadowColor = UIColor.black.cgColor
-        container.layer.shadowOffset = CGSize(width: 0, height: 2)
-        container.layer.shadowOpacity = 0.1
-        container.layer.shadowRadius = 3
+        FocusCalendarTheme.styleCard(container)
         
         // Icon
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
-        iconContainer.backgroundColor = .goldenPrimary
+        iconContainer.backgroundColor = FocusCalendarTheme.primaryTextColor
         iconContainer.layer.cornerRadius = 20
         container.addSubview(iconContainer)
         
@@ -991,23 +965,23 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
+        iconImageView.tintColor = FocusCalendarTheme.backgroundColor
         iconContainer.addSubview(iconImageView)
         
         // Title label
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         container.addSubview(titleLabel)
         
         // Description label
         let descriptionLabel = UILabel()
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         descriptionLabel.text = description
-        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
-        descriptionLabel.textColor = .goldenText
+        descriptionLabel.font = FocusCalendarTheme.bodyFont
+        descriptionLabel.textColor = FocusCalendarTheme.secondaryTextColor
         descriptionLabel.numberOfLines = 2
         container.addSubview(descriptionLabel)
         
@@ -1015,9 +989,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Learn More", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.titleLabel?.font = FocusCalendarTheme.buttonFont
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .goldenPrimary
+        button.backgroundColor = FocusCalendarTheme.primaryTextColor
         button.layer.cornerRadius = 10
         button.tag = tag
         
@@ -1098,10 +1072,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Container for the button with description
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = .goldenBackground
+        container.backgroundColor = FocusCalendarTheme.backgroundColor
         container.layer.cornerRadius = 12
         container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        container.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         container.tag = tag
         
         // Add shadow for depth
@@ -1114,16 +1088,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         container.addSubview(titleLabel)
         
         // Description label
         let descriptionLabel = UILabel()
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         descriptionLabel.text = description
-        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
-        descriptionLabel.textColor = .goldenText
+        descriptionLabel.font = FocusCalendarTheme.bodyFont
+        descriptionLabel.textColor = FocusCalendarTheme.secondaryTextColor
         descriptionLabel.numberOfLines = 2
         container.addSubview(descriptionLabel)
         
@@ -1131,11 +1105,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Activate", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .goldenAccent
-        button.layer.cornerRadius = 10
         button.tag = tag
+        FocusCalendarTheme.styleButton(button)
         
         // Store perturbation type in button's accessibilityIdentifier
         button.accessibilityIdentifier = perturbationType
@@ -1210,19 +1181,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
         button.tag = tag
-        button.backgroundColor = .white
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 15
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        FocusCalendarTheme.styleButton(button)
         button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
-        
-        // Add shadow
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowOpacity = 0.1
-        button.layer.shadowRadius = 4
         
         return button
     }
@@ -1231,12 +1191,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
         button.tag = tag
-        button.backgroundColor = .goldenBackground
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        button.layer.cornerRadius = 10
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.5).cgColor
+        FocusCalendarTheme.styleButton(button)
+        button.titleLabel?.font = FocusCalendarTheme.bodyFont
         button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
         return button
     }
@@ -1245,10 +1201,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
         button.tag = tag
-        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.5)
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 15
+        FocusCalendarTheme.styleButton(button)
         button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
         
@@ -1267,7 +1220,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Handle mode button tap
         let title = "Mode Selected"
-        let message = "You selected mode: \(sender.titleLabel?.text ?? "Unknown")"
+        _ = "You selected mode: \(sender.titleLabel?.text ?? "Unknown")"
         
         // Show visual feedback
         UIView.animate(withDuration: 0.1, animations: {
@@ -1342,7 +1295,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     private func setupIntegrationView() {
         // Set background to Golden Enterprises theme
-        integrationView.backgroundColor = .goldenBackground
+        integrationView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
         let headerView = createHeaderWithLogo(title: "Pendulum Integrations", for: integrationView)
@@ -1399,9 +1352,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(title, for: .normal)
         button.tag = tag
-        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        button.backgroundColor = FocusCalendarTheme.accentSage.withAlphaComponent(0.6)
+        button.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.titleLabel?.font = FocusCalendarTheme.titleFont
         button.layer.cornerRadius = 15
         button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
         
@@ -1457,7 +1410,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         button.backgroundColor = .white
         button.layer.cornerRadius = 15
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        button.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
         
         // Create icon image
@@ -1468,12 +1421,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Configure title
         button.setTitle(title, for: .normal)
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.titleLabel?.font = FocusCalendarTheme.buttonFont
         
         // Adjust button layout
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        // imageEdgeInsets is deprecated, using configuration instead
+        // titleEdgeInsets is deprecated, using configuration instead
         
         return button
     }
@@ -1516,10 +1469,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func createDataButton(title: String, iconName: String, tag: Int) -> UIButton {
         let button = UIButton(type: .system)
         button.tag = tag
-        button.backgroundColor = .goldenBackground.withAlphaComponent(0.8)
+        button.backgroundColor = FocusCalendarTheme.backgroundColor.withAlphaComponent(0.8)
         button.layer.cornerRadius = 12
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.goldenTextLight.withAlphaComponent(0.3).cgColor
+        button.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
         
         // Create icon image
@@ -1530,12 +1483,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Configure title
         button.setTitle(title, for: .normal)
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.titleLabel?.font = FocusCalendarTheme.buttonFont
         
         // Adjust button layout
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        // imageEdgeInsets is deprecated, using configuration instead
+        // titleEdgeInsets is deprecated, using configuration instead
         
         // Set height constraint
         button.heightAnchor.constraint(equalToConstant: 45).isActive = true
@@ -1577,7 +1530,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func createConnectionButton(title: String, iconName: String, tag: Int) -> UIButton {
         let button = UIButton(type: .system)
         button.tag = tag
-        button.backgroundColor = .goldenSecondary.withAlphaComponent(0.6)
+        button.backgroundColor = FocusCalendarTheme.accentSage.withAlphaComponent(0.6)
         button.layer.cornerRadius = 15
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
         button.addTarget(self, action: #selector(integrationButtonTapped(_:)), for: .touchUpInside)
@@ -1596,12 +1549,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Configure title
         button.setTitle(title, for: .normal)
-        button.setTitleColor(.goldenDark, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.titleLabel?.font = FocusCalendarTheme.buttonFont
         
         // Adjust button layout
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+        // imageEdgeInsets is deprecated, using configuration instead
+        // titleEdgeInsets is deprecated, using configuration instead
         
         return button
     }
@@ -1628,7 +1581,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     private func setupSettingsView() {
         // Set background to Golden Enterprises theme
-        settingsView.backgroundColor = .goldenBackground
+        settingsView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
         let headerView = createHeaderWithLogo(title: "Settings", for: settingsView)
@@ -1699,15 +1652,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Add about section at the bottom
         let aboutButton = UIButton(type: .system)
         aboutButton.setTitle("About The Pendulum", for: .normal)
-        aboutButton.setTitleColor(.goldenDark, for: .normal)
-        aboutButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        aboutButton.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        aboutButton.titleLabel?.font = FocusCalendarTheme.buttonFont
         aboutButton.contentHorizontalAlignment = .left
         aboutButton.addTarget(self, action: #selector(showAboutInfo), for: .touchUpInside)
         
         let versionLabel = UILabel()
         versionLabel.text = "Version 1.0.0"
-        versionLabel.font = UIFont.systemFont(ofSize: 14)
-        versionLabel.textColor = .goldenTextLight
+        versionLabel.font = FocusCalendarTheme.bodyFont
+        versionLabel.textColor = FocusCalendarTheme.tertiaryTextColor
         versionLabel.textAlignment = .left
         
         let aboutStack = UIStackView(arrangedSubviews: [aboutButton, versionLabel])
@@ -1716,7 +1669,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         aboutStack.translatesAutoresizingMaskIntoConstraints = false
         
         let separator = UIView()
-        separator.backgroundColor = .goldenAccent.withAlphaComponent(0.3)
+        separator.backgroundColor = FocusCalendarTheme.borderColor
         separator.translatesAutoresizingMaskIntoConstraints = false
         separator.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
@@ -1741,17 +1694,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Section title
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.font = FocusCalendarTheme.largeTitleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         sectionView.addSubview(titleLabel)
         
         // Options container (shows current selection with dropdown indicator)
         let optionsContainer = UIView()
-        optionsContainer.backgroundColor = .white
+        optionsContainer.backgroundColor = FocusCalendarTheme.cardBackgroundColor
         optionsContainer.layer.cornerRadius = 12
         optionsContainer.layer.borderWidth = 1
-        optionsContainer.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        optionsContainer.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
         sectionView.addSubview(optionsContainer)
         
@@ -1785,14 +1738,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             UserDefaults.standard.set(defaultSelection, forKey: "setting_\(title)")
         }
         
-        selectionLabel.font = UIFont.systemFont(ofSize: 16)
+        selectionLabel.font = FocusCalendarTheme.bodyFont
         selectionLabel.textColor = .black
         selectionLabel.translatesAutoresizingMaskIntoConstraints = false
         optionsContainer.addSubview(selectionLabel)
         
         // Dropdown icon
         let dropdownImageView = UIImageView(image: UIImage(systemName: "chevron.down"))
-        dropdownImageView.tintColor = .goldenAccent
+        dropdownImageView.tintColor = FocusCalendarTheme.primaryTextColor
         dropdownImageView.translatesAutoresizingMaskIntoConstraints = false
         optionsContainer.addSubview(dropdownImageView)
         
@@ -1882,12 +1835,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func createOptionButton(title: String, section: String, isSelected: Bool) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        button.setTitleColor(isSelected ? .white : .goldenDark, for: .normal)
-        button.backgroundColor = isSelected ? .goldenAccent : .white
+        button.titleLabel?.font = FocusCalendarTheme.bodyFont
+        button.setTitleColor(isSelected ? FocusCalendarTheme.cardBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.cardBackgroundColor
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.goldenAccent.withAlphaComponent(0.3).cgColor
+        button.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         button.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
         // Store section in accessibilityIdentifier for reference
@@ -2039,8 +1992,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                    let title = button.title(for: .normal) {
                     // Update button state based on selection
                     let isSelected = title == selectedOption
-                    button.backgroundColor = isSelected ? .goldenAccent : .white
-                    button.setTitleColor(isSelected ? .white : .goldenDark, for: .normal)
+                    button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.cardBackgroundColor
+                    button.setTitleColor(isSelected ? FocusCalendarTheme.cardBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
                 }
             }
         }
@@ -2068,10 +2021,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func createParameterControl(title: String, slider: UISlider) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = .goldenSecondary.withAlphaComponent(0.7)
+        container.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor.withAlphaComponent(0.7)
         container.layer.cornerRadius = 10
         container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        container.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
         container.layer.shadowColor = UIColor.black.cgColor
         container.layer.shadowOffset = CGSize(width: 0, height: 2)
         container.layer.shadowOpacity = 0.1
@@ -2083,8 +2036,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Title label with units
         let titleLabel = UILabel()
         titleLabel.text = "\(title) (\(units))"
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        titleLabel.textColor = .goldenDark
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
         
@@ -2093,17 +2046,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Use a non-zero initial value even before slider is set
         let initialValue = getDefaultValueForParameter(title)
         valueLabel.text = formatParameterValue(title, value: initialValue)
-        valueLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        valueLabel.font = FocusCalendarTheme.buttonFont
         valueLabel.textAlignment = .right
-        valueLabel.textColor = .goldenAccentBlue
+        valueLabel.textColor = FocusCalendarTheme.accentSlate
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(valueLabel)
         
         // Add description label between title and slider
         let descriptionLabel = UILabel()
         descriptionLabel.text = getDescriptionForParameter(title)
-        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
-        descriptionLabel.textColor = .goldenText
+        descriptionLabel.font = FocusCalendarTheme.bodyFont
+        descriptionLabel.textColor = FocusCalendarTheme.secondaryTextColor
         descriptionLabel.numberOfLines = 0 // Allow multiple lines
         descriptionLabel.lineBreakMode = .byWordWrapping
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -2114,13 +2067,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Configure slider appearance
         slider.translatesAutoresizingMaskIntoConstraints = false
-        slider.tintColor = .goldenPrimary
-        slider.thumbTintColor = .goldenAccent
-        slider.maximumTrackTintColor = UIColor.goldenBackgroundAlt
+        slider.tintColor = FocusCalendarTheme.primaryTextColor
+        slider.thumbTintColor = FocusCalendarTheme.accentGold
+        slider.maximumTrackTintColor = FocusCalendarTheme.secondaryBackgroundColor
         
         // Create custom track height appearance
-        slider.setMinimumTrackImage(createSliderTrackImage(color: .goldenPrimary), for: .normal)
-        slider.setMaximumTrackImage(createSliderTrackImage(color: .goldenBackgroundAlt), for: .normal)
+        slider.setMinimumTrackImage(createSliderTrackImage(color: FocusCalendarTheme.primaryTextColor), for: .normal)
+        slider.setMaximumTrackImage(createSliderTrackImage(color: FocusCalendarTheme.secondaryBackgroundColor), for: .normal)
         
         container.addSubview(slider)
         
@@ -2223,10 +2176,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Simulation Controls
     
     private func setupGameHUD() {
-        // Container for game HUD elements - using Golden Enterprises theme
+        // Container for game HUD elements - using Focus Calendar theme
         hudContainer = UIView()
-        hudContainer.backgroundColor = .goldenSecondary
-        hudContainer.applyGoldenCard() // Apply Golden Enterprise styling
+        FocusCalendarTheme.styleCard(hudContainer)
         hudContainer.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(hudContainer)
 
@@ -2240,8 +2192,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         scoreLabel = UILabel()
         scoreLabel.text = "Score: 0"
         scoreLabel.textAlignment = .left
-        scoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        scoreLabel.textColor = .goldenDark
+        scoreLabel.font = FocusCalendarTheme.Fonts.titleFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
+        scoreLabel.textColor = FocusCalendarTheme.primaryTextColor
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(scoreLabel)
 
@@ -2249,8 +2201,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         levelLabel = UILabel()
         levelLabel.text = "Level: 1"
         levelLabel.textAlignment = .center
-        levelLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        levelLabel.textColor = .goldenDark
+        levelLabel.font = FocusCalendarTheme.Fonts.titleFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
+        levelLabel.textColor = FocusCalendarTheme.primaryTextColor
         levelLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(levelLabel)
 
@@ -2258,8 +2210,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         timeLabel = UILabel()
         timeLabel.text = "Time: 0.0s"
         timeLabel.textAlignment = .right
-        timeLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        timeLabel.textColor = .goldenDark
+        timeLabel.font = FocusCalendarTheme.Fonts.titleFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
+        timeLabel.textColor = FocusCalendarTheme.primaryTextColor
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
 
@@ -2267,8 +2219,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         gameMessageLabel = UILabel()
         gameMessageLabel.text = "Balance the Inverted Pendulum!"
         gameMessageLabel.textAlignment = .center
-        gameMessageLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
+        gameMessageLabel.font = FocusCalendarTheme.Fonts.titleFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
+        gameMessageLabel.textColor = FocusCalendarTheme.accentRose // Using rose accent for warnings
         gameMessageLabel.translatesAutoresizingMaskIntoConstraints = false
         gameMessageLabel.isHidden = true
         hudContainer.addSubview(gameMessageLabel)
@@ -2315,18 +2267,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create a container view for the phase space
         let phaseSpaceContainer = UIView()
         phaseSpaceContainer.translatesAutoresizingMaskIntoConstraints = false
-        phaseSpaceContainer.backgroundColor = UIColor.white
-        phaseSpaceContainer.layer.cornerRadius = 10
-        phaseSpaceContainer.layer.borderWidth = 1
-        phaseSpaceContainer.layer.borderColor = UIColor.goldenPrimary.withAlphaComponent(0.3).cgColor
+        FocusCalendarTheme.styleCard(phaseSpaceContainer)
         simulationView.addSubview(phaseSpaceContainer)
 
         // Create a label for the phase space
         phaseSpaceLabel = UILabel()
         phaseSpaceLabel.text = "Phase Space"
         phaseSpaceLabel.textAlignment = .center
-        phaseSpaceLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        phaseSpaceLabel.textColor = .goldenDark
+        FocusCalendarTheme.styleLabel(phaseSpaceLabel, style: .sectionHeader)
         phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(phaseSpaceLabel)
 
@@ -2433,19 +2381,19 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
         // Style buttons with Golden Enterprises theme
         let buttonStyle: (UIButton) -> Void = { button in
-            button.applyGoldenButtonStyle(isPrimary: false)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            FocusCalendarTheme.styleButton(button, isPrimary: false)
+            button.titleLabel?.font = FocusCalendarTheme.Fonts.bodyFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
         }
 
         // Apply styles to buttons
         [startButton, stopButton, pushLeftButton, pushRightButton].forEach(buttonStyle)
 
-        // Special styling for Start/Stop buttons using Golden theme
-        startButton.applyGoldenButtonStyle(isPrimary: true)
-        startButton.backgroundColor = .goldenAccentGreen
+        // Special styling for Start/Stop buttons using Focus Calendar theme
+        FocusCalendarTheme.styleButton(startButton, isPrimary: true)
+        startButton.backgroundColor = FocusCalendarTheme.accentSage // Sage green for start
 
-        stopButton.applyGoldenButtonStyle(isPrimary: true)
-        stopButton.backgroundColor = .goldenError
+        FocusCalendarTheme.styleButton(stopButton, isPrimary: true)
+        stopButton.backgroundColor = FocusCalendarTheme.accentRose // Rose for stop
 
         // Set plain text button titles to avoid symbol confusion
         startButton.setTitle("Start", for: .normal)
@@ -2453,11 +2401,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         pushLeftButton.setTitle("← Push", for: .normal)
         pushRightButton.setTitle("Push →", for: .normal)
 
-        // Create a container for the buttons with Golden Enterprises styling
+        // Create a container for the buttons with Focus Calendar styling
         controlPanel = UIView()
-        controlPanel.backgroundColor = .goldenSecondary
-        controlPanel.applyGoldenCard() // Apply Golden Enterprise styling
         controlPanel.translatesAutoresizingMaskIntoConstraints = false
+        FocusCalendarTheme.styleCard(controlPanel)
         parentView.addSubview(controlPanel)
 
         // Create button stacks for better organization - using vertical layout
