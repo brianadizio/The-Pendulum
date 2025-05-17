@@ -3,6 +3,9 @@ import UIKit
 
 class DynamicParticleManager {
     
+    // MARK: - Texture Cache
+    private static var textureCache: [String: SKTexture] = [:]
+    
     // MARK: - Color Palettes extracted from reference images
     
     // Sunset over water (IMG_5043)
@@ -63,9 +66,233 @@ class DynamicParticleManager {
         desertLandscapePalette
     ]
     
-    // MARK: - Simplified shape-based particle creation for color debugging
+    // MARK: - Texture Creation Methods
     
-    /// Creates a simple shape-based particle effect using the proper color palette
+    /// Creates a gradient glow texture
+    static func createGlowTexture(color: UIColor, size: CGSize = CGSize(width: 128, height: 128)) -> SKTexture {
+        let cacheKey = "glow_\(color.hash)_\(Int(size.width))x\(Int(size.height))"
+        
+        if let cachedTexture = textureCache[cacheKey] {
+            return cachedTexture
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2
+            
+            // Create radial gradient from color to transparent
+            let colors = [
+                color.withAlphaComponent(1.0).cgColor,
+                color.withAlphaComponent(0.8).cgColor,
+                color.withAlphaComponent(0.4).cgColor,
+                color.withAlphaComponent(0.1).cgColor,
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.15, 0.4, 0.8, 1.0]
+            
+            guard let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            ) else { return }
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+        }
+        
+        let texture = SKTexture(image: image)
+        textureCache[cacheKey] = texture
+        return texture
+    }
+    
+    /// Creates a star-shaped texture
+    static func createStarTexture(color: UIColor, points: Int = 5, size: CGSize = CGSize(width: 64, height: 64)) -> SKTexture {
+        let cacheKey = "star_\(color.hash)_\(points)_\(Int(size.width))x\(Int(size.height))"
+        
+        if let cachedTexture = textureCache[cacheKey] {
+            return cachedTexture
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            ctx.translateBy(x: size.width / 2, y: size.height / 2)
+            
+            let outerRadius = min(size.width, size.height) / 2 * 0.8
+            let innerRadius = outerRadius * 0.4
+            
+            let path = UIBezierPath()
+            for i in 0..<points * 2 {
+                let angle = CGFloat(i) * CGFloat.pi / CGFloat(points) - CGFloat.pi / 2
+                let radius = i % 2 == 0 ? outerRadius : innerRadius
+                let x = cos(angle) * radius
+                let y = sin(angle) * radius
+                
+                if i == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            path.close()
+            
+            // Add glow effect
+            ctx.saveGState()
+            ctx.setShadow(offset: .zero, blur: 8, color: color.cgColor)
+            color.setFill()
+            path.fill()
+            ctx.restoreGState()
+            
+            // Draw the star with gradient
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [
+                    color.withAlphaComponent(1.0).cgColor,
+                    color.withAlphaComponent(0.6).cgColor
+                ] as CFArray,
+                locations: [0.0, 1.0]
+            )!
+            
+            path.addClip()
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: CGPoint.zero,
+                startRadius: 0,
+                endCenter: CGPoint.zero,
+                endRadius: outerRadius,
+                options: []
+            )
+        }
+        
+        let texture = SKTexture(image: image)
+        textureCache[cacheKey] = texture
+        return texture
+    }
+    
+    /// Creates a soft circular particle texture
+    static func createSoftParticle(color: UIColor, size: CGSize = CGSize(width: 64, height: 64)) -> SKTexture {
+        let cacheKey = "soft_\(color.hash)_\(Int(size.width))x\(Int(size.height))"
+        
+        if let cachedTexture = textureCache[cacheKey] {
+            return cachedTexture
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2
+            
+            // Create soft edge gradient
+            let colors = [
+                color.withAlphaComponent(1.0).cgColor,
+                color.withAlphaComponent(0.9).cgColor,
+                color.withAlphaComponent(0.5).cgColor,
+                color.withAlphaComponent(0.1).cgColor,
+                UIColor.clear.cgColor
+            ]
+            let locations: [CGFloat] = [0.0, 0.3, 0.6, 0.85, 1.0]
+            
+            guard let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors as CFArray,
+                locations: locations
+            ) else { return }
+            
+            ctx.drawRadialGradient(
+                gradient,
+                startCenter: center,
+                startRadius: 0,
+                endCenter: center,
+                endRadius: radius,
+                options: []
+            )
+        }
+        
+        let texture = SKTexture(image: image)
+        textureCache[cacheKey] = texture
+        return texture
+    }
+    
+    /// Creates a flame/teardrop shaped texture for trails
+    static func createFlameTexture(color: UIColor, size: CGSize = CGSize(width: 32, height: 48)) -> SKTexture {
+        let cacheKey = "flame_\(color.hash)_\(Int(size.width))x\(Int(size.height))"
+        
+        if let cachedTexture = textureCache[cacheKey] {
+            return cachedTexture
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let ctx = context.cgContext
+            
+            // Create flame shape path
+            let path = UIBezierPath()
+            let centerX = size.width / 2
+            
+            // Bottom of flame (circular)
+            path.move(to: CGPoint(x: centerX, y: size.height * 0.9))
+            path.addQuadCurve(
+                to: CGPoint(x: centerX * 0.2, y: size.height * 0.7),
+                controlPoint: CGPoint(x: centerX * 0.1, y: size.height * 0.85)
+            )
+            
+            // Left side curve
+            path.addQuadCurve(
+                to: CGPoint(x: centerX, y: size.height * 0.1),
+                controlPoint: CGPoint(x: centerX * 0.3, y: size.height * 0.4)
+            )
+            
+            // Right side curve
+            path.addQuadCurve(
+                to: CGPoint(x: centerX * 1.8, y: size.height * 0.7),
+                controlPoint: CGPoint(x: centerX * 1.7, y: size.height * 0.4)
+            )
+            
+            // Complete the shape
+            path.addQuadCurve(
+                to: CGPoint(x: centerX, y: size.height * 0.9),
+                controlPoint: CGPoint(x: centerX * 1.9, y: size.height * 0.85)
+            )
+            
+            path.close()
+            
+            // Create gradient fill
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [
+                    color.withAlphaComponent(1.0).cgColor,
+                    color.withAlphaComponent(0.6).cgColor,
+                    color.withAlphaComponent(0.2).cgColor
+                ] as CFArray,
+                locations: [0.0, 0.5, 1.0]
+            )!
+            
+            path.addClip()
+            ctx.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: centerX, y: size.height),
+                end: CGPoint(x: centerX, y: 0),
+                options: []
+            )
+        }
+        
+        let texture = SKTexture(image: image)
+        textureCache[cacheKey] = texture
+        return texture
+    }
+    
+    // MARK: - Main Particle Effect Creation
+    
+    /// Creates a level completion effect with texture-based particles
     static func createLevelCompletionEffect(for level: Int, at position: CGPoint, in scene: SKScene) {
         print("Creating level completion effect for level \(level)")
         
@@ -74,140 +301,247 @@ class DynamicParticleManager {
         let selectedPalette = allPalettes[paletteIndex]
         
         print("Using palette index \(paletteIndex) for level \(level)")
-        print("Selected palette has \(selectedPalette.count) colors")
         
-        // Create simple shape-based particles first to ensure colors work
-        createSimpleColoredShapes(palette: selectedPalette, at: position, in: scene)
+        // Create multiple layers of effects
+        createMainExplosion(palette: selectedPalette, at: position, in: scene)
+        createRingBurst(palette: selectedPalette, at: position, in: scene, delay: 0.2)
+        createSparkleField(palette: selectedPalette, at: position, in: scene)
+        createTrailingStars(palette: selectedPalette, at: position, in: scene)
+    }
+    
+    /// Creates the main explosion effect
+    private static func createMainExplosion(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
+        let emitter = SKEmitterNode()
+        emitter.position = position
+        emitter.zPosition = 100
         
-        // Create emitter with proper colors
-        let mainEffect = createColoredFireworkEmitter(palette: selectedPalette, at: position)
-        scene.addChild(mainEffect)
+        // Use glow textures for main explosion
+        let mainColor = palette.first ?? UIColor.orange
+        emitter.particleTexture = createGlowTexture(color: mainColor)
+        
+        // Explosion configuration
+        emitter.particleBirthRate = 1000
+        emitter.numParticlesToEmit = 200
+        emitter.particleLifetime = 2.0
+        emitter.particleLifetimeRange = 0.5
+        
+        emitter.particleSize = CGSize(width: 40, height: 40)
+        emitter.particleScale = 1.5
+        emitter.particleScaleRange = 1.0
+        emitter.particleScaleSpeed = -0.8
+        
+        // CRITICAL: Use texture color, not particle color
+        emitter.particleColorBlendFactor = 0.0  // Use texture color ONLY
+        // Remove color sequence to avoid overriding texture colors
+        // emitter.particleColorSequence = createColorSequence(from: palette)
+        
+        // Explosion pattern
+        emitter.emissionAngle = 0
+        emitter.emissionAngleRange = CGFloat.pi * 2
+        emitter.particleSpeed = 400
+        emitter.particleSpeedRange = 100
+        
+        // Physics
+        emitter.particleAlpha = 1.0
+        emitter.particleAlphaSpeed = -0.5
+        emitter.yAcceleration = -200
+        
+        // Use alpha blend instead of add to preserve colors
+        emitter.particleBlendMode = .alpha
+        
+        scene.addChild(emitter)
         
         // Remove after effect completes
         let removeAction = SKAction.sequence([
             SKAction.wait(forDuration: 3.0),
             SKAction.removeFromParent()
         ])
-        mainEffect.run(removeAction)
+        emitter.run(removeAction)
     }
     
-    /// Creates simple colored shapes to verify colors are working
-    static func createSimpleColoredShapes(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
-        // Create 30 colored circles using the palette
-        for i in 0..<30 {
-            let colorIndex = i % palette.count
-            let color = palette[colorIndex]
+    /// Creates a ring burst effect
+    private static func createRingBurst(palette: [UIColor], at position: CGPoint, in scene: SKScene, delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            let emitter = SKEmitterNode()
+            emitter.position = position
+            emitter.zPosition = 101
             
-            // Create a simple colored circle
-            let circle = SKShapeNode(circleOfRadius: 8)
-            circle.fillColor = color
-            circle.strokeColor = .clear
-            circle.position = position
-            circle.zPosition = 150
+            // Use star textures for ring burst
+            let ringColor = palette[min(1, palette.count - 1)]
+            emitter.particleTexture = createStarTexture(color: ringColor)
             
-            scene.addChild(circle)
+            // Ring configuration
+            emitter.particleBirthRate = 800
+            emitter.numParticlesToEmit = 150
+            emitter.particleLifetime = 1.5
+            emitter.particleLifetimeRange = 0.3
             
-            // Animate outward in a firework pattern
-            let angle = CGFloat(i) * (CGFloat.pi * 2) / 30
-            let distance = CGFloat.random(in: 150...300)
+            emitter.particleSize = CGSize(width: 24, height: 24)
+            emitter.particleScale = 1.2
+            emitter.particleScaleRange = 0.5
+            emitter.particleScaleSpeed = -0.7
             
-            let moveAction = SKAction.move(by: CGVector(
-                dx: cos(angle) * distance,
-                dy: sin(angle) * distance
-            ), duration: 1.5)
+            // CRITICAL: Use texture color ONLY
+            emitter.particleColorBlendFactor = 0.0
+            // Remove particle color override
+            // emitter.particleColor = ringColor
             
-            let fadeAction = SKAction.fadeOut(withDuration: 1.5)
-            let scaleAction = SKAction.scale(to: 0.2, duration: 1.5)
+            // Ring pattern
+            emitter.emissionAngle = 0
+            emitter.emissionAngleRange = CGFloat.pi * 2
+            emitter.particleSpeed = 300
+            emitter.particleSpeedRange = 50
             
-            let groupAction = SKAction.group([moveAction, fadeAction, scaleAction])
-            let sequence = SKAction.sequence([
-                groupAction,
+            // Physics
+            emitter.particleAlpha = 1.0
+            emitter.particleAlphaSpeed = -0.6
+            emitter.yAcceleration = -100
+            
+            // Rotation for sparkle
+            emitter.particleRotation = 0
+            emitter.particleRotationRange = CGFloat.pi * 2
+            emitter.particleRotationSpeed = CGFloat.pi * 4
+            
+            // Use alpha blend for better color preservation
+            emitter.particleBlendMode = .alpha
+            
+            scene.addChild(emitter)
+            
+            // Remove after effect completes
+            emitter.run(SKAction.sequence([
+                SKAction.wait(forDuration: 2.5),
                 SKAction.removeFromParent()
-            ])
-            
-            circle.run(sequence)
+            ]))
         }
     }
     
-    /// Creates a colored particle texture (made public for testing)
-    public static func createColoredParticleTexture(color: UIColor) -> SKTexture {
-        let size = CGSize(width: 64, height: 64)
-        
-        UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        guard let context = UIGraphicsGetCurrentContext() else {
-            UIGraphicsEndImageContext()
-            return SKTexture()
-        }
-        
-        // Draw a simple colored circle
-        context.setFillColor(color.cgColor)
-        context.fillEllipse(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        
-        // Get the image
-        guard let image = UIGraphicsGetImageFromCurrentImageContext() else {
-            UIGraphicsEndImageContext()
-            return SKTexture()
-        }
-        UIGraphicsEndImageContext()
-        
-        return SKTexture(image: image)
-    }
-    
-    /// Creates a colored emitter with no texture - just colored particles
-    static func createColoredFireworkEmitter(palette: [UIColor], at position: CGPoint) -> SKEmitterNode {
-        let emitter = SKEmitterNode()
-        
-        // No texture - just basic colored dots
-        emitter.particleTexture = nil
-        
-        // Firework burst configuration
-        emitter.particleBirthRate = 800
-        emitter.numParticlesToEmit = 200
-        emitter.particleLifetime = 2.0
-        emitter.particleLifetimeRange = 0.5
-        
-        // Size
-        emitter.particleSize = CGSize(width: 12, height: 12)
-        emitter.particleScale = 1.0
-        emitter.particleScaleRange = 0.5
-        emitter.particleScaleSpeed = -0.4
-        
-        // Use first color from palette directly
-        emitter.particleColor = palette.first ?? UIColor.orange
-        emitter.particleColorBlendFactor = 1.0
-        
-        // Create color sequence to cycle through palette
-        if palette.count > 1 {
-            var keyframeValues: [UIColor] = []
-            var times: [NSNumber] = []
-            
-            for (index, color) in palette.enumerated() {
-                keyframeValues.append(color)
-                times.append(NSNumber(value: Float(index) / Float(palette.count - 1)))
+    /// Creates a field of sparkles
+    private static func createSparkleField(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
+        for i in 0..<20 {
+            let delay = Double(i) * 0.05
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                let sparklePosition = CGPoint(
+                    x: position.x + CGFloat.random(in: -100...100),
+                    y: position.y + CGFloat.random(in: -100...100)
+                )
+                
+                let emitter = SKEmitterNode()
+                emitter.position = sparklePosition
+                emitter.zPosition = 102
+                
+                // Use soft particles for sparkles
+                let sparkleColor = palette.randomElement() ?? UIColor.white
+                emitter.particleTexture = createSoftParticle(color: sparkleColor)
+                
+                // Sparkle configuration
+                emitter.particleBirthRate = 30
+                emitter.numParticlesToEmit = 10
+                emitter.particleLifetime = 1.0
+                emitter.particleLifetimeRange = 0.3
+                
+                emitter.particleSize = CGSize(width: 16, height: 16)
+                emitter.particleScale = 1.0
+                emitter.particleScaleRange = 0.5
+                emitter.particleScaleSpeed = -0.8
+                
+                // CRITICAL: Use texture color ONLY
+                emitter.particleColorBlendFactor = 0.0
+                
+                // Gentle movement
+                emitter.emissionAngle = -CGFloat.pi / 2
+                emitter.emissionAngleRange = CGFloat.pi / 4
+                emitter.particleSpeed = 50
+                emitter.particleSpeedRange = 30
+                
+                emitter.particleAlpha = 0.9
+                emitter.particleAlphaSpeed = -0.8
+                emitter.yAcceleration = 30  // Float upward
+                
+                // Use alpha blend to preserve colors
+                emitter.particleBlendMode = .alpha
+                
+                scene.addChild(emitter)
+                
+                // Remove after effect completes
+                emitter.run(SKAction.sequence([
+                    SKAction.wait(forDuration: 1.5),
+                    SKAction.removeFromParent()
+                ]))
             }
+        }
+    }
+    
+    /// Creates trailing star effects
+    private static func createTrailingStars(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
+        for i in 0..<6 {
+            let angle = Double(i) * .pi / 3.0
+            let emitter = SKEmitterNode()
+            emitter.position = position
+            emitter.zPosition = 99
             
-            emitter.particleColorSequence = SKKeyframeSequence(
-                keyframeValues: keyframeValues,
-                times: times
-            )
+            // Use flame textures for trails
+            let trailColor = palette[min(2, palette.count - 1)]
+            emitter.particleTexture = createFlameTexture(color: trailColor)
+            
+            // Trail configuration
+            emitter.particleBirthRate = 200
+            emitter.numParticlesToEmit = 100
+            emitter.particleLifetime = 1.5
+            emitter.particleLifetimeRange = 0.5
+            
+            emitter.particleSize = CGSize(width: 20, height: 30)
+            emitter.particleScale = 1.0
+            emitter.particleScaleRange = 0.5
+            emitter.particleScaleSpeed = -0.5
+            
+            // CRITICAL: Use texture color ONLY
+            emitter.particleColorBlendFactor = 0.0
+            
+            // Directional emission
+            emitter.emissionAngle = CGFloat(angle)
+            emitter.emissionAngleRange = CGFloat.pi / 12
+            emitter.particleSpeed = 500
+            emitter.particleSpeedRange = 100
+            
+            emitter.particleAlpha = 1.0
+            emitter.particleAlphaSpeed = -0.6
+            emitter.yAcceleration = -80
+            
+            // Use alpha blend to preserve colors
+            emitter.particleBlendMode = .alpha
+            
+            scene.addChild(emitter)
+            
+            // Remove after effect completes
+            emitter.run(SKAction.sequence([
+                SKAction.wait(forDuration: 2.0),
+                SKAction.removeFromParent()
+            ]))
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Creates a color sequence from a palette
+    private static func createColorSequence(from palette: [UIColor]) -> SKKeyframeSequence {
+        var colors: [UIColor] = []
+        var times: [NSNumber] = []
+        
+        // Create smooth transitions between colors
+        for (index, color) in palette.enumerated() {
+            colors.append(color)
+            times.append(NSNumber(value: Double(index) / Double(palette.count - 1)))
         }
         
-        // Burst pattern
-        emitter.emissionAngle = 0
-        emitter.emissionAngleRange = CGFloat.pi * 2
-        emitter.particleSpeed = 300
-        emitter.particleSpeedRange = 100
+        // Add fade to transparent at the end
+        colors.append(UIColor.clear)
+        times.append(1.0)
         
-        // Physics
-        emitter.particleAlpha = 1.0
-        emitter.particleAlphaSpeed = -0.5
-        emitter.yAcceleration = -100
-        
-        // Position and blend mode
-        emitter.position = position
-        emitter.zPosition = 100
-        emitter.particleBlendMode = .alpha
-        
-        return emitter
+        return SKKeyframeSequence(keyframeValues: colors, times: times)
+    }
+    
+    /// Clear texture cache if needed
+    static func clearTextureCache() {
+        textureCache.removeAll()
     }
 }

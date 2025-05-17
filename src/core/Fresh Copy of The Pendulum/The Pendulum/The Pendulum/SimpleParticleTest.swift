@@ -27,8 +27,8 @@ class SimpleParticleTest {
                 let emitter = SKEmitterNode()
                 emitter.position = CGPoint(x: 100 + CGFloat(colorIndex) * 50, y: 250)
                 
-                // Create colored texture
-                let texture = DynamicParticleManager.createColoredParticleTexture(color: color)
+                // Create colored texture using new texture methods
+                let texture = DynamicParticleManager.createGlowTexture(color: color, size: CGSize(width: 64, height: 64))
                 emitter.particleTexture = texture
                 
                 // Simple settings
