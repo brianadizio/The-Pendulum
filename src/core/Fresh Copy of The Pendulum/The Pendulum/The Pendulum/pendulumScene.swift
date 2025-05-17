@@ -1302,7 +1302,12 @@ class PendulumScene: SKScene {
     /// Shows a new level start particle effect
     func showNewLevelEffect(at position: CGPoint? = nil, level: Int = 1) {
         // Add sparkling trail to pendulum bob for visual interest
-        addSparklingTrailToBob(for: level)
+        // Use total completions for color variety instead of level
+        if let viewModel = viewModel {
+            addSparklingTrailToBob(for: viewModel.totalCompletions)
+        } else {
+            addSparklingTrailToBob(for: level)
+        }
         
         // Create a subtle level start effect
         let effectPosition = position ?? pendulumBob.position
