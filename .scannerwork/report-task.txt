@@ -1,0 +1,6 @@
+projectKey=The-Pendulum
+serverUrl=http://localhost:9000
+serverVersion=2025.1.0.102418
+dashboardUrl=http://localhost:9000/dashboard?id=The-Pendulum
+ceTaskId=46ead8d6-6c47-4c2c-9f82-886dc8ac6807
+ceTaskUrl=http://localhost:9000/api/ce/task?id=46ead8d6-6c47-4c2c-9f82-886dc8ac6807

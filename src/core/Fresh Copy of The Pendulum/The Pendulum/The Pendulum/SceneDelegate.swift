@@ -11,6 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         // Create the window with the window scene
         window = UIWindow(windowScene: windowScene)
+        window?.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Set the PendulumViewController as root
         let pendulumVC = PendulumViewController()
