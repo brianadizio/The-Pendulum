@@ -22,6 +22,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var isProgressiveMode: Bool = false // For Progressive mode
     @Published var totalLevelsCompleted: Int = 0 // Track total levels completed in quasi-periodic mode
     
+    // Total completions counter for particle color effects
+    @Published var totalCompletions: Int = 0 // Tracks all completions across all modes
+    
     // Level system properties
     @Published var currentLevel: Int = 1
     @Published var balanceThreshold: Double = 0.15  // Will be replaced by level manager
@@ -395,6 +398,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Increment total levels completed counter for stats
         totalLevelsCompleted += 1
         levelStats["totalLevelsCompleted"] = Double(totalLevelsCompleted)
+        
+        // Increment total completions counter (for particle effects)
+        totalCompletions += 1
 
         // Update Core Data session
         if let sessionId = currentSessionId {
@@ -421,8 +427,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Store completed level for celebration
         let completedLevel = currentLevel
         
-        // Show level completion effect ONCE here before mode-specific handling
-        self.scene?.showLevelCompletionEffect(at: nil, level: completedLevel)
+        // Show level completion effect using total completions for color variety
+        // This ensures colors change even when replaying the same level in Primary mode
+        self.scene?.showLevelCompletionEffect(at: nil, level: totalCompletions)
 
         // Handle level progression based on game mode
         if isQuasiPeriodicMode {
@@ -1173,6 +1180,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             totalLevelsCompleted = 0
             totalBalanceTime = 0
             levelStats = [:]
+            // Don't reset totalCompletions to keep color variety across sessions
+            // User will see new colors even when restarting
         }
 
         // Reset the pendulum to a slightly perturbed upright position
