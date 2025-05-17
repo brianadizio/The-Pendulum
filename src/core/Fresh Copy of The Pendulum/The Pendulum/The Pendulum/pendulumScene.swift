@@ -678,17 +678,12 @@ class PendulumScene: SKScene {
         explosionEmitter.particleLifetime = 1.45
         explosionEmitter.particleLifetimeRange = 0.6
         
-        // Use direct particle colors with variation
-        let particleColors = [
-            UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0),   // Golden
-            UIColor(red: 1.0, green: 0.5, blue: 0.3, alpha: 1.0),   // Orange
-            UIColor(red: 0.9, green: 0.3, blue: 0.4, alpha: 1.0),   // Red-pink
-            UIColor(red: 0.7, green: 0.3, blue: 0.6, alpha: 1.0),   // Purple
-            UIColor(red: 0.5, green: 0.5, blue: 0.9, alpha: 1.0)    // Blue
-        ]
-        explosionEmitter.particleColor = particleColors.randomElement()!
-        explosionEmitter.particleColorBlendFactor = 1.0  // Full color blend
-        explosionEmitter.particleColorSequence = nil
+        // Use pre-colored textures from reference image palettes
+        let paletteIndex = Int.random(in: 0..<DynamicParticleManager.allPalettes.count)
+        let palette = DynamicParticleManager.allPalettes[paletteIndex]
+        let color = palette.randomElement() ?? UIColor.white
+        explosionEmitter.particleTexture = DynamicParticleManager.createGlowTexture(color: color)
+        explosionEmitter.particleColorBlendFactor = 0.0  // Use texture colors only
         
         // Small particles
         explosionEmitter.particleScale = 0.15 * scale
@@ -713,8 +708,8 @@ class PendulumScene: SKScene {
         explosionEmitter.particleAlphaRange = 0.0
         explosionEmitter.particleAlphaSpeed = -0.65
         
-        // Additive blending
-        explosionEmitter.particleBlendMode = .add
+        // Alpha blending preserves colors better
+        explosionEmitter.particleBlendMode = .alpha
         
         addChild(explosionEmitter)
         print("🌟 Added emitter to scene. emitter.particleTexture: \(explosionEmitter.particleTexture != nil)")
@@ -838,9 +833,8 @@ class PendulumScene: SKScene {
         sparkEmitter.particleLifetime = 0.8
         sparkEmitter.particleLifetimeRange = 0.2
         
-        // Bright white-gold color
-        sparkEmitter.particleColor = UIColor(red: 1.0, green: 0.95, blue: 0.7, alpha: 1.0)
-        sparkEmitter.particleColorBlendFactor = 1.0
+        // Use texture colors without tinting
+        sparkEmitter.particleColorBlendFactor = 0.0
         
         // Very small particles
         sparkEmitter.particleScale = 0.1 * scale
@@ -964,10 +958,12 @@ class PendulumScene: SKScene {
             UIColor(red: 0.7, green: 0.6, blue: 0.85, alpha: 1.0)   // Blue-purple
         ]
         
-        // Create color sequence
-        let colorSequence = SKKeyframeSequence(keyframeValues: sunsetColors, times: [0, 0.2, 0.4, 0.5, 0.7, 1.0])
-        explosionEmitter.particleColorSequence = colorSequence
-        explosionEmitter.particleColorBlendFactor = 1.0  // Use full color blending
+        // Use pre-colored texture from palette colors
+        let paletteIndex = Int.random(in: 0..<DynamicParticleManager.allPalettes.count)
+        let palette = DynamicParticleManager.allPalettes[paletteIndex]
+        let color = palette.randomElement() ?? UIColor.orange
+        explosionEmitter.particleTexture = DynamicParticleManager.createGlowTexture(color: color)
+        explosionEmitter.particleColorBlendFactor = 0.0  // Use texture colors only
         
         // Small particles
         explosionEmitter.particleScale = 0.12
@@ -992,8 +988,8 @@ class PendulumScene: SKScene {
         explosionEmitter.particleAlphaRange = 0.1
         explosionEmitter.particleAlphaSpeed = -0.8
         
-        // Additive blending for bright effect
-        explosionEmitter.particleBlendMode = .add
+        // Alpha blending for better color preservation
+        explosionEmitter.particleBlendMode = .alpha
         
         // Single burst
         explosionEmitter.numParticlesToEmit = 200
@@ -1312,13 +1308,21 @@ class PendulumScene: SKScene {
         // Create a subtle level start effect
         let effectPosition = position ?? pendulumBob.position
         
-        // Create a simple shimmer effect to indicate new level start
+        // Create a shimmer effect with texture-based particles
         let shimmerEmitter = SKEmitterNode()
         shimmerEmitter.position = effectPosition
+        
+        // Get palette for shimmer effect
+        let paletteIndex = level % DynamicParticleManager.allPalettes.count
+        let palette = DynamicParticleManager.allPalettes[paletteIndex]
+        let shimmerColor = palette.last ?? UIColor.white
+        
+        // Use star texture for shimmer
+        shimmerEmitter.particleTexture = DynamicParticleManager.createStarTexture(color: shimmerColor, points: 4)
         shimmerEmitter.particleBirthRate = 200  // More particles for initial burst
         shimmerEmitter.numParticlesToEmit = 100  // Limited burst
         shimmerEmitter.particleLifetime = 1.0
-        shimmerEmitter.particleSize = CGSize(width: 8, height: 8)
+        shimmerEmitter.particleSize = CGSize(width: 16, height: 16)
         shimmerEmitter.particleScale = 1.0
         shimmerEmitter.particleScaleRange = 0.5
         shimmerEmitter.particleScaleSpeed = -0.8
@@ -1326,10 +1330,13 @@ class PendulumScene: SKScene {
         shimmerEmitter.emissionAngleRange = CGFloat.pi / 4
         shimmerEmitter.particleSpeed = 50
         shimmerEmitter.particleSpeedRange = 30
-        shimmerEmitter.particleAlpha = 0.8
+        shimmerEmitter.particleAlpha = 0.9
         shimmerEmitter.particleAlphaSpeed = -0.8
-        shimmerEmitter.particleColor = UIColor.white
-        shimmerEmitter.particleColorBlendFactor = 1.0
+        shimmerEmitter.particleColorBlendFactor = 0.0  // Use texture color only
+        shimmerEmitter.particleBlendMode = .alpha  // Better color preservation
+        shimmerEmitter.particleRotation = 0
+        shimmerEmitter.particleRotationRange = CGFloat.pi * 2
+        shimmerEmitter.particleRotationSpeed = CGFloat.pi * 3  // Spinning stars
         addChild(shimmerEmitter)
         
         // Remove after short time
@@ -1353,10 +1360,10 @@ class PendulumScene: SKScene {
         cometEmitter.particleLifetime = 1.0
         cometEmitter.particleLifetimeRange = 0.3
         
-        // Blue-white gradient colors
-        cometEmitter.particleColor = UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
-        cometEmitter.particleColorBlendFactor = 1.0
-        cometEmitter.particleColorSequence = createCometColorSequence()
+        // Use pre-colored comet texture
+        let texture = DynamicParticleManager.createGlowTexture(color: UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0))
+        cometEmitter.particleTexture = texture
+        cometEmitter.particleColorBlendFactor = 0.0  // Use texture colors only
         
         // Size variation
         cometEmitter.particleScale = 0.4
@@ -1382,8 +1389,8 @@ class PendulumScene: SKScene {
         cometEmitter.particleAlphaRange = 0.1
         cometEmitter.particleAlphaSpeed = -0.6
         
-        // Add glow effect
-        cometEmitter.particleBlendMode = .add
+        // Alpha blend for color preservation
+        cometEmitter.particleBlendMode = .alpha
         
         addChild(cometEmitter)
         
@@ -1417,9 +1424,10 @@ class PendulumScene: SKScene {
         burstEmitter.particleLifetime = 0.6
         burstEmitter.particleLifetimeRange = 0.1
         
-        // Bright silver-blue color
-        burstEmitter.particleColor = UIColor(red: 0.9, green: 0.95, blue: 1.0, alpha: 1.0)
-        burstEmitter.particleColorBlendFactor = 1.0
+        // Use pre-colored burst texture
+        let texture = DynamicParticleManager.createStarTexture(color: UIColor(red: 0.9, green: 0.95, blue: 1.0, alpha: 1.0), points: 6)
+        burstEmitter.particleTexture = texture
+        burstEmitter.particleColorBlendFactor = 0.0  // Use texture colors only
         
         // Size
         burstEmitter.particleScale = 0.3 * scale
@@ -1442,8 +1450,8 @@ class PendulumScene: SKScene {
         burstEmitter.particleAlpha = 1.0
         burstEmitter.particleAlphaSpeed = -1.5
         
-        // Additive blend for brightness
-        burstEmitter.particleBlendMode = .add
+        // Alpha blend for color preservation
+        burstEmitter.particleBlendMode = .alpha
         
         addChild(burstEmitter)
         
@@ -1656,12 +1664,20 @@ class PendulumScene: SKScene {
         // Remove any existing trail
         pendulumBob.removeAllChildren()
         
-        // Create a simple sparkling trail
+        // Create a sparkling trail with texture-based particles
         let sparklingTrail = SKEmitterNode()
+        
+        // Get palette colors for this level/completion
+        let paletteIndex = level % DynamicParticleManager.allPalettes.count
+        let palette = DynamicParticleManager.allPalettes[paletteIndex]
+        let trailColor = palette[min(3, palette.count - 1)]
+        
+        // Use soft particle texture for trails
+        sparklingTrail.particleTexture = DynamicParticleManager.createSoftParticle(color: trailColor)
         sparklingTrail.particleBirthRate = 50
         sparklingTrail.particleLifetime = 0.8
         sparklingTrail.particleLifetimeRange = 0.3
-        sparklingTrail.particleSize = CGSize(width: 6, height: 6)
+        sparklingTrail.particleSize = CGSize(width: 12, height: 12)
         sparklingTrail.particleScale = 1.0
         sparklingTrail.particleScaleRange = 0.5
         sparklingTrail.particleScaleSpeed = -0.8
@@ -1669,13 +1685,13 @@ class PendulumScene: SKScene {
         sparklingTrail.emissionAngleRange = CGFloat.pi / 6
         sparklingTrail.particleSpeed = 40
         sparklingTrail.particleSpeedRange = 20
-        sparklingTrail.particleAlpha = 0.7
-        sparklingTrail.particleAlphaSpeed = -0.9
+        sparklingTrail.particleAlpha = 0.9
+        sparklingTrail.particleAlphaSpeed = -0.8
         sparklingTrail.yAcceleration = -50
-        sparklingTrail.particleColor = UIColor(white: 1.0, alpha: 1.0)
-        sparklingTrail.particleColorBlendFactor = 1.0
+        sparklingTrail.particleColorBlendFactor = 0.0  // Use texture colors only
         sparklingTrail.targetNode = self // Particles remain in scene
         sparklingTrail.zPosition = pendulumBob.zPosition - 1
+        sparklingTrail.particleBlendMode = .alpha  // Better color preservation
         pendulumBob.addChild(sparklingTrail)
     }
 
