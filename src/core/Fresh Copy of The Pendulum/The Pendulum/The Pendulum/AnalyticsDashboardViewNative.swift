@@ -101,13 +101,14 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
         
-        // Add header title
-        let headerTitle = createHeaderLabel("Pendulum Analytics")
+        // Add header title with logo
+        let headerTitle = HeaderViewCreator.createHeaderView(title: "Pendulum Analytics")
+        headerTitle.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(headerTitle)
         
-        // Configure header title constraints after adding to view hierarchy
+        // Configure header title constraints to match other tabs
         NSLayoutConstraint.activate([
-            headerTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            headerTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             headerTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             headerTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             headerTitle.heightAnchor.constraint(equalToConstant: 40)
@@ -140,11 +141,14 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
 
         contentView.addSubview(timeSegmentControl)
 
-        // Get the header title - it should be the first UILabel in contentView
-        let headerTitle = contentView.subviews.first(where: { $0 is UILabel }) as? UILabel
+        // Get the header title - it's the UIView created by HeaderViewCreator
+        let headerTitle = contentView.subviews.first(where: { 
+            // The header is a UIView containing a UILabel
+            $0.subviews.contains(where: { $0 is UILabel }) 
+        })
 
         NSLayoutConstraint.activate([
-            timeSegmentControl.topAnchor.constraint(equalTo: headerTitle?.bottomAnchor ?? contentView.topAnchor, constant: 20),
+            timeSegmentControl.topAnchor.constraint(equalTo: headerTitle?.bottomAnchor ?? contentView.topAnchor, constant: 15),
             timeSegmentControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             timeSegmentControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             timeSegmentControl.heightAnchor.constraint(equalToConstant: 40)
@@ -261,8 +265,8 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             chartsContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -50) // Increased padding from -20 to -50
         ])
         
-        // Add section title
-        let sectionTitle = createSectionLabel("Performance Charts")
+        // Add section title with logo
+        let sectionTitle = HeaderViewCreator.createSectionHeader(title: "Performance Charts")
         chartsContainer.addSubview(sectionTitle)
         
         // Add Charts

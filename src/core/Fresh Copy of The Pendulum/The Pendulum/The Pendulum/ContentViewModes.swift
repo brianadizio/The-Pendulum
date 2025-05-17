@@ -6,10 +6,17 @@ struct ContentViewModes: View {
     var body: some View {
         VStack(spacing: 16) {
             // Header
-            Text("Perturbation Modes")
-                .font(.title)
-                .fontWeight(.bold)
-                .padding(.top, 20)
+            HStack(spacing: 12) {
+                Image("PendulumLogo-removebg-preview")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                
+                Text("Perturbation Modes")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(Color(UIColor.goldenPrimary))
+            }
+            .padding(.top, 20)
             
             // Description
             Text("Select a perturbation mode to modify how external forces affect the pendulum")

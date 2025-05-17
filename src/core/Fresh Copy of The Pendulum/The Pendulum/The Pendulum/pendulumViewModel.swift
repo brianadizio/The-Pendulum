@@ -623,6 +623,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         timer = Timer.scheduledTimer(withTimeInterval: 0.002, repeats: true) { [weak self] _ in
             self?.step()
         }
+        
+        // Resume perturbations if they were stopped
+        NotificationCenter.default.post(name: NSNotification.Name("ResumeAllPerturbations"), object: nil)
     }
     
     private func step() {
@@ -834,6 +837,13 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         timer?.invalidate()
         timer = nil
         isSimulating = false
+        
+        // Ensure pendulum completely stops
+        currentState = PendulumState(theta: currentState.theta, thetaDot: 0, time: currentState.time)
+        simulation.setInitialState(state: currentState)
+        
+        // Stop any ongoing perturbations
+        NotificationCenter.default.post(name: NSNotification.Name("StopAllPerturbations"), object: nil)
     }
     
     func applyForce(_ magnitude: Double) {

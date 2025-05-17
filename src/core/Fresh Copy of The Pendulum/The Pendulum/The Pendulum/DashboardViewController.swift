@@ -171,38 +171,14 @@ class DashboardViewController: UIViewController {
     }
     
     private func setupHeader() {
-        // Create header container
-        headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = (UIColor.goldenPrimary as UIColor)
-        contentView.addSubview(headerView)
+        // Create styled header using HeaderViewCreator
+        let styledHeader = HeaderViewCreator.createViewControllerHeader(title: "The Pendulum")
+        styledHeader.translatesAutoresizingMaskIntoConstraints = false
+        styledHeader.backgroundColor = (UIColor.goldenPrimary as UIColor)
+        contentView.addSubview(styledHeader)
         
-        // Add gradient layer to header
-        DispatchQueue.main.async { // Add on next run loop to ensure bounds are set
-            let gradientLayer = GoldenGradients.createHeaderGradient(for: self.headerView)
-            self.headerView.layer.insertSublayer(gradientLayer, at: 0)
-        }
-        
-        // Add logo to header - using the appLogo extension
-        let logoImageView = UIImageView(image: UIImage.appLogo)
-        logoImageView.translatesAutoresizingMaskIntoConstraints = false
-        logoImageView.contentMode = .scaleAspectFit
-        logoImageView.layer.cornerRadius = 15
-        logoImageView.clipsToBounds = true
-        if logoImageView.image == nil {
-            // In case the image is nil, set a background color
-            logoImageView.backgroundColor = (UIColor.goldenAccent as UIColor)
-        }
-        logoImageView.tintColor = (UIColor.goldenAccent as UIColor) // For the fallback symbol if used
-        headerView.addSubview(logoImageView)
-        
-        // Create title label
-        titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Pendulum Analytics"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = .white
-        headerView.addSubview(titleLabel)
+        // Store reference to header view
+        headerView = styledHeader
         
         // Create view toggle button
         let toggleButton = UIButton(type: .system)
@@ -221,15 +197,6 @@ class DashboardViewController: UIViewController {
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 100),
             
-            // Logo on the left side of header
-            logoImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
-            logoImageView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 40),
-            logoImageView.heightAnchor.constraint(equalToConstant: 40),
-            
-            // Title centered in header
-            titleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
             
             // Toggle button on the right
             toggleButton.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),

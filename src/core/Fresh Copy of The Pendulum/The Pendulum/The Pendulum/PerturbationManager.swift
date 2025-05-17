@@ -274,11 +274,62 @@ class PerturbationManager {
     // Warning indicator node
     private var warningIndicator: SKNode?
     
+    // Track if manager is active
+    private var isActive: Bool = true
+    
     // Initialize with optional profile
     init(profile: PerturbationProfile? = nil) {
         if let profile = profile {
             activateProfile(profile)
         }
+        
+        // Listen for stop notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleStopNotification),
+            name: NSNotification.Name("StopAllPerturbations"),
+            object: nil
+        )
+        
+        // Listen for resume notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleResumeNotification),
+            name: NSNotification.Name("ResumeAllPerturbations"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleStopNotification() {
+        stop()
+    }
+    
+    @objc private func handleResumeNotification() {
+        resume()
+    }
+    
+    // Stop all perturbations
+    func stop() {
+        isActive = false
+        
+        // Clear any visual warnings
+        warningIndicator?.removeFromParent()
+        warningIndicator = nil
+        
+        print("PerturbationManager stopped")
+    }
+    
+    // Resume perturbations
+    func resume() {
+        isActive = true
+        resetImpulseTiming()
+        lastUpdateTime = 0
+        
+        print("PerturbationManager resumed")
     }
     
     // Activate a perturbation profile
@@ -413,7 +464,7 @@ class PerturbationManager {
     
     // Update the perturbation manager
     func update(currentTime: TimeInterval) {
-        guard let profile = activeProfile, let viewModel = viewModel else { return }
+        guard isActive, let profile = activeProfile, let viewModel = viewModel else { return }
         
         // Calculate delta time
         let deltaTime: TimeInterval
