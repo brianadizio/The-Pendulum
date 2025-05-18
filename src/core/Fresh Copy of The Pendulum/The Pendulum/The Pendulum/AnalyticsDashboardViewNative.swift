@@ -355,7 +355,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             angleVarianceSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             angleVarianceSection.heightAnchor.constraint(equalToConstant: 300),
             
-            angleVarianceChart.topAnchor.constraint(equalTo: angleVarianceSection.topAnchor, constant: 60),
+            angleVarianceChart.topAnchor.constraint(equalTo: angleVarianceSection.topAnchor, constant: 80),
             angleVarianceChart.leadingAnchor.constraint(equalTo: angleVarianceSection.leadingAnchor, constant: 10),
             angleVarianceChart.trailingAnchor.constraint(equalTo: angleVarianceSection.trailingAnchor, constant: -10),
             angleVarianceChart.bottomAnchor.constraint(equalTo: angleVarianceSection.bottomAnchor, constant: -10),
@@ -366,7 +366,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             pushFrequencySection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             pushFrequencySection.heightAnchor.constraint(equalToConstant: 300),
             
-            pushFrequencyChart.topAnchor.constraint(equalTo: pushFrequencySection.topAnchor, constant: 60),
+            pushFrequencyChart.topAnchor.constraint(equalTo: pushFrequencySection.topAnchor, constant: 80),
             pushFrequencyChart.leadingAnchor.constraint(equalTo: pushFrequencySection.leadingAnchor, constant: 10),
             pushFrequencyChart.trailingAnchor.constraint(equalTo: pushFrequencySection.trailingAnchor, constant: -10),
             pushFrequencyChart.bottomAnchor.constraint(equalTo: pushFrequencySection.bottomAnchor, constant: -10),
@@ -377,7 +377,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             pushMagnitudeSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             pushMagnitudeSection.heightAnchor.constraint(equalToConstant: 300),
             
-            pushMagnitudeChart.topAnchor.constraint(equalTo: pushMagnitudeSection.topAnchor, constant: 60),
+            pushMagnitudeChart.topAnchor.constraint(equalTo: pushMagnitudeSection.topAnchor, constant: 80),
             pushMagnitudeChart.leadingAnchor.constraint(equalTo: pushMagnitudeSection.leadingAnchor, constant: 10),
             pushMagnitudeChart.trailingAnchor.constraint(equalTo: pushMagnitudeSection.trailingAnchor, constant: -10),
             pushMagnitudeChart.bottomAnchor.constraint(equalTo: pushMagnitudeSection.bottomAnchor, constant: -10),
@@ -388,7 +388,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             reactionTimeSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             reactionTimeSection.heightAnchor.constraint(equalToConstant: 300),
             
-            reactionTimeChart.topAnchor.constraint(equalTo: reactionTimeSection.topAnchor, constant: 60),
+            reactionTimeChart.topAnchor.constraint(equalTo: reactionTimeSection.topAnchor, constant: 80),
             reactionTimeChart.leadingAnchor.constraint(equalTo: reactionTimeSection.leadingAnchor, constant: 10),
             reactionTimeChart.trailingAnchor.constraint(equalTo: reactionTimeSection.trailingAnchor, constant: -10),
             reactionTimeChart.bottomAnchor.constraint(equalTo: reactionTimeSection.bottomAnchor, constant: -10),
@@ -399,7 +399,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             learningCurveSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             learningCurveSection.heightAnchor.constraint(equalToConstant: 300),
             
-            learningCurveChart.topAnchor.constraint(equalTo: learningCurveSection.topAnchor, constant: 60),
+            learningCurveChart.topAnchor.constraint(equalTo: learningCurveSection.topAnchor, constant: 80),
             learningCurveChart.leadingAnchor.constraint(equalTo: learningCurveSection.leadingAnchor, constant: 10),
             learningCurveChart.trailingAnchor.constraint(equalTo: learningCurveSection.trailingAnchor, constant: -10),
             learningCurveChart.bottomAnchor.constraint(equalTo: learningCurveSection.bottomAnchor, constant: -10),
@@ -411,7 +411,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             directionalBiasSection.heightAnchor.constraint(equalToConstant: 320), // Increased from 300 to 320
             // Removed the bottom constraint to chartsContainer.bottomAnchor to prevent overlap
             
-            directionalBiasChart.topAnchor.constraint(equalTo: directionalBiasSection.topAnchor, constant: 60),
+            directionalBiasChart.topAnchor.constraint(equalTo: directionalBiasSection.topAnchor, constant: 80),
             directionalBiasChart.leadingAnchor.constraint(equalTo: directionalBiasSection.leadingAnchor, constant: 10),
             directionalBiasChart.trailingAnchor.constraint(equalTo: directionalBiasSection.trailingAnchor, constant: -10),
             directionalBiasChart.bottomAnchor.constraint(equalTo: directionalBiasSection.bottomAnchor, constant: -10)
@@ -439,10 +439,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
 
         // Create cards for the additional metrics
         let metricsData = [
-            ["title": "Total Levels Balanced", "icon": "checkmark.circle.fill", "color": UIColor.systemGreen],
-            ["title": "Average Time Per Level", "icon": "timer", "color": UIColor.systemBlue],
-            ["title": "Longest Balance Streak", "icon": "flame.fill", "color": UIColor.systemOrange],
-            ["title": "Play Sessions (Last Week)", "icon": "calendar", "color": UIColor.systemIndigo]
+            ["title": "Total Levels\nBalanced", "icon": "checkmark.circle.fill", "color": UIColor.systemGreen],
+            ["title": "Average Time\nPer Level", "icon": "timer", "color": UIColor.systemBlue],
+            ["title": "Longest Balance\nStreak", "icon": "flame.fill", "color": UIColor.systemOrange],
+            ["title": "Play Sessions\n(Last Week)", "icon": "calendar", "color": UIColor.systemIndigo]
         ]
 
         var metricCards: [UIView] = []
@@ -518,7 +518,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             levelCompletionsSection.heightAnchor.constraint(equalToConstant: 300),
             levelCompletionsSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -20),
 
-            levelCompletionsChart.topAnchor.constraint(equalTo: levelCompletionsSection.topAnchor, constant: 60),
+            levelCompletionsChart.topAnchor.constraint(equalTo: levelCompletionsSection.topAnchor, constant: 80),
             levelCompletionsChart.leadingAnchor.constraint(equalTo: levelCompletionsSection.leadingAnchor, constant: 10),
             levelCompletionsChart.trailingAnchor.constraint(equalTo: levelCompletionsSection.trailingAnchor, constant: -10),
             levelCompletionsChart.bottomAnchor.constraint(equalTo: levelCompletionsSection.bottomAnchor, constant: -10),
@@ -635,13 +635,13 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 let valueLabel = card.subviews.last(where: { $0 is UILabel }) as? UILabel
 
                 switch titleLabel.text {
-                case "Total Levels Balanced":
+                case "Total Levels\nBalanced":
                     valueLabel?.text = "\(totalLevels)"
-                case "Average Time Per Level":
+                case "Average Time\nPer Level":
                     valueLabel?.text = String(format: "%.1fs", avgTimePerLevel)
-                case "Longest Balance Streak":
+                case "Longest Balance\nStreak":
                     valueLabel?.text = "\(longestStreak) levels"
-                case "Play Sessions (Last Week)":
+                case "Play Sessions\n(Last Week)":
                     valueLabel?.text = "\(playSessions)"
                 default:
                     break
@@ -741,16 +741,19 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        titleLabel.font = UIFont.systemFont(ofSize: 13, weight: .medium)
         titleLabel.textColor = (UIColor.goldenText as UIColor)
+        titleLabel.numberOfLines = 2
+        titleLabel.lineBreakMode = .byWordWrapping
         card.addSubview(titleLabel)
         
         // Icon
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         let iconImage = UIImage(systemName: iconName, withConfiguration: iconConfig)
         let iconView = UIImageView(image: iconImage)
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.tintColor = color
+        iconView.contentMode = .scaleAspectFit
         card.addSubview(iconView)
         
         // Value label
@@ -766,11 +769,12 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
             titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: iconView.leadingAnchor, constant: -4),
             
             iconView.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
-            iconView.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8),
-            iconView.widthAnchor.constraint(equalToConstant: 20),
-            iconView.heightAnchor.constraint(equalToConstant: 20),
+            iconView.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            iconView.widthAnchor.constraint(equalToConstant: 18),
+            iconView.heightAnchor.constraint(equalToConstant: 18),
             
             valueLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             valueLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),

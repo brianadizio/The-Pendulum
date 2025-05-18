@@ -19,6 +19,10 @@ class PendulumScene: SKScene {
     
     // Background elements
     private var backgroundType: BackgroundType = .plain
+    private var sceneBackgroundLayer: SKShapeNode?
+    
+    // Status message label
+    private var statusMessageLabel: SKLabelNode?
     
     // UI elements
     private var controlButtons: [SKNode] = []
@@ -47,8 +51,8 @@ class PendulumScene: SKScene {
         print("Scene size: \(self.size)")
         print("View size: \(view.bounds.size)")
         
-        // Set up a gradient background based on UI designs
-        setupBackground()
+        // Set up the background based on current state
+        updateSceneBackground()
         
         // Setup decorative grid for perspective
         setupGrid()
@@ -95,6 +99,9 @@ class PendulumScene: SKScene {
         // Setup control buttons (following UI designs in slides)
         setupControlButtonsUI()
         
+        // Setup status message label in center of scene
+        setupStatusMessageLabel()
+        
         // Force update of initial pendulum position
         if let viewModel = viewModel {
             updatePendulumPosition(with: viewModel.currentState)
@@ -110,11 +117,44 @@ class PendulumScene: SKScene {
         print("PendulumScene: didMove completed - scene size: \(self.size)")
     }
     
-    // Set up a gradient background based on UI design
-    private func setupBackground() {
-        let gradientNode = SKSpriteNode(color: .clear, size: self.size)
-        gradientNode.zPosition = -100
-        addChild(gradientNode)
+    // Set up the background based on BackgroundManager state
+    func updateSceneBackground() {
+        // Remove existing background layer if it exists
+        sceneBackgroundLayer?.removeFromParent()
+        
+        // Create a background layer
+        sceneBackgroundLayer = SKShapeNode(rectOf: self.size)
+        sceneBackgroundLayer?.position = CGPoint(x: frame.midX, y: frame.midY)
+        sceneBackgroundLayer?.zPosition = -100
+        sceneBackgroundLayer?.strokeColor = .clear
+        
+        // Check if BackgroundManager has a background set
+        let hasBackground = BackgroundManager.shared.getCurrentFolder() != .none
+        
+        if hasBackground {
+            // Make scene semi-transparent to show the underlying UIView background
+            self.backgroundColor = UIColor.clear
+            sceneBackgroundLayer?.fillColor = UIColor.white.withAlphaComponent(0.3) // Semi-transparent overlay
+            
+            // Make non-essential elements more transparent
+            updateSceneTransparency(transparency: 0.7)
+        } else {
+            // No background selected, use white background
+            self.backgroundColor = UIColor.white
+            sceneBackgroundLayer?.fillColor = UIColor.white
+            
+            // Reset transparency to full opacity
+            updateSceneTransparency(transparency: 1.0)
+        }
+        
+        if let sceneBackgroundLayer = sceneBackgroundLayer {
+            addChild(sceneBackgroundLayer)
+        }
+    }
+    
+    // Set up a gradient background based on UI design (for when background is None)
+    private func setupGradientBackground() {
+        guard let sceneBackgroundLayer = sceneBackgroundLayer else { return }
         
         // Create the gradient texture using a different approach - light cream color from UI designs
         let startColor = UIColor(red: 0.98, green: 0.96, blue: 0.9, alpha: 1.0) // Light cream
@@ -156,9 +196,15 @@ class PendulumScene: SKScene {
             UIGraphicsEndImageContext()
         }
 
-        let texture = SKTexture(image: gradientImage)
+        // Use SpriteKit's built-in gradient capabilities
+        sceneBackgroundLayer.fillColor = UIColor.white
         
-        gradientNode.texture = texture
+        // Create a gradient effect using a child node
+        let gradientOverlay = SKSpriteNode(color: endColor, size: self.size)
+        gradientOverlay.position = CGPoint.zero
+        gradientOverlay.zPosition = 1  // Above the background but below other elements
+        gradientOverlay.alpha = 0.2  // Subtle gradient effect
+        sceneBackgroundLayer.addChild(gradientOverlay)
     }
     
     // Setup an enhanced trail visualization
@@ -275,7 +321,7 @@ class PendulumScene: SKScene {
     private func setupGrid() {
         // Create a grid for perspective/aesthetic based on UI designs
         let gridNode = SKNode()
-        gridNode.alpha = 0.1
+        gridNode.alpha = 0.2
         gridNode.zPosition = -50
         
         let horizontalLines = 12
@@ -291,7 +337,7 @@ class PendulumScene: SKScene {
             path.addLine(to: CGPoint(x: size.width, y: y))
             
             let line = SKShapeNode(path: path)
-            line.strokeColor = .darkGray
+            line.strokeColor = .lightGray
             line.lineWidth = 1
             gridNode.addChild(line)
         }
@@ -304,7 +350,7 @@ class PendulumScene: SKScene {
             path.addLine(to: CGPoint(x: x, y: size.height))
             
             let line = SKShapeNode(path: path)
-            line.strokeColor = .darkGray
+            line.strokeColor = .lightGray
             line.lineWidth = 1
             gridNode.addChild(line)
         }
@@ -889,6 +935,133 @@ class PendulumScene: SKScene {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             sparkEmitter.removeFromParent()
         }
+    }
+    
+    // Setup balance progress bar above pendulum bob - NOT USED (Using UIProgressView in HUD instead)
+    /*
+    private func setupBalanceProgressBar() {
+        balanceProgressBar = SKNode()
+        balanceProgressBar?.zPosition = 25  // Above most elements but below particles
+        
+        // Progress bar background
+        let barWidth: CGFloat = 50
+        let barHeight: CGFloat = 8
+        
+        balanceProgressBackground = SKShapeNode(rectOf: CGSize(width: barWidth, height: barHeight), cornerRadius: barHeight/2)
+        balanceProgressBackground?.fillColor = UIColor.darkGray.withAlphaComponent(0.4)
+        balanceProgressBackground?.strokeColor = UIColor.darkGray.withAlphaComponent(0.8)
+        balanceProgressBackground?.lineWidth = 1
+        
+        // Progress bar fill container
+        let fillContainer = SKNode()
+        fillContainer.position = CGPoint(x: -barWidth/2, y: 0)  // Position at left edge of bar
+        
+        // Progress bar fill - start as a small rectangle
+        balanceProgressFill = SKShapeNode(rectOf: CGSize(width: 1, height: barHeight), cornerRadius: barHeight/2)
+        balanceProgressFill?.fillColor = UIColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0)  // Green color
+        balanceProgressFill?.strokeColor = .clear
+        balanceProgressFill?.position = CGPoint(x: 0.5, y: 0)  // Center the 1-pixel width shape
+        
+        fillContainer.addChild(balanceProgressFill!)
+        
+        if let balanceProgressBar = balanceProgressBar,
+           let balanceProgressBackground = balanceProgressBackground {
+            balanceProgressBar.addChild(balanceProgressBackground)
+            balanceProgressBar.addChild(fillContainer)
+            addChild(balanceProgressBar)
+        }
+    }
+    */
+    
+    // Update balance progress bar - NOT USED (Using UIProgressView in HUD instead)
+    /*
+    func updateBalanceProgressBar(progress: CGFloat, above bobPosition: CGPoint) {
+        guard let balanceProgressBar = balanceProgressBar else { return }
+        
+        // Position the bar above the pendulum bob
+        let barOffset: CGFloat = 35  // Distance above the bob
+        balanceProgressBar.position = CGPoint(x: bobPosition.x, y: bobPosition.y + barOffset)
+        
+        // Update the progress fill by recreating it with new width
+        let barWidth: CGFloat = 50
+        let barHeight: CGFloat = 8
+        let fillWidth = max(1, barWidth * progress)  // Minimum 1 pixel width
+        
+        // Get the fill container (parent of the fill)
+        if let fillContainer = self.balanceProgressFill?.parent {
+            self.balanceProgressFill?.removeFromParent()
+            
+            // Create new fill with appropriate width
+            let newFill = SKShapeNode(rectOf: CGSize(width: fillWidth, height: barHeight), cornerRadius: barHeight/2)
+            
+            // Change color based on progress
+            if progress < 0.3 {
+                newFill.fillColor = UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0)  // Red
+            } else if progress < 0.7 {
+                newFill.fillColor = UIColor(red: 0.8, green: 0.6, blue: 0.2, alpha: 1.0)  // Orange
+            } else {
+                newFill.fillColor = UIColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0)  // Green
+            }
+            
+            newFill.strokeColor = .clear
+            newFill.position = CGPoint(x: fillWidth/2, y: 0)  // Position based on width
+            fillContainer.addChild(newFill)
+            
+            self.balanceProgressFill = newFill
+        }
+    }
+    */
+    
+    // Setup status message label
+    private func setupStatusMessageLabel() {
+        statusMessageLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+        statusMessageLabel?.fontSize = 24
+        statusMessageLabel?.fontColor = .black
+        statusMessageLabel?.position = CGPoint(x: frame.midX, y: frame.midY)
+        statusMessageLabel?.zPosition = 100  // On top of everything
+        statusMessageLabel?.alpha = 0  // Start hidden
+        addChild(statusMessageLabel!)
+    }
+    
+    // Show status message in the center of the scene
+    func showStatusMessage(_ message: String, color: UIColor = .white) {
+        guard let statusMessageLabel = statusMessageLabel else { return }
+        
+        statusMessageLabel.text = message
+        statusMessageLabel.fontColor = color
+        
+        // Fade in
+        statusMessageLabel.removeAllActions()
+        statusMessageLabel.run(SKAction.fadeIn(withDuration: 0.3))
+    }
+    
+    // Hide status message
+    func hideStatusMessage() {
+        guard let statusMessageLabel = statusMessageLabel else { return }
+        
+        statusMessageLabel.removeAllActions()
+        statusMessageLabel.run(SKAction.fadeOut(withDuration: 0.3))
+    }
+    
+    // Update transparency of scene elements (when background is displayed)
+    private func updateSceneTransparency(transparency: CGFloat) {
+        // Update grid transparency
+        if let gridNode = childNode(withName: "gridNode") {
+            gridNode.alpha = transparency * 0.1  // Keep grid subtle
+        }
+        
+        // Update visualization background transparency
+        if let visualBackground = childNode(withName: "visualBackground") {
+            visualBackground.alpha = transparency
+        }
+        
+        // Update floor line transparency  
+        if let floor = childNode(withName: "floor") {
+            floor.alpha = transparency * 0.5
+        }
+        
+        // Keep bob, pendulum rod, and base fully opaque
+        // These should always be clearly visible
     }
     
     /// Creates a star-shaped texture for particles
