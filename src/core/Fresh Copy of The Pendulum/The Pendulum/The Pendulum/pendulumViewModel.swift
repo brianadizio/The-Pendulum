@@ -676,11 +676,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             }
             
             // Check for fallen state, but only after allowing time to get started
-            // Add a grace period after applying force (0.5 seconds)
-            let forceGracePeriod = 0.5
-            let isInGracePeriod = currentState.time - lastForceAppliedTime < forceGracePeriod
-            
-            if currentState.time > 0.5 && angleFromTop > failureAngleThreshold && !isInGracePeriod {
+            if currentState.time > 0.5 && angleFromTop > failureAngleThreshold {
                 // Pendulum has fallen too far from vertical
                 print("FALLEN! Angle from top: \(angleFromTop), threshold: \(failureAngleThreshold)")
                 

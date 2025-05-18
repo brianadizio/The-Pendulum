@@ -360,53 +360,8 @@ class PendulumScene: SKScene {
     
     // Create a modern visualization background based on UI designs
     private func setupVisualizationBackground() {
-        let visualBackground = SKNode()
-        visualBackground.zPosition = -40
-        
-        // Create a much larger circular orbit pattern for the very long pendulum
-        let orbitRadius = frame.height * 0.65 // Very large radius to match the much longer pendulum
-        let orbitNode = SKShapeNode(circleOfRadius: orbitRadius)
-        orbitNode.position = pendulumPivot.position // Center on the pendulum pivot
-        orbitNode.strokeColor = UIColor.darkGray.withAlphaComponent(0.15) // Slightly more subtle
-        orbitNode.lineWidth = 1
-        
-        // Create a dashed circle using multiple short line segments instead of lineDashPattern
-        let dashedOrbitNode = SKNode()
-        dashedOrbitNode.position = orbitNode.position
-        let segments = 36
-        for i in 0..<segments {
-            if i % 2 == 0 { // Only add every other segment to create dashes
-                let angle1 = CGFloat(i) * 2 * .pi / CGFloat(segments)
-                let angle2 = CGFloat(i+1) * 2 * .pi / CGFloat(segments)
-                let path = CGMutablePath()
-                path.move(to: CGPoint(x: orbitRadius * cos(angle1), y: orbitRadius * sin(angle1)))
-                path.addLine(to: CGPoint(x: orbitRadius * cos(angle2), y: orbitRadius * sin(angle2)))
-                let segment = SKShapeNode(path: path)
-                segment.strokeColor = UIColor.darkGray.withAlphaComponent(0.15)
-                segment.lineWidth = 1
-                dashedOrbitNode.addChild(segment)
-            }
-        }
-        visualBackground.addChild(dashedOrbitNode)
-        visualBackground.addChild(orbitNode)
-        
-        // Add radius line adjusted for new orbit size
-        let radiusPath = CGMutablePath()
-        radiusPath.move(to: CGPoint(x: orbitNode.position.x, y: orbitNode.position.y))
-        radiusPath.addLine(to: CGPoint(x: orbitNode.position.x + orbitRadius, y: orbitNode.position.y))
-
-        let radiusLine = SKShapeNode(path: radiusPath)
-        radiusLine.strokeColor = UIColor.black.withAlphaComponent(0.2)
-        radiusLine.lineWidth = 1
-        visualBackground.addChild(radiusLine)
-
-        // Add dot at end of radius
-        let endDot = SKShapeNode(circleOfRadius: 3)
-        endDot.position = CGPoint(x: orbitNode.position.x + orbitRadius, y: orbitNode.position.y)
-        endDot.fillColor = UIColor.black.withAlphaComponent(0.3)
-        visualBackground.addChild(endDot)
-        
-        addChild(visualBackground)
+        // Removed orbit circle visualizations to reduce visual clutter
+        // Only keeping grid and other minimal background elements
     }
     
     // Helper method to update the pendulum position for an inverted pendulum

@@ -220,3 +220,31 @@ extension UIColor {
         return FocusCalendarTheme.lightBorderColor
     }
 }
+
+// MARK: - UI Element Creation Methods
+extension FocusCalendarTheme {
+    static func createTitleLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = Fonts.titleFont(size: Fonts.Size.largeTitle)
+        label.textColor = primaryTextColor
+        label.textAlignment = .center
+        return label
+    }
+    
+    static func createTextButton(_ title: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = buttonFont
+        button.tintColor = accentGold
+        button.setTitleColor(accentGold, for: .normal)
+        return button
+    }
+    
+    static func createStyledButton(_ title: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        styleButton(button, isPrimary: true)
+        return button
+    }
+}

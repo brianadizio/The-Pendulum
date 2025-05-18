@@ -9,6 +9,31 @@ enum AnalyticsTimeRange {
     case daily
     case weekly
     case monthly
+    case yearly
+}
+
+// Pendulum parameters enum
+enum PendulumParameter: String, CaseIterable {
+    case forceMultiplier = "Force Multiplier"
+    case damping = "Damping"
+    case gravity = "Gravity"
+    case mass = "Mass"
+    case length = "Length"
+    
+    var unit: String {
+        switch self {
+        case .forceMultiplier:
+            return ""
+        case .damping:
+            return ""
+        case .gravity:
+            return "m/s²"
+        case .mass:
+            return "kg"
+        case .length:
+            return "m"
+        }
+    }
 }
 
 class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
@@ -33,6 +58,11 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     private var reactionTimeChart: SimpleLineChartView!
     private var learningCurveChart: SimpleLineChartView!
     private var directionalBiasChart: SimplePieChartView!
+    private var pendulumParametersChart: SimpleLineChartView!
+    
+    // Parameter selection for pendulum parameters chart
+    private var parameterSegmentControl: UISegmentedControl!
+    private var selectedParameter: PendulumParameter = .forceMultiplier
     
     // Time range control
     private var timeSegmentControl: UISegmentedControl!
@@ -68,6 +98,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         loadDirectionalBiasChart(timeRange: selectedTimeRange, sessionId: nil)
         updateAdditionalMetrics(timeRange: "Session")
         updateLevelCompletionsChart(timeRange: "Session")
+        updatePendulumParametersChart(timeRange: "Session", parameter: selectedParameter)
     }
     
     // MARK: - UI Setup
@@ -130,7 +161,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     }
     
     private func setupTimeRangeControl() {
-        timeSegmentControl = UISegmentedControl(items: ["Session", "Daily", "Weekly", "Monthly"])
+        timeSegmentControl = UISegmentedControl(items: ["Session", "Daily", "Weekly", "Monthly", "Yearly"])
         timeSegmentControl.translatesAutoresizingMaskIntoConstraints = false
         timeSegmentControl.selectedSegmentIndex = 0
 
@@ -516,7 +547,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             levelCompletionsSection.leadingAnchor.constraint(equalTo: chartsContainer.leadingAnchor),
             levelCompletionsSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             levelCompletionsSection.heightAnchor.constraint(equalToConstant: 300),
-            levelCompletionsSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -20),
+            levelCompletionsSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -400),
 
             levelCompletionsChart.topAnchor.constraint(equalTo: levelCompletionsSection.topAnchor, constant: 80),
             levelCompletionsChart.leadingAnchor.constraint(equalTo: levelCompletionsSection.leadingAnchor, constant: 10),
@@ -524,9 +555,52 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             levelCompletionsChart.bottomAnchor.constraint(equalTo: levelCompletionsSection.bottomAnchor, constant: -10),
         ])
 
+        // Create pendulum parameters chart section
+        let pendulumParametersSection = createChartSection(
+            title: "Pendulum Parameters Over Time",
+            description: "Shows how pendulum parameters change across levels."
+        )
+        chartsContainer.addSubview(pendulumParametersSection)
+        
+        // Add parameter selector
+        parameterSegmentControl = UISegmentedControl(items: PendulumParameter.allCases.map { $0.rawValue })
+        parameterSegmentControl.selectedSegmentIndex = 0
+        parameterSegmentControl.translatesAutoresizingMaskIntoConstraints = false
+        parameterSegmentControl.backgroundColor = .systemGray6
+        parameterSegmentControl.selectedSegmentTintColor = .goldenPrimary
+        parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.label], for: .normal)
+        parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
+        parameterSegmentControl.addTarget(self, action: #selector(parameterChanged(_:)), for: .valueChanged)
+        pendulumParametersSection.addSubview(parameterSegmentControl)
+        
+        pendulumParametersChart = SimpleLineChartView()
+        pendulumParametersChart.translatesAutoresizingMaskIntoConstraints = false
+        pendulumParametersChart.color = .systemPurple
+        pendulumParametersSection.addSubview(pendulumParametersChart)
+        
+        // Layout constraints for pendulum parameters section
+        NSLayoutConstraint.activate([
+            pendulumParametersSection.topAnchor.constraint(equalTo: levelCompletionsSection.bottomAnchor, constant: 20),
+            pendulumParametersSection.leadingAnchor.constraint(equalTo: chartsContainer.leadingAnchor),
+            pendulumParametersSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
+            pendulumParametersSection.heightAnchor.constraint(equalToConstant: 350),
+            pendulumParametersSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -20),
+            
+            parameterSegmentControl.topAnchor.constraint(equalTo: pendulumParametersSection.topAnchor, constant: 80),
+            parameterSegmentControl.leadingAnchor.constraint(equalTo: pendulumParametersSection.leadingAnchor, constant: 10),
+            parameterSegmentControl.trailingAnchor.constraint(equalTo: pendulumParametersSection.trailingAnchor, constant: -10),
+            parameterSegmentControl.heightAnchor.constraint(equalToConstant: 30),
+            
+            pendulumParametersChart.topAnchor.constraint(equalTo: parameterSegmentControl.bottomAnchor, constant: 30),
+            pendulumParametersChart.leadingAnchor.constraint(equalTo: pendulumParametersSection.leadingAnchor, constant: 10),
+            pendulumParametersChart.trailingAnchor.constraint(equalTo: pendulumParametersSection.trailingAnchor, constant: -10),
+            pendulumParametersChart.bottomAnchor.constraint(equalTo: pendulumParametersSection.bottomAnchor, constant: -10)
+        ])
+        
         // Initialize with sample data - now using the main time range selector
         updateAdditionalMetrics(timeRange: "Session")
         updateLevelCompletionsChart(timeRange: "Session")
+        updatePendulumParametersChart(timeRange: "Session", parameter: selectedParameter)
     }
 
     // Combined time range handler - updates both performance charts and additional metrics
@@ -551,6 +625,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         case 3:
             range = .monthly
             stringRange = "Month"
+        case 4:
+            range = .yearly
+            stringRange = "Year"
         default:
             range = .session
             stringRange = "Session"
@@ -571,6 +648,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Also update additional metrics sections
         updateAdditionalMetrics(timeRange: stringRange)
         updateLevelCompletionsChart(timeRange: stringRange)
+        updatePendulumParametersChart(timeRange: stringRange, parameter: selectedParameter)
     }
 
     private func updateAdditionalMetrics(timeRange: String) {
@@ -854,6 +932,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 if timeSegmentControl.selectedSegmentIndex != 3 {
                     timeSegmentControl.selectedSegmentIndex = 3
                 }
+            case .yearly:
+                if timeSegmentControl.selectedSegmentIndex != 4 {
+                    timeSegmentControl.selectedSegmentIndex = 4
+                }
             }
         } else {
             // If timeRange is nil, get the current selection from the segment control
@@ -868,6 +950,8 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 selectedTimeRange = .weekly
             case 3:
                 selectedTimeRange = .monthly
+            case 4:
+                selectedTimeRange = .yearly
             default:
                 selectedTimeRange = .session
             }
@@ -884,6 +968,8 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             stringTimeRange = "Week"
         case .monthly:
             stringTimeRange = "Month"
+        case .yearly:
+            stringTimeRange = "Year"
         }
 
         // Load all data using the selectedTimeRange
@@ -912,8 +998,8 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 } else {
                     metrics = AnalyticsManager.shared.getPerformanceMetrics()
                 }
-            case .daily, .weekly, .monthly:
-                let period = timeRange == .daily ? "daily" : timeRange == .weekly ? "weekly" : "monthly"
+            case .daily, .weekly, .monthly, .yearly:
+                let period = timeRange == .daily ? "daily" : timeRange == .weekly ? "weekly" : timeRange == .monthly ? "monthly" : "yearly"
                 metrics = AnalyticsManager.shared.getAggregatedAnalytics(period: period)
             }
         } catch {
@@ -960,6 +1046,15 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                     "directionalBias": 0.03,
                     "totalPlayTime": 9200.0
                 ]
+            case .yearly:
+                metrics = [
+                    "stabilityScore": 88.4,
+                    "efficiencyRating": 91.2,
+                    "playerStyle": "Master",
+                    "averageCorrectionTime": 0.28,
+                    "directionalBias": 0.01,
+                    "totalPlayTime": 86400.0
+                ]
             }
         }
 
@@ -1002,6 +1097,8 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             timeSeriesData = AnalyticsManager.shared.getInteractionTimeSeries(timeframe: -604800) // Last 7 days
         case .monthly:
             timeSeriesData = AnalyticsManager.shared.getInteractionTimeSeries(timeframe: -2592000) // Last 30 days
+        case .yearly:
+            timeSeriesData = AnalyticsManager.shared.getInteractionTimeSeries(timeframe: -31536000) // Last 365 days
         }
 
         // If no data, provide sample data based on time range
@@ -1026,6 +1123,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 // Simulated weekly angle variances for a month
                 angleValues = [14.5, 12.2, 10.8, 9.5]
                 labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .yearly:
+                // Simulated monthly angle variances for a year
+                angleValues = [13.5, 12.8, 11.5, 10.2, 9.0, 8.2, 7.5, 7.0, 6.8, 6.5, 6.2, 6.0]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             }
 
             angleVarianceChart.updateData(
@@ -1045,7 +1146,21 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         let labels = timeSeriesData.compactMap { entry -> String? in
             guard let date = entry["timestamp"] as? Date else { return nil }
             let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm:ss"
+            
+            // Use appropriate date format based on time range
+            switch timeRange {
+            case .session:
+                formatter.dateFormat = "HH:mm"  // Show time for session view
+            case .daily:
+                formatter.dateFormat = "h a"    // Show hours (e.g., "3 PM")
+            case .weekly:
+                formatter.dateFormat = "EEE"    // Show day names (e.g., "Mon")
+            case .monthly:
+                formatter.dateFormat = "MMM d"  // Show month and day (e.g., "Jan 15")
+            case .yearly:
+                formatter.dateFormat = "MMM"    // Show month names (e.g., "Jan")
+            }
+            
             return formatter.string(from: date)
         }
 
@@ -1079,6 +1194,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 labels = ["0.5s", "1.0s", "1.5s", "2.0s", "2.5s", "3.0s"]
             case .monthly:
                 values = [125, 215, 302, 278, 165, 95]
+                labels = ["0.5s", "1.0s", "1.5s", "2.0s", "2.5s", "3.0s"]
+            case .yearly:
+                values = [520, 890, 1250, 1150, 680, 390]
                 labels = ["0.5s", "1.0s", "1.5s", "2.0s", "2.5s", "3.0s"]
             }
 
@@ -1128,6 +1246,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
                 labels = ["0.5", "1.0", "1.5", "2.0", "2.5", "3.0"]
             case .monthly:
                 values = [380, 520, 420, 280, 150, 65]
+                labels = ["0.5", "1.0", "1.5", "2.0", "2.5", "3.0"]
+            case .yearly:
+                values = [1580, 2150, 1740, 1160, 620, 270]
                 labels = ["0.5", "1.0", "1.5", "2.0", "2.5", "3.0"]
             }
 
@@ -1180,6 +1301,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             case .monthly:
                 reactionTimes = [0.60, 0.55, 0.50, 0.45]
                 labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .yearly:
+                reactionTimes = [0.65, 0.62, 0.58, 0.54, 0.50, 0.48, 0.45, 0.43, 0.41, 0.39, 0.37, 0.35]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             default:
                 // Empty data for session without ID or other time ranges
                 reactionTimes = []
@@ -1216,6 +1340,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         case .monthly:
             scores = [45.0, 53.0, 65.0, 78.0]
             labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+        case .yearly:
+            scores = [45.0, 48.0, 52.0, 58.0, 62.0, 68.0, 72.0, 75.0, 78.0, 82.0, 85.0, 88.0]
+            labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         }
         
         // Update chart
@@ -1302,5 +1429,143 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
 
     // Note: The combined time range handler is now defined earlier in the file
     // This implementation has been merged with the other timeRangeChanged method
+    
+    @objc private func parameterChanged(_ sender: UISegmentedControl) {
+        selectedParameter = PendulumParameter.allCases[sender.selectedSegmentIndex]
+        
+        // Convert current time range to string
+        let stringRange: String
+        switch selectedTimeRange {
+        case .session:
+            stringRange = "Session"
+        case .daily:
+            stringRange = "Daily"
+        case .weekly:
+            stringRange = "Week"
+        case .monthly:
+            stringRange = "Month"
+        case .yearly:
+            stringRange = "Year"
+        }
+        
+        updatePendulumParametersChart(timeRange: stringRange, parameter: selectedParameter)
+    }
+    
+    private func updatePendulumParametersChart(timeRange: String, parameter: PendulumParameter) {
+        // Sample data based on time range and parameter
+        var values: [Double] = []
+        var labels: [String] = []
+        
+        switch timeRange {
+        case "Session":
+            // Show parameter values for each level in the session
+            switch parameter {
+            case .forceMultiplier:
+                values = [1.0, 1.2, 1.4, 1.6]
+                labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+            case .damping:
+                values = [0.5, 0.45, 0.4, 0.35]
+                labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+            case .gravity:
+                values = [9.81, 9.81, 9.81, 9.81]
+                labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+            case .mass:
+                values = [5.0, 5.2, 5.4, 5.6]
+                labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+            case .length:
+                values = [3.0, 3.1, 3.2, 3.3]
+                labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+            }
+        case "Daily":
+            // Show average parameter values per hour
+            switch parameter {
+            case .forceMultiplier:
+                values = [1.0, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3]
+                labels = ["9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM"]
+            case .damping:
+                values = [0.5, 0.48, 0.45, 0.42, 0.40, 0.38, 0.35, 0.33]
+                labels = ["9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM"]
+            case .gravity:
+                values = [9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81]
+                labels = ["9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM"]
+            case .mass:
+                values = [5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7]
+                labels = ["9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM"]
+            case .length:
+                values = [3.0, 3.05, 3.1, 3.15, 3.2, 3.25, 3.3, 3.35]
+                labels = ["9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM"]
+            }
+        case "Week":
+            // Show average parameter values per day
+            switch parameter {
+            case .forceMultiplier:
+                values = [1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3]
+                labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            case .damping:
+                values = [0.48, 0.45, 0.42, 0.40, 0.38, 0.35, 0.33]
+                labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            case .gravity:
+                values = [9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81]
+                labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            case .mass:
+                values = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7]
+                labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            case .length:
+                values = [3.05, 3.1, 3.15, 3.2, 3.25, 3.3, 3.35]
+                labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            }
+        case "Month":
+            // Show average parameter values per week
+            switch parameter {
+            case .forceMultiplier:
+                values = [1.2, 1.5, 1.8, 2.1]
+                labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .damping:
+                values = [0.45, 0.40, 0.35, 0.30]
+                labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .gravity:
+                values = [9.81, 9.81, 9.81, 9.81]
+                labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .mass:
+                values = [5.2, 5.4, 5.6, 5.8]
+                labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            case .length:
+                values = [3.1, 3.2, 3.3, 3.4]
+                labels = ["Week 1", "Week 2", "Week 3", "Week 4"]
+            }
+        case "Year":
+            // Show average parameter values per month
+            switch parameter {
+            case .forceMultiplier:
+                values = [1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9, 3.1, 3.3]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            case .damping:
+                values = [0.48, 0.45, 0.42, 0.40, 0.38, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            case .gravity:
+                values = [9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81, 9.81]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            case .mass:
+                values = [5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.0, 6.1]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            case .length:
+                values = [3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1]
+                labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            }
+        default:
+            // Default to session data
+            values = [1.0, 1.2, 1.4, 1.6]
+            labels = ["Level 1", "Level 2", "Level 3", "Level 4"]
+        }
+        
+        // Update the chart with a title that includes the unit
+        let title = "\(parameter.rawValue)\(parameter.unit.isEmpty ? "" : " (\(parameter.unit))")"
+        pendulumParametersChart.updateData(
+            data: values,
+            labels: labels,
+            title: title,
+            color: .systemPurple
+        )
+    }
     
 }
