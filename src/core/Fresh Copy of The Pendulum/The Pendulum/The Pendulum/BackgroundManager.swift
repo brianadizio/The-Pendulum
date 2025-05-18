@@ -166,6 +166,11 @@ class BackgroundManager {
         return imageNames
     }
     
+    // Get current folder
+    func getCurrentFolder() -> BackgroundFolder {
+        return currentFolder
+    }
+    
     // Update background mode from settings
     func updateBackgroundMode(_ mode: String) {
         if let folder = BackgroundFolder.allCases.first(where: { $0.rawValue == mode }) {

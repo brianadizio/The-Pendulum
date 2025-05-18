@@ -91,6 +91,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private var levelLabel: UILabel!
     private var gameMessageLabel: UILabel!
     private var hudContainer: UIView!
+    private var balanceProgressView: UIProgressView!
     
     // Dashboard elements for stats
     private var dashboardContainer: UIView!
@@ -186,6 +187,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Initialize backgrounds for all tabs after a delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
+            // Update the pendulum scene background to match the initial setting
+            self.scene?.updateSceneBackground()
         }
     }
 
@@ -1253,8 +1256,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             viewModel.enableQuasiPeriodicMode()
             // Reset the game but keep stats
             viewModel.resetToLevel1KeepingStats()
-            // Update label to reflect the mode
-            updateGameMessageLabel("Primary Mode: Beat level 1 repeatedly")
+            // Don't show repetitive mode message - players know what mode they selected
             // Deactivate perturbation for game modes
             deactivatePerturbation()
 
@@ -1263,8 +1265,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             viewModel.enableProgressiveMode()
             // Reset the game with progressive difficulty
             viewModel.resetToLevel1WithProgressiveDifficulty()
-            // Update label to reflect the mode
-            updateGameMessageLabel("Progressive Mode: Increasing difficulty")
+            // Don't show repetitive mode message - players know what mode they selected
             // Deactivate perturbation for game modes
             deactivatePerturbation()
 
@@ -1894,6 +1895,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                     // Apply new background to all tabs after a small delay to ensure views are ready
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
+                        // Update the pendulum scene background to match the new setting
+                        self.scene?.updateSceneBackground()
                     }
                 }
                 
@@ -2215,44 +2218,44 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         hudContainer.addSubview(timeLabel)
 
-        // Game message label (for game over messages)
-        gameMessageLabel = UILabel()
-        gameMessageLabel.text = "Balance the Inverted Pendulum!"
-        gameMessageLabel.textAlignment = .center
-        gameMessageLabel.font = FocusCalendarTheme.Fonts.titleFont(size: FocusCalendarTheme.Fonts.Size.bodyText)
-        gameMessageLabel.textColor = FocusCalendarTheme.accentRose // Using rose accent for warnings
-        gameMessageLabel.translatesAutoresizingMaskIntoConstraints = false
-        gameMessageLabel.isHidden = true
-        hudContainer.addSubview(gameMessageLabel)
+        // Game message label removed - messages now display in the scene
+        
+        // Balance progress view
+        balanceProgressView = UIProgressView(progressViewStyle: .default)
+        balanceProgressView.translatesAutoresizingMaskIntoConstraints = false
+        balanceProgressView.progressTintColor = UIColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0) // Green
+        balanceProgressView.trackTintColor = UIColor.darkGray.withAlphaComponent(0.4)
+        balanceProgressView.layer.cornerRadius = 4
+        balanceProgressView.clipsToBounds = true
+        hudContainer.addSubview(balanceProgressView)
 
         // Position HUD below the header with proper spacing
         NSLayoutConstraint.activate([
-            // Position HUD properly below the header with more space
-            hudContainer.topAnchor.constraint(equalTo: headerView?.bottomAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 10),
+            // Position HUD below the header and lower by 5-10 pixels
+            hudContainer.topAnchor.constraint(equalTo: headerView?.bottomAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 15),
             hudContainer.leadingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             hudContainer.trailingAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            // Increased height to accommodate both level label and game message without overlap
-            hudContainer.heightAnchor.constraint(equalToConstant: 65),
+            // Increased height to accommodate progress bar
+            hudContainer.heightAnchor.constraint(equalToConstant: 60),
 
-            // Single row with score, level, and time evenly spaced
-            scoreLabel.centerYAnchor.constraint(equalTo: hudContainer.centerYAnchor),
+            // Score, level, time in a single row at the top
+            scoreLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
             scoreLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
-            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
+            scoreLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.3),
 
-            // Reposition level label to the top part of the container to prevent overlap
-            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 5),
+            levelLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
             levelLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            levelLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
+            levelLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.3),
 
-            timeLabel.centerYAnchor.constraint(equalTo: hudContainer.centerYAnchor),
+            timeLabel.topAnchor.constraint(equalTo: hudContainer.topAnchor, constant: 10),
             timeLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
-            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.28),
-
-            // Position game message in the bottom part of the container
-            gameMessageLabel.centerXAnchor.constraint(equalTo: hudContainer.centerXAnchor),
-            gameMessageLabel.bottomAnchor.constraint(equalTo: hudContainer.bottomAnchor, constant: -5),
-            gameMessageLabel.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
-            gameMessageLabel.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20)
+            timeLabel.widthAnchor.constraint(equalTo: hudContainer.widthAnchor, multiplier: 0.3),
+            
+            // Progress bar below the stats
+            balanceProgressView.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 10),
+            balanceProgressView.leadingAnchor.constraint(equalTo: hudContainer.leadingAnchor, constant: 20),
+            balanceProgressView.trailingAnchor.constraint(equalTo: hudContainer.trailingAnchor, constant: -20),
+            balanceProgressView.heightAnchor.constraint(equalToConstant: 8)
         ])
 
         // Start update timer for HUD
@@ -2319,53 +2322,67 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private func updateGameHUD() {
         // Update score and basic stats
         scoreLabel.text = "Score: \(viewModel.score)"
-        levelLabel.text = "Level: \(viewModel.currentLevel)"
+        // In Primary mode, show total levels completed instead of just level 1
+        if viewModel.isQuasiPeriodicMode {
+            levelLabel.text = "Level: \(viewModel.totalLevelsCompleted + 1)"
+        } else {
+            levelLabel.text = "Level: \(viewModel.currentLevel)"
+        }
         timeLabel.text = String(format: "Time: %.1fs", viewModel.totalBalanceTime)
 
         // Update message based on game state
         if !viewModel.isGameActive && viewModel.gameOverReason != nil {
-            gameMessageLabel.text = viewModel.gameOverReason
-            gameMessageLabel.isHidden = false
-
-            // For level completion, use special formatting
-            if viewModel.gameOverReason!.contains("completed") {
-                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
-                // Play achievement sound for level completion
-                PendulumSoundManager.shared.playAchievementSound()
-                // Cycle background when level is completed
-                BackgroundManager.shared.cycleBackground(for: simulationView)
-            } else if viewModel.gameOverReason!.contains("Level") && !viewModel.gameOverReason!.contains("completed") {
-                // For level announcement, use blue
-                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.8, alpha: 1.0)
-                // Play level start sound
-                PendulumSoundManager.shared.playLevelStartSound()
-            } else {
-                // For failure, use red
-                gameMessageLabel.textColor = UIColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
-                // Play failure sound
-                PendulumSoundManager.shared.playFailureSound()
+            // Show message in the scene instead of HUD
+            if let message = viewModel.gameOverReason {
+                var messageColor = UIColor.white
+                
+                // For level completion, use forest green
+                if message.contains("completed") {
+                    messageColor = UIColor(red: 0.133, green: 0.545, blue: 0.133, alpha: 1.0) // Forest green
+                    // Play achievement sound for level completion
+                    PendulumSoundManager.shared.playAchievementSound()
+                    // Cycle background when level is completed
+                    BackgroundManager.shared.cycleBackground(for: simulationView)
+                } else if message.contains("fell") || message.contains("Fell") {
+                    // For failure messages (pendulum fell), use red
+                    messageColor = UIColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+                    // Play failure sound
+                    PendulumSoundManager.shared.playFailureSound()
+                } else {
+                    // For neutral messages (level announcements, etc.), use navy blue
+                    messageColor = UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0) // Navy blue
+                    // Play level start sound if it's a level message
+                    if message.contains("Level") {
+                        PendulumSoundManager.shared.playLevelStartSound()
+                    }
+                }
+                
+                scene?.showStatusMessage(message, color: messageColor)
             }
             
             // Change Start button to Restart if game is over and not just paused
-            if viewModel.gameOverReason == "Pendulum fell!" {
+            if viewModel.gameOverReason == "Pendulum Fell" {
                 startButton.setTitle("↺ Restart", for: .normal)
             }
         } else if viewModel.isGameActive {
-            // During active gameplay, show balance progress
-            if viewModel.consecutiveBalanceTime > 0 {
-                gameMessageLabel.text = String(format: "Balance: %.1fs / %.1fs", 
-                                              viewModel.consecutiveBalanceTime, 
-                                              viewModel.levelSuccessTime)
-                gameMessageLabel.isHidden = false
-                gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0)
+            // During active gameplay, update balance progress bar
+            let progress = min(1.0, viewModel.consecutiveBalanceTime / viewModel.levelSuccessTime)
+            balanceProgressView.progress = Float(progress)
+            
+            // Update progress bar color based on progress
+            if progress < 0.3 {
+                balanceProgressView.progressTintColor = UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0) // Red
+            } else if progress < 0.7 {
+                balanceProgressView.progressTintColor = UIColor(red: 0.8, green: 0.6, blue: 0.2, alpha: 1.0) // Orange
             } else {
-                gameMessageLabel.isHidden = true
+                balanceProgressView.progressTintColor = UIColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0) // Green
             }
+            
+            // Hide any status message during active gameplay
+            scene?.hideStatusMessage()
         } else {
             // Not active, not game over - must be paused
-            gameMessageLabel.isHidden = false
-            gameMessageLabel.text = "Game Paused"
-            gameMessageLabel.textColor = UIColor(red: 0.5, green: 0.3, blue: 0.0, alpha: 1.0)
+            scene?.showStatusMessage("Game Paused", color: UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0))
             
             // Change button text
             startButton.setTitle("▶ Resume", for: .normal)
@@ -2797,34 +2814,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     // Show a temporary game message with visual feedback
     private func updateGameMessageLabel(_ message: String) {
-        // Show a game message temporarily with visual styling
-        gameMessageLabel.text = message
-        gameMessageLabel.isHidden = false
-        
-        // Change color to indicate update (blue for parameter changes)
-        gameMessageLabel.textColor = UIColor(red: 0.0, green: 0.3, blue: 0.8, alpha: 1.0)
-        
-        // Animate the label for better visibility
-        UIView.animate(withDuration: 0.2, animations: {
-            self.gameMessageLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-        }) { _ in
-            UIView.animate(withDuration: 0.2) {
-                self.gameMessageLabel.transform = .identity
-            }
-        }
+        // Show message in the scene instead of HUD with navy blue color for neutral messages
+        scene?.showStatusMessage(message, color: UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0))
         
         // Hide it after 2 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             if self?.viewModel.gameOverReason == nil {
-                // Fade out animation
-                UIView.animate(withDuration: 0.5, animations: {
-                    self?.gameMessageLabel.alpha = 0
-                }) { _ in
-                    self?.gameMessageLabel.isHidden = true
-                    self?.gameMessageLabel.alpha = 1
-                    // Reset color for other messages
-                    self?.gameMessageLabel.textColor = UIColor(red: 0.7, green: 0.0, blue: 0.0, alpha: 1.0)
-                }
+                self?.scene?.hideStatusMessage()
             }
         }
         
@@ -2851,6 +2847,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         case 0: // Simulation
             selectedView = simulationView
             showView(simulationView)
+            // Update the pendulum scene background when switching to simulation tab
+            scene?.updateSceneBackground()
         case 1: // Dashboard
             selectedView = dashboardView
             updateDashboardStats() // Update stats before showing (this will start the timer)

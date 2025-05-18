@@ -413,12 +413,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             )
         }
 
-        // Announce level completion
-        if isQuasiPeriodicMode {
-            gameOverReason = "Level completed! Total: \(totalLevelsCompleted)"
-        } else {
-            gameOverReason = "Level \(currentLevel) completed!"
-        }
+        // Don't announce level completion - players can see their progress
 
         // Brief pause before starting new level
         let wasSimulating = isSimulating
@@ -701,7 +696,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     )
                 }
                 
-                endGame(reason: "Pendulum fell!")
+                endGame(reason: "Pendulum Fell")
                 
                 // Update stats for dashboard
                 let failTime = Date().timeIntervalSince(balanceStartTime ?? Date())
@@ -997,8 +992,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Reset to level 1
         levelManager.resetToLevel1()
 
-        // Update game state
-        gameOverReason = "Primary Mode: Beat level 1 repeatedly"
+        // Don't show repetitive mode message - players know they selected Primary mode
 
         // Ensure current display reflects Level 1
         currentLevel = 1
@@ -1039,8 +1033,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
                     self.simulation.setInitialState(state: self.currentState)
 
-                    // Update game message to show quasi-periodic mode stats
-                    self.gameOverReason = "Primary Mode: Level 1 (Total: \(self.totalLevelsCompleted))"
+                    // Don't show mode status - players can see this in the UI
 
                     // Start simulation
                     self.startSimulation()
@@ -1064,8 +1057,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
                 self.simulation.setInitialState(state: self.currentState)
 
-                // Update game message
-                self.gameOverReason = "Primary Mode: Level 1 (Total: \(self.totalLevelsCompleted))"
+                // Don't show mode status - players can see this in the UI
 
                 // Start simulation
                 self.startSimulation()
@@ -1082,8 +1074,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Reset to level 1
         levelManager.resetToLevel1()
 
-        // Update game state
-        gameOverReason = "Progressive Mode: Increasing difficulty"
+        // Don't show repetitive mode message - players know they selected Progressive mode
 
         // Ensure current display reflects Level 1
         currentLevel = 1
@@ -1123,8 +1114,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     self.currentState = PendulumState(theta: initialTheta, thetaDot: initialThetaDot, time: 0)
                     self.simulation.setInitialState(state: self.currentState)
 
-                    // Update game message
-                    self.gameOverReason = "Progressive Mode: Level \(self.currentLevel)"
+                    // Don't show mode status - players can see this in the UI
 
                     // Start simulation
                     self.startSimulation()
@@ -1147,7 +1137,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 self.simulation.setInitialState(state: self.currentState)
 
                 // Update game message
-                self.gameOverReason = "Progressive Mode: Level \(self.currentLevel)"
+                // Don't show mode status - players can see this in the UI
 
                 // Start simulation
                 self.startSimulation()
