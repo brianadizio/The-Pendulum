@@ -433,7 +433,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         parametersView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
-        let headerView = createHeaderWithLogo(title: "Pendulum Parameters", for: parametersView)
+        let headerView = createHeaderWithLogo(title: "Parameters", for: parametersView)
         
         // Create a subtitle label
         let subtitleLabel = UILabel()
@@ -494,7 +494,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             resetButton.centerXAnchor.constraint(equalTo: resetContainer.centerXAnchor),
             resetButton.centerYAnchor.constraint(equalTo: resetContainer.centerYAnchor),
             resetButton.widthAnchor.constraint(equalToConstant: 120),
-            resetButton.heightAnchor.constraint(equalToConstant: 44)
+            resetButton.heightAnchor.constraint(equalToConstant: 44),
+            // Center the button in the remaining space below last parameter
+            resetContainer.heightAnchor.constraint(equalToConstant: 60)
         ])
         
         parametersStack.addArrangedSubview(resetContainer)
@@ -523,7 +525,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             parametersStack.topAnchor.constraint(equalTo: parametersContainer.topAnchor, constant: 20),
             parametersStack.leadingAnchor.constraint(equalTo: parametersContainer.leadingAnchor, constant: 20),
             parametersStack.trailingAnchor.constraint(equalTo: parametersContainer.trailingAnchor, constant: -20),
-            parametersStack.bottomAnchor.constraint(equalTo: parametersContainer.bottomAnchor, constant: -20)
+            parametersStack.bottomAnchor.constraint(equalTo: parametersContainer.bottomAnchor, constant: -5) // Minimal bottom padding
         ])
         
         // Set up initial slider values based on viewModel
@@ -1299,7 +1301,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         integrationView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
-        let headerView = createHeaderWithLogo(title: "Pendulum Integrations", for: integrationView)
+        let headerView = createHeaderWithLogo(title: "Integration", for: integrationView)
         
         // Create scroll view for content
         let scrollView = UIScrollView()
@@ -2644,6 +2646,37 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // This method is no longer used but we're keeping it for now as startButtonTapped
     // has the reset functionality when needed
     @objc private func resetButtonTapped() {
+        // Reset all parameter sliders to default values
+        massSlider.value = 1.0
+        lengthSlider.value = 1.0  
+        dampingSlider.value = 0.1
+        gravitySlider.value = 9.81
+        forceStrengthSlider.value = 0.0
+        springConstantSlider.value = 0.0
+        momentOfInertiaSlider.value = 1.0
+        initialPerturbationSlider.value = 10.0
+        
+        // Update value labels
+        updateSliderValueLabel(massSlider)
+        updateSliderValueLabel(lengthSlider)
+        updateSliderValueLabel(dampingSlider)
+        updateSliderValueLabel(gravitySlider)
+        updateSliderValueLabel(forceStrengthSlider)
+        updateSliderValueLabel(springConstantSlider)
+        updateSliderValueLabel(momentOfInertiaSlider)
+        updateSliderValueLabel(initialPerturbationSlider)
+        
+        // Apply the reset values to the view model
+        massSliderChanged()
+        lengthSliderChanged()
+        dampingSliderChanged()
+        gravitySliderChanged()
+        forceStrengthSliderChanged()
+        springConstantSliderChanged()
+        momentOfInertiaSliderChanged()
+        initialPerturbationSliderChanged()
+        
+        // Reset phase space and simulation
         phaseSpaceView.clearPoints()
         viewModel.resetAndStart()
     }
