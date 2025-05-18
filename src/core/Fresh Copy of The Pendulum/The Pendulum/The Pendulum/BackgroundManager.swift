@@ -39,6 +39,14 @@ class BackgroundManager {
         }
     }
     
+    // Theme colors enum for perturbation effects
+    enum ThemeColors {
+        case golden
+        case sunset
+        case ocean
+        case forest
+    }
+    
     // Current selected folder
     private var currentFolder: BackgroundFolder = .none
     
@@ -327,5 +335,19 @@ class BackgroundManager {
             imageView.removeFromSuperview()
         }
         backgroundImageViews.removeAll()
+    }
+    
+    // Get theme colors based on current folder
+    func getThemeColors() -> ThemeColors {
+        switch currentFolder {
+        case .sachuest, .acadia, .outerSpace, .fluid:
+            return .ocean
+        case .joshuaTree, .ai:
+            return .sunset
+        case .immersiveTopology, .theMazeGuide:
+            return .forest
+        case .parchment, .thePortraits, .tsp, .none:
+            return .golden
+        }
     }
 }

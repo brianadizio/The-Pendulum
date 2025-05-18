@@ -4,79 +4,114 @@ import SwiftUI
 
 struct ContentViewModes: View {
     var body: some View {
-        VStack(spacing: 16) {
-            // Header
-            HStack(spacing: 12) {
-                Image("PendulumLogo-removebg-preview")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
+        print("ContentViewModes loaded - showing new layout")
+        return ScrollView {
+            VStack(spacing: 20) {
+                // Header
+                HStack(spacing: 12) {
+                    Image("PendulumLogo-removebg-preview")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                    
+                    Text("Game Modes")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
+                }
+                .padding(.top, 20)
                 
-                Text("Perturbation Modes")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(Color(UIColor.goldenPrimary))
+                // Active Modes Section (Primary & Perturbation combined)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Active Modes")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
+                        .padding(.horizontal)
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                        // Primary Modes
+                        PerturbationModeButton(title: "Primary", subtitle: "Basic Pendulum", iconName: "circle.dashed", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivatePrimaryMode"), object: nil)
+                        })
+                        
+                        PerturbationModeButton(title: "Progressive", subtitle: "Increasing Difficulty", iconName: "chart.line.uptrend.xyaxis", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateProgressiveMode"), object: nil)
+                        })
+                        
+                        // Perturbation Modes
+                        PerturbationModeButton(title: "No Perturbation", subtitle: "Gravity Only", iconName: "arrow.down", action: {
+                            NotificationCenter.default.post(name: Notification.Name("DeactivatePerturbation"), object: nil)
+                        })
+                        
+                        PerturbationModeButton(title: "Random Impulses", subtitle: "Sudden Forces", iconName: "bolt.circle", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "impulse")
+                        })
+                        
+                        PerturbationModeButton(title: "Sine Wave", subtitle: "Periodic Force", iconName: "waveform", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "sine")
+                        })
+                        
+                        PerturbationModeButton(title: "Data Driven", subtitle: "CSV Based", iconName: "doc.chart", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "data")
+                        })
+                        
+                        PerturbationModeButton(title: "Compound", subtitle: "Multi-Effect", iconName: "square.stack.3d.forward.dottedline", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "compound")
+                        })
+                    }
+                    .padding(.horizontal)
+                }
+                
+                Divider()
+                    .padding(.horizontal)
+                
+                // Coming Soon Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Coming Soon")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
+                        .padding(.horizontal)
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                        ComingSoonButton(title: "Real Experiment", subtitle: "Lab Data", iconName: "testtube.2")
+                        ComingSoonButton(title: "The Focus Calendar", subtitle: "Productivity Mode", iconName: "calendar")
+                        ComingSoonButton(title: "Zero Gravity", subtitle: "Space Station", iconName: "star")
+                        ComingSoonButton(title: "Rotating Room", subtitle: "Spinning Chamber", iconName: "arrow.triangle.2.circlepath")
+                        ComingSoonButton(title: "The Maze", subtitle: "Navigate Puzzles", iconName: "square.grid.3x3")
+                        ComingSoonButton(title: "Nature's Essence", subtitle: "Natural Forces", iconName: "leaf")
+                    }
+                    .padding(.horizontal)
+                }
+                
+                Divider()
+                    .padding(.horizontal)
+                
+                // Additional Information Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Additional Information")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
+                        .padding(.horizontal)
+                    
+                    HStack {
+                        Spacer()
+                        PerturbationModeButton(title: "Inverted Pendulum", subtitle: "Physics & Algorithms", iconName: "doc.text", action: {
+                            NotificationCenter.default.post(name: Notification.Name("ShowPendulumPhysics"), object: nil)
+                        })
+                        .frame(maxWidth: 300)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+                
+                Spacer(minLength: 20)
             }
-            .padding(.top, 20)
-            
-            // Description
-            Text("Select a perturbation mode to modify how external forces affect the pendulum")
-                .font(.subheadline)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-                .padding(.bottom, 10)
-            
-            // Main modes grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                // Standard mode buttons
-                PerturbationModeButton(title: "Mode 1", subtitle: "Joshua Tree", iconName: "mountain.2", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivatePerturbationMode"), object: 1)
-                })
-                
-                PerturbationModeButton(title: "Mode 2", subtitle: "Zero-G Space", iconName: "sparkles", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivatePerturbationMode"), object: 2)
-                })
-                
-                PerturbationModeButton(title: "Experiment", subtitle: "Data-Driven", iconName: "waveform.path", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivatePerturbationMode"), object: 0)
-                })
-                
-                PerturbationModeButton(title: "No Perturbation", subtitle: "Gravity Only", iconName: "arrow.down", action: {
-                    NotificationCenter.default.post(name: Notification.Name("DeactivatePerturbation"), object: nil)
-                })
-            }
-            .padding()
-            
-            Divider()
-                .padding(.vertical, 5)
-            
-            // Special perturbation types
-            Text("Special Perturbation Types")
-                .font(.headline)
-                .padding(.top, 10)
-            
-            // Special perturbation buttons
-            VStack(spacing: 15) {
-                SpecialPerturbationButton(title: "Random Impulses", description: "Random forces applied at unpredictable intervals", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "impulse")
-                })
-                
-                SpecialPerturbationButton(title: "Sine Wave", description: "Smooth oscillating forces with adjustable frequency", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "sine")
-                })
-                
-                SpecialPerturbationButton(title: "Data-Driven", description: "Forces from external datasets or recordings", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "data")
-                })
-                
-                SpecialPerturbationButton(title: "Compound", description: "Complex combination of multiple perturbation types", action: {
-                    NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "compound")
-                })
-            }
-            .padding()
-            
-            Spacer()
         }
         .background(Color(UIColor.systemGroupedBackground))
+    }
+    
+    private func showComingSoonAlert() {
+        // This will be handled by the view controller
+        NotificationCenter.default.post(name: Notification.Name("ShowComingSoonAlert"), object: nil)
     }
 }
 
@@ -118,40 +153,57 @@ struct PerturbationModeButton: View {
     }
 }
 
-struct SpecialPerturbationButton: View {
+struct ComingSoonButton: View {
     let title: String
-    let description: String
-    let action: () -> Void
+    let subtitle: String
+    let iconName: String
     
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 15) {
-                // Title and description
-                VStack(alignment: .leading, spacing: 4) {
+        Button(action: showComingSoonAlert) {
+            ZStack {
+                VStack(spacing: 10) {
+                    // Icon
+                    Image(systemName: iconName)
+                        .font(.system(size: 30))
+                        .foregroundColor(.white.opacity(0.6))
+                        .frame(width: 50, height: 50)
+                        .background(Color.gray.opacity(0.5))
+                        .clipShape(Circle())
+                    
+                    // Title
                     Text(title)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primary.opacity(0.6))
                     
-                    Text(description)
+                    // Subtitle
+                    Text(subtitle)
                         .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+                        .foregroundColor(.secondary.opacity(0.6))
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
                 
-                Spacer()
-                
-                // Indicator
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.blue)
-                    .font(.system(size: 14, weight: .semibold))
+                // Coming Soon overlay
+                Text("COMING SOON")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.orange)
+                    .cornerRadius(6)
+                    .offset(x: 35, y: -35)
             }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(10)
+            .background(Color(UIColor.secondarySystemBackground).opacity(0.7))
+            .cornerRadius(12)
         }
         .buttonStyle(PlainButtonStyle())
     }
+    
+    private func showComingSoonAlert() {
+        NotificationCenter.default.post(name: Notification.Name("ShowComingSoonAlert"), object: nil)
+    }
 }
+
 
 // UIKit Wrapper for compatibility with existing codebase
 struct ModeButton: UIViewRepresentable {

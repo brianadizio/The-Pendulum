@@ -575,11 +575,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     // MARK: - Modes View Setup
     
     private func setupModesView() {
+        print("Setting up modes view...") // Debug
+        
         // Set background to Golden Enterprises theme
         modesView.backgroundColor = FocusCalendarTheme.backgroundColor
         
         // Add a header view with logo
-        let headerView = createHeaderWithLogo(title: "Pendulum Modes", for: modesView)
+        let headerView = createHeaderWithLogo(title: "Game Modes", for: modesView)
         
         // Create a scroll view for the content
         let scrollView = UIScrollView()
@@ -607,118 +609,249 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
         
-        // Create the grid layout for the modes
-        setupModesGrid(in: contentView)
+        // Create the active modes section
+        print("Creating active modes section...") // Debug
+        setupActiveModesSection(in: contentView)
         
-        // Create buttons for additional modes
-        setupAdditionalModesButtons(in: contentView)
+        // Create coming soon section
+        print("Creating coming soon section...") // Debug
+        setupComingSoonSection(in: contentView)
         
-        // Add information buttons at the bottom
-        setupInformationButtons(in: contentView)
+        // Add information section at the bottom
+        print("Creating additional info section...") // Debug
+        setupAdditionalInfoSection(in: contentView)
         
-        // Set a minimum height for the content - increased to accommodate all buttons
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1200).isActive = true
+        // Set a minimum height for the content
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1000).isActive = true
+        
+        print("Modes view setup complete") // Debug
     }
     
-    private func setupModesGrid(in containerView: UIView) {
-        // Create a container for the grid
+    private func setupActiveModesSection(in containerView: UIView) {
+        // Active Modes header
+        let headerLabel = UILabel()
+        headerLabel.text = "Active Modes"
+        headerLabel.font = FocusCalendarTheme.largeTitleFont
+        headerLabel.textColor = FocusCalendarTheme.primaryTextColor
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(headerLabel)
+        
+        NSLayoutConstraint.activate([
+            headerLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            headerLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
+            headerLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10)
+        ])
+        
+        // Create grid for active modes
         let gridContainer = UIView()
         gridContainer.translatesAutoresizingMaskIntoConstraints = false
-        gridContainer.backgroundColor = .clear
         containerView.addSubview(gridContainer)
         
         NSLayoutConstraint.activate([
-            gridContainer.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            gridContainer.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 15),
             gridContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            gridContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            gridContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
         ])
         
-        // Top row - 1x2 grid
-        let topRowStack = createGridRow()
-        gridContainer.addSubview(topRowStack)
-
-        NSLayoutConstraint.activate([
-            topRowStack.topAnchor.constraint(equalTo: gridContainer.topAnchor),
-            topRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
-            topRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
-            topRowStack.heightAnchor.constraint(equalToConstant: 120)
-        ])
-
-        // Add buttons to top row - Update "Primary" to be a quasi-periodic constant difficulty mode
-        // and rename "Dashboard" to "Progressive" for increasing difficulty
-        let primaryButton = createModeButton(title: "Primary", tag: 201) // Changed tag to 201 for quasi-periodic mode
-        let progressiveButton = createModeButton(title: "Progressive", tag: 202) // Changed from "Dashboard" to "Progressive" and tag to 202
-        topRowStack.addArrangedSubview(primaryButton)
-        topRowStack.addArrangedSubview(progressiveButton)
+        // Create buttons in the exact order requested
+        let modeButtons: [(String, String, String, Int)] = [
+            ("Primary", "Basic Pendulum", "circle.dashed", 201),
+            ("Progressive", "Increasing Difficulty", "chart.line.uptrend.xyaxis", 202),
+            ("No Perturbation", "Gravity Only", "arrow.down", 301),
+            ("Random Impulses", "Sudden Forces", "bolt.circle", 302),
+            ("Sine Wave", "Periodic Force", "waveform", 303),
+            ("Data Driven", "CSV Based", "doc.chart", 304),
+            ("Compound", "Multi-Effect", "square.stack.3d.forward.dottedline", 305)
+        ]
         
-        // Middle row - 1x2 grid
-        let middleRowStack = createGridRow()
-        gridContainer.addSubview(middleRowStack)
+        // Create rows with 2 buttons each
+        var previousRowAnchor = gridContainer.topAnchor
+        var buttonsInRow: [UIView] = []
         
-        NSLayoutConstraint.activate([
-            middleRowStack.topAnchor.constraint(equalTo: topRowStack.bottomAnchor, constant: 10),
-            middleRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
-            middleRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
-            middleRowStack.heightAnchor.constraint(equalToConstant: 120)
-        ])
-        
-        // Add buttons to middle row
-        // These titles are kept the same, but we'll disable their perturbation functionality
-        let experimentButton = createModeButton(title: "Experiment", tag: 1103) // Changed tag to 1103
-        let timeButton = createModeButton(title: "Joshua Tree", tag: 1104) // Changed tag to 1104
-        middleRowStack.addArrangedSubview(experimentButton)
-        middleRowStack.addArrangedSubview(timeButton)
-        
-        // Bottom row - 1x2 grid
-        let bottomRowStack = createGridRow()
-        gridContainer.addSubview(bottomRowStack)
-        
-        NSLayoutConstraint.activate([
-            bottomRowStack.topAnchor.constraint(equalTo: middleRowStack.bottomAnchor, constant: 10),
-            bottomRowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
-            bottomRowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
-            bottomRowStack.heightAnchor.constraint(equalToConstant: 120),
-            bottomRowStack.bottomAnchor.constraint(equalTo: gridContainer.bottomAnchor)
-        ])
-        
-        // Add buttons to bottom row
-        // These titles are kept the same, but we'll disable their perturbation functionality
-        let zerosSpaceButton = createModeButton(title: "Zero-G Space", tag: 1105) // Changed tag to 1105
-        let focalButton = createModeButton(title: "The Focal Calculator", tag: 106)
-        bottomRowStack.addArrangedSubview(zerosSpaceButton)
-        bottomRowStack.addArrangedSubview(focalButton)
-        
-        // Add a label to indicate these buttons will have custom perturbations later
-        let placeholderLabel = UILabel()
-        placeholderLabel.text = "Future Matlab-Processed Perturbation Modes"
-        placeholderLabel.font = FocusCalendarTheme.titleFont
-        placeholderLabel.textColor = FocusCalendarTheme.primaryTextColor
-        placeholderLabel.textAlignment = .center
-        placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(placeholderLabel)
-        
-        // Add a visual separator
-        let separator = UIView()
-        separator.backgroundColor = FocusCalendarTheme.borderColor
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(separator)
-        
-        NSLayoutConstraint.activate([
-            placeholderLabel.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 20),
-            placeholderLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            placeholderLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+        for (index, buttonData) in modeButtons.enumerated() {
+            let button = createPerturbationModeButton(
+                title: buttonData.0,
+                subtitle: buttonData.1,
+                iconName: buttonData.2,
+                tag: buttonData.3
+            )
+            buttonsInRow.append(button)
             
-            // Add separator line below the label
-            separator.topAnchor.constraint(equalTo: placeholderLabel.bottomAnchor, constant: 10),
-            separator.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
-            separator.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
-            separator.heightAnchor.constraint(equalToConstant: 1)
+            // Create row when we have 2 buttons or it's the last button
+            if buttonsInRow.count == 2 || index == modeButtons.count - 1 {
+                let rowStack = UIStackView(arrangedSubviews: buttonsInRow)
+                rowStack.axis = .horizontal
+                rowStack.spacing = 15
+                rowStack.distribution = .fillEqually
+                rowStack.translatesAutoresizingMaskIntoConstraints = false
+                gridContainer.addSubview(rowStack)
+                
+                NSLayoutConstraint.activate([
+                    rowStack.topAnchor.constraint(equalTo: previousRowAnchor, constant: index == 0 ? 0 : 15),
+                    rowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+                    rowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+                    rowStack.heightAnchor.constraint(equalToConstant: 120)
+                ])
+                
+                previousRowAnchor = rowStack.bottomAnchor
+                buttonsInRow = []
+            }
+        }
+        
+        gridContainer.bottomAnchor.constraint(equalTo: previousRowAnchor).isActive = true
+        
+        // Add divider
+        let divider = UIView()
+        divider.backgroundColor = FocusCalendarTheme.borderColor
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(divider)
+        
+        NSLayoutConstraint.activate([
+            divider.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 30),
+            divider.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            divider.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            divider.heightAnchor.constraint(equalToConstant: 1)
+        ])
+    }
+    
+    private func setupComingSoonSection(in containerView: UIView) {
+        // Find the last divider
+        let lastDivider = containerView.subviews.last(where: { $0.backgroundColor == FocusCalendarTheme.borderColor })
+        
+        // Coming Soon header
+        let headerLabel = UILabel()
+        headerLabel.text = "Coming Soon"
+        headerLabel.font = FocusCalendarTheme.largeTitleFont
+        headerLabel.textColor = FocusCalendarTheme.primaryTextColor
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(headerLabel)
+        
+        NSLayoutConstraint.activate([
+            headerLabel.topAnchor.constraint(equalTo: lastDivider?.bottomAnchor ?? containerView.topAnchor, constant: 30),
+            headerLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
+            headerLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10)
+        ])
+        
+        // Create grid for coming soon modes
+        let gridContainer = UIView()
+        gridContainer.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(gridContainer)
+        
+        NSLayoutConstraint.activate([
+            gridContainer.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 15),
+            gridContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            gridContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+        ])
+        
+        // Coming soon buttons in the exact order requested
+        let comingSoonButtons: [(String, String, String)] = [
+            ("Real Experiment", "Lab Data", "testtube.2"),
+            ("The Focus Calendar", "Productivity Mode", "calendar"),
+            ("Zero Gravity", "Space Station", "star"),
+            ("Rotating Room", "Spinning Chamber", "arrow.triangle.2.circlepath"),
+            ("The Maze", "Navigate Puzzles", "square.grid.3x3"),
+            ("Nature's Essence", "Natural Forces", "leaf")
+        ]
+        
+        // Create rows with 2 buttons each
+        var previousRowAnchor = gridContainer.topAnchor
+        var buttonsInRow: [UIView] = []
+        
+        for (index, buttonData) in comingSoonButtons.enumerated() {
+            let button = createComingSoonButton(
+                title: buttonData.0,
+                subtitle: buttonData.1,
+                iconName: buttonData.2
+            )
+            buttonsInRow.append(button)
+            
+            // Create row when we have 2 buttons or it's the last button
+            if buttonsInRow.count == 2 || index == comingSoonButtons.count - 1 {
+                let rowStack = UIStackView(arrangedSubviews: buttonsInRow)
+                rowStack.axis = .horizontal
+                rowStack.spacing = 15
+                rowStack.distribution = .fillEqually
+                rowStack.translatesAutoresizingMaskIntoConstraints = false
+                gridContainer.addSubview(rowStack)
+                
+                NSLayoutConstraint.activate([
+                    rowStack.topAnchor.constraint(equalTo: previousRowAnchor, constant: index == 0 ? 0 : 15),
+                    rowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+                    rowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+                    rowStack.heightAnchor.constraint(equalToConstant: 120)
+                ])
+                
+                previousRowAnchor = rowStack.bottomAnchor
+                buttonsInRow = []
+            }
+        }
+        
+        gridContainer.bottomAnchor.constraint(equalTo: previousRowAnchor).isActive = true
+        
+        // Add divider
+        let divider = UIView()
+        divider.backgroundColor = FocusCalendarTheme.borderColor
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(divider)
+        
+        NSLayoutConstraint.activate([
+            divider.topAnchor.constraint(equalTo: gridContainer.bottomAnchor, constant: 30),
+            divider.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            divider.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            divider.heightAnchor.constraint(equalToConstant: 1)
+        ])
+    }
+    
+    private func setupAdditionalInfoSection(in containerView: UIView) {
+        // Find the last divider
+        let lastDivider = containerView.subviews.last(where: { $0.backgroundColor == FocusCalendarTheme.borderColor })
+        
+        // Additional Information header
+        let headerLabel = UILabel()
+        headerLabel.text = "Additional Information"
+        headerLabel.font = FocusCalendarTheme.largeTitleFont
+        headerLabel.textColor = FocusCalendarTheme.primaryTextColor
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(headerLabel)
+        
+        NSLayoutConstraint.activate([
+            headerLabel.topAnchor.constraint(equalTo: lastDivider?.bottomAnchor ?? containerView.topAnchor, constant: 30),
+            headerLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
+            headerLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10)
+        ])
+        
+        // Create button for physics information
+        let physicsButton = createPerturbationModeButton(
+            title: "Inverted Pendulum",
+            subtitle: "Physics & Algorithms",
+            iconName: "doc.text",
+            tag: 999
+        )
+        
+        // Center it horizontally
+        let buttonContainer = UIView()
+        buttonContainer.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(buttonContainer)
+        
+        buttonContainer.addSubview(physicsButton)
+        
+        NSLayoutConstraint.activate([
+            buttonContainer.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 15),
+            buttonContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            buttonContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            buttonContainer.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -30),
+            
+            physicsButton.centerXAnchor.constraint(equalTo: buttonContainer.centerXAnchor),
+            physicsButton.topAnchor.constraint(equalTo: buttonContainer.topAnchor),
+            physicsButton.widthAnchor.constraint(equalToConstant: 300),
+            physicsButton.heightAnchor.constraint(equalToConstant: 120),
+            physicsButton.bottomAnchor.constraint(equalTo: buttonContainer.bottomAnchor)
         ])
     }
     
     private func setupAdditionalModesButtons(in containerView: UIView) {
-        // This now relies on the separator line from previous section
-        // Get the appropriate subview - the separator should be the last element added
+        // This method is now replaced by setupComingSoonSection
+        // Keep empty for compatibility
         let separator = containerView.subviews.last(where: { $0 is UIView && $0.backgroundColor == FocusCalendarTheme.borderColor })
         var previousAnchor = separator?.bottomAnchor ?? containerView.topAnchor
 
@@ -1219,25 +1352,179 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return button
     }
     
-    @objc private func modeButtonTapped(_ sender: UIButton) {
+    private func createPerturbationModeButton(title: String, subtitle: String, iconName: String, tag: Int) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.tag = tag
+        FocusCalendarTheme.styleCard(container)
+        
+        // Icon background
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.8)
+        iconContainer.layer.cornerRadius = 25
+        container.addSubview(iconContainer)
+        
+        // Icon
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .white
+        iconContainer.addSubview(iconImageView)
+        
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(titleLabel)
+        
+        // Subtitle label
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = subtitle
+        subtitleLabel.font = FocusCalendarTheme.bodyFont
+        subtitleLabel.textColor = FocusCalendarTheme.secondaryTextColor
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(subtitleLabel)
+        
+        NSLayoutConstraint.activate([
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 15),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 50),
+            iconContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 15),
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 25),
+            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -15),
+            
+            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 5),
+            subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor)
+        ])
+        
+        // Add tap gesture recognizer
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(modeButtonTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    private func createComingSoonButton(title: String, subtitle: String, iconName: String) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.alpha = 0.7
+        FocusCalendarTheme.styleCard(container)
+        
+        // Icon background
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = UIColor.systemGray.withAlphaComponent(0.5)
+        iconContainer.layer.cornerRadius = 25
+        container.addSubview(iconContainer)
+        
+        // Icon
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .white.withAlphaComponent(0.6)
+        iconContainer.addSubview(iconImageView)
+        
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = FocusCalendarTheme.titleFont
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor.withAlphaComponent(0.6)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(titleLabel)
+        
+        // Subtitle label
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = subtitle
+        subtitleLabel.font = FocusCalendarTheme.bodyFont
+        subtitleLabel.textColor = FocusCalendarTheme.secondaryTextColor.withAlphaComponent(0.6)
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(subtitleLabel)
+        
+        // Coming Soon badge
+        let badgeLabel = UILabel()
+        badgeLabel.text = "COMING SOON"
+        badgeLabel.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        badgeLabel.textColor = .white
+        badgeLabel.backgroundColor = UIColor.orange
+        badgeLabel.layer.cornerRadius = 6
+        badgeLabel.clipsToBounds = true
+        badgeLabel.textAlignment = .center
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(badgeLabel)
+        
+        NSLayoutConstraint.activate([
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 15),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 50),
+            iconContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 15),
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 25),
+            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -15),
+            
+            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 5),
+            subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            
+            badgeLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            badgeLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
+            badgeLabel.widthAnchor.constraint(equalToConstant: 80),
+            badgeLabel.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        
+        // Add tap gesture recognizer
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleComingSoonAlert))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    @objc private func modeButtonTapped(_ sender: Any) {
         // Play button tap sound
         PendulumSoundManager.shared.playButtonTapSound()
         
         // Handle mode button tap
-        let title = "Mode Selected"
-        _ = "You selected mode: \(sender.titleLabel?.text ?? "Unknown")"
+        var tag = 0
+        var tappedView: UIView?
+        
+        if let button = sender as? UIButton {
+            tag = button.tag
+            tappedView = button
+        } else if let gesture = sender as? UITapGestureRecognizer,
+                  let view = gesture.view {
+            tag = view.tag
+            tappedView = view
+        }
         
         // Show visual feedback
-        UIView.animate(withDuration: 0.1, animations: {
-            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                sender.transform = .identity
+        if let view = tappedView {
+            UIView.animate(withDuration: 0.1, animations: {
+                view.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            }) { _ in
+                UIView.animate(withDuration: 0.1) {
+                    view.transform = .identity
+                }
             }
         }
         
         // Print the selection
-        print("Selected mode: \(sender.titleLabel?.text ?? "Unknown") (tag: \(sender.tag))")
+        print("Selected mode with tag: \(tag)")
         
         // Set up perturbation system if not already done
         if perturbationManager == nil {
@@ -1245,14 +1532,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         }
         
         // Handle specific mode selections based on tag
-        switch sender.tag {
+        switch tag {
         // Old tags, disabled and changed
         case 1103, 1104, 1105:
             // These buttons have been disabled for perturbation functionality
             // and will be replaced with Matlab-processed modes
             updateGameMessageLabel("This perturbation mode will be available soon")
 
-        // Game modes
+        // Game modes - activate mode and switch to simulation
         case 201: // Primary mode (quasi-periodic constant difficulty)
             // Enable quasi-periodic mode where the player beats the same level repeatedly
             viewModel.enableQuasiPeriodicMode()
@@ -1261,6 +1548,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             // Don't show repetitive mode message - players know what mode they selected
             // Deactivate perturbation for game modes
             deactivatePerturbation()
+            switchToSimulationTab()
 
         case 202: // Progressive mode (increasing difficulty)
             // Enable progressive mode where difficulty increases with each level
@@ -1270,27 +1558,59 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             // Don't show repetitive mode message - players know what mode they selected
             // Deactivate perturbation for game modes
             deactivatePerturbation()
+            switchToSimulationTab()
 
         // Legacy standard modes (no longer active for game modes)
         case 101, 102, 106:
             // Now just deactivate perturbation but don't change game mode
             deactivatePerturbation()
             
-        // Original unified perturbation buttons (300-304)
-        case 300: // No Perturbation (now first)
+        // Perturbation modes (301-305) - activate mode and switch to simulation
+        case 301: // No Perturbation
             deactivatePerturbation()
-        case 301: // Random Impulses
+            updateGameMessageLabel("Perturbation deactivated - Pure physics only")
+            switchToSimulationTab()
+        case 302: // Random Impulses
             activateSpecialPerturbation("impulse")
-        case 302: // Sine Wave
+            updateGameMessageLabel("Random impulse perturbation activated")
+            switchToSimulationTab()
+        case 303: // Sine Wave
             activateSpecialPerturbation("sine")
-        case 303: // Data-Driven
+            updateGameMessageLabel("Sine wave perturbation activated")
+            switchToSimulationTab()
+        case 304: // Data Driven
             activateSpecialPerturbation("data")
-        case 304: // Compound
+            updateGameMessageLabel("Data-driven perturbation activated")
+            switchToSimulationTab()
+        case 305: // Compound
             activateSpecialPerturbation("compound")
+            updateGameMessageLabel("Compound perturbation activated")
+            switchToSimulationTab()
+            
+        // Special case for physics information button
+        case 999: // Inverted Pendulum (Physics & Algorithms)
+            showPhysicsInformation()
             
         default:
             // By default, deactivate perturbations
             deactivatePerturbation()
+        }
+    }
+    
+    private func showPhysicsInformation() {
+        // Create and present the physics information view controller
+        let physicsViewController = InvertedPendulumPhysicsViewController()
+        let navigationController = UINavigationController(rootViewController: physicsViewController)
+        navigationController.modalPresentationStyle = .fullScreen
+        present(navigationController, animated: true, completion: nil)
+    }
+    
+    private func switchToSimulationTab() {
+        // Find the simulation tab bar item and select it
+        if let simulationItem = tabBar.items?.first(where: { $0.tag == 0 }) {
+            tabBar.selectedItem = simulationItem
+            // Manually trigger the tab selection to ensure view switching
+            tabBar(tabBar, didSelect: simulationItem)
         }
     }
     
@@ -2887,12 +3207,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             updateDashboardStats() // Update stats before showing (this will start the timer)
             showView(dashboardView)
         case 2: // Modes
+            print("Modes tab selected") // Debug
             selectedView = modesView
             // Set up perturbation system if not already done
             if perturbationManager == nil {
                 setupPerturbationSystem()
             }
             showView(modesView)
+            print("Modes view shown") // Debug
         case 3: // Integration
             selectedView = integrationView
             showView(integrationView)
@@ -2945,6 +3267,37 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             self,
             selector: #selector(handleDeactivatePerturbation),
             name: Notification.Name("DeactivatePerturbation"),
+            object: nil
+        )
+        
+        // New primary modes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePrimaryMode),
+            name: Notification.Name("ActivatePrimaryMode"),
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleProgressiveMode),
+            name: Notification.Name("ActivateProgressiveMode"),
+            object: nil
+        )
+        
+        // Coming soon alert
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleComingSoonAlert),
+            name: Notification.Name("ShowComingSoonAlert"),
+            object: nil
+        )
+        
+        // Physics information
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShowPendulumPhysics),
+            name: Notification.Name("ShowPendulumPhysics"),
             object: nil
         )
     }
@@ -3078,5 +3431,39 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Show confirmation
         updateGameMessageLabel("Perturbations will be disabled on restart")
+    }
+    
+    @objc private func handlePrimaryMode() {
+        // Clear any perturbations and set to basic mode
+        pendingPerturbationProfile = nil
+        viewModel.enableQuasiPeriodicMode()
+        
+        // Show confirmation
+        updateGameMessageLabel("Primary mode selected. Click Restart to apply.")
+    }
+    
+    @objc private func handleProgressiveMode() {
+        // Clear any perturbations and enable progressive difficulty
+        pendingPerturbationProfile = nil
+        viewModel.enableProgressiveMode()
+        
+        // Show confirmation
+        updateGameMessageLabel("Progressive mode selected. Click Restart to apply.")
+    }
+    
+    @objc private func handleComingSoonAlert() {
+        let alert = UIAlertController(
+            title: "Coming Soon",
+            message: "This feature is currently under development and will be available in a future update.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    @objc private func handleShowPendulumPhysics() {
+        let physicsVC = InvertedPendulumPhysicsViewController()
+        physicsVC.modalPresentationStyle = .fullScreen
+        present(physicsVC, animated: true)
     }
 }
