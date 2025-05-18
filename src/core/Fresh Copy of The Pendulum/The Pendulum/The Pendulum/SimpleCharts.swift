@@ -13,7 +13,7 @@ class SimpleChartView: UIView {
     var color: UIColor = .systemBlue
     
     // Styling
-    private let margin: CGFloat = 30
+    private let margin: CGFloat = 50 // Increased from 30 to accommodate y-axis labels
     private let bottomMargin: CGFloat = 40
     private let topMargin: CGFloat = 40
     private let labelHeight: CGFloat = 20
@@ -45,6 +45,27 @@ class SimpleChartView: UIView {
         self.title = title
         self.color = color
         setNeedsDisplay()
+    }
+    
+    // Helper to extract unit from title
+    func getUnitFromTitle() -> String {
+        let lowerTitle = title.lowercased()
+        if lowerTitle.contains("angle") || lowerTitle.contains("variance") {
+            return "°"
+        } else if lowerTitle.contains("frequency") {
+            return "/s"
+        } else if lowerTitle.contains("time") {
+            return "s"
+        } else if lowerTitle.contains("magnitude") {
+            return "N"
+        } else if lowerTitle.contains("reaction") {
+            return "s"
+        } else if lowerTitle.contains("score") {
+            return "%"
+        } else if lowerTitle.contains("level") && lowerTitle.contains("completion") {
+            return ""
+        }
+        return ""
     }
     
     // Drawing
@@ -166,6 +187,52 @@ class SimpleChartView: UIView {
             label.draw(in: labelRect, withAttributes: labelAttributes)
         }
     }
+    
+    // Helper to draw Y-axis labels with tick marks
+    func drawYAxisLabels(in context: CGContext, chartArea: CGRect, minValue: Double, maxValue: Double, unit: String = "") {
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 10),
+            .foregroundColor: UIColor.darkGray
+        ]
+        
+        // Draw 5 tick marks (0%, 25%, 50%, 75%, 100%)
+        let tickCount = 5
+        
+        context.setStrokeColor(UIColor.lightGray.cgColor)
+        context.setLineWidth(1)
+        
+        for i in 0...tickCount {
+            let progress = CGFloat(i) / CGFloat(tickCount)
+            let y = chartArea.maxY - (progress * chartArea.height)
+            let value = minValue + ((maxValue - minValue) * Double(progress))
+            
+            // Draw tick mark
+            context.move(to: CGPoint(x: chartArea.minX - 5, y: y))
+            context.addLine(to: CGPoint(x: chartArea.minX, y: y))
+            
+            // Draw value label with appropriate formatting
+            let labelText: String
+            if maxValue - minValue < 1 {
+                labelText = String(format: "%.2f%@", value, unit)
+            } else if maxValue - minValue > 100 {
+                labelText = String(format: "%.0f%@", value, unit)
+            } else {
+                labelText = String(format: "%.1f%@", value, unit)
+            }
+            let labelSize = labelText.size(withAttributes: labelAttributes)
+            
+            let labelRect = CGRect(
+                x: chartArea.minX - labelSize.width - 8,
+                y: y - (labelSize.height / 2),
+                width: labelSize.width,
+                height: labelSize.height
+            )
+            
+            labelText.draw(in: labelRect, withAttributes: labelAttributes)
+        }
+        
+        context.strokePath()
+    }
 }
 
 // MARK: - Line Chart
@@ -184,6 +251,9 @@ class SimpleLineChartView: SimpleChartView {
         
         // Draw X-axis labels
         drawXAxisLabels(in: chartArea)
+        
+        // Draw Y-axis labels with tick marks
+        drawYAxisLabels(in: context, chartArea: chartArea, minValue: minValue, maxValue: maxValue, unit: getUnitFromTitle())
         
         // Calculate step sizes
         let stepX = chartArea.width / CGFloat(dataPoints.count > 1 ? dataPoints.count - 1 : 1)
@@ -238,6 +308,7 @@ class SimpleBarChartView: SimpleChartView {
         let chartArea = getChartArea(in: rect)
         
         // Find max value for scaling
+        let minValue: Double = 0 // Bar charts typically start from 0
         let maxValue = dataPoints.max() ?? 1
         
         // Draw axes
@@ -245,6 +316,9 @@ class SimpleBarChartView: SimpleChartView {
         
         // Draw X-axis labels
         drawXAxisLabels(in: chartArea)
+        
+        // Draw Y-axis labels with tick marks
+        drawYAxisLabels(in: context, chartArea: chartArea, minValue: minValue, maxValue: maxValue, unit: getUnitFromTitle())
         
         // Calculate bar width
         let barWidth = (chartArea.width / CGFloat(dataPoints.count)) * 0.8
@@ -254,7 +328,7 @@ class SimpleBarChartView: SimpleChartView {
         context.setFillColor(color.cgColor)
         
         for (index, value) in dataPoints.enumerated() {
-            let normalizedHeight = CGFloat(value / maxValue) * chartArea.height
+            let normalizedHeight = CGFloat((value - minValue) / (maxValue - minValue)) * chartArea.height
             let barX = chartArea.minX + (CGFloat(index) * (barWidth + barSpacing)) + (barSpacing / 2)
             let barY = chartArea.maxY - normalizedHeight
             
