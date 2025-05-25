@@ -85,41 +85,19 @@ class BackgroundManager {
             return []
         case .ai:
             // Actual AI folder images from asset catalog
-            imageNames = ["IMG_9322", "IMG_9324", "IMG_9325", "IMG_9326", "IMG_9383", "IMG_9384", 
-                         "IMG_9385", "IMG_9386", "IMG_9387", "IMG_9388", "IMG_9389", "IMG_9390",
-                         "IMG_9391", "IMG_9392", "IMG_9393", "IMG_9394"]
+            imageNames = ["IMG_9322", "IMG_9324", "IMG_9325"]
         case .acadia:
             // Actual Acadia folder images from asset catalog
-            imageNames = ["IMG_9441", "IMG_9444", "IMG_9447", "IMG_9451", "IMG_9476", "IMG_9479",
-                         "IMG_9487", "IMG_9495"]
+            imageNames = ["IMG_9441", "IMG_9444"]
         case .fluid:
             // Actual Fluid folder images from asset catalog
-            imageNames = ["IMG_3149", "IMG_3251", "IMG_3252", "IMG_3253", "IMG_3790",
-                         "IMG_5184", "IMG_5185", "IMG_5583", "IMG_9603", "IMG_9604",
-                         "IMG_9794", "IMG_9959"]
+            imageNames = ["IMG_3149", "IMG_3251", "IMG_3252"]
         case .immersiveTopology:
             // Actual ImmersiveTopology folder images from asset catalog
-            imageNames = ["IMG_0042", "IMG_0044", "IMG_5180", "IMG_5187", "IMG_5188",
-                         "IMG_5193", "IMG_5194", "IMG_5200", "IMG_5203", "IMG_5204",
-                         "IMG_5205", "IMG_5208", "IMG_5210", "IMG_5211", "IMG_5212",
-                         "IMG_5215", "IMG_5217", "IMG_5219", "IMG_5224", "IMG_5226",
-                         "IMG_5228", "IMG_5233", "IMG_5237", "IMG_5238", "IMG_5239",
-                         "IMG_5555", "IMG_5558", "IMG_5559", "IMG_5560", "IMG_5561",
-                         "IMG_5563", "IMG_5567", "IMG_5569", "IMG_5570", "IMG_5572",
-                         "IMG_5585", "IMG_5587", "IMG_5590", "IMG_5597", "IMG_5598",
-                         "IMG_5603", "IMG_5607", "IMG_5608", "IMG_5609", "IMG_5612",
-                         "IMG_5904", "IMG_6831", "IMG_6833", "IMG_6837", "IMG_6838",
-                         "IMG_6839", "IMG_6842", "IMG_6843", "IMG_6844", "IMG_6845",
-                         "IMG_6846", "IMG_6847", "IMG_6859", "IMG_6867", "IMG_7058",
-                         "IMG_7068", "IMG_7074"]
+            imageNames = ["IMG_0042", "IMG_0044", "IMG_5180"]
         case .joshuaTree:
             // Actual Joshua Tree folder images from asset catalog
-            imageNames = ["IMG_4014", "IMG_4030", "IMG_4037", "IMG_4044", "IMG_4051",
-                         "IMG_4081", "IMG_4082", "IMG_4093", "IMG_4094", "IMG_4095",
-                         "IMG_4096", "IMG_4103", "IMG_4106", "IMG_4114", "IMG_4127",
-                         "IMG_4196", "IMG_4200", "IMG_4216", "IMG_4218", "IMG_4220",
-                         "IMG_4224", "IMG_4225", "IMG_4228", "IMG_4231", "IMG_4233",
-                         "IMG_4239", "IMG_4245", "IMG_4249", "IMG_4254", "IMG_4285"]
+            imageNames = ["IMG_4014", "IMG_4030", "IMG_4037"]
         case .outerSpace:
             // Actual Outer Space folder images from asset catalog
             imageNames = ["IMG_9352", "IMG_9353", "IMG_9354", "IMG_9355", "IMG_9356",
@@ -129,46 +107,21 @@ class BackgroundManager {
                          "IMG_9372", "IMG_9373", "IMG_9374", "IMG_9375", "IMG_9376",
                          "IMG_9376 (1)", "IMG_9378", "IMG_9379", "IMG_9380"]
         case .parchment:
-            // Actual Parchment folder images from asset catalog
-            imageNames = ["165102644", "165102644 (1)", "165102644 (2)", "165102644 (3)",
-                         "IMG_6528", "IMG_6529", "IMG_6530", "IMG_9705"]
+            // Actual Parchment folder images from asset catalog (4 unique images)
+            imageNames = ["165102644", "165102644 (1)", "165102644 (2)", "165102644 (3)"]
         case .sachuest:
-            // Actual Sachuest folder images from asset catalog
+            // Actual Sachuest folder images from asset catalog (8 unique images)
             imageNames = ["IMG_1526", "IMG_3198", "IMG_3713", "IMG_3794", "IMG_3797",
-                         "IMG_3805", "IMG_3806", "IMG_3809", "IMG_3831", "IMG_4054",
-                         "IMG_4067", "IMG_4112", "IMG_4354", "IMG_4356", "IMG_4664",
-                         "IMG_4741", "IMG_4779", "IMG_4796", "IMG_4818", "IMG_4939",
-                         "IMG_4941", "IMG_5041", "IMG_5118", "IMG_5147", "IMG_5234_Sach",
-                         "IMG_5243", "IMG_5278", "IMG_5294", "IMG_5527", "IMG_5638",
-                         "IMG_5669", "IMG_5734", "IMG_5792", "IMG_5939", "IMG_5994",
-                         "IMG_6123", "IMG_6577", "IMG_6589", "IMG_6665", "IMG_7200",
-                         "IMG_7200 (1)", "IMG_7588", "IMG_7871", "IMG_8751", "IMG_9154",
-                         "IMG_9156", "IMG_9696", "IMG_9697", "IMG_9699"]
+                         "IMG_3805", "IMG_3806", "IMG_3809"]
         case .theMazeGuide:
-            // Actual The Maze Guide folder images from asset catalog
-            imageNames = ["IMG_1189", "IMG_1192", "IMG_1193", "IMG_1194", "IMG_1195",
-                         "IMG_1196", "IMG_1197", "IMG_1198", "IMG_1199", "IMG_1200",
-                         "IMG_1202", "IMG_1203", "IMG_1204", "IMG_1205", "IMG_1207",
-                         "IMG_1208", "IMG_1209", "IMG_1210", "IMG_1211", "IMG_1212",
-                         "IMG_1213", "IMG_1214", "IMG_1215", "IMG_1216", "IMG_1217",
-                         "IMG_1219", "IMG_1220", "IMG_1221", "IMG_1223"]
+            // Actual The Maze Guide folder images from asset catalog (3 unique images)
+            imageNames = ["IMG_1189", "IMG_1192", "IMG_1193"]
         case .thePortraits:
-            // Actual The Portraits folder images from asset catalog
-            imageNames = ["IMG_2650", "IMG_2656", "IMG_3101", "IMG_3145", "IMG_3146",
-                         "IMG_3148", "IMG_3149_Port", "IMG_3150", "IMG_3151", "IMG_3229",
-                         "IMG_3251_Port", "IMG_3252_Port", "IMG_3253_Port", "IMG_4824",
-                         "IMG_4825", "IMG_4844", "IMG_4860", "IMG_4861", "IMG_5070",
-                         "IMG_6976"]
+            // Actual The Portraits folder images from asset catalog (3 unique images)
+            imageNames = ["IMG_2650", "IMG_2656", "IMG_3101"]
         case .tsp:
-            // Actual TSP folder images from asset catalog
-            imageNames = ["IMG_0063", "IMG_0064", "IMG_0065", "IMG_0066", "IMG_0068",
-                         "IMG_0069", "IMG_0070", "IMG_0071", "IMG_0072", "IMG_0073",
-                         "IMG_0074", "IMG_0075", "IMG_0076", "IMG_0078", "IMG_0079",
-                         "IMG_0080", "IMG_0081", "IMG_0082", "IMG_0083", "IMG_0084",
-                         "IMG_0085", "IMG_0087", "IMG_0088", "IMG_0089", "IMG_0090",
-                         "IMG_0091", "IMG_0092", "IMG_0093", "IMG_0094", "IMG_0095",
-                         "IMG_0096", "IMG_0097", "IMG_0098", "IMG_0099", "IMG_0100",
-                         "IMG_0101", "IMG_0102", "IMG_0103"]
+            // Actual TSP folder images from asset catalog (3 unique images)
+            imageNames = ["IMG_0063", "IMG_0064", "IMG_0065"]
         }
         
         return imageNames
@@ -248,6 +201,10 @@ class BackgroundManager {
             } else {
                 backgroundImageView.image = image
             }
+        } else {
+            // No image found, remove the background
+            print("BackgroundManager: No image found, removing background for \(type(of: view))")
+            removeBackground(from: view)
         }
     }
     

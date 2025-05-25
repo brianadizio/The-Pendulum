@@ -3155,7 +3155,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         phaseSpaceLabel = UILabel()
         phaseSpaceLabel.text = "Phase Space"
         phaseSpaceLabel.textAlignment = .center
-        FocusCalendarTheme.styleLabel(phaseSpaceLabel, style: .sectionHeader)
+        FocusCalendarTheme.styleLabel(phaseSpaceLabel, style: .caption) // Use theme font
         phaseSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
         simulationView.addSubview(phaseSpaceLabel)
 
@@ -3171,12 +3171,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             phaseSpaceLabel.topAnchor.constraint(equalTo: controlPanel.bottomAnchor, constant: 10),
             phaseSpaceLabel.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
 
-            // Position container below the label with increased height
+            // Position container below the label to fill remaining space
             phaseSpaceContainer.topAnchor.constraint(equalTo: phaseSpaceLabel.bottomAnchor, constant: 5),
             phaseSpaceContainer.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
             phaseSpaceContainer.widthAnchor.constraint(equalTo: simulationView.widthAnchor, multiplier: 0.85),
-            // Connect to the simulationView's bottom instead (which is already constrained to the tab bar)
-            phaseSpaceContainer.bottomAnchor.constraint(equalTo: simulationView.bottomAnchor, constant: -5), // Small gap at bottom
+            phaseSpaceContainer.bottomAnchor.constraint(equalTo: simulationView.bottomAnchor, constant: -10), // Fill to bottom with margin
 
             // Position the phase space view within its container
             phaseSpaceView.topAnchor.constraint(equalTo: phaseSpaceContainer.topAnchor, constant: 10),
@@ -3289,6 +3288,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
         FocusCalendarTheme.styleButton(stopButton, isPrimary: true)
         stopButton.backgroundColor = FocusCalendarTheme.accentRose // Rose for stop
+        
+        // Keep push buttons with the same theme font as other buttons
 
         // Set plain text button titles to avoid symbol confusion
         startButton.setTitle("Start", for: .normal)
@@ -3341,7 +3342,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             controlPanel.topAnchor.constraint(equalTo: skViewContainer?.bottomAnchor ?? parentView.centerYAnchor, constant: 10), // Reduced spacing
             controlPanel.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             controlPanel.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            controlPanel.heightAnchor.constraint(equalToConstant: 100), // Slightly reduced height to be more compact
+            controlPanel.heightAnchor.constraint(equalToConstant: 140), // Increased height for larger push buttons
 
             // Control stack - fill the container with a bit more padding
             controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 10), // Increased padding
@@ -3352,8 +3353,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             // Make buttons have a minimum height
             startButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
             stopButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
-            pushLeftButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
-            pushRightButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40)
+            pushLeftButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 55),
+            pushRightButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 55)
         ])
 
         // We now position the phase space in setupPhaseSpaceView
