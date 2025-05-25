@@ -51,8 +51,11 @@ class PendulumScene: SKScene {
         print("Scene size: \(self.size)")
         print("View size: \(view.bounds.size)")
         
-        // Set up the background based on current state
-        updateSceneBackground()
+        // Set initial background color to white
+        self.backgroundColor = UIColor.white
+        
+        // Set up the background based on current state (after initial setup)
+        // updateSceneBackground()  // Comment out for now until we fix positioning
         
         // Setup decorative grid for perspective
         setupGrid()
@@ -64,8 +67,8 @@ class PendulumScene: SKScene {
         // setupPhaseSpaceVisualization()
         
         // Setup pivot point - more refined design and centered horizontally
-        pendulumPivot.fillColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Dark gray
-        pendulumPivot.strokeColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+        pendulumPivot.fillColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0) // Dark gray
+        pendulumPivot.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Darker gray
 
         // Position the pendulum pivot very low in the container (at 15% height)
         // Right near the bottom where it will be just above the buttons
@@ -79,17 +82,17 @@ class PendulumScene: SKScene {
         setupPlatform()
 
         // Setup pendulum rod - thicker for better visibility with the longer length
-        pendulumRod.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        pendulumRod.strokeColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0) // Medium gray
         pendulumRod.lineWidth = 5 // More thickness for better visibility with longer rod
         pendulumRod.zPosition = 5
         addChild(pendulumRod)
 
         // Setup bob - sized appropriately for the longer pendulum
         pendulumBob = SKShapeNode(circleOfRadius: 18) // Larger bob for better visibility
-        pendulumBob.fillColor = UIColor(red: 0.0, green: 0.5, blue: 0.9, alpha: 1.0) // Brighter blue
-        pendulumBob.strokeColor = UIColor(red: 0.0, green: 0.3, blue: 0.7, alpha: 1.0)
+        pendulumBob.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Rich blue
+        pendulumBob.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0) // Darker blue stroke
         pendulumBob.lineWidth = 3 // Thicker stroke
-        pendulumBob.glowWidth = 2 // Moderate glow
+        pendulumBob.glowWidth = 3 // Moderate glow
         pendulumBob.zPosition = 15
         addChild(pendulumBob)
         
@@ -122,33 +125,22 @@ class PendulumScene: SKScene {
         // Remove existing background layer if it exists
         sceneBackgroundLayer?.removeFromParent()
         
-        // Create a background layer
-        sceneBackgroundLayer = SKShapeNode(rectOf: self.size)
-        sceneBackgroundLayer?.position = CGPoint(x: frame.midX, y: frame.midY)
-        sceneBackgroundLayer?.zPosition = -100
-        sceneBackgroundLayer?.strokeColor = .clear
-        
+        // Don't create a background layer - just set scene background color directly
         // Check if BackgroundManager has a background set
         let hasBackground = BackgroundManager.shared.getCurrentFolder() != .none
         
         if hasBackground {
             // Make scene semi-transparent to show the underlying UIView background
             self.backgroundColor = UIColor.clear
-            sceneBackgroundLayer?.fillColor = UIColor.white.withAlphaComponent(0.3) // Semi-transparent overlay
             
             // Make non-essential elements more transparent
             updateSceneTransparency(transparency: 0.7)
         } else {
             // No background selected, use white background
             self.backgroundColor = UIColor.white
-            sceneBackgroundLayer?.fillColor = UIColor.white
             
             // Reset transparency to full opacity
             updateSceneTransparency(transparency: 1.0)
-        }
-        
-        if let sceneBackgroundLayer = sceneBackgroundLayer {
-            addChild(sceneBackgroundLayer)
         }
     }
     
@@ -278,8 +270,8 @@ class PendulumScene: SKScene {
         let platformHeight: CGFloat = 8
 
         let platform = SKShapeNode(rectOf: CGSize(width: platformWidth, height: platformHeight))
-        platform.fillColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0)
-        platform.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        platform.fillColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0) // Dark gray
+        platform.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Darker gray
         platform.position = CGPoint(x: pendulumPivot.position.x, y: pendulumPivot.position.y + platformHeight/2)
         platform.zPosition = 5
         addChild(platform)
@@ -289,8 +281,8 @@ class PendulumScene: SKScene {
         let baseHeight: CGFloat = 12 // Much shorter
 
         let base = SKShapeNode(rectOf: CGSize(width: baseWidth, height: baseHeight))
-        base.fillColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1.0)
-        base.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        base.fillColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1.0) // Dark gray
+        base.strokeColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0) // Darker gray
         base.position = CGPoint(x: pendulumPivot.position.x, y: pendulumPivot.position.y + baseHeight/2 + platformHeight)
         base.zPosition = 6
         addChild(base)
@@ -382,7 +374,7 @@ class PendulumScene: SKScene {
 
         // Only print the bob position occasionally for debugging
         if Int(angle * 100) % 300 == 0 {
-            print("Bob position: \(bobPosition) for angle: \(angle), theta: \(state.theta)")
+            print("Bob position: \(bobPosition) for angle: \(angle)")
         }
 
         // Update rod path with slight curve for aesthetics
@@ -441,6 +433,7 @@ class PendulumScene: SKScene {
         print("PendulumScene: Added test circle at center")
     }
     
+    
     override func update(_ currentTime: TimeInterval) {
         guard let viewModel = viewModel else { 
             return 
@@ -460,6 +453,9 @@ class PendulumScene: SKScene {
             
             // Update phase space visualization
             updatePhaseSpaceVisualization(with: viewModel.currentState)
+            
+            // Track phase space data for analytics
+            AnalyticsManager.shared.trackPhaseSpacePoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
             
             // Update perturbation manager if it exists
             if let perturbationManager = self.perturbationManager {

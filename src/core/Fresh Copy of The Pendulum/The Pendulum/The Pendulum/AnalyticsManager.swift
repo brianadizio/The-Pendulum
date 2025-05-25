@@ -36,6 +36,11 @@ class AnalyticsManager {
     private var correctionEfficiency: [Double] = [] // Force applied vs. stability gained
     private var reactionTimes: [Double] = [] // Time from instability to correction
     
+    // Phase space tracking
+    private var phaseSpacePoints: [(theta: Double, omega: Double)] = []
+    private var currentLevel: Int = 0
+    private var levelPhaseSpaceData: [Int: [(theta: Double, omega: Double)]] = [:]
+    
     // MARK: - Data Models
     
     struct InteractionEventData {
@@ -73,6 +78,12 @@ class AnalyticsManager {
         // Calculate final metrics before ending
         if let sessionId = currentSessionId {
             calculateAndSavePerformanceMetrics(for: sessionId)
+            
+            // Store phase space data for the current level
+            if !phaseSpacePoints.isEmpty {
+                levelPhaseSpaceData[currentLevel] = phaseSpacePoints
+                calculateAndSaveAveragePhaseSpace()
+            }
         }
         
         // Clear tracking state
@@ -542,6 +553,135 @@ class AnalyticsManager {
     private func normalizeAngle(_ angle: Double) -> Double {
         // Normalize angle to [-π, π]
         return atan2(sin(angle), cos(angle))
+    }
+    
+    // MARK: - Phase Space Tracking
+    
+    func trackPhaseSpacePoint(theta: Double, omega: Double) {
+        guard isTracking else { return }
+        
+        phaseSpacePoints.append((theta: theta, omega: omega))
+        
+        // Limit the number of points to prevent memory issues
+        let maxPoints = 1000
+        if phaseSpacePoints.count > maxPoints {
+            phaseSpacePoints.removeFirst()
+        }
+    }
+    
+    func setCurrentLevel(_ level: Int) {
+        if currentLevel != level {
+            // Save phase space data for the previous level
+            if !phaseSpacePoints.isEmpty {
+                levelPhaseSpaceData[currentLevel] = phaseSpacePoints
+            }
+            
+            // Reset for new level
+            currentLevel = level
+            phaseSpacePoints = []
+        }
+    }
+    
+    private func calculateAndSaveAveragePhaseSpace() {
+        guard let sessionId = currentSessionId else { return }
+        
+        // Calculate average phase space for each level
+        for (level, points) in levelPhaseSpaceData {
+            let averageData = calculateAveragePhaseSpaceData(points: points)
+            
+            // Convert to a format that can be stored in Core Data
+            let dataToStore = encodePhaseSpaceData(averageData)
+            
+            // Save to Core Data
+            context.performAndWait {
+                // Find or create performance metrics for this session and level
+                let fetchRequest: NSFetchRequest<PerformanceMetrics> = PerformanceMetrics.fetchRequest()
+                fetchRequest.predicate = NSPredicate(format: "sessionId == %@ AND averagePhaseSpaceLevel == %d", sessionId as CVarArg, level)
+                
+                do {
+                    let metrics = try context.fetch(fetchRequest).first ?? PerformanceMetrics(context: context)
+                    metrics.sessionId = sessionId
+                    metrics.averagePhaseSpaceLevel = Int32(level)
+                    metrics.averagePhaseSpaceData = dataToStore
+                    metrics.timestamp = Date()
+                    
+                    try context.save()
+                } catch {
+                    print("Error saving phase space data: \(error)")
+                }
+            }
+        }
+    }
+    
+    private func calculateAveragePhaseSpaceData(points: [(theta: Double, omega: Double)]) -> [(theta: Double, omega: Double)] {
+        guard !points.isEmpty else { return [] }
+        
+        // Group points into bins for averaging
+        let binCount = 100
+        let binSize = points.count / binCount
+        
+        var averagedPoints: [(theta: Double, omega: Double)] = []
+        
+        for i in 0..<binCount {
+            let startIndex = i * binSize
+            let endIndex = min((i + 1) * binSize, points.count)
+            
+            if startIndex < endIndex {
+                let binPoints = Array(points[startIndex..<endIndex])
+                let avgTheta = binPoints.map { $0.theta }.reduce(0, +) / Double(binPoints.count)
+                let avgOmega = binPoints.map { $0.omega }.reduce(0, +) / Double(binPoints.count)
+                
+                averagedPoints.append((theta: avgTheta, omega: avgOmega))
+            }
+        }
+        
+        return averagedPoints
+    }
+    
+    private func encodePhaseSpaceData(_ data: [(theta: Double, omega: Double)]) -> Data? {
+        let dictionary = ["points": data.map { ["theta": $0.theta, "omega": $0.omega] }]
+        return try? JSONSerialization.data(withJSONObject: dictionary)
+    }
+    
+    func getAveragePhaseSpaceData(for level: Int? = nil) -> [Int: [(theta: Double, omega: Double)]] {
+        var result: [Int: [(theta: Double, omega: Double)]] = [:]
+        
+        let fetchRequest: NSFetchRequest<PerformanceMetrics> = PerformanceMetrics.fetchRequest()
+        if let level = level {
+            fetchRequest.predicate = NSPredicate(format: "averagePhaseSpaceLevel == %d", level)
+        } else {
+            fetchRequest.predicate = NSPredicate(format: "averagePhaseSpaceData != nil")
+        }
+        
+        context.performAndWait {
+            do {
+                let metrics = try context.fetch(fetchRequest)
+                
+                for metric in metrics {
+                    if let data = metric.averagePhaseSpaceData,
+                       let points = decodePhaseSpaceData(data) {
+                        result[Int(metric.averagePhaseSpaceLevel)] = points
+                    }
+                }
+            } catch {
+                print("Error fetching average phase space data: \(error)")
+            }
+        }
+        
+        return result
+    }
+    
+    private func decodePhaseSpaceData(_ data: Data) -> [(theta: Double, omega: Double)]? {
+        guard let dictionary = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let points = dictionary["points"] as? [[String: Double]] else {
+            return nil
+        }
+        
+        return points.compactMap { point in
+            guard let theta = point["theta"],
+                  let omega = point["omega"] else { return nil }
+            return (theta: theta, omega: omega)
+        }
     }
     
     // MARK: - Data Retrieval for Dashboard
