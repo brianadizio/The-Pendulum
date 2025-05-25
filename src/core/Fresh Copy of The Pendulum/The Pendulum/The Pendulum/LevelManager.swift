@@ -69,6 +69,9 @@ class LevelManager {
         
         currentLevel = level
         
+        // Notify analytics manager about level change
+        AnalyticsManager.shared.setCurrentLevel(level)
+        
         // Update max reached level if needed
         if level > maxReachedLevel {
             maxReachedLevel = level

@@ -13,9 +13,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: windowScene)
         window?.backgroundColor = FocusCalendarTheme.backgroundColor
         
-        // Set the PendulumViewController as root
-        let pendulumVC = PendulumViewController()
-        window?.rootViewController = pendulumVC
+        // Show launch screen first
+        let launchScreenVC = LaunchScreenViewController()
+        window?.rootViewController = launchScreenVC
         window?.makeKeyAndVisible()
     }
     

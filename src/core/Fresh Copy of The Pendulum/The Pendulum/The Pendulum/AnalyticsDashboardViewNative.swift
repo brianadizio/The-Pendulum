@@ -59,6 +59,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     private var learningCurveChart: SimpleLineChartView!
     private var directionalBiasChart: SimplePieChartView!
     private var pendulumParametersChart: SimpleLineChartView!
+    private var averagePhaseSpaceChart: PhaseSpaceChartView!
     
     // Parameter selection for pendulum parameters chart
     private var parameterSegmentControl: UISegmentedControl!
@@ -456,6 +457,33 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
 
     private func setupAdditionalMetricsSection(after lastSection: UIView) {
         let chartsContainer = lastSection.superview!
+        
+        // Add Phase Space Chart
+        let phaseSpaceSection = createChartSection(
+            title: "Average Phase Space by Level",
+            description: "Shows the average phase space trajectory for each level played."
+        )
+        chartsContainer.addSubview(phaseSpaceSection)
+        
+        let phaseSpaceChart = PhaseSpaceChartView()
+        phaseSpaceChart.translatesAutoresizingMaskIntoConstraints = false
+        phaseSpaceSection.addSubview(phaseSpaceChart)
+        
+        // Layout constraints for phase space chart
+        NSLayoutConstraint.activate([
+            phaseSpaceSection.topAnchor.constraint(equalTo: lastSection.bottomAnchor, constant: 30),
+            phaseSpaceSection.leadingAnchor.constraint(equalTo: chartsContainer.leadingAnchor),
+            phaseSpaceSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
+            phaseSpaceSection.heightAnchor.constraint(equalToConstant: 400), // Taller for phase space
+            
+            phaseSpaceChart.topAnchor.constraint(equalTo: phaseSpaceSection.topAnchor, constant: 80),
+            phaseSpaceChart.leadingAnchor.constraint(equalTo: phaseSpaceSection.leadingAnchor, constant: 10),
+            phaseSpaceChart.trailingAnchor.constraint(equalTo: phaseSpaceSection.trailingAnchor, constant: -10),
+            phaseSpaceChart.bottomAnchor.constraint(equalTo: phaseSpaceSection.bottomAnchor, constant: -10)
+        ])
+        
+        // Store reference for data updates
+        self.averagePhaseSpaceChart = phaseSpaceChart
 
         // Create section for additional metrics
         let additionalMetricsTitle = createSectionLabel("Additional Statistics")
@@ -533,7 +561,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Layout constraints
         NSLayoutConstraint.activate([
             // Title
-            additionalMetricsTitle.topAnchor.constraint(equalTo: lastSection.bottomAnchor, constant: 50),
+            additionalMetricsTitle.topAnchor.constraint(equalTo: phaseSpaceSection.bottomAnchor, constant: 50),
             additionalMetricsTitle.leadingAnchor.constraint(equalTo: chartsContainer.leadingAnchor),
             additionalMetricsTitle.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
 
@@ -649,6 +677,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         updateAdditionalMetrics(timeRange: stringRange)
         updateLevelCompletionsChart(timeRange: stringRange)
         updatePendulumParametersChart(timeRange: stringRange, parameter: selectedParameter)
+        updateAveragePhaseSpaceChart()
     }
 
     private func updateAdditionalMetrics(timeRange: String) {
@@ -1566,6 +1595,16 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             title: title,
             color: .systemPurple
         )
+    }
+    
+    private func updateAveragePhaseSpaceChart() {
+        guard let phaseSpaceChart = averagePhaseSpaceChart else { return }
+        
+        // Get average phase space data from the analytics manager
+        let phaseSpaceData = AnalyticsManager.shared.getAveragePhaseSpaceData()
+        
+        // Update the chart with the data
+        phaseSpaceChart.updateLevelData(phaseSpaceData)
     }
     
 }

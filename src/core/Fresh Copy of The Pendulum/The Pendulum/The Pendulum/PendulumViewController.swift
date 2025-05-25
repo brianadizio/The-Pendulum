@@ -187,8 +187,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Initialize backgrounds for all tabs after a delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
-            // Update the pendulum scene background to match the initial setting
-            self.scene?.updateSceneBackground()
+            // Update the pendulum scene background to match the initial setting after scene is fully set up
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.scene?.updateSceneBackground()
+            }
         }
     }
 
@@ -664,9 +666,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             ("Compound", "Multi-Effect", "square.stack.3d.forward.dottedline", 305)
         ]
         
-        // Create rows with 2 buttons each
-        var previousRowAnchor = gridContainer.topAnchor
-        var buttonsInRow: [UIView] = []
+        // Create one button per row
+        var previousButtonAnchor = gridContainer.topAnchor
         
         for (index, buttonData) in modeButtons.enumerated() {
             let button = createPerturbationModeButton(
@@ -675,30 +676,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                 iconName: buttonData.2,
                 tag: buttonData.3
             )
-            buttonsInRow.append(button)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            gridContainer.addSubview(button)
             
-            // Create row when we have 2 buttons or it's the last button
-            if buttonsInRow.count == 2 || index == modeButtons.count - 1 {
-                let rowStack = UIStackView(arrangedSubviews: buttonsInRow)
-                rowStack.axis = .horizontal
-                rowStack.spacing = 15
-                rowStack.distribution = .fillEqually
-                rowStack.translatesAutoresizingMaskIntoConstraints = false
-                gridContainer.addSubview(rowStack)
-                
-                NSLayoutConstraint.activate([
-                    rowStack.topAnchor.constraint(equalTo: previousRowAnchor, constant: index == 0 ? 0 : 15),
-                    rowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
-                    rowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
-                    rowStack.heightAnchor.constraint(equalToConstant: 120)
-                ])
-                
-                previousRowAnchor = rowStack.bottomAnchor
-                buttonsInRow = []
-            }
+            NSLayoutConstraint.activate([
+                button.topAnchor.constraint(equalTo: previousButtonAnchor, constant: index == 0 ? 0 : 10),
+                button.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+                button.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+                button.heightAnchor.constraint(equalToConstant: 80)
+            ])
+            
+            previousButtonAnchor = button.bottomAnchor
         }
         
-        gridContainer.bottomAnchor.constraint(equalTo: previousRowAnchor).isActive = true
+        gridContainer.bottomAnchor.constraint(equalTo: previousButtonAnchor).isActive = true
         
         // Add divider
         let divider = UIView()
@@ -753,9 +744,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             ("Nature's Essence", "Natural Forces", "leaf")
         ]
         
-        // Create rows with 2 buttons each
-        var previousRowAnchor = gridContainer.topAnchor
-        var buttonsInRow: [UIView] = []
+        // Create one button per row
+        var previousButtonAnchor = gridContainer.topAnchor
         
         for (index, buttonData) in comingSoonButtons.enumerated() {
             let button = createComingSoonButton(
@@ -763,30 +753,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
                 subtitle: buttonData.1,
                 iconName: buttonData.2
             )
-            buttonsInRow.append(button)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            gridContainer.addSubview(button)
             
-            // Create row when we have 2 buttons or it's the last button
-            if buttonsInRow.count == 2 || index == comingSoonButtons.count - 1 {
-                let rowStack = UIStackView(arrangedSubviews: buttonsInRow)
-                rowStack.axis = .horizontal
-                rowStack.spacing = 15
-                rowStack.distribution = .fillEqually
-                rowStack.translatesAutoresizingMaskIntoConstraints = false
-                gridContainer.addSubview(rowStack)
-                
-                NSLayoutConstraint.activate([
-                    rowStack.topAnchor.constraint(equalTo: previousRowAnchor, constant: index == 0 ? 0 : 15),
-                    rowStack.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
-                    rowStack.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
-                    rowStack.heightAnchor.constraint(equalToConstant: 120)
-                ])
-                
-                previousRowAnchor = rowStack.bottomAnchor
-                buttonsInRow = []
-            }
+            NSLayoutConstraint.activate([
+                button.topAnchor.constraint(equalTo: previousButtonAnchor, constant: index == 0 ? 0 : 10),
+                button.leadingAnchor.constraint(equalTo: gridContainer.leadingAnchor),
+                button.trailingAnchor.constraint(equalTo: gridContainer.trailingAnchor),
+                button.heightAnchor.constraint(equalToConstant: 80)
+            ])
+            
+            previousButtonAnchor = button.bottomAnchor
         }
         
-        gridContainer.bottomAnchor.constraint(equalTo: previousRowAnchor).isActive = true
+        gridContainer.bottomAnchor.constraint(equalTo: previousButtonAnchor).isActive = true
         
         // Add divider
         let divider = UIView()
@@ -827,25 +807,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             iconName: "doc.text",
             tag: 999
         )
-        
-        // Center it horizontally
-        let buttonContainer = UIView()
-        buttonContainer.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(buttonContainer)
-        
-        buttonContainer.addSubview(physicsButton)
+        physicsButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(physicsButton)
         
         NSLayoutConstraint.activate([
-            buttonContainer.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 15),
-            buttonContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            buttonContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            buttonContainer.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -30),
-            
-            physicsButton.centerXAnchor.constraint(equalTo: buttonContainer.centerXAnchor),
-            physicsButton.topAnchor.constraint(equalTo: buttonContainer.topAnchor),
-            physicsButton.widthAnchor.constraint(equalToConstant: 300),
-            physicsButton.heightAnchor.constraint(equalToConstant: 120),
-            physicsButton.bottomAnchor.constraint(equalTo: buttonContainer.bottomAnchor)
+            physicsButton.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 15),
+            physicsButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            physicsButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            physicsButton.heightAnchor.constraint(equalToConstant: 80),
+            physicsButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -30)
         ])
     }
     
@@ -1631,9 +1601,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
-            scrollView.leadingAnchor.constraint(equalTo: integrationView.leadingAnchor, constant: 20),
-            scrollView.trailingAnchor.constraint(equalTo: integrationView.trailingAnchor, constant: -20),
-            scrollView.bottomAnchor.constraint(equalTo: integrationView.bottomAnchor, constant: -20)
+            scrollView.leadingAnchor.constraint(equalTo: integrationView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: integrationView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: integrationView.bottomAnchor)
         ])
         
         // Create content view
@@ -1649,24 +1619,277 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
         
-        // Setup View Leaderboards button
-        let leaderboardsButton = createIntegrationButton(
-            title: "View Leaderboards",
-            tag: 301,
-            in: contentView
-        )
+        // SOCIAL Section
+        let socialLabel = UILabel()
+        socialLabel.text = "SOCIAL"
+        socialLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        socialLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        socialLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(socialLabel)
         
-        // Setup social media integration buttons
-        let socialStack = createSocialIntegrationButtons(in: contentView, topAnchor: leaderboardsButton.bottomAnchor)
+        NSLayoutConstraint.activate([
+            socialLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            socialLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
         
-        // Setup data view buttons
-        let dataViewsStack = createDataViewButtons(in: contentView, topAnchor: socialStack.bottomAnchor)
+        // Social card
+        let socialCard = createSettingsCard()
+        contentView.addSubview(socialCard)
         
-        // Setup connection buttons
-        let connectionsStack = createConnectionButtons(in: contentView, topAnchor: dataViewsStack.bottomAnchor)
+        NSLayoutConstraint.activate([
+            socialCard.topAnchor.constraint(equalTo: socialLabel.bottomAnchor, constant: 10),
+            socialCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            socialCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
         
-        // Set minimum height for content
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 650).isActive = true
+        // Add social options
+        let socialOptions = [
+            ("trophy", "View Leaderboards"),
+            ("camera", "Instagram"),
+            ("person.2", "Facebook")
+        ]
+        
+        var previousView: UIView? = nil
+        for (index, option) in socialOptions.enumerated() {
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 301 + index)
+            socialCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? socialCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: socialCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: socialCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < socialOptions.count - 1 {
+                addSeparator(to: optionView, in: socialCard)
+            }
+            
+            previousView = optionView
+        }
+        
+        socialCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
+        
+        // DATA VIEWS Section
+        let dataLabel = UILabel()
+        dataLabel.text = "DATA VIEWS"
+        dataLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        dataLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        dataLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(dataLabel)
+        
+        NSLayoutConstraint.activate([
+            dataLabel.topAnchor.constraint(equalTo: socialCard.bottomAnchor, constant: 40),
+            dataLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
+        
+        // Data Views card
+        let dataCard = createSettingsCard()
+        contentView.addSubview(dataCard)
+        
+        NSLayoutConstraint.activate([
+            dataCard.topAnchor.constraint(equalTo: dataLabel.bottomAnchor, constant: 10),
+            dataCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            dataCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add data view options
+        let dataOptions = [
+            ("doc.text", "View Data"),
+            ("map", "View Manifolds"),
+            ("arrow.up.right.square", "View Surjective Submersions"),
+            ("square.stack.3d.up", "View Sheaf"),
+            ("arrow.triangle.merge", "View Morphisms"),
+            ("rectangle.connected.to.line.below", "View Category"),
+            ("function", "View Functor")
+        ]
+        
+        previousView = nil
+        for (index, option) in dataOptions.enumerated() {
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 304 + index)
+            dataCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? dataCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: dataCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: dataCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < dataOptions.count - 1 {
+                addSeparator(to: optionView, in: dataCard)
+            }
+            
+            previousView = optionView
+        }
+        
+        dataCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
+        
+        // CONNECTIONS Section
+        let connectionsLabel = UILabel()
+        connectionsLabel.text = "CONNECTIONS"
+        connectionsLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        connectionsLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        connectionsLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(connectionsLabel)
+        
+        NSLayoutConstraint.activate([
+            connectionsLabel.topAnchor.constraint(equalTo: dataCard.bottomAnchor, constant: 40),
+            connectionsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
+        
+        // Connections card
+        let connectionsCard = createSettingsCard()
+        contentView.addSubview(connectionsCard)
+        
+        NSLayoutConstraint.activate([
+            connectionsCard.topAnchor.constraint(equalTo: connectionsLabel.bottomAnchor, constant: 10),
+            connectionsCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            connectionsCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add connections options
+        let connectionsOptions = [
+            ("icloud", "iCloud Sync"),
+            ("waveform.path.ecg", "Health App"),
+            ("calendar", "The Focus Calendar"),
+            ("square.grid.3x3", "The Maze"),
+            ("testtube.2", "The Hypergraph"),
+            ("waveform", "The Immersive Topology")
+        ]
+        
+        previousView = nil
+        for (index, option) in connectionsOptions.enumerated() {
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 401 + index)
+            connectionsCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? connectionsCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: connectionsCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: connectionsCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < connectionsOptions.count - 1 {
+                addSeparator(to: optionView, in: connectionsCard)
+            }
+            
+            previousView = optionView
+        }
+        
+        connectionsCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
+        
+        // Bottom spacing
+        contentView.bottomAnchor.constraint(equalTo: connectionsCard.bottomAnchor, constant: 30).isActive = true
+    }
+    
+    private func createIntegrationOption(iconName: String, title: String, tag: Int) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.tag = tag
+        
+        // Icon background (optional, can be removed for cleaner look)
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = UIColor.systemGray5
+        iconContainer.layer.cornerRadius = 8
+        container.addSubview(iconContainer)
+        
+        // Icon
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        iconContainer.addSubview(iconImageView)
+        
+        // Title
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 17)
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(titleLabel)
+        
+        // Chevron
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.tintColor = FocusCalendarTheme.tertiaryTextColor
+        chevron.contentMode = .scaleAspectFit
+        container.addSubview(chevron)
+        
+        NSLayoutConstraint.activate([
+            // Icon container
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 36),
+            iconContainer.heightAnchor.constraint(equalToConstant: 36),
+            
+            // Icon
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 22),
+            iconImageView.heightAnchor.constraint(equalToConstant: 22),
+            
+            // Title
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 16),
+            titleLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            
+            // Chevron
+            chevron.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            chevron.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 13),
+            chevron.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        
+        // Add tap gesture
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(integrationOptionTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    @objc private func integrationOptionTapped(_ sender: UITapGestureRecognizer) {
+        guard let view = sender.view else { return }
+        let tag = view.tag
+        
+        // Handle different integration options based on tag
+        switch tag {
+        case 301: // View Leaderboards
+            print("View Leaderboards tapped")
+        case 302: // Instagram
+            print("Instagram integration tapped")
+        case 303: // Facebook
+            print("Facebook integration tapped")
+        case 304: // View Data
+            print("View Data tapped")
+        case 305: // View Manifolds
+            print("View Manifolds tapped")
+        case 306: // View Surjective Submersions
+            print("View Surjective Submersions tapped")
+        case 307: // View Sheaf
+            print("View Sheaf tapped")
+        case 308: // View Morphisms
+            print("View Morphisms tapped")
+        case 309: // View Category
+            print("View Category tapped")
+        case 310: // View Functor
+            print("View Functor tapped")
+        case 401: // iCloud Sync
+            print("iCloud Sync tapped")
+        case 402: // Health App
+            print("Health App integration tapped")
+        case 403: // The Focus Calendar
+            print("The Focus Calendar integration tapped")
+        case 404: // The Maze
+            print("The Maze integration tapped")
+        case 405: // The Hypergraph
+            print("The Hypergraph integration tapped")
+        case 406: // The Immersive Topology
+            print("The Immersive Topology integration tapped")
+        default:
+            print("Unknown integration option: \(tag)")
+        }
     }
     
     private func createIntegrationButton(title: String, tag: Int, in containerView: UIView) -> UIButton {
@@ -1912,6 +2135,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Create scroll view for settings content
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .clear
         settingsView.addSubview(scrollView)
         
         // Create content view inside scroll view
@@ -1921,7 +2145,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Layout scroll view and content view
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
             scrollView.leadingAnchor.constraint(equalTo: settingsView.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: settingsView.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: settingsView.bottomAnchor),
@@ -1933,80 +2157,394 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
         
-        // Create stack view for settings sections
-        let settingsStack = UIStackView()
-        settingsStack.axis = .vertical
-        settingsStack.spacing = 30
-        settingsStack.distribution = .fill
-        settingsStack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(settingsStack)
+        // EXPERIENCE Section
+        let experienceLabel = UILabel()
+        experienceLabel.text = "EXPERIENCE"
+        experienceLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        experienceLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        experienceLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(experienceLabel)
         
         NSLayoutConstraint.activate([
-            settingsStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-            settingsStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            settingsStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            settingsStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+            experienceLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            experienceLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
         ])
         
-        // Define sections and their options
-        let settingsSections = [
-            (title: "Graphics", options: [
-                "Standard", "High Definition", "Low Power", "Simplified", "Detailed", "Experimental"
-            ]),
-            (title: "Metrics", options: [
-                "Basic", "Advanced", "Scientific", "Educational", "Detailed", "Performance"
-            ]),
-            (title: "Sounds", options: [
-                "Standard", "Enhanced", "Minimal", "Realistic", "None", "Educational"
-            ]),
-            (title: "Backgrounds", options: [
-                "None", "AI", "Acadia", "Fluid", "Immersive Topology", "Joshua Tree", 
-                "Outer Space", "Parchment", "Sachuest", "The Maze Guide", "The Portraits", "TSP"
-            ])
+        // Experience card
+        let experienceCard = createSettingsCard()
+        contentView.addSubview(experienceCard)
+        
+        NSLayoutConstraint.activate([
+            experienceCard.topAnchor.constraint(equalTo: experienceLabel.bottomAnchor, constant: 10),
+            experienceCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            experienceCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add experience options
+        let experienceOptions = [
+            ("image", "Backgrounds"),
+            ("speaker.wave.2", "Sounds"),
+            ("gearshape", "Graphics"),
+            ("chart.line.uptrend.xyaxis", "Metrics")
         ]
         
-        // Add each section to the settings stack
-        for section in settingsSections {
-            // Create and add the section
-            let sectionView = createSettingsSection(title: section.title, options: section.options)
-            settingsStack.addArrangedSubview(sectionView)
+        var previousView: UIView? = nil
+        for (index, option) in experienceOptions.enumerated() {
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 100 + index)
+            experienceCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? experienceCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: experienceCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: experienceCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < experienceOptions.count - 1 {
+                addSeparator(to: optionView, in: experienceCard)
+            }
+            
+            previousView = optionView
         }
         
-        // Add about section at the bottom
-        let aboutButton = UIButton(type: .system)
-        aboutButton.setTitle("About The Pendulum", for: .normal)
-        aboutButton.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
-        aboutButton.titleLabel?.font = FocusCalendarTheme.buttonFont
-        aboutButton.contentHorizontalAlignment = .left
-        aboutButton.addTarget(self, action: #selector(showAboutInfo), for: .touchUpInside)
+        experienceCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
         
+        // CONTROLS Section
+        let controlsLabel = UILabel()
+        controlsLabel.text = "CONTROLS"
+        controlsLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        controlsLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        controlsLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(controlsLabel)
+        
+        NSLayoutConstraint.activate([
+            controlsLabel.topAnchor.constraint(equalTo: experienceCard.bottomAnchor, constant: 40),
+            controlsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
+        
+        // Controls card
+        let controlsCard = createSettingsCard()
+        contentView.addSubview(controlsCard)
+        
+        NSLayoutConstraint.activate([
+            controlsCard.topAnchor.constraint(equalTo: controlsLabel.bottomAnchor, constant: 10),
+            controlsCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            controlsCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add control option
+        let controlOption = ("gamecontroller", "Game Controls")
+        let controlView = createSettingsOption(iconName: controlOption.0, title: controlOption.1, tag: 200)
+        controlsCard.addSubview(controlView)
+        
+        NSLayoutConstraint.activate([
+            controlView.topAnchor.constraint(equalTo: controlsCard.topAnchor),
+            controlView.leadingAnchor.constraint(equalTo: controlsCard.leadingAnchor),
+            controlView.trailingAnchor.constraint(equalTo: controlsCard.trailingAnchor),
+            controlView.heightAnchor.constraint(equalToConstant: 60),
+            controlView.bottomAnchor.constraint(equalTo: controlsCard.bottomAnchor)
+        ])
+        
+        previousView = controlView
+        
+        // INFORMATION Section
+        let infoLabel = UILabel()
+        infoLabel.text = "INFORMATION"
+        infoLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        infoLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        infoLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(infoLabel)
+        
+        NSLayoutConstraint.activate([
+            infoLabel.topAnchor.constraint(equalTo: controlsCard.bottomAnchor, constant: 40),
+            infoLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
+        
+        // Information card
+        let infoCard = createSettingsCard()
+        contentView.addSubview(infoCard)
+        
+        NSLayoutConstraint.activate([
+            infoCard.topAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 10),
+            infoCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            infoCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add information options
+        let infoOptions = [
+            ("info.circle", "About The Pendulum"),
+            ("doc.text", "Privacy Policy"),
+            ("envelope", "Contact Support")
+        ]
+        
+        previousView = nil
+        for (index, option) in infoOptions.enumerated() {
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 300 + index)
+            infoCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? infoCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: infoCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < infoOptions.count - 1 {
+                addSeparator(to: optionView, in: infoCard)
+            }
+            
+            previousView = optionView
+        }
+        
+        infoCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
+        
+        // Version info at bottom
         let versionLabel = UILabel()
-        versionLabel.text = "Version 1.0.0"
-        versionLabel.font = FocusCalendarTheme.bodyFont
+        versionLabel.text = "Version 1.0.0 (Build 1)"
+        versionLabel.font = UIFont.systemFont(ofSize: 12)
         versionLabel.textColor = FocusCalendarTheme.tertiaryTextColor
-        versionLabel.textAlignment = .left
+        versionLabel.textAlignment = .center
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(versionLabel)
         
-        let aboutStack = UIStackView(arrangedSubviews: [aboutButton, versionLabel])
-        aboutStack.axis = .vertical
-        aboutStack.spacing = 5
-        aboutStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            versionLabel.topAnchor.constraint(equalTo: infoCard.bottomAnchor, constant: 30),
+            versionLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            versionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
+        ])
+    }
+    
+    private func createSettingsCard() -> UIView {
+        let card = UIView()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = FocusCalendarTheme.cardBackgroundColor
+        card.layer.cornerRadius = 12
+        card.layer.masksToBounds = true
+        return card
+    }
+    
+    private func createSettingsOption(iconName: String, title: String, tag: Int) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.tag = tag
         
+        // Icon background (optional, can be removed for cleaner look)
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = UIColor.systemGray5
+        iconContainer.layer.cornerRadius = 8
+        container.addSubview(iconContainer)
+        
+        // Icon
+        let iconImageView = UIImageView(image: UIImage(systemName: iconName))
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        iconContainer.addSubview(iconImageView)
+        
+        // Title
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 17)
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(titleLabel)
+        
+        // Chevron
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.tintColor = FocusCalendarTheme.tertiaryTextColor
+        chevron.contentMode = .scaleAspectFit
+        container.addSubview(chevron)
+        
+        NSLayoutConstraint.activate([
+            // Icon container
+            iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 36),
+            iconContainer.heightAnchor.constraint(equalToConstant: 36),
+            
+            // Icon
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 22),
+            iconImageView.heightAnchor.constraint(equalToConstant: 22),
+            
+            // Title
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 16),
+            titleLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            
+            // Chevron
+            chevron.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            chevron.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 13),
+            chevron.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        
+        // Add tap gesture
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(settingsOptionTapped(_:)))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }
+    
+    private func addSeparator(to view: UIView, in containerView: UIView) {
         let separator = UIView()
-        separator.backgroundColor = FocusCalendarTheme.borderColor
+        separator.backgroundColor = FocusCalendarTheme.borderColor.withAlphaComponent(0.3)
         separator.translatesAutoresizingMaskIntoConstraints = false
-        separator.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        containerView.addSubview(separator)
         
-        let aboutSectionStack = UIStackView(arrangedSubviews: [separator, aboutStack])
-        aboutSectionStack.axis = .vertical
-        aboutSectionStack.spacing = 15
-        aboutSectionStack.translatesAutoresizingMaskIntoConstraints = false
-        aboutSectionStack.layoutMargins = UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0)
-        aboutSectionStack.isLayoutMarginsRelativeArrangement = true
+        NSLayoutConstraint.activate([
+            separator.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 60),
+            separator.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            separator.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            separator.heightAnchor.constraint(equalToConstant: 0.5)
+        ])
+    }
+    
+    @objc private func settingsOptionTapped(_ sender: UITapGestureRecognizer) {
+        guard let view = sender.view else { return }
+        let tag = view.tag
         
-        settingsStack.addArrangedSubview(aboutSectionStack)
+        // Handle different settings options based on tag
+        switch tag {
+        // Experience options
+        case 100: // Backgrounds
+            showBackgroundSettings()
+        case 101: // Sounds
+            showSoundSettings()
+        case 102: // Graphics
+            showGraphicsSettings()
+        case 103: // Metrics
+            showMetricsSettings()
+        // Controls options
+        case 200: // Game Controls
+            showGameControlSettings()
+        // Information options
+        case 300: // About
+            showAboutInfo()
+        case 301: // Privacy Policy
+            showPrivacyPolicy()
+        case 302: // Contact Support
+            showContactSupport()
+        default:
+            break
+        }
+    }
+    
+    // Settings action methods
+    private func showBackgroundSettings() {
+        let backgroundOptions = [
+            "None", "AI", "Acadia", "Fluid", "Immersive Topology", "Joshua Tree",
+            "Outer Space", "Parchment", "Sachuest", "The Maze Guide", "The Portraits", "TSP"
+        ]
         
-        // Force a minimum content height
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 800).isActive = true
+        showSettingsOptions(title: "Backgrounds", options: backgroundOptions) { selectedOption in
+            BackgroundManager.shared.updateBackgroundMode(selectedOption)
+            DispatchQueue.main.async {
+                BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
+            }
+            UserDefaults.standard.set(selectedOption, forKey: "backgroundMode")
+        }
+    }
+    
+    private func showSoundSettings() {
+        let soundOptions = [
+            "Standard", "Enhanced", "Minimal", "Realistic", "None", "Educational"
+        ]
+        
+        showSettingsOptions(title: "Sounds", options: soundOptions) { selectedOption in
+            // Save sound preference
+            UserDefaults.standard.set(selectedOption, forKey: "soundMode")
+            print("Sound mode set to: \(selectedOption)")
+            // TODO: Apply sound settings to PendulumSoundManager
+        }
+    }
+    
+    private func showGraphicsSettings() {
+        let graphicsOptions = [
+            "Standard", "High Definition", "Low Power", "Simplified", "Detailed", "Experimental"
+        ]
+        
+        showSettingsOptions(title: "Graphics", options: graphicsOptions) { selectedOption in
+            // Save graphics preference
+            UserDefaults.standard.set(selectedOption, forKey: "graphicsMode")
+            print("Graphics mode set to: \(selectedOption)")
+            // TODO: Apply graphics settings to scene rendering
+        }
+    }
+    
+    private func showMetricsSettings() {
+        let metricsOptions = [
+            "Basic", "Advanced", "Scientific", "Educational", "Detailed", "Performance"
+        ]
+        
+        showSettingsOptions(title: "Metrics", options: metricsOptions) { selectedOption in
+            // Save metrics preference
+            UserDefaults.standard.set(selectedOption, forKey: "metricsMode")
+            print("Metrics mode set to: \(selectedOption)")
+            // TODO: Update analytics display based on selection
+        }
+    }
+    
+    private func showGameControlSettings() {
+        let controlOptions = [
+            "Push", "Gyroscope", "Slide", "Tap", "Swipe", "Tilt"
+        ]
+        
+        showSettingsOptions(title: "Game Controls", options: controlOptions) { selectedOption in
+            // Save control preference
+            UserDefaults.standard.set(selectedOption, forKey: "controlMode")
+            print("Control mode set to: \(selectedOption)")
+            // TODO: Apply control settings to game
+        }
+    }
+    
+    // Helper method to show options selection
+    private func showSettingsOptions(title: String, options: [String], completion: @escaping (String) -> Void) {
+        let alertController = UIAlertController(title: title, message: "Select an option", preferredStyle: .actionSheet)
+        
+        // Get current selection if any
+        let currentSelection: String?
+        switch title {
+        case "Backgrounds":
+            currentSelection = UserDefaults.standard.string(forKey: "backgroundMode") ?? "None"
+        case "Sounds":
+            currentSelection = UserDefaults.standard.string(forKey: "soundMode") ?? "Standard"
+        case "Graphics":
+            currentSelection = UserDefaults.standard.string(forKey: "graphicsMode") ?? "Standard"
+        case "Metrics":
+            currentSelection = UserDefaults.standard.string(forKey: "metricsMode") ?? "Basic"
+        case "Game Controls":
+            currentSelection = UserDefaults.standard.string(forKey: "controlMode") ?? "Swipe"
+        default:
+            currentSelection = nil
+        }
+        
+        for option in options {
+            let action = UIAlertAction(title: option, style: .default) { _ in
+                completion(option)
+            }
+            
+            // Add checkmark to current selection
+            if option == currentSelection {
+                action.setValue(true, forKey: "checked")
+            }
+            
+            alertController.addAction(action)
+        }
+        
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        // For iPad
+        if let popover = alertController.popoverPresentationController {
+            popover.sourceView = self.view
+            popover.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        
+        present(alertController, animated: true)
     }
     
     private func createSettingsSection(title: String, options: [String]) -> UIView {
@@ -2330,17 +2868,35 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             title: "About The Pendulum",
             message: """
             The Pendulum Simulation
-            Golden Enterprise Solutions
+            Golden Enterprises Solutions Inc.
             
             A physics-based pendulum simulation with dynamic perturbations and comprehensive visualizations.
             
+            Chief Mathematician: Brian DiZio
+            Rhode Island, USA
+            
             Version: 1.0.0
+            © 2025 Golden Enterprises Solutions Inc.
             """,
             preferredStyle: .alert
         )
         
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    
+    @objc private func showPrivacyPolicy() {
+        let privacyVC = PrivacyPolicyViewController()
+        let navController = UINavigationController(rootViewController: privacyVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
+    }
+    
+    @objc private func showContactSupport() {
+        let contactVC = ContactSupportViewController()
+        let navController = UINavigationController(rootViewController: contactVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
     }
     
     private func createParameterControl(title: String, slider: UISlider) -> UIView {
@@ -2707,7 +3263,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             scene?.showStatusMessage("Game Paused", color: UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0))
             
             // Change button text
-            startButton.setTitle("▶ Resume", for: .normal)
+            startButton.setTitle("Resume", for: .normal)
         }
         
         // Update phase space view with current pendulum state
@@ -2888,7 +3444,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         updateGameMessageLabel("Game paused - Return to Simulation tab and press Resume or Push to continue")
         
         // Change button text to reflect state
-        startButton.setTitle("▶ Resume", for: .normal)
+        startButton.setTitle("Resume", for: .normal)
     }
     
     @objc private func pushLeftButtonTapped() {
