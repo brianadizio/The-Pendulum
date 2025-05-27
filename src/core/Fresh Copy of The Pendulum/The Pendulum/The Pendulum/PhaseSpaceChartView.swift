@@ -20,6 +20,8 @@ class PhaseSpaceChartView: UIView {
     }
     
     private func setupUI() {
+        // Ensure this view doesn't conflict with Auto Layout
+        translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = UIColor(white: 0.98, alpha: 1.0)
         layer.cornerRadius = 12
         layer.borderWidth = 1
@@ -87,6 +89,11 @@ class PhaseSpaceChartView: UIView {
     }
     
     private func convert(theta: Double, omega: Double) -> CGPoint {
+        // Check for NaN or infinite values
+        guard !theta.isNaN && !theta.isInfinite && !omega.isNaN && !omega.isInfinite else {
+            return CGPoint(x: bounds.width / 2, y: (bounds.height - 52) / 2 + 52)
+        }
+        
         // Convert physics coordinates to view coordinates
         // Center of phase space area (accounting for level selector)
         let centerX = bounds.width / 2

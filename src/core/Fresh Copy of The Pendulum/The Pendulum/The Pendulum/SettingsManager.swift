@@ -88,6 +88,18 @@ class SettingsManager {
         }
     }
     
+    /// Get the corresponding MetricGroupType for the current metrics setting
+    func getMetricGroupType() -> MetricGroupType {
+        switch metrics {
+        case "Advanced": return .advanced
+        case "Scientific": return .scientific
+        case "Educational": return .educational
+        case "Topology": return .topology
+        case "Performance": return .performance
+        default: return .basic
+        }
+    }
+    
     /// Apply metrics settings to the view model
     func applyMetricsSettings(to viewModel: PendulumViewModel) {
         switch metrics {
@@ -109,10 +121,10 @@ class SettingsManager {
             viewModel.showHints = true
             viewModel.recordTrajectory = true
             
-        case "Detailed":
+        case "Topology":
             viewModel.showAdvancedMetrics = true
             viewModel.showBasicMetrics = true
-            viewModel.showRawData = true
+            viewModel.showTopologyMetrics = true
             viewModel.recordFullTrajectory = true
             
         case "Performance":
@@ -287,6 +299,7 @@ class ViewModelSettings {
     var showHints: Bool = false
     var recordFullTrajectory: Bool = false
     var showPerformanceMetrics: Bool = false
+    var showTopologyMetrics: Bool = false
     
     private init() {}
 }
@@ -330,6 +343,11 @@ extension PendulumViewModel {
     var showPerformanceMetrics: Bool {
         get { return ViewModelSettings.shared.showPerformanceMetrics }
         set { ViewModelSettings.shared.showPerformanceMetrics = newValue }
+    }
+    
+    var showTopologyMetrics: Bool {
+        get { return ViewModelSettings.shared.showTopologyMetrics }
+        set { ViewModelSettings.shared.showTopologyMetrics = newValue }
     }
 }
 

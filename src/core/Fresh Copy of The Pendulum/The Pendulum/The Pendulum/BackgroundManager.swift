@@ -150,7 +150,7 @@ class BackgroundManager {
             print("[BackgroundManager] Current folder is None, removing background")
             removeBackground(from: view)
             // Restore the original background color
-            view.backgroundColor = .goldenBackground
+            view.backgroundColor = UIColor.goldenBackground
             return
         }
         
@@ -270,7 +270,7 @@ class BackgroundManager {
             print("[BackgroundManager] Clearing backgrounds for \(view.subviews.count) subviews")
             for subview in view.subviews {
                 if subview != backgroundImageViews[view] {
-                    if subview.backgroundColor == .goldenBackground {
+                    if subview.backgroundColor == UIColor.goldenBackground {
                         print("[BackgroundManager] Clearing golden background from subview: \(type(of: subview))")
                         subview.backgroundColor = .clear
                     }

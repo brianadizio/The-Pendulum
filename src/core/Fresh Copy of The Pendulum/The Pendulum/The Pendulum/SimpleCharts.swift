@@ -30,6 +30,8 @@ class SimpleChartView: UIView {
     }
     
     private func setupView() {
+        // Ensure this view doesn't conflict with Auto Layout
+        translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .white
         layer.cornerRadius = 10
         layer.shadowColor = UIColor.black.cgColor
@@ -72,7 +74,33 @@ class SimpleChartView: UIView {
     override func draw(_ rect: CGRect) {
         super.draw(rect)
         
-        guard let context = UIGraphicsGetCurrentContext(), !dataPoints.isEmpty else {
+        // Debug: Log chart drawing with unique identifier
+        let chartId = "\(type(of: self))_\(title)"
+        print("DEBUG: Drawing chart '\(chartId)' with \(dataPoints.count) points")
+        
+        // Debug: Check for NaN in data points
+        var hasNaN = false
+        for (index, point) in dataPoints.enumerated() {
+            if point.isNaN || point.isInfinite {
+                print("ERROR: NaN/Infinite detected in '\(chartId)' at index \(index): \(point)")
+                print("DEBUG: Chart is visible: \(self.window != nil), Alpha: \(self.alpha), Hidden: \(self.isHidden)")
+                hasNaN = true
+            }
+        }
+        
+        // Check if rect is valid
+        if rect.width.isNaN || rect.height.isNaN || rect.width.isInfinite || rect.height.isInfinite {
+            print("ERROR: Invalid rect for '\(chartId)': \(rect)")
+            return
+        }
+        
+        guard let context = UIGraphicsGetCurrentContext() else {
+            print("ERROR: No graphics context for '\(chartId)'")
+            return
+        }
+        
+        // If we have no data points, show the no data message
+        if dataPoints.isEmpty {
             drawNoDataMessage(in: rect)
             return
         }
@@ -80,8 +108,13 @@ class SimpleChartView: UIView {
         // Draw title
         drawTitle(in: rect)
         
-        // Draw chart area based on type
-        drawChartContent(context: context, in: rect)
+        // Draw chart area based on type (only if no NaN)
+        if !hasNaN {
+            drawChartContent(context: context, in: rect)
+        } else {
+            print("WARNING: Skipping chart content drawing for '\(chartId)' due to NaN data")
+            drawNoDataMessage(in: rect)
+        }
     }
     
     func drawChartContent(context: CGContext, in rect: CGRect) {
@@ -89,6 +122,9 @@ class SimpleChartView: UIView {
     }
     
     func drawTitle(in rect: CGRect) {
+        // Skip if title is empty
+        guard !title.isEmpty else { return }
+        
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: 16),
             .foregroundColor: UIColor.black
@@ -102,16 +138,29 @@ class SimpleChartView: UIView {
             height: titleSize.height
         )
         
+        // Validate title rect
+        guard titleRect.width > 0 && titleRect.height > 0 && 
+              !titleRect.width.isNaN && !titleRect.height.isNaN else { return }
+        
         title.draw(in: titleRect, withAttributes: titleAttributes)
     }
     
     func drawNoDataMessage(in rect: CGRect) {
+        // Validate rect
+        guard rect.width > 0 && rect.height > 0 && !rect.width.isNaN && !rect.height.isNaN else {
+            print("WARNING: Invalid rect in drawNoDataMessage")
+            return
+        }
+        
         // Get the message from the title if it contains "No Data", otherwise use generic message
         let defaultMessage = "No data available"
         let message = title.contains("No Data") ? title : defaultMessage
         
         // Draw background
-        let bgPath = UIBezierPath(roundedRect: rect.insetBy(dx: margin, dy: topMargin), cornerRadius: 8)
+        let insetRect = rect.insetBy(dx: margin, dy: topMargin)
+        guard insetRect.width > 0 && insetRect.height > 0 else { return }
+        
+        let bgPath = UIBezierPath(roundedRect: insetRect, cornerRadius: 8)
         UIColor.systemGray6.setFill()
         bgPath.fill()
         
@@ -134,12 +183,26 @@ class SimpleChartView: UIView {
     
     // Helper function to get chart area
     func getChartArea(in rect: CGRect) -> CGRect {
-        return CGRect(
+        let chartArea = CGRect(
             x: margin,
             y: topMargin,
             width: rect.width - (margin * 2),
             height: rect.height - topMargin - bottomMargin
         )
+        
+        // Debug logging
+        if chartArea.width <= 0 || chartArea.height <= 0 || chartArea.width.isNaN || chartArea.height.isNaN {
+            print("WARNING: Invalid chart area for \(title): width=\(chartArea.width), height=\(chartArea.height)")
+            print("  Original rect: \(rect)")
+            print("  Margins: top=\(topMargin), bottom=\(bottomMargin), margin=\(margin)")
+        }
+        
+        // Ensure valid dimensions
+        guard chartArea.width > 0 && chartArea.height > 0 && !chartArea.width.isNaN && !chartArea.height.isNaN else {
+            return CGRect.zero
+        }
+        
+        return chartArea
     }
     
     // Helper function to draw axes
@@ -162,12 +225,18 @@ class SimpleChartView: UIView {
     func drawXAxisLabels(in chartArea: CGRect) {
         guard !labels.isEmpty else { return }
         
+        // Validate chart area
+        guard chartArea.width > 0 && chartArea.height > 0 && !chartArea.width.isNaN && !chartArea.height.isNaN else {
+            print("WARNING: Invalid chart area in drawXAxisLabels")
+            return
+        }
+        
         let labelAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 10),
             .foregroundColor: UIColor.darkGray
         ]
         
-        let stepWidth = chartArea.width / CGFloat(labels.count > 1 ? labels.count - 1 : 1)
+        let stepWidth = labels.count > 1 ? chartArea.width / CGFloat(labels.count - 1) : chartArea.width
         
         // Only draw a subset of labels if there are too many
         let maxLabels = 5
@@ -190,6 +259,10 @@ class SimpleChartView: UIView {
     
     // Helper to draw Y-axis labels with tick marks
     func drawYAxisLabels(in context: CGContext, chartArea: CGRect, minValue: Double, maxValue: Double, unit: String = "") {
+        // Validate inputs
+        guard chartArea.height > 0 && !minValue.isNaN && !minValue.isInfinite && 
+              !maxValue.isNaN && !maxValue.isInfinite else { return }
+        
         let labelAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 10),
             .foregroundColor: UIColor.darkGray
@@ -205,6 +278,9 @@ class SimpleChartView: UIView {
             let progress = CGFloat(i) / CGFloat(tickCount)
             let y = chartArea.maxY - (progress * chartArea.height)
             let value = minValue + ((maxValue - minValue) * Double(progress))
+            
+            // Skip if y or value is invalid
+            guard !y.isNaN && !y.isInfinite && !value.isNaN && !value.isInfinite else { continue }
             
             // Draw tick mark
             context.move(to: CGPoint(x: chartArea.minX - 5, y: y))
@@ -242,9 +318,25 @@ class SimpleLineChartView: SimpleChartView {
     override func drawChartContent(context: CGContext, in rect: CGRect) {
         let chartArea = getChartArea(in: rect)
         
+        // Check for valid chart area
+        guard chartArea.width > 0 && chartArea.height > 0 else { return }
+        
+        // Check for empty data
+        guard !dataPoints.isEmpty else {
+            drawNoDataMessage(in: rect)
+            return
+        }
+        
+        // Filter out any NaN or infinite values
+        let validDataPoints = dataPoints.filter { !$0.isNaN && !$0.isInfinite }
+        guard !validDataPoints.isEmpty else {
+            drawNoDataMessage(in: rect)
+            return
+        }
+        
         // Find min/max values for scaling
-        let minValue = dataPoints.min() ?? 0
-        let maxValue = max(dataPoints.max() ?? 1, minValue + 1) // Ensure range is at least 1
+        let minValue = validDataPoints.min() ?? 0
+        let maxValue = max(validDataPoints.max() ?? 1, minValue + 1) // Ensure range is at least 1
         
         // Draw axes
         drawAxes(in: context, chartArea: chartArea)
@@ -257,7 +349,7 @@ class SimpleLineChartView: SimpleChartView {
         
         // Calculate step sizes
         let stepX = chartArea.width / CGFloat(dataPoints.count > 1 ? dataPoints.count - 1 : 1)
-        let valueRange = maxValue - minValue
+        let valueRange = max(maxValue - minValue, 0.001) // Prevent division by zero
         
         // Set line properties
         context.setStrokeColor(color.cgColor)
@@ -266,35 +358,51 @@ class SimpleLineChartView: SimpleChartView {
         
         // Create the line path
         if dataPoints.count > 0 {
-            let normalizedY = CGFloat(1 - ((dataPoints[0] - minValue) / valueRange))
-            let startX = chartArea.minX
+            var validStartIndex = -1
+            
+            // Find first valid data point
+            for i in 0..<dataPoints.count {
+                if !dataPoints[i].isNaN && !dataPoints[i].isInfinite {
+                    validStartIndex = i
+                    break
+                }
+            }
+            
+            guard validStartIndex >= 0 else { return }
+            
+            let normalizedY = CGFloat(1 - ((dataPoints[validStartIndex] - minValue) / valueRange))
+            let startX = chartArea.minX + (CGFloat(validStartIndex) * stepX)
             let startY = chartArea.minY + (normalizedY * chartArea.height)
             
             context.move(to: CGPoint(x: startX, y: startY))
             
-            for i in 1..<dataPoints.count {
-                let normalizedY = CGFloat(1 - ((dataPoints[i] - minValue) / valueRange))
-                let pointX = chartArea.minX + (CGFloat(i) * stepX)
-                let pointY = chartArea.minY + (normalizedY * chartArea.height)
-                
-                context.addLine(to: CGPoint(x: pointX, y: pointY))
+            for i in (validStartIndex + 1)..<dataPoints.count {
+                if !dataPoints[i].isNaN && !dataPoints[i].isInfinite {
+                    let normalizedY = CGFloat(1 - ((dataPoints[i] - minValue) / valueRange))
+                    let pointX = chartArea.minX + (CGFloat(i) * stepX)
+                    let pointY = chartArea.minY + (normalizedY * chartArea.height)
+                    
+                    context.addLine(to: CGPoint(x: pointX, y: pointY))
+                }
             }
             
             context.strokePath()
             
             // Draw data points
             for i in 0..<dataPoints.count {
-                let normalizedY = CGFloat(1 - ((dataPoints[i] - minValue) / valueRange))
-                let pointX = chartArea.minX + (CGFloat(i) * stepX)
-                let pointY = chartArea.minY + (normalizedY * chartArea.height)
-                
-                context.setFillColor(color.cgColor)
-                context.fillEllipse(in: CGRect(
-                    x: pointX - 3,
-                    y: pointY - 3,
-                    width: 6,
-                    height: 6
-                ))
+                if !dataPoints[i].isNaN && !dataPoints[i].isInfinite {
+                    let normalizedY = CGFloat(1 - ((dataPoints[i] - minValue) / valueRange))
+                    let pointX = chartArea.minX + (CGFloat(i) * stepX)
+                    let pointY = chartArea.minY + (normalizedY * chartArea.height)
+                    
+                    context.setFillColor(color.cgColor)
+                    context.fillEllipse(in: CGRect(
+                        x: pointX - 3,
+                        y: pointY - 3,
+                        width: 6,
+                        height: 6
+                    ))
+                }
             }
         }
     }
@@ -305,11 +413,30 @@ class SimpleLineChartView: SimpleChartView {
 class SimpleBarChartView: SimpleChartView {
     
     override func drawChartContent(context: CGContext, in rect: CGRect) {
+        // Check for empty data FIRST before doing any calculations
+        guard !dataPoints.isEmpty else {
+            drawNoDataMessage(in: rect)
+            return
+        }
+        
         let chartArea = getChartArea(in: rect)
+        
+        // Check for valid chart area
+        guard chartArea.width > 0 && chartArea.height > 0 else {
+            print("WARNING: Invalid chart area for bar chart '\(title)'")
+            return
+        }
+        
+        // Filter out any NaN or infinite values
+        let validDataPoints = dataPoints.filter { !$0.isNaN && !$0.isInfinite }
+        guard !validDataPoints.isEmpty else {
+            drawNoDataMessage(in: rect)
+            return
+        }
         
         // Find max value for scaling
         let minValue: Double = 0 // Bar charts typically start from 0
-        let maxValue = dataPoints.max() ?? 1
+        let maxValue = max(validDataPoints.max() ?? 1, 1) // Ensure at least 1 to prevent division by zero
         
         // Draw axes
         drawAxes(in: context, chartArea: chartArea)
@@ -320,7 +447,8 @@ class SimpleBarChartView: SimpleChartView {
         // Draw Y-axis labels with tick marks
         drawYAxisLabels(in: context, chartArea: chartArea, minValue: minValue, maxValue: maxValue, unit: getUnitFromTitle())
         
-        // Calculate bar width
+        // Calculate bar width - protect against division by zero
+        guard dataPoints.count > 0 else { return }
         let barWidth = (chartArea.width / CGFloat(dataPoints.count)) * 0.8
         let barSpacing = (chartArea.width / CGFloat(dataPoints.count)) * 0.2
         
@@ -328,16 +456,20 @@ class SimpleBarChartView: SimpleChartView {
         context.setFillColor(color.cgColor)
         
         for (index, value) in dataPoints.enumerated() {
-            let normalizedHeight = CGFloat((value - minValue) / (maxValue - minValue)) * chartArea.height
-            let barX = chartArea.minX + (CGFloat(index) * (barWidth + barSpacing)) + (barSpacing / 2)
-            let barY = chartArea.maxY - normalizedHeight
-            
-            context.fill(CGRect(
-                x: barX,
-                y: barY,
-                width: barWidth,
-                height: normalizedHeight
-            ))
+            if !value.isNaN && !value.isInfinite {
+                let normalizedHeight = CGFloat((value - minValue) / (maxValue - minValue)) * chartArea.height
+                let barX = chartArea.minX + (CGFloat(index) * (barWidth + barSpacing)) + (barSpacing / 2)
+                let barY = chartArea.maxY - normalizedHeight
+                
+                if normalizedHeight > 0 {
+                    context.fill(CGRect(
+                        x: barX,
+                        y: barY,
+                        width: barWidth,
+                        height: normalizedHeight
+                    ))
+                }
+            }
         }
     }
 }
@@ -347,28 +479,62 @@ class SimpleBarChartView: SimpleChartView {
 class SimplePieChartView: SimpleChartView {
     var segments: [(value: Double, label: String, color: UIColor)] = []
     
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.title = "Pie Chart" // Default title to prevent empty string
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.title = "Pie Chart" // Default title to prevent empty string
+    }
+    
     func updateSegments(_ segments: [(value: Double, label: String, color: UIColor)]) {
         self.segments = segments
         setNeedsDisplay()
     }
     
     override func drawChartContent(context: CGContext, in rect: CGRect) {
+        print("DEBUG: Drawing pie chart with \(segments.count) segments")
         guard !segments.isEmpty else { return }
         
         let chartArea = getChartArea(in: rect)
+        guard chartArea != CGRect.zero else {
+            print("WARNING: Pie chart area is zero")
+            return
+        }
+        
         let center = CGPoint(x: chartArea.midX, y: chartArea.midY)
         let radius = min(chartArea.width, chartArea.height) / 2
         
+        // Check for NaN in center or radius
+        if center.x.isNaN || center.y.isNaN || radius.isNaN || radius.isInfinite {
+            print("ERROR: NaN/Infinite in pie chart geometry - center: \(center), radius: \(radius)")
+            return
+        }
+        
         // Calculate total value
         let total = segments.reduce(0) { $0 + $1.value }
+        
+        // If total is 0, show no data message
+        guard total > 0 else {
+            drawNoDataMessage(in: rect)
+            return
+        }
         
         // Track start angle
         var startAngle: CGFloat = -.pi / 2 // Start at top
         
         // Draw segments
         for segment in segments {
+            // Skip segments with 0 or invalid value
+            guard segment.value > 0 && !segment.value.isNaN && !segment.value.isInfinite else { continue }
+            
             // Calculate angle for this segment
             let angle = CGFloat(segment.value / total) * .pi * 2
+            
+            // Skip segments with 0 or invalid angle
+            guard angle > 0 && !angle.isNaN && !angle.isInfinite else { continue }
             
             // Set fill color
             context.setFillColor(segment.color.cgColor)
@@ -417,13 +583,21 @@ class SimplePieChartView: SimpleChartView {
         }
         
         // Draw center circle (hole)
-        context.setFillColor(UIColor.white.cgColor)
-        context.fillEllipse(in: CGRect(
-            x: center.x - (radius * 0.5),
-            y: center.y - (radius * 0.5),
-            width: radius,
-            height: radius
-        ))
+        let holeRadius = radius * 0.5
+        let holeRect = CGRect(
+            x: center.x - holeRadius,
+            y: center.y - holeRadius,
+            width: holeRadius * 2,
+            height: holeRadius * 2
+        )
+        
+        // Check for NaN before drawing
+        if holeRect.origin.x.isNaN || holeRect.origin.y.isNaN || holeRect.width.isNaN || holeRect.height.isNaN {
+            print("ERROR: NaN in pie chart hole rect: \(holeRect)")
+        } else {
+            context.setFillColor(UIColor.white.cgColor)
+            context.fillEllipse(in: holeRect)
+        }
     }
     
     override func drawXAxisLabels(in chartArea: CGRect) {

@@ -25,6 +25,17 @@ When analyzing this codebase, be sure to read these critical files using offset 
 - AnalyticsDashboardViewNative.swift
 - AnalyticsDashboardView.swift
 
+## Large File Handling
+When encountering a file that exceeds token limits:
+- ALWAYS read the file in its entirety by using multiple Read operations with chunks of 7500 tokens
+- Start with offset=0 and continue incrementing the offset by the chunk size until the entire file is read
+- Lean towards reading files completely rather than just sampling portions
+- This ensures full understanding of the code structure and prevents missing critical implementation details
+- Example for a large file:
+  - First chunk: Read file_path="/path/to/file" offset=0 limit=7500
+  - Second chunk: Read file_path="/path/to/file" offset=7500 limit=7500
+  - Continue until reaching the end of the file
+
 ## Project Focus
 - This core functionality of The Pendulum, the scientific modeling, and base controls and application are important to making it a rigorous research tool and for making it a living topology solution.
 - Remember this state of the application, as it's almost completely ready with UI, the physics is right, and only some Modes and Settings need to be precomputed, analyzed in Matlab and uploaded.
@@ -32,3 +43,6 @@ When analyzing this codebase, be sure to read these critical files using offset 
 
 ## Milestone Notes
 - Great job, Claude, together, the application is in a good state. It has full scientific functionality, it's playable, it has graphics, it has sounds, and it's becoming alive.
+
+## Progress Notes
+- Good reseting, adjusting to the problem with the tangled, complicated enhanced dashboard, and refining the solution to a more clear, crystal simplified implementation that includes all data from progressive coding

@@ -17,7 +17,7 @@ class AnalyticsManager {
     private var isTracking: Bool = false
     
     // Current session tracking
-    private var currentSessionId: UUID?
+    internal var currentSessionId: UUID?
     private var sessionStartTime: Date?
     private var lastPushTime: Date?
     private var lastInstabilityTime: Date?
@@ -31,13 +31,13 @@ class AnalyticsManager {
     var directionalPushes: [String: Int] = ["left": 0, "right": 0]
     
     // Performance tracking
-    private var angleBuffer: [Double] = [] // For variance calculation
+    internal var angleBuffer: [Double] = [] // For variance calculation
     private var totalForceApplied: Double = 0
     private var correctionEfficiency: [Double] = [] // Force applied vs. stability gained
-    private var reactionTimes: [Double] = [] // Time from instability to correction
+    internal var reactionTimes: [Double] = [] // Time from instability to correction
     
     // Phase space tracking
-    private var phaseSpacePoints: [(theta: Double, omega: Double)] = []
+    internal var phaseSpacePoints: [(theta: Double, omega: Double)] = []
     private var currentLevel: Int = 0
     private var levelPhaseSpaceData: [Int: [(theta: Double, omega: Double)]] = [:]
     
@@ -286,7 +286,7 @@ class AnalyticsManager {
     
     // MARK: - Analytics Calculation Methods
     
-    private func calculateStabilityScore() -> Double {
+    internal func calculateStabilityScore() -> Double {
         guard !angleBuffer.isEmpty else { return 0 }
         
         // Calculate variance of angles
@@ -302,10 +302,16 @@ class AnalyticsManager {
         let normalizedVariance = min(variance / maxVariance, 1.0)
         let stabilityScore = 100.0 * (1.0 - normalizedVariance)
         
+        // Debug check for NaN
+        if stabilityScore.isNaN || stabilityScore.isInfinite {
+            print("ERROR: NaN/Infinite stability score. Mean: \(mean), Variance: \(variance), AngleBuffer count: \(angleBuffer.count)")
+            return 0.0
+        }
+        
         return stabilityScore
     }
     
-    private func calculateEfficiencyRating() -> Double {
+    internal func calculateEfficiencyRating() -> Double {
         // If no force applied, return 0
         guard totalForceApplied > 0 && !angleBuffer.isEmpty else { return 0 }
         
@@ -313,14 +319,20 @@ class AnalyticsManager {
         let stability = calculateStabilityScore()
         
         // Efficiency is stability achieved per unit of force
-        let normalizedForce = min(totalForceApplied, 100) / 100
+        let normalizedForce = max(min(totalForceApplied, 100) / 100, 0.01) // Prevent division by zero
         let efficiencyRating = stability / normalizedForce
+        
+        // Debug check for NaN
+        if efficiencyRating.isNaN || efficiencyRating.isInfinite {
+            print("ERROR: NaN/Infinite efficiency rating. Stability: \(stability), NormalizedForce: \(normalizedForce), TotalForce: \(totalForceApplied)")
+            return 0.0
+        }
         
         // Normalize to 0-100 scale
         return min(efficiencyRating, 100)
     }
     
-    private func calculateDirectionalBias() -> Double {
+    internal func calculateDirectionalBias() -> Double {
         let leftCount = directionalPushes["left"] ?? 0
         let rightCount = directionalPushes["right"] ?? 0
         let total = leftCount + rightCount
@@ -331,7 +343,7 @@ class AnalyticsManager {
         return Double(rightCount - leftCount) / Double(total)
     }
     
-    private func calculateOvercorrectionRate() -> Double {
+    internal func calculateOvercorrectionRate() -> Double {
         guard !interactionHistory.isEmpty else { return 0 }
         
         // Analyze sequential pushes to detect overcorrections
@@ -362,7 +374,7 @@ class AnalyticsManager {
         return pushCount > 1 ? Double(overcorrectionCount) / Double(pushCount - 1) : 0
     }
     
-    private func determinePlayerStyle(stabilityScore: Double, efficiencyRating: Double, directionalBias: Double, overcorrectionRate: Double) -> String {
+    internal func determinePlayerStyle(stabilityScore: Double, efficiencyRating: Double, directionalBias: Double, overcorrectionRate: Double) -> String {
         // Categorize player style based on metrics
         
         // Check for specific patterns
@@ -567,6 +579,10 @@ class AnalyticsManager {
         if phaseSpacePoints.count > maxPoints {
             phaseSpacePoints.removeFirst()
         }
+    }
+    
+    func getCurrentLevel() -> Int {
+        return currentLevel
     }
     
     func setCurrentLevel(_ level: Int) {
@@ -847,5 +863,127 @@ class AnalyticsManager {
         }
         
         return distribution
+    }
+    
+    // MARK: - Additional Dashboard Statistics
+    
+    func getTotalLevelsCompleted() -> Int {
+        let fetchRequest: NSFetchRequest<PlaySession> = PlaySession.fetchRequest()
+        
+        do {
+            let sessions = try context.fetch(fetchRequest)
+            // Count unique highest levels reached across all sessions
+            let maxLevel = sessions.map { Int($0.highestLevel) }.max() ?? 0
+            return maxLevel
+        } catch {
+            print("Error fetching total levels completed: \(error)")
+            return 0
+        }
+    }
+    
+    func getAverageTimePerLevel() -> Double {
+        let fetchRequest: NSFetchRequest<PlaySession> = PlaySession.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "highestLevel > 0")
+        
+        do {
+            let sessions = try context.fetch(fetchRequest)
+            guard !sessions.isEmpty else { return 0 }
+            
+            let totalTime = sessions.reduce(0.0) { $0 + $1.duration }
+            let totalLevels = sessions.reduce(0) { $0 + Int($1.highestLevel) }
+            
+            return totalLevels > 0 ? totalTime / Double(totalLevels) : 0
+        } catch {
+            print("Error calculating average time per level: \(error)")
+            return 0
+        }
+    }
+    
+    func getLongestBalanceStreak() -> Int {
+        // Get all interaction events from current session
+        guard let sessionId = currentSessionId else {
+            // Try to get from most recent session
+            let fetchRequest: NSFetchRequest<PerformanceMetrics> = PerformanceMetrics.fetchRequest()
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+            fetchRequest.fetchLimit = 1
+            
+            do {
+                if let metric = try context.fetch(fetchRequest).first {
+                    // Estimate based on stability score
+                    // Higher stability = longer balance streaks
+                    return Int(metric.stabilityScore * 0.5) // Convert to seconds estimate
+                }
+            } catch {
+                print("Error fetching longest balance streak: \(error)")
+            }
+            return 0
+        }
+        
+        // For current session, analyze angle buffer
+        var longestStreak = 0
+        var currentStreak = 0
+        let stabilityThreshold = 0.3 // Radians from vertical
+        
+        for angle in angleBuffer {
+            let angleFromVertical = abs(normalizeAngle(angle - Double.pi))
+            if angleFromVertical < stabilityThreshold {
+                currentStreak += 1
+                longestStreak = max(longestStreak, currentStreak)
+            } else {
+                currentStreak = 0
+            }
+        }
+        
+        // Convert from samples to seconds (assuming 60 fps)
+        return longestStreak / 60
+    }
+    
+    func getPlaySessionsLastWeek() -> Int {
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-604800) // 7 days ago
+        
+        let fetchRequest: NSFetchRequest<PlaySession> = PlaySession.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "date >= %@", startDate as NSDate)
+        
+        do {
+            return try context.count(for: fetchRequest)
+        } catch {
+            print("Error counting play sessions last week: \(error)")
+            return 0
+        }
+    }
+    
+    // MARK: - Missing Chart Data Methods
+    
+    func getLevelCompletionsByTimePeriod() -> [Double] {
+        // For now, provide sample data based on current level
+        // This should be enhanced to track actual level completions over time
+        if currentLevel > 0 {
+            // Create a pattern showing progression
+            var completions: [Double] = []
+            for level in 1...min(currentLevel, 10) {
+                completions.append(Double(level))
+            }
+            return completions
+        } else {
+            // Return sample data if no levels completed yet
+            return [1, 2, 1, 3, 2, 1, 4]
+        }
+    }
+    
+    func getParameterHistoryTimeSeries() -> [(Date, Double)] {
+        // Return parameter change history as time series
+        // For now, generate sample parameter evolution data
+        let now = Date()
+        var timeSeries: [(Date, Double)] = []
+        
+        // Generate sample parameter evolution data
+        for i in 0..<10 {
+            let date = now.addingTimeInterval(Double(i - 10) * 60) // 1 minute intervals
+            let value = 1.0 + Double(i) * 0.1 // Gradually increasing
+            timeSeries.append((date, value))
+        }
+        
+        return timeSeries
     }
 }

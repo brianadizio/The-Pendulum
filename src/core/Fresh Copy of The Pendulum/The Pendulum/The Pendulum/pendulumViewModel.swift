@@ -61,42 +61,57 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     private var lastForceAppliedTime: Double = 0
     private var maxAngleRecovered: Double = 0.0 // Track max angle successfully recovered from
     
+    // Flag to prevent recursive parameter updates
+    private var isUpdatingParameters = false
+    
     // Parameter properties with reactive updating
     @Published var mass: Double = 1.0 {
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
     @Published var length: Double = 1.0 {
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
     @Published var damping: Double = 0.0 {  // Zero damping to allow completely natural falling
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
     @Published var gravity: Double = 15.0 {  // Increased gravity significantly for more pronounced falling behavior
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
     // Additional parameters that might be needed
     @Published var springConstant: Double = 0.1 {  // Small spring constant for slight stabilization
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
     // Moment of inertia parameter
     @Published var momentOfInertia: Double = 0.5 {  // Default moment of inertia
         didSet {
-            updatePhysicsParameters()
+            if !isUpdatingParameters {
+                updatePhysicsParameters()
+            }
         }
     }
     
@@ -228,6 +243,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     }
     
     private func loadInitialParameters() {
+        // Set flag to prevent recursive updates
+        isUpdatingParameters = true
+        
         // Get current parameters from the simulation
         let params = simulation.getCurrentParameters()
         
@@ -241,6 +259,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         if params.momentOfInertia > 0 { momentOfInertia = params.momentOfInertia }
         
         print("Loaded initial parameters: mass=\(mass), length=\(length), damping=\(damping), gravity=\(gravity), springConstant=\(springConstant), momentOfInertia=\(momentOfInertia)")
+        
+        // Clear flag
+        isUpdatingParameters = false
     }
     
     private func updatePhysicsParameters() {
@@ -1198,6 +1219,26 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         
         // Log that parameters were directly updated
         print("Parameters directly updated through updateSimulationParameters()")
+    }
+    
+    // Method to update multiple parameters at once without triggering multiple updates
+    func updateAllParameters(mass: Double? = nil, 
+                           length: Double? = nil, 
+                           damping: Double? = nil, 
+                           gravity: Double? = nil, 
+                           springConstant: Double? = nil,
+                           momentOfInertia: Double? = nil) {
+        isUpdatingParameters = true
+        
+        if let mass = mass { self.mass = mass }
+        if let length = length { self.length = length }
+        if let damping = damping { self.damping = damping }
+        if let gravity = gravity { self.gravity = gravity }
+        if let springConstant = springConstant { self.springConstant = springConstant }
+        if let momentOfInertia = momentOfInertia { self.momentOfInertia = momentOfInertia }
+        
+        isUpdatingParameters = false
+        updatePhysicsParameters()
     }
     
     // MARK: - Score Multiplier System
