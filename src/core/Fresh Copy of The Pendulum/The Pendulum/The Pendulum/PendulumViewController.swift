@@ -11,7 +11,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     private let tabBar = UITabBar()
     private let simulationItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "simulationTabPendulum-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "simulation-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Simulation", image: resizedImage, tag: 0)
         item.selectedImage = resizedImage
@@ -20,7 +20,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
     private let dashboardItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "dashboardTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "dashboard-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Dashboard", image: resizedImage, tag: 1)
         item.selectedImage = resizedImage
@@ -29,7 +29,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
     private let modesItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "modesTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "modes-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Modes", image: resizedImage, tag: 2)
         item.selectedImage = resizedImage
@@ -38,7 +38,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
     private let integrationItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "integrationTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "integration-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Integration", image: resizedImage, tag: 3)
         item.selectedImage = resizedImage
@@ -47,7 +47,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
     private let parametersItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "parametersTabPendulum-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "parameters1-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Parameters", image: resizedImage, tag: 4)
         item.selectedImage = resizedImage
@@ -56,7 +56,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
     private let settingsItem: UITabBarItem = {
         // Create the image with original rendering mode to preserve colors
-        let image = UIImage(named: "settingsTabFocusCalendar-removebg-preview")?.withRenderingMode(.alwaysOriginal)
+        let image = UIImage(named: "settings-removebg-preview")?.withRenderingMode(.alwaysOriginal)
         let resizedImage = PendulumViewController.resizeImage(image, targetSize: CGSize(width: 25, height: 25))
         let item = UITabBarItem(title: "Settings", image: resizedImage, tag: 5)
         item.selectedImage = resizedImage
@@ -1644,14 +1644,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Add social options
         let socialOptions = [
-            ("trophy", "View Leaderboards"),
-            ("camera", "Instagram"),
-            ("person.2", "Facebook")
+            ("general11", "View Leaderboards", true),  // Using general11 for leaderboards
+            ("instagram-removebg-preview", "Instagram", true),
+            ("facebook-removebg-preview", "Facebook", true)
         ]
         
         var previousView: UIView? = nil
         for (index, option) in socialOptions.enumerated() {
-            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 301 + index)
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 301 + index, isCustomImage: option.2)
             socialCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -1693,20 +1693,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             dataCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
         ])
         
-        // Add data view options
+        // Add data view options - using general icons from noBg folder
         let dataOptions = [
-            ("doc.text", "View Data"),
-            ("map", "View Manifolds"),
-            ("arrow.up.right.square", "View Surjective Submersions"),
-            ("square.stack.3d.up", "View Sheaf"),
-            ("arrow.triangle.merge", "View Morphisms"),
-            ("rectangle.connected.to.line.below", "View Category"),
-            ("function", "View Functor")
+            ("general12", "View Data", true),
+            ("general13", "View Manifolds", true),
+            ("general14", "View Surjective Submersions", true),
+            ("general15", "View Sheaf", true),
+            ("general16", "View Morphisms", true),
+            ("general17", "View Category", true),
+            ("fibonacciColor", "View Functor", true)  // Using fibonacci image as requested
         ]
         
         previousView = nil
         for (index, option) in dataOptions.enumerated() {
-            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 304 + index)
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 304 + index, isCustomImage: option.2)
             dataCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -1750,17 +1750,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Add connections options
         let connectionsOptions = [
-            ("icloud", "iCloud Sync"),
-            ("waveform.path.ecg", "Health App"),
-            ("calendar", "The Focus Calendar"),
-            ("square.grid.3x3", "The Maze"),
-            ("testtube.2", "The Hypergraph"),
-            ("waveform", "The Immersive Topology")
+            ("cloud-removebg-preview", "iCloud Sync", true),
+            ("health-removebg-preview", "Health App", true),
+            ("FocusCalendarLogo-removebg-preview", "The Focus Calendar", true),
+            ("TheMazeLogo-removebg-preview", "The Maze", true),
+            ("HypergraphLogo-removebg-preview", "The Hypergraph", true),
+            ("tesseract", "The Immersive Topology", true)  // Using tesseract from generalNoBg
         ]
         
         previousView = nil
         for (index, option) in connectionsOptions.enumerated() {
-            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 401 + index)
+            let optionView = createIntegrationOption(iconName: option.0, title: option.1, tag: 401 + index, isCustomImage: option.2)
             connectionsCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -1783,7 +1783,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         contentView.bottomAnchor.constraint(equalTo: connectionsCard.bottomAnchor, constant: 30).isActive = true
     }
     
-    private func createIntegrationOption(iconName: String, title: String, tag: Int) -> UIView {
+    private func createIntegrationOption(iconName: String, title: String, tag: Int, isCustomImage: Bool = false) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
         container.tag = tag
@@ -1796,10 +1796,19 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         container.addSubview(iconContainer)
         
         // Icon
-        let iconImageView = UIImageView(image: UIImage(systemName: iconName))
+        let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        
+        if isCustomImage {
+            // Use custom image from assets
+            iconImageView.image = UIImage(named: iconName)
+        } else {
+            // Use SF Symbol
+            iconImageView.image = UIImage(systemName: iconName)
+            iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        }
+        
         iconContainer.addSubview(iconImageView)
         
         // Title
@@ -2180,17 +2189,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             experienceCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
         ])
         
-        // Add experience options
+        // Add experience options - using custom images where available
         let experienceOptions = [
-            ("image", "Backgrounds"),
-            ("speaker.wave.2", "Sounds"),
-            ("gearshape", "Graphics"),
-            ("chart.line.uptrend.xyaxis", "Metrics")
+            ("backgrounds-removebg-preview", "Backgrounds", true),  // true means custom image
+            ("sound1-removebg-preview", "Sounds", true),
+            ("settings2-removebg-preview", "Graphics", true),  // Using settings2 icon
+            ("metrics1-removebg-preview", "Metrics", true)
         ]
         
         var previousView: UIView? = nil
         for (index, option) in experienceOptions.enumerated() {
-            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 100 + index)
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 100 + index, isCustomImage: option.2)
             experienceCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -2233,8 +2242,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         ])
         
         // Add control option
-        let controlOption = ("gamecontroller", "Game Controls")
-        let controlView = createSettingsOption(iconName: controlOption.0, title: controlOption.1, tag: 200)
+        let controlOption = ("settings3-removebg-preview", "Game Controls", true)
+        let controlView = createSettingsOption(iconName: controlOption.0, title: controlOption.1, tag: 200, isCustomImage: controlOption.2)
         controlsCard.addSubview(controlView)
         
         NSLayoutConstraint.activate([
@@ -2272,14 +2281,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         
         // Add information options
         let infoOptions = [
-            ("info.circle", "About The Pendulum"),
-            ("doc.text", "Privacy Policy"),
-            ("envelope", "Contact Support")
+            ("general18", "About The Pendulum", true),
+            ("general19", "Privacy Policy", true),
+            ("general20", "Contact Support", true)
         ]
         
         previousView = nil
         for (index, option) in infoOptions.enumerated() {
-            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 300 + index)
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 300 + index, isCustomImage: option.2)
             infoCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -2323,7 +2332,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return card
     }
     
-    private func createSettingsOption(iconName: String, title: String, tag: Int) -> UIView {
+    private func createSettingsOption(iconName: String, title: String, tag: Int, isCustomImage: Bool = false) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
         container.tag = tag
@@ -2336,10 +2345,19 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         container.addSubview(iconContainer)
         
         // Icon
-        let iconImageView = UIImageView(image: UIImage(systemName: iconName))
+        let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        
+        if isCustomImage {
+            // Use custom image from assets
+            iconImageView.image = UIImage(named: iconName)
+        } else {
+            // Use SF Symbol
+            iconImageView.image = UIImage(systemName: iconName)
+            iconImageView.tintColor = FocusCalendarTheme.primaryTextColor
+        }
+        
         iconContainer.addSubview(iconImageView)
         
         // Title
@@ -2477,14 +2495,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     private func showMetricsSettings() {
         let metricsOptions = [
-            "Basic", "Advanced", "Scientific", "Educational", "Detailed", "Performance"
+            "Basic", "Advanced", "Scientific", "Educational", "Topology", "Performance"
         ]
         
         showSettingsOptions(title: "Metrics", options: metricsOptions) { selectedOption in
             // Save metrics preference
             UserDefaults.standard.set(selectedOption, forKey: "metricsMode")
             print("Metrics mode set to: \(selectedOption)")
-            // TODO: Update analytics display based on selection
+            
+            // Update analytics display based on selection
+            let metricGroup = SettingsManager.shared.getMetricGroupType()
+            // SimpleDashboard handles metric group selection internally via controls
+            // Settings will be reflected when user switches to dashboard tab
+            
+            // SimpleDashboard automatically updates with latest data
+            // DashboardViewController shows basic stats only
         }
     }
     
@@ -3052,6 +3077,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Show selected view
         view.isHidden = false
         currentView = view
+        
+        // If showing dashboard, sync metrics with settings
+        if view == dashboardView {
+            onAnalyticsTabSelected()
+        }
     }
     
     // MARK: - Simulation Controls

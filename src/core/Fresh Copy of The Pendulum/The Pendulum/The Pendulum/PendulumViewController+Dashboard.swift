@@ -12,27 +12,8 @@ extension PendulumViewController {
         // Set background color to match Golden Enterprises theme
         dashboardView.backgroundColor = (UIColor.goldenBackground as UIColor)
         
-        // Create dashboard view controller
-        dashboardViewController = DashboardViewController(viewModel: viewModel)
-        
-        // Add as child view controller
-        if let dashboardVC = dashboardViewController {
-            addChild(dashboardVC)
-            dashboardVC.view.frame = dashboardView.bounds
-            dashboardVC.view.translatesAutoresizingMaskIntoConstraints = false
-            dashboardView.addSubview(dashboardVC.view)
-            
-            // Set up constraints (safer than just using autoresizingMask)
-            NSLayoutConstraint.activate([
-                dashboardVC.view.topAnchor.constraint(equalTo: dashboardView.topAnchor),
-                dashboardVC.view.leadingAnchor.constraint(equalTo: dashboardView.leadingAnchor),
-                dashboardVC.view.trailingAnchor.constraint(equalTo: dashboardView.trailingAnchor),
-                dashboardVC.view.bottomAnchor.constraint(equalTo: dashboardView.bottomAnchor)
-            ])
-            
-            // Complete the child view controller setup
-            dashboardVC.didMove(toParent: self)
-        }
+        // ONLY setup the enhanced analytics view - remove old dashboard
+        setupEnhancedAnalyticsView()
     }
     
     // Method to update dashboard stats

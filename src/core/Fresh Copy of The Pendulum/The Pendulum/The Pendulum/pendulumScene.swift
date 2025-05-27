@@ -5,7 +5,7 @@ class PendulumScene: SKScene {
     // Pendulum visual elements
     private let pendulumPivot = SKShapeNode(circleOfRadius: 5)
     private let pendulumRod = SKShapeNode()
-    private var pendulumBob = SKShapeNode(circleOfRadius: 15) // Changed to var
+    private var pendulumBob: SKNode = SKShapeNode(circleOfRadius: 15) // Changed to var, using SKNode to allow both shape and sprite
     
     // Trail visualization
     private let trailNode = SKNode()
@@ -51,11 +51,11 @@ class PendulumScene: SKScene {
         print("Scene size: \(self.size)")
         print("View size: \(view.bounds.size)")
         
-        // Set initial background color to white
-        self.backgroundColor = UIColor.white
+        // Set initial background color to light gray to debug visibility
+        self.backgroundColor = UIColor.lightGray.withAlphaComponent(1.0)
         
         // Set up the background based on current state (after initial setup)
-        // updateSceneBackground()  // Comment out for now until we fix positioning
+        // updateSceneBackground()  // Disabled - causing visibility issues
         
         // Setup decorative grid for perspective
         setupGrid()
@@ -85,15 +85,28 @@ class PendulumScene: SKScene {
         pendulumRod.strokeColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0) // Medium gray
         pendulumRod.lineWidth = 5 // More thickness for better visibility with longer rod
         pendulumRod.zPosition = 5
+        pendulumRod.alpha = 1.0  // Ensure full opacity
         addChild(pendulumRod)
 
-        // Setup bob - sized appropriately for the longer pendulum
-        pendulumBob = SKShapeNode(circleOfRadius: 18) // Larger bob for better visibility
-        pendulumBob.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Rich blue
-        pendulumBob.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0) // Darker blue stroke
-        pendulumBob.lineWidth = 3 // Thicker stroke
-        pendulumBob.glowWidth = 3 // Moderate glow
-        pendulumBob.zPosition = 15
+        // Setup bob with image
+        if let bobImage = UIImage(named: "pendulumBob1") {
+            let texture = SKTexture(image: bobImage)
+            let spriteNode = SKSpriteNode(texture: texture)
+            spriteNode.size = CGSize(width: 36, height: 36) // Larger bob for better visibility
+            spriteNode.zPosition = 15
+            spriteNode.alpha = 1.0  // Ensure full opacity
+            pendulumBob = spriteNode
+        } else {
+            // Fallback to shape node if image not found
+            let shapeNode = SKShapeNode(circleOfRadius: 18)
+            shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Rich blue
+            shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0) // Darker blue stroke
+            shapeNode.lineWidth = 3 // Thicker stroke
+            shapeNode.glowWidth = 0 // Remove glow to eliminate shadow
+            shapeNode.zPosition = 15
+            shapeNode.alpha = 1.0  // Ensure full opacity
+            pendulumBob = shapeNode
+        }
         addChild(pendulumBob)
         
         // Setup trail with better appearance
@@ -117,31 +130,31 @@ class PendulumScene: SKScene {
         // Print pendulum positions for debugging
         print("PendulumScene: Pivot position: \(pendulumPivot.position)")
         print("PendulumScene: Bob position: \(pendulumBob.position)")
+        print("PendulumScene: Scene size: \(self.size)")
+        print("PendulumScene: Scene background color: \(self.backgroundColor)")
+        print("PendulumScene: Number of children: \(self.children.count)")
+        
+        // Debug pendulum visibility
+        print("PendulumScene: Bob alpha: \(pendulumBob.alpha)")
+        print("PendulumScene: Bob zPosition: \(pendulumBob.zPosition)")
+        print("PendulumScene: Rod alpha: \(pendulumRod.alpha)")
+        print("PendulumScene: Rod zPosition: \(pendulumRod.zPosition)")
         print("PendulumScene: didMove completed - scene size: \(self.size)")
     }
     
     // Set up the background based on BackgroundManager state
     func updateSceneBackground() {
-        // Remove existing background layer if it exists
-        sceneBackgroundLayer?.removeFromParent()
+        // ALWAYS keep the scene visible with light gray background for debugging
+        // The pendulum game mechanics need to be visible at all times
+        self.backgroundColor = UIColor.lightGray
         
-        // Don't create a background layer - just set scene background color directly
-        // Check if BackgroundManager has a background set
-        let hasBackground = BackgroundManager.shared.getCurrentFolder() != .none
+        // Always keep full opacity for game elements
+        updateSceneTransparency(transparency: 1.0)
         
-        if hasBackground {
-            // Make scene semi-transparent to show the underlying UIView background
-            self.backgroundColor = UIColor.clear
-            
-            // Make non-essential elements more transparent
-            updateSceneTransparency(transparency: 0.7)
-        } else {
-            // No background selected, use white background
-            self.backgroundColor = UIColor.white
-            
-            // Reset transparency to full opacity
-            updateSceneTransparency(transparency: 1.0)
-        }
+        // Note: Background images should be handled by the UIView layer behind the scene,
+        // not by making the scene transparent
+        
+        print("PendulumScene: updateSceneBackground called - background set to light gray")
     }
     
     // Set up a gradient background based on UI design (for when background is None)
@@ -304,6 +317,7 @@ class PendulumScene: SKScene {
         floorPath.addLine(to: CGPoint(x: frame.width, y: pendulumPivot.position.y + 15))
 
         let floor = SKShapeNode(path: floorPath)
+        floor.name = "floor"  // Add name for later reference
         floor.strokeColor = UIColor(red: 0.3, green: 0.3, blue: 0.3, alpha: 0.5)
         floor.lineWidth = 1
         floor.zPosition = 4
@@ -313,7 +327,8 @@ class PendulumScene: SKScene {
     private func setupGrid() {
         // Create a grid for perspective/aesthetic based on UI designs
         let gridNode = SKNode()
-        gridNode.alpha = 0.2
+        gridNode.name = "gridNode"  // Add name for later reference
+        gridNode.alpha = 0.5  // Increased from 0.2 for better visibility
         gridNode.zPosition = -50
         
         let horizontalLines = 12
@@ -399,11 +414,7 @@ class PendulumScene: SKScene {
         // Ensure the bob is always large enough to be visible
         if pendulumBob.frame.width < 40 {
             // Create a new larger bob
-            let newBob = SKShapeNode(circleOfRadius: 25)
-            newBob.fillColor = UIColor(red: 0.0, green: 0.5, blue: 0.9, alpha: 1.0) // Brighter blue
-            newBob.strokeColor = UIColor(red: 0.0, green: 0.3, blue: 0.7, alpha: 1.0)
-            newBob.lineWidth = 3
-            newBob.glowWidth = 3
+            let newBob = createPendulumBob(radius: 25)
             newBob.zPosition = 15
             newBob.position = bobPosition
 
@@ -599,11 +610,8 @@ class PendulumScene: SKScene {
         
         // Update the bob appearance based on mass
         let bobRadius = 10 + CGFloat(viewModel.mass) * 2
-        let newBob = SKShapeNode(circleOfRadius: bobRadius)
-        newBob.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Royal blue
-        newBob.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
-        newBob.lineWidth = 2
-        newBob.glowWidth = 2
+        let newBob = createPendulumBob(radius: bobRadius)
+        newBob.zPosition = 15
         
         // Save position before replacing bob
         let bobPosition = pendulumBob.position
@@ -996,9 +1004,9 @@ class PendulumScene: SKScene {
     
     // Update transparency of scene elements (when background is displayed)
     private func updateSceneTransparency(transparency: CGFloat) {
-        // Update grid transparency
+        // Update grid transparency - always keep it visible
         if let gridNode = childNode(withName: "gridNode") {
-            gridNode.alpha = transparency * 0.1  // Keep grid subtle
+            gridNode.alpha = 0.5  // Keep grid at consistent visibility
         }
         
         // Update visualization background transparency
@@ -1008,7 +1016,7 @@ class PendulumScene: SKScene {
         
         // Update floor line transparency  
         if let floor = childNode(withName: "floor") {
-            floor.alpha = transparency * 0.5
+            floor.alpha = 1.0  // Keep floor fully visible
         }
         
         // Keep bob, pendulum rod, and base fully opaque
@@ -1849,6 +1857,25 @@ class PendulumScene: SKScene {
         if let phaseSpaceNode = phaseSpaceNode,
            let trajectoryNode = phaseSpaceNode.childNode(withName: "phaseTrajectory") as? SKShapeNode {
             trajectoryNode.path = nil
+        }
+    }
+    
+    /// Creates a pendulum bob node with the specified size
+    private func createPendulumBob(radius: CGFloat = 18) -> SKNode {
+        // Try to create sprite node with image first
+        if let bobImage = UIImage(named: "pendulumBob1") {
+            let texture = SKTexture(image: bobImage)
+            let spriteNode = SKSpriteNode(texture: texture)
+            spriteNode.size = CGSize(width: radius * 2, height: radius * 2)
+            return spriteNode
+        } else {
+            // Fallback to shape node if image not found
+            let shapeNode = SKShapeNode(circleOfRadius: radius)
+            shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
+            shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
+            shapeNode.lineWidth = 3
+            shapeNode.glowWidth = 0  // Remove glow to eliminate shadow
+            return shapeNode
         }
     }
     
