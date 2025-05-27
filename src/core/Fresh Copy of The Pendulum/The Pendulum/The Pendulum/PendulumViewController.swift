@@ -6,6 +6,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     
     let viewModel = PendulumViewModel()
     private var scene: PendulumScene?
+    private var skView: SKView?
     
     // Tab bar for navigation
     private let tabBar = UITabBar()
@@ -394,8 +395,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         ])
 
         // Configure the SpriteKit view
-        skView.showsFPS = true
-        skView.showsNodeCount = true
+        skView.showsFPS = false  // Disable debug info
+        skView.showsNodeCount = false  // Disable debug info
         skView.ignoresSiblingOrder = true
 
         // Add a border to the SKView for visibility
@@ -405,11 +406,28 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Add control buttons next
         setupSimulationControls(in: simulationView)
 
+        // Store reference to skView for later use
+        self.skView = skView
+        
         // Wait for the view to layout before creating the scene
-        DispatchQueue.main.async {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             // Create and present the pendulum scene once view is sized
-            let sceneSize = skView.bounds.size
+            var sceneSize = skView.bounds.size
             print("Creating scene with size: \(sceneSize)")
+            
+            // Ensure we have a valid size
+            if sceneSize.width <= 0 || sceneSize.height <= 0 {
+                print("WARNING: Invalid scene size detected. Using container size.")
+                // Use the container size instead
+                sceneSize = CGSize(width: skViewContainer.bounds.width, height: skViewContainer.bounds.height)
+                
+                // If still invalid, use default
+                if sceneSize.width <= 0 || sceneSize.height <= 0 {
+                    sceneSize = CGSize(width: 375, height: 300)
+                }
+            }
+            
+            print("Final scene size: \(sceneSize)")
 
             self.scene = PendulumScene(size: sceneSize)
             self.scene?.scaleMode = .aspectFill
@@ -421,8 +439,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
             // Present the scene
             if let theScene = self.scene {
-                skView.presentScene(theScene, transition: SKTransition.fade(withDuration: 0.5))
+                skView.presentScene(theScene)
                 print("Scene presented. SKView size: \(skView.bounds.size)")
+                print("Scene frame: \(theScene.frame)")
+                print("Number of scene children: \(theScene.children.count)")
             }
         }
 

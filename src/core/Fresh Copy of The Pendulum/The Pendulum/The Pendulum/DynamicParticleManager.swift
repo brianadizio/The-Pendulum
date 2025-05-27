@@ -6,65 +6,113 @@ class DynamicParticleManager {
     // MARK: - Texture Cache
     private static var textureCache: [String: SKTexture] = [:]
     
-    // MARK: - Color Palettes extracted from reference images
+    // MARK: - Color Palettes inspired by the painting
     
-    // Sunset over water (IMG_5043)
-    static let sunsetWaterPalette = [
-        UIColor(red: 1.0, green: 0.85, blue: 0.65, alpha: 1.0),  // Warm peach
-        UIColor(red: 1.0, green: 0.7, blue: 0.4, alpha: 1.0),    // Golden orange
-        UIColor(red: 0.95, green: 0.6, blue: 0.35, alpha: 1.0),  // Deep orange
+    // Yellow/Gold spectrum (top left of painting)
+    static let yellowGoldPalette = [
+        UIColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0),    // Bright yellow
+        UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0),   // Golden yellow
+        UIColor(red: 0.95, green: 0.8, blue: 0.15, alpha: 1.0),  // Deep gold
+        UIColor(red: 0.9, green: 0.75, blue: 0.3, alpha: 1.0),   // Warm gold
+        UIColor(red: 0.85, green: 0.7, blue: 0.25, alpha: 1.0),  // Olive gold
+        UIColor(red: 0.75, green: 0.65, blue: 0.2, alpha: 1.0)   // Dark gold
+    ]
+    
+    // Orange/Red spectrum (top right of painting)
+    static let orangeRedPalette = [
+        UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0),    // Bright orange
+        UIColor(red: 1.0, green: 0.5, blue: 0.15, alpha: 1.0),   // Deep orange
+        UIColor(red: 0.95, green: 0.4, blue: 0.1, alpha: 1.0),   // Red-orange
+        UIColor(red: 0.9, green: 0.3, blue: 0.15, alpha: 1.0),   // Warm red
+        UIColor(red: 0.85, green: 0.25, blue: 0.2, alpha: 1.0),  // Deep red
+        UIColor(red: 0.75, green: 0.2, blue: 0.15, alpha: 1.0)   // Dark red
+    ]
+    
+    // Blue/Teal spectrum (bottom left of painting)
+    static let blueTealPalette = [
+        UIColor(red: 0.1, green: 0.4, blue: 0.6, alpha: 1.0),    // Deep blue
+        UIColor(red: 0.15, green: 0.5, blue: 0.65, alpha: 1.0),  // Ocean blue
+        UIColor(red: 0.2, green: 0.55, blue: 0.6, alpha: 1.0),   // Teal blue
+        UIColor(red: 0.15, green: 0.6, blue: 0.55, alpha: 1.0),  // Turquoise
+        UIColor(red: 0.1, green: 0.5, blue: 0.5, alpha: 1.0),    // Deep teal
+        UIColor(red: 0.05, green: 0.3, blue: 0.4, alpha: 1.0)    // Dark ocean
+    ]
+    
+    // Purple/Magenta spectrum (bottom right of painting)
+    static let purpleMagentaPalette = [
+        UIColor(red: 0.7, green: 0.2, blue: 0.5, alpha: 1.0),    // Magenta
+        UIColor(red: 0.6, green: 0.15, blue: 0.45, alpha: 1.0),  // Deep magenta
+        UIColor(red: 0.5, green: 0.2, blue: 0.5, alpha: 1.0),    // Purple
+        UIColor(red: 0.45, green: 0.15, blue: 0.4, alpha: 1.0),  // Deep purple
+        UIColor(red: 0.4, green: 0.1, blue: 0.35, alpha: 1.0),   // Dark purple
+        UIColor(red: 0.5, green: 0.25, blue: 0.4, alpha: 1.0)    // Plum
+    ]
+    
+    // Mixed spectrum (transitions between colors)
+    static let mixedSpectrumPalette = [
+        UIColor(red: 0.8, green: 0.7, blue: 0.3, alpha: 1.0),    // Yellow-green
+        UIColor(red: 0.3, green: 0.6, blue: 0.4, alpha: 1.0),    // Green
         UIColor(red: 0.9, green: 0.5, blue: 0.3, alpha: 1.0),    // Coral
-        UIColor(red: 0.85, green: 0.4, blue: 0.25, alpha: 1.0),  // Burnt orange
-        UIColor(red: 0.7, green: 0.3, blue: 0.2, alpha: 1.0)     // Deep sunset
-    ]
-    
-    // Ocean and sky (IMG_5536)
-    static let oceanSkyPalette = [
-        UIColor(red: 0.2, green: 0.4, blue: 0.6, alpha: 1.0),    // Deep ocean blue
-        UIColor(red: 0.3, green: 0.5, blue: 0.7, alpha: 1.0),    // Ocean blue
-        UIColor(red: 0.4, green: 0.6, blue: 0.8, alpha: 1.0),    // Sky blue
-        UIColor(red: 0.7, green: 0.8, blue: 0.9, alpha: 1.0),    // Light sky
-        UIColor(red: 0.75, green: 0.65, blue: 0.5, alpha: 1.0),  // Sand/rocks
-        UIColor(red: 0.9, green: 0.85, blue: 0.8, alpha: 1.0)    // Light clouds
-    ]
-    
-    // Vibrant autumn (IMG_3145)
-    static let vibrantAutumnPalette = [
-        UIColor(red: 0.9, green: 0.2, blue: 0.1, alpha: 1.0),    // Bright red
-        UIColor(red: 1.0, green: 0.4, blue: 0.2, alpha: 1.0),    // Orange-red
-        UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0),    // Orange
-        UIColor(red: 0.9, green: 0.7, blue: 0.3, alpha: 1.0),    // Yellow-orange
-        UIColor(red: 0.3, green: 0.5, blue: 0.3, alpha: 1.0),    // Forest green
-        UIColor(red: 0.2, green: 0.3, blue: 0.2, alpha: 1.0)     // Dark green
-    ]
-    
-    // Abstract art palette (IMG_3149)
-    static let abstractArtPalette = [
-        UIColor(red: 0.15, green: 0.25, blue: 0.45, alpha: 1.0), // Deep blue
-        UIColor(red: 0.25, green: 0.35, blue: 0.5, alpha: 1.0),  // Mid blue
-        UIColor(red: 0.4, green: 0.5, blue: 0.6, alpha: 1.0),    // Light blue-gray
-        UIColor(red: 0.8, green: 0.6, blue: 0.3, alpha: 1.0),    // Gold
-        UIColor(red: 0.9, green: 0.7, blue: 0.4, alpha: 1.0),    // Light gold
-        UIColor(red: 0.7, green: 0.5, blue: 0.4, alpha: 1.0)     // Bronze
-    ]
-    
-    // Desert landscape (IMG_4506)
-    static let desertLandscapePalette = [
-        UIColor(red: 0.85, green: 0.7, blue: 0.5, alpha: 1.0),   // Light sand
-        UIColor(red: 0.8, green: 0.6, blue: 0.4, alpha: 1.0),    // Sand
-        UIColor(red: 0.7, green: 0.5, blue: 0.35, alpha: 1.0),   // Desert rock
-        UIColor(red: 0.6, green: 0.4, blue: 0.3, alpha: 1.0),    // Dark rock
-        UIColor(red: 0.5, green: 0.3, blue: 0.25, alpha: 1.0),   // Shadow
-        UIColor(red: 0.8, green: 0.7, blue: 0.9, alpha: 1.0)     // Twilight sky
+        UIColor(red: 0.4, green: 0.3, blue: 0.6, alpha: 1.0),    // Indigo
+        UIColor(red: 0.7, green: 0.4, blue: 0.5, alpha: 1.0),    // Rose
+        UIColor(red: 0.5, green: 0.5, blue: 0.6, alpha: 1.0)     // Gray-blue
     ]
     
     static let allPalettes = [
-        sunsetWaterPalette,
-        oceanSkyPalette,
-        vibrantAutumnPalette,
-        abstractArtPalette,
-        desertLandscapePalette
+        yellowGoldPalette,
+        orangeRedPalette,
+        blueTealPalette,
+        purpleMagentaPalette,
+        mixedSpectrumPalette
     ]
+    
+    // MARK: - Available texture names
+    static let coastTextures = [
+        "textureCoast1", "textureCoast2", "textureCoast3",
+        "textureCoast4", "textureCoast5", "textureCoast6",
+        "textureCoast7", "textureCoast8", "textureCoast9"
+    ]
+    
+    // MARK: - Texture Loading Methods
+    
+    /// Loads a random coast texture from assets
+    static func getRandomCoastTexture() -> SKTexture? {
+        guard let textureName = coastTextures.randomElement() else { return nil }
+        
+        // Check cache first
+        if let cachedTexture = textureCache[textureName] {
+            return cachedTexture
+        }
+        
+        // Load from assets
+        if let image = UIImage(named: textureName) {
+            let texture = SKTexture(image: image)
+            textureCache[textureName] = texture
+            return texture
+        }
+        
+        return nil
+    }
+    
+    /// Loads a specific coast texture by index
+    static func getCoastTexture(index: Int) -> SKTexture? {
+        let textureIndex = index % coastTextures.count
+        let textureName = coastTextures[textureIndex]
+        
+        // Check cache first
+        if let cachedTexture = textureCache[textureName] {
+            return cachedTexture
+        }
+        
+        // Load from assets
+        if let image = UIImage(named: textureName) {
+            let texture = SKTexture(image: image)
+            textureCache[textureName] = texture
+            return texture
+        }
+        
+        return nil
+    }
     
     // MARK: - Texture Creation Methods
     
@@ -296,67 +344,91 @@ class DynamicParticleManager {
     static func createLevelCompletionEffect(for level: Int, at position: CGPoint, in scene: SKScene) {
         print("Creating level completion effect for level \(level)")
         
-        // Select color palette based on level
-        let paletteIndex = (level - 1) % allPalettes.count
-        let selectedPalette = allPalettes[paletteIndex]
+        // Always use the full rainbow spectrum for every level
+        let fullRainbowPalette = createFullRainbowPalette()
         
-        print("Using palette index \(paletteIndex) for level \(level)")
+        print("Using full rainbow spectrum for level \(level)")
         
-        // Create multiple layers of effects
-        createMainExplosion(palette: selectedPalette, at: position, in: scene)
-        createRingBurst(palette: selectedPalette, at: position, in: scene, delay: 0.2)
-        createSparkleField(palette: selectedPalette, at: position, in: scene)
-        createTrailingStars(palette: selectedPalette, at: position, in: scene)
+        // Create multiple layers of effects with rainbow colors
+        createMainExplosion(palette: fullRainbowPalette, at: position, in: scene)
+        createRingBurst(palette: fullRainbowPalette, at: position, in: scene, delay: 0.2)
+        createSparkleField(palette: fullRainbowPalette, at: position, in: scene)
+        createTrailingStars(palette: fullRainbowPalette, at: position, in: scene)
+    }
+    
+    /// Creates a full rainbow palette matching the painting's spectrum
+    static func createFullRainbowPalette() -> [UIColor] {
+        return [
+            // Yellow spectrum (top left of painting)
+            UIColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0),    // Bright yellow
+            UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0),   // Golden yellow
+            // Orange spectrum (transition)
+            UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0),    // Bright orange
+            UIColor(red: 0.95, green: 0.4, blue: 0.1, alpha: 1.0),   // Red-orange
+            // Red spectrum (top right)
+            UIColor(red: 0.9, green: 0.3, blue: 0.15, alpha: 1.0),   // Warm red
+            // Purple/Magenta spectrum (bottom right)
+            UIColor(red: 0.7, green: 0.2, blue: 0.5, alpha: 1.0),    // Magenta
+            UIColor(red: 0.5, green: 0.2, blue: 0.5, alpha: 1.0),    // Purple
+            // Blue spectrum (bottom left)
+            UIColor(red: 0.2, green: 0.55, blue: 0.6, alpha: 1.0),   // Teal blue
+            UIColor(red: 0.1, green: 0.4, blue: 0.6, alpha: 1.0),    // Deep blue
+            // Green spectrum (transition back to yellow)
+            UIColor(red: 0.3, green: 0.6, blue: 0.4, alpha: 1.0),    // Green
+            UIColor(red: 0.8, green: 0.7, blue: 0.3, alpha: 1.0)     // Yellow-green
+        ]
     }
     
     /// Creates the main explosion effect
     private static func createMainExplosion(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
-        let emitter = SKEmitterNode()
-        emitter.position = position
-        emitter.zPosition = 100
-        
-        // Use glow textures for main explosion
-        let mainColor = palette.first ?? UIColor.orange
-        emitter.particleTexture = createGlowTexture(color: mainColor)
-        
-        // Explosion configuration
-        emitter.particleBirthRate = 1000
-        emitter.numParticlesToEmit = 200
-        emitter.particleLifetime = 2.0
-        emitter.particleLifetimeRange = 0.5
-        
-        emitter.particleSize = CGSize(width: 40, height: 40)
-        emitter.particleScale = 1.5
-        emitter.particleScaleRange = 1.0
-        emitter.particleScaleSpeed = -0.8
-        
-        // CRITICAL: Use texture color, not particle color
-        emitter.particleColorBlendFactor = 0.0  // Use texture color ONLY
-        // Remove color sequence to avoid overriding texture colors
-        // emitter.particleColorSequence = createColorSequence(from: palette)
-        
-        // Explosion pattern
-        emitter.emissionAngle = 0
-        emitter.emissionAngleRange = CGFloat.pi * 2
-        emitter.particleSpeed = 400
-        emitter.particleSpeedRange = 100
-        
-        // Physics
-        emitter.particleAlpha = 1.0
-        emitter.particleAlphaSpeed = -0.5
-        emitter.yAcceleration = -200
-        
-        // Use alpha blend instead of add to preserve colors
-        emitter.particleBlendMode = .alpha
-        
-        scene.addChild(emitter)
-        
-        // Remove after effect completes
-        let removeAction = SKAction.sequence([
-            SKAction.wait(forDuration: 3.0),
-            SKAction.removeFromParent()
-        ])
-        emitter.run(removeAction)
+        // Create multiple emitters for different colors to get full rainbow in explosion
+        for (index, color) in palette.enumerated() {
+            let emitter = SKEmitterNode()
+            emitter.position = position
+            emitter.zPosition = CGFloat(100 + index)
+            
+            // Use glow textures for each color
+            emitter.particleTexture = createGlowTexture(color: color)
+            
+            // Explosion configuration - reduce particles per emitter since we have many
+            emitter.particleBirthRate = 800 / CGFloat(palette.count)
+            emitter.numParticlesToEmit = 20
+            emitter.particleLifetime = 2.0
+            emitter.particleLifetimeRange = 0.5
+            
+            emitter.particleSize = CGSize(width: 40, height: 40)
+            emitter.particleScale = 1.5
+            emitter.particleScaleRange = 1.0
+            emitter.particleScaleSpeed = -0.8
+            
+            // CRITICAL: Use texture color, not particle color
+            emitter.particleColorBlendFactor = 0.0  // Use texture color ONLY
+            
+            // Explosion pattern - spread out angles for each color
+            let angleSpread = (CGFloat.pi * 2) / CGFloat(palette.count)
+            let baseAngle = angleSpread * CGFloat(index)
+            emitter.emissionAngle = baseAngle
+            emitter.emissionAngleRange = angleSpread * 1.2 // Slight overlap
+            emitter.particleSpeed = 400
+            emitter.particleSpeedRange = 100
+            
+            // Physics
+            emitter.particleAlpha = 1.0
+            emitter.particleAlphaSpeed = -0.5
+            emitter.yAcceleration = -200
+            
+            // Use alpha blend instead of add to preserve colors
+            emitter.particleBlendMode = .alpha
+            
+            scene.addChild(emitter)
+            
+            // Remove after effect completes
+            let removeAction = SKAction.sequence([
+                SKAction.wait(forDuration: 3.0),
+                SKAction.removeFromParent()
+            ])
+            emitter.run(removeAction)
+        }
     }
     
     /// Creates a ring burst effect
@@ -366,9 +438,18 @@ class DynamicParticleManager {
             emitter.position = position
             emitter.zPosition = 101
             
-            // Use star textures for ring burst
+            // Use coast textures for ring burst
             let ringColor = palette[min(1, palette.count - 1)]
-            emitter.particleTexture = createStarTexture(color: ringColor)
+            if let coastTexture = getRandomCoastTexture() {
+                emitter.particleTexture = coastTexture
+                // Apply color tinting to the texture
+                emitter.particleColor = ringColor
+                emitter.particleColorBlendFactor = 0.8  // Allow some color blending
+            } else {
+                // Fallback to glow texture if coast texture not found
+                emitter.particleTexture = createGlowTexture(color: ringColor)
+                emitter.particleColorBlendFactor = 0.0
+            }
             
             // Ring configuration
             emitter.particleBirthRate = 800
@@ -380,11 +461,6 @@ class DynamicParticleManager {
             emitter.particleScale = 1.2
             emitter.particleScaleRange = 0.5
             emitter.particleScaleSpeed = -0.7
-            
-            // CRITICAL: Use texture color ONLY
-            emitter.particleColorBlendFactor = 0.0
-            // Remove particle color override
-            // emitter.particleColor = ringColor
             
             // Ring pattern
             emitter.emissionAngle = 0
@@ -429,9 +505,17 @@ class DynamicParticleManager {
                 emitter.position = sparklePosition
                 emitter.zPosition = 102
                 
-                // Use soft particles for sparkles
+                // Use coast textures for sparkles
                 let sparkleColor = palette.randomElement() ?? UIColor.white
-                emitter.particleTexture = createSoftParticle(color: sparkleColor)
+                if let coastTexture = getCoastTexture(index: i) {
+                    emitter.particleTexture = coastTexture
+                    emitter.particleColor = sparkleColor
+                    emitter.particleColorBlendFactor = 0.9  // Strong color tinting for sparkles
+                } else {
+                    // Fallback to soft particle if texture not found
+                    emitter.particleTexture = createSoftParticle(color: sparkleColor)
+                    emitter.particleColorBlendFactor = 0.0
+                }
                 
                 // Sparkle configuration
                 emitter.particleBirthRate = 30
@@ -443,9 +527,6 @@ class DynamicParticleManager {
                 emitter.particleScale = 1.0
                 emitter.particleScaleRange = 0.5
                 emitter.particleScaleSpeed = -0.8
-                
-                // CRITICAL: Use texture color ONLY
-                emitter.particleColorBlendFactor = 0.0
                 
                 // Gentle movement
                 emitter.emissionAngle = -CGFloat.pi / 2
@@ -479,9 +560,17 @@ class DynamicParticleManager {
             emitter.position = position
             emitter.zPosition = 99
             
-            // Use flame textures for trails
+            // Use coast textures for trails
             let trailColor = palette[min(2, palette.count - 1)]
-            emitter.particleTexture = createFlameTexture(color: trailColor)
+            if let coastTexture = getCoastTexture(index: i) {
+                emitter.particleTexture = coastTexture
+                emitter.particleColor = trailColor
+                emitter.particleColorBlendFactor = 0.7  // Moderate color blending for trails
+            } else {
+                // Fallback to flame texture if coast texture not found
+                emitter.particleTexture = createFlameTexture(color: trailColor)
+                emitter.particleColorBlendFactor = 0.0
+            }
             
             // Trail configuration
             emitter.particleBirthRate = 200
@@ -493,9 +582,6 @@ class DynamicParticleManager {
             emitter.particleScale = 1.0
             emitter.particleScaleRange = 0.5
             emitter.particleScaleSpeed = -0.5
-            
-            // CRITICAL: Use texture color ONLY
-            emitter.particleColorBlendFactor = 0.0
             
             // Directional emission
             emitter.emissionAngle = CGFloat(angle)
