@@ -33,6 +33,9 @@ extension AnalyticsManager {
         // Track in base analytics
         trackPendulumState(angle: angle, angleVelocity: angleVelocity)
         
+        // Track phase space point for trajectory visualization
+        trackPhaseSpacePoint(theta: angle, omega: angleVelocity)
+        
         // Track in metrics calculator
         metricsCalculator.recordState(time: time, angle: angle, velocity: angleVelocity)
     }
@@ -223,6 +226,11 @@ extension AnalyticsManager {
             // Return directional bias as distribution for pie chart
             let leftCount = Double(directionalPushes["left"] ?? 0)
             let rightCount = Double(directionalPushes["right"] ?? 0)
+            
+            // Debug logging
+            print("DEBUG: Full Directional Bias - left: \(leftCount), right: \(rightCount)")
+            print("DEBUG: Full Directional Bias - directionalPushes: \(directionalPushes)")
+            
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
             
@@ -273,8 +281,45 @@ extension AnalyticsManager {
             return createMetricValue(angleTimeSeries)
             
         case .phaseTrajectory:
-            let trajectory = phaseSpacePoints.suffix(100) // Last 100 points
-            return createMetricValue(trajectory)
+            // Get average phase space data across all levels
+            let averagePhaseData = getAveragePhaseSpaceData()
+            
+            // Debug: Log phase space data
+            print("DEBUG: Phase trajectory - averagePhaseData levels: \(averagePhaseData.keys.sorted())")
+            
+            // Combine all level data into a single trajectory
+            var combinedTrajectory: [(theta: Double, omega: Double)] = []
+            
+            // If we have saved average data, use it
+            if !averagePhaseData.isEmpty {
+                // Combine trajectories from all levels
+                for level in averagePhaseData.keys.sorted() {
+                    if let levelData = averagePhaseData[level] {
+                        combinedTrajectory.append(contentsOf: levelData)
+                        print("DEBUG: Phase trajectory - added \(levelData.count) points from level \(level)")
+                    }
+                }
+            }
+            
+            // If no saved data, use current session data
+            if combinedTrajectory.isEmpty {
+                // Use current phase space points if available
+                combinedTrajectory = Array(phaseSpacePoints.suffix(200))
+                print("DEBUG: Phase trajectory - using current session data: \(combinedTrajectory.count) points")
+            }
+            
+            // Limit to reasonable number of points for display
+            let maxPoints = 500
+            if combinedTrajectory.count > maxPoints {
+                // Sample evenly across the trajectory
+                let stride = combinedTrajectory.count / maxPoints
+                combinedTrajectory = stride > 1 ? 
+                    Array(combinedTrajectory.enumerated().compactMap { $0.offset % stride == 0 ? $0.element : nil }) :
+                    combinedTrajectory
+            }
+            
+            print("DEBUG: Phase trajectory - returning \(combinedTrajectory.count) total points")
+            return createMetricValue(combinedTrajectory)
             
         // Educational Metrics
         case .learningCurve:

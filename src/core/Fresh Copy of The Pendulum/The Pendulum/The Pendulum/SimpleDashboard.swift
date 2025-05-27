@@ -104,10 +104,18 @@ class SimpleDashboard: UITableViewController {
                 onGroupChanged: { [weak self] group in
                     self?.currentMetricGroup = group
                     self?.loadMetrics()
+                    // Force table reload to update all visible charts
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                    }
                 },
                 onTimeRangeChanged: { [weak self] range in
                     self?.currentTimeRange = range
                     self?.loadMetrics()
+                    // Force table reload to update all visible charts
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                    }
                 }
             )
             return cell
@@ -350,7 +358,18 @@ class MetricCell: UITableViewCell {
     func configure(with metric: MetricValue) {
         titleLabel.text = metric.type.rawValue
         valueLabel.text = metric.formattedValue
-        unitLabel.text = metric.type.unit
+        
+        // Debug logging
+        print("DEBUG: MetricCell - \(metric.type.rawValue): value='\(metric.formattedValue)' unit='\(metric.type.unit)'")
+        
+        // Only show unit label for metrics that have meaningful units
+        if metric.type.unit == "category" || metric.type.unit == "path" || 
+           metric.type.unit == "distribution" || metric.type.unit == "values" ||
+           metric.type.unit == "dimension" || metric.type.unit == "complexity" {
+            unitLabel.text = ""
+        } else {
+            unitLabel.text = metric.type.unit
+        }
         
         // Set icon based on metric type
         switch metric.type {
@@ -373,6 +392,9 @@ class MetricCell: UITableViewCell {
     
     func updateValue(_ metric: MetricValue) {
         valueLabel.text = metric.formattedValue
+        
+        // Debug logging
+        print("DEBUG: MetricCell update - \(metric.type.rawValue): value='\(metric.formattedValue)'")
         
         if let confidence = metric.confidence {
             valueLabel.textColor = confidenceColor(for: confidence)
@@ -508,7 +530,7 @@ class ChartCell: UITableViewCell {
                     chartLabels = getSampleDistributionLabels(for: metricValue.type)
                 }
                 
-                barChart.updateData(data: chartData, labels: chartLabels, title: metricValue.type.rawValue)
+                barChart.updateData(data: chartData, labels: chartLabels, title: "")
             }
             
         case let timeSeries as [(Date, Double)]:
@@ -523,7 +545,7 @@ class ChartCell: UITableViewCell {
                     labels = sampleData.map { DateFormatter.localizedString(from: $0.0, dateStyle: .none, timeStyle: .short) }
                 }
                 
-                lineChart.updateData(data: values, labels: labels, title: metricValue.type.rawValue)
+                lineChart.updateData(data: values, labels: labels, title: "")
             }
             
         case let trajectory as [(theta: Double, omega: Double)]:
