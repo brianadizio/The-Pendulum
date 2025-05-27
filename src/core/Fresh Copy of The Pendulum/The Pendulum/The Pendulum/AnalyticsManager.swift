@@ -590,6 +590,9 @@ class AnalyticsManager {
             // Save phase space data for the previous level
             if !phaseSpacePoints.isEmpty {
                 levelPhaseSpaceData[currentLevel] = phaseSpacePoints
+                
+                // Calculate and save average phase space data after each level
+                calculateAndSaveAveragePhaseSpace()
             }
             
             // Reset for new level

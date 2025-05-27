@@ -51,8 +51,8 @@ class PendulumScene: SKScene {
         print("Scene size: \(self.size)")
         print("View size: \(view.bounds.size)")
         
-        // Set initial background color to light gray to debug visibility
-        self.backgroundColor = UIColor.lightGray.withAlphaComponent(1.0)
+        // Set background color to white for clean appearance
+        self.backgroundColor = UIColor.white
         
         // Set up the background based on current state (after initial setup)
         // updateSceneBackground()  // Disabled - causing visibility issues
@@ -88,17 +88,20 @@ class PendulumScene: SKScene {
         pendulumRod.alpha = 1.0  // Ensure full opacity
         addChild(pendulumRod)
 
-        // Setup bob with image
+        // Setup bob with image (30% bigger)
         if let bobImage = UIImage(named: "pendulumBob1") {
             let texture = SKTexture(image: bobImage)
             let spriteNode = SKSpriteNode(texture: texture)
-            spriteNode.size = CGSize(width: 36, height: 36) // Larger bob for better visibility
+            spriteNode.size = CGSize(width: 47, height: 47) // 30% bigger (36 * 1.3 = 46.8)
             spriteNode.zPosition = 15
             spriteNode.alpha = 1.0  // Ensure full opacity
+            // Remove any shadow effects
+            spriteNode.shadowCastBitMask = 0
+            spriteNode.shadowedBitMask = 0
             pendulumBob = spriteNode
         } else {
-            // Fallback to shape node if image not found
-            let shapeNode = SKShapeNode(circleOfRadius: 18)
+            // Fallback to shape node if image not found (30% bigger)
+            let shapeNode = SKShapeNode(circleOfRadius: 23) // 30% bigger (18 * 1.3 = 23.4)
             shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Rich blue
             shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0) // Darker blue stroke
             shapeNode.lineWidth = 3 // Thicker stroke
@@ -144,9 +147,9 @@ class PendulumScene: SKScene {
     
     // Set up the background based on BackgroundManager state
     func updateSceneBackground() {
-        // ALWAYS keep the scene visible with light gray background for debugging
+        // ALWAYS keep the scene visible with white background for clean appearance
         // The pendulum game mechanics need to be visible at all times
-        self.backgroundColor = UIColor.lightGray
+        self.backgroundColor = UIColor.white
         
         // Always keep full opacity for game elements
         updateSceneTransparency(transparency: 1.0)
@@ -154,7 +157,7 @@ class PendulumScene: SKScene {
         // Note: Background images should be handled by the UIView layer behind the scene,
         // not by making the scene transparent
         
-        print("PendulumScene: updateSceneBackground called - background set to light gray")
+        print("PendulumScene: updateSceneBackground called - background set to white")
     }
     
     // Set up a gradient background based on UI design (for when background is None)
@@ -328,8 +331,8 @@ class PendulumScene: SKScene {
         // Create a grid for perspective/aesthetic based on UI designs
         let gridNode = SKNode()
         gridNode.name = "gridNode"  // Add name for later reference
-        gridNode.alpha = 0.5  // Increased from 0.2 for better visibility
-        gridNode.zPosition = -50
+        gridNode.alpha = 1.0  // Full visibility for grid lines
+        gridNode.zPosition = -10  // Bring closer but still behind pendulum
         
         let horizontalLines = 12
         let verticalLines = 10
@@ -344,8 +347,9 @@ class PendulumScene: SKScene {
             path.addLine(to: CGPoint(x: size.width, y: y))
             
             let line = SKShapeNode(path: path)
-            line.strokeColor = .lightGray
+            line.strokeColor = UIColor.lightGray  // Explicitly use light gray
             line.lineWidth = 1
+            line.alpha = 0.8  // Make grid lines visible but subtle
             gridNode.addChild(line)
         }
         
@@ -357,8 +361,9 @@ class PendulumScene: SKScene {
             path.addLine(to: CGPoint(x: x, y: size.height))
             
             let line = SKShapeNode(path: path)
-            line.strokeColor = .lightGray
+            line.strokeColor = UIColor.lightGray  // Explicitly use light gray
             line.lineWidth = 1
+            line.alpha = 0.8  // Make grid lines visible but subtle
             gridNode.addChild(line)
         }
         
@@ -423,15 +428,7 @@ class PendulumScene: SKScene {
             pendulumBob = newBob
         }
 
-        // Add shadow under the bob if needed
-        if pendulumBob.children.isEmpty {
-            let shadow = SKShapeNode(circleOfRadius: pendulumBob.frame.width / 2)
-            shadow.fillColor = UIColor.black.withAlphaComponent(0.2)
-            shadow.strokeColor = .clear
-            shadow.position = CGPoint(x: 2, y: -2)
-            shadow.zPosition = -1
-            pendulumBob.addChild(shadow)
-        }
+        // Shadow removed for cleaner appearance
     }
     
     private func drawTestPath() {
@@ -624,13 +621,7 @@ class PendulumScene: SKScene {
         pendulumBob = newBob
         pendulumBob.position = bobPosition
         
-        // Add shadow to new bob
-        let shadow = SKShapeNode(circleOfRadius: bobRadius)
-        shadow.fillColor = UIColor.black.withAlphaComponent(0.2)
-        shadow.strokeColor = .clear
-        shadow.position = CGPoint(x: 2, y: -2)
-        shadow.zPosition = -1
-        pendulumBob.addChild(shadow)
+        // Shadow removed for cleaner appearance
         
         // Update the pendulum position to reflect the new length
         updatePendulumPosition(with: viewModel.currentState)
@@ -1860,13 +1851,16 @@ class PendulumScene: SKScene {
         }
     }
     
-    /// Creates a pendulum bob node with the specified size
-    private func createPendulumBob(radius: CGFloat = 18) -> SKNode {
+    /// Creates a pendulum bob node with the specified size (30% bigger)
+    private func createPendulumBob(radius: CGFloat = 23) -> SKNode { // 30% bigger default (18 * 1.3)
         // Try to create sprite node with image first
         if let bobImage = UIImage(named: "pendulumBob1") {
             let texture = SKTexture(image: bobImage)
             let spriteNode = SKSpriteNode(texture: texture)
             spriteNode.size = CGSize(width: radius * 2, height: radius * 2)
+            // Remove any shadow effects
+            spriteNode.shadowCastBitMask = 0
+            spriteNode.shadowedBitMask = 0
             return spriteNode
         } else {
             // Fallback to shape node if image not found
@@ -1874,7 +1868,7 @@ class PendulumScene: SKScene {
             shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
             shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
             shapeNode.lineWidth = 3
-            shapeNode.glowWidth = 0  // Remove glow to eliminate shadow
+            shapeNode.glowWidth = 0 // Remove glow to eliminate shadow
             return shapeNode
         }
     }
