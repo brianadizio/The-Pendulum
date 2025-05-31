@@ -49,7 +49,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     private var playerStyleLabel: UILabel!
     private var reactionTimeLabel: UILabel!
     private var directionalBiasLabel: UILabel!
-    private var sessionTimeLabel: UILabel!
+    internal var sessionTimeLabel: UILabel!
     
     // Charts
     private var angleVarianceChart: SimpleLineChartView!
@@ -204,7 +204,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             summaryContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
         ])
         
-        // Create the summary cards
+        // Create the summary cards with descriptions
         let metrics = [
             ["title": "Stability Score", "icon": "waveform.path", "color": UIColor.systemBlue],
             ["title": "Efficiency Rating", "icon": "bolt.fill", "color": UIColor.systemGreen],
@@ -218,7 +218,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         var cardViews: [UIView] = []
         
         for (index, metric) in metrics.enumerated() {
-            let card = createSummaryCard(
+            let card = createEnhancedSummaryCard(
                 title: metric["title"] as! String,
                 iconName: metric["icon"] as! String,
                 color: metric["color"] as! UIColor
@@ -304,9 +304,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Add Charts
         
         // 1. Angle Variance Chart
-        let angleVarianceSection = createChartSection(
+        let angleVarianceSection = createEnhancedChartSection(
             title: "Pendulum Angle Variance",
-            description: "Shows the pendulum angle over time. Smaller variance indicates better stability."
+            description: "Shows pendulum deviation from vertical over time - lower values mean better stability.",
+            chartKey: "AngleVariance"
         )
         chartsContainer.addSubview(angleVarianceSection)
         
@@ -316,9 +317,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         angleVarianceSection.addSubview(angleVarianceChart)
         
         // 2. Push Frequency Chart
-        let pushFrequencySection = createChartSection(
+        let pushFrequencySection = createEnhancedChartSection(
             title: "Push Frequency Distribution",
-            description: "Shows how frequently you apply forces to the pendulum."
+            description: "How often you apply corrections - optimal frequency balances responsiveness with efficiency.",
+            chartKey: "PushFrequency"
         )
         chartsContainer.addSubview(pushFrequencySection)
         
@@ -328,9 +330,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         pushFrequencySection.addSubview(pushFrequencyChart)
         
         // 3. Push Magnitude Chart 
-        let pushMagnitudeSection = createChartSection(
+        let pushMagnitudeSection = createEnhancedChartSection(
             title: "Push Magnitude Distribution",
-            description: "Shows the distribution of force magnitudes you apply."
+            description: "Strength of your corrections - smaller forces indicate more precise control.",
+            chartKey: "PushMagnitude"
         )
         chartsContainer.addSubview(pushMagnitudeSection)
         
@@ -340,9 +343,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         pushMagnitudeSection.addSubview(pushMagnitudeChart)
         
         // 4. Reaction Time Chart
-        let reactionTimeSection = createChartSection(
+        let reactionTimeSection = createEnhancedChartSection(
             title: "Reaction Time Analysis",
-            description: "Shows how quickly you respond to pendulum instability."
+            description: "Speed of response to instability - faster reactions typically yield better control.",
+            chartKey: "ReactionTime"
         )
         chartsContainer.addSubview(reactionTimeSection)
         
@@ -352,9 +356,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         reactionTimeSection.addSubview(reactionTimeChart)
         
         // 5. Learning Curve Chart
-        let learningCurveSection = createChartSection(
+        let learningCurveSection = createEnhancedChartSection(
             title: "Learning Curve",
-            description: "Shows your improvement over time based on stability scores."
+            description: "Your improvement trend over time based on stability scores.",
+            chartKey: "LearningCurve"
         )
         chartsContainer.addSubview(learningCurveSection)
         
@@ -364,9 +369,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         learningCurveSection.addSubview(learningCurveChart)
         
         // 6. Directional Bias Chart
-        let directionalBiasSection = createChartSection(
+        let directionalBiasSection = createEnhancedChartSection(
             title: "Directional Bias",
-            description: "Shows your tendency to favor left vs. right corrections."
+            description: "Balance between left and right corrections - centered distribution shows unbiased control.",
+            chartKey: "DirectionalBias"
         )
         chartsContainer.addSubview(directionalBiasSection)
         
@@ -459,9 +465,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         let chartsContainer = lastSection.superview!
         
         // Add Phase Space Chart
-        let phaseSpaceSection = createChartSection(
+        let phaseSpaceSection = createEnhancedChartSection(
             title: "Average Phase Space by Level",
-            description: "Shows the average phase space trajectory for each level played."
+            description: "Pendulum's angle vs velocity patterns - tighter loops indicate better control.",
+            chartKey: "PhaseSpace"
         )
         chartsContainer.addSubview(phaseSpaceSection)
         
@@ -507,7 +514,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         var metricCards: [UIView] = []
 
         for (index, data) in metricsData.enumerated() {
-            let card = createSummaryCard(
+            let card = createEnhancedSummaryCard(
                 title: data["title"] as! String,
                 iconName: data["icon"] as! String,
                 color: data["color"] as! UIColor
@@ -547,9 +554,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         }
 
         // Create level completions bar chart
-        let levelCompletionsSection = createChartSection(
+        let levelCompletionsSection = createEnhancedChartSection(
             title: "Level Completions Over Time",
-            description: "Shows how many levels you've completed per time period."
+            description: "Number of levels successfully completed in each time period.",
+            chartKey: "LevelCompletions"
         )
         chartsContainer.addSubview(levelCompletionsSection)
 
@@ -584,9 +592,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         ])
 
         // Create pendulum parameters chart section
-        let pendulumParametersSection = createChartSection(
+        let pendulumParametersSection = createEnhancedChartSection(
             title: "Pendulum Parameters Over Time",
-            description: "Shows how pendulum parameters change across levels."
+            description: "How game physics parameters change across levels to increase difficulty.",
+            chartKey: "PendulumParameters"
         )
         chartsContainer.addSubview(pendulumParametersSection)
         
@@ -936,7 +945,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     // MARK: - Data Updates
     
     // The selected time range - use this to track the current state
-    private var selectedTimeRange: AnalyticsTimeRange = .session
+    internal var selectedTimeRange: AnalyticsTimeRange = .session
 
     func updateDashboard(timeRange: AnalyticsTimeRange? = nil, sessionId: UUID? = nil) {
         // Only update the selectedTimeRange if explicitly provided
@@ -1023,9 +1032,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             switch timeRange {
             case .session:
                 if let sessionId = sessionId {
-                    metrics = AnalyticsManager.shared.getPerformanceMetrics(for: sessionId)
+                    metrics = AnalyticsManager.shared.getPerformanceMetricsWithStaticTime(for: sessionId)
                 } else {
-                    metrics = AnalyticsManager.shared.getPerformanceMetrics()
+                    metrics = AnalyticsManager.shared.getPerformanceMetricsWithStaticTime()
                 }
             case .daily, .weekly, .monthly, .yearly:
                 let period = timeRange == .daily ? "daily" : timeRange == .weekly ? "weekly" : timeRange == .monthly ? "monthly" : "yearly"
@@ -1040,13 +1049,15 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         if metrics.isEmpty {
             switch timeRange {
             case .session:
+                // Use static session duration for sample data
+                let staticDuration = SessionTimeManager.shared.getDashboardSessionDuration()
                 metrics = [
                     "stabilityScore": 78.5,
                     "efficiencyRating": 82.1,
                     "playerStyle": "Balanced",
                     "averageCorrectionTime": 0.45,
                     "directionalBias": 0.12,
-                    "totalPlayTime": 180.0
+                    "totalPlayTime": staticDuration > 0 ? staticDuration : 180.0
                 ]
             case .daily:
                 metrics = [
@@ -1448,7 +1459,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         }
     }
     
-    private func formatTimeInterval(_ interval: TimeInterval) -> String {
+    internal func formatTimeInterval(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
         let seconds = Int(interval) % 60
         return String(format: "%d:%02d", minutes, seconds)
@@ -1605,6 +1616,42 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         
         // Update the chart with the data
         phaseSpaceChart.updateLevelData(phaseSpaceData)
+    }
+    
+    // MARK: - Enhanced UI Components with Descriptions
+    
+    private func createEnhancedSummaryCard(title: String, iconName: String, color: UIColor) -> UIView {
+        let card = createSummaryCard(title: title, iconName: iconName, color: color)
+        
+        // Add info button if description exists
+        if let descriptionData = DashboardDescriptions.summaryMetrics[title] ?? 
+           DashboardDescriptions.additionalMetrics[title] {
+            let infoButton = DashboardInfoButton(
+                title: descriptionData.title,
+                description: descriptionData.description
+            )
+            card.addSubview(infoButton)
+            
+            // Position info button in top-right corner, away from the existing icon
+            NSLayoutConstraint.activate([
+                infoButton.topAnchor.constraint(equalTo: card.topAnchor, constant: 8),
+                infoButton.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 8)
+            ])
+        }
+        
+        return card
+    }
+    
+    private func createEnhancedChartSection(title: String, description: String, chartKey: String) -> UIView {
+        let container = createChartSection(title: title, description: description)
+        
+        // Add info button for additional details if needed
+        if let descriptionData = DashboardDescriptions.chartDescriptions[chartKey] {
+            // The description is already shown in the chart section, so we're using the provided description
+            // No need for additional info button since description is visible
+        }
+        
+        return container
     }
     
 }

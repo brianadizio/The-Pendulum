@@ -1864,24 +1864,47 @@ class PendulumScene: SKScene {
     
     /// Creates a pendulum bob node with the specified size (30% bigger)
     private func createPendulumBob(radius: CGFloat = 23) -> SKNode { // 30% bigger default (18 * 1.3)
-        // Try to create sprite node with image first
-        if let bobImage = UIImage(named: "pendulumBob1") {
-            let texture = SKTexture(image: bobImage)
-            let spriteNode = SKSpriteNode(texture: texture)
-            spriteNode.size = CGSize(width: radius * 2, height: radius * 2)
-            // Remove any shadow effects
-            spriteNode.shadowCastBitMask = 0
-            spriteNode.shadowedBitMask = 0
-            return spriteNode
-        } else {
-            // Fallback to shape node if image not found
-            let shapeNode = SKShapeNode(circleOfRadius: radius)
-            shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0)
-            shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0)
-            shapeNode.lineWidth = 3
-            shapeNode.glowWidth = 0 // Remove glow to eliminate shadow
-            return shapeNode
+        // Try the correct asset names from pendulumScene/pendulumSceneNoBg/
+        let bobImageNames = ["pendulumBob1", "pendulumBob2", "pendulumBob3"]
+        
+        for imageName in bobImageNames {
+            if let bobImage = UIImage(named: imageName) {
+                let texture = SKTexture(image: bobImage)
+                let spriteNode = SKSpriteNode(texture: texture)
+                spriteNode.size = CGSize(width: radius * 2, height: radius * 2)
+                
+                // Keep the original golden appearance of the asset
+                // Remove any color tinting to preserve the asset's natural golden color
+                spriteNode.color = .white
+                spriteNode.colorBlendFactor = 0.0 // No color blending to preserve original colors
+                
+                // Remove any shadow effects
+                spriteNode.shadowCastBitMask = 0
+                spriteNode.shadowedBitMask = 0
+                
+                print("✅ Successfully loaded pendulum bob asset: \(imageName)")
+                return spriteNode
+            } else {
+                print("⚠️ Could not load pendulum bob asset: \(imageName)")
+            }
         }
+        
+        // Fallback to golden shape node if no images found
+        let shapeNode = SKShapeNode(circleOfRadius: radius)
+        
+        // Create golden appearance
+        shapeNode.fillColor = UIColor(red: 0.85, green: 0.7, blue: 0.2, alpha: 1.0) // Golden primary
+        shapeNode.strokeColor = UIColor(red: 0.8, green: 0.5, blue: 0.1, alpha: 1.0) // Golden accent
+        shapeNode.lineWidth = 2
+        shapeNode.glowWidth = 2 // Small glow for golden effect
+        
+        // Add inner highlight for more realistic golden look
+        let innerCircle = SKShapeNode(circleOfRadius: radius * 0.6)
+        innerCircle.fillColor = UIColor(red: 1.0, green: 0.9, blue: 0.6, alpha: 0.6) // Light golden highlight
+        innerCircle.strokeColor = .clear
+        shapeNode.addChild(innerCircle)
+        
+        return shapeNode
     }
     
     /// Creates a sunset gradient texture

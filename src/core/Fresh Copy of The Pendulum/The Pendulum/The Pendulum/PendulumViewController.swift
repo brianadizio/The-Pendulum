@@ -146,6 +146,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return button
     }()
     
+    private lazy var aiTestButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("AI Test", for: .normal)
+        button.addTarget(self, action: #selector(runAITest), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -357,8 +365,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         // Apply Focus Calendar theme
         simulationView.backgroundColor = FocusCalendarTheme.backgroundColor
 
-        // Add a header view with logo - ensure it's positioned below the status bar
-        _ = createHeaderWithLogo(title: "The Pendulum", for: simulationView)
+        // Add a header view with logo and AI Test button - ensure it's positioned below the status bar
+        _ = createHeaderWithAIButton(title: "The Pendulum", for: simulationView)
 
         // Setup the HUD first so we can position other elements relative to it
         setupGameHUD()
@@ -3083,6 +3091,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return headerView
     }
     
+    private func createHeaderWithAIButton(title: String, for containerView: UIView) -> UIView {
+        // Create the styled header with AI button
+        let headerView = HeaderViewCreator.createHeaderWithAIButton(title: title) { [weak self] in
+            self?.runAITest()
+        }
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(headerView)
+
+        // Layout constraints
+        NSLayoutConstraint.activate([
+            // Move header down from the top edge to avoid system status bar
+            headerView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
+            headerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            headerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            headerView.heightAnchor.constraint(equalToConstant: 40)
+        ])
+
+        return headerView
+    }
+    
     // MARK: - View Management
     
     private func showView(_ view: UIView) {
@@ -3339,6 +3367,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         FocusCalendarTheme.styleButton(stopButton, isPrimary: true)
         stopButton.backgroundColor = FocusCalendarTheme.accentRose // Rose for stop
         
+        // AI Test button now in header - no longer styled here
+        
         // Keep push buttons with the same theme font as other buttons
 
         // Set plain text button titles to avoid symbol confusion
@@ -3346,6 +3376,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         stopButton.setTitle("Stop", for: .normal)
         pushLeftButton.setTitle("← Push", for: .normal)
         pushRightButton.setTitle("Push →", for: .normal)
+        // AI Test button title now set in header
 
         // Create a container for the buttons with Focus Calendar styling
         controlPanel = UIView()
@@ -3372,11 +3403,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         forceControlsStack.addArrangedSubview(pushLeftButton)
         forceControlsStack.addArrangedSubview(pushRightButton)
 
-        // Main control stack - vertical layout with tighter spacing
+        // Main control stack - vertical layout with just two rows now
         let controlStack = UIStackView()
         controlStack.axis = .vertical
-        controlStack.spacing = 10 // Reduced spacing between rows for a more compact layout
-        controlStack.distribution = .fillEqually // Ensure equal height for both rows
+        controlStack.spacing = 15 // More spacing between rows since we have more room
+        controlStack.distribution = .fillEqually // Ensure equal height for all rows
         controlStack.translatesAutoresizingMaskIntoConstraints = false
         controlStack.addArrangedSubview(simulationControlsStack)
         controlStack.addArrangedSubview(forceControlsStack)
@@ -3392,7 +3423,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             controlPanel.topAnchor.constraint(equalTo: skViewContainer?.bottomAnchor ?? parentView.centerYAnchor, constant: 10), // Reduced spacing
             controlPanel.leadingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             controlPanel.trailingAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            controlPanel.heightAnchor.constraint(equalToConstant: 140), // Increased height for larger push buttons
+            controlPanel.heightAnchor.constraint(equalToConstant: 140), // Reduced height since AI test button moved to header
 
             // Control stack - fill the container with a bit more padding
             controlStack.topAnchor.constraint(equalTo: controlPanel.topAnchor, constant: 10), // Increased padding
@@ -3404,7 +3435,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             startButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
             stopButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 40),
             pushLeftButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 55),
-            pushRightButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 55)
+            pushRightButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 55),
+            // AI Test button constraints now handled in header
         ])
 
         // We now position the phase space in setupPhaseSpaceView
@@ -3608,6 +3640,65 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         viewModel.resetAndStart()
     }
     
+    @objc private func runAITest() {
+        let alert = UIAlertController(title: "AI Test", message: "Select test type", preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Quick Test (5 min)", style: .default) { _ in
+            AITestingSystem.generateQuickDashboardData()
+            self.updateGameMessageLabel("Running quick AI test...")
+        })
+        
+        alert.addAction(UIAlertAction(title: "Generate 3 Months Data", style: .default) { _ in
+            self.updateGameMessageLabel("Generating 3 months of data...")
+            AITestingSystem.generateMonthsOfGameplayData(months: 3) { success in
+                DispatchQueue.main.async {
+                    self.updateGameMessageLabel(success ? "3 months data generated!" : "Data generation failed")
+                }
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Full Testing Suite", style: .default) { _ in
+            self.updateGameMessageLabel("Running full test suite...")
+            ComprehensiveTestingSuite.shared.runCompleteSuite { results in
+                DispatchQueue.main.async {
+                    self.updateGameMessageLabel(results.overallSuccess ? "All tests passed!" : "Some tests failed")
+                }
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Play vs AI", style: .default) { [weak self] _ in
+            self?.startAIOpponent()
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        // For iPad compatibility
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.minY + 100, width: 0, height: 0)
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    private func startAIOpponent() {
+        // Start AI player as opponent
+        PendulumAIManager.shared.startAIPlayer(skillLevel: .intermediate, viewModel: viewModel)
+        
+        let alert = UIAlertController(
+            title: "AI Opponent Active",
+            message: "The AI is now playing. Watch it balance the pendulum!",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Stop AI", style: .destructive) { _ in
+            PendulumAIManager.shared.stopAIPlayer()
+            self.updateGameMessageLabel("AI player stopped")
+        })
+        
+        present(alert, animated: true)
+    }
+    
     @objc private func sliderValueChanged(_ slider: UISlider) {
         // Update the value label
         updateSliderValueLabel(slider)
@@ -3796,6 +3887,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         // Play tab selection sound
         PendulumSoundManager.shared.playButtonTapSound()
+        
+        // Create a visual burst effect at the selected tab
+        if let tabBarView = tabBar.subviews.first(where: { $0.subviews.contains(where: { $0 is UIImageView }) }),
+           let index = tabBar.items?.firstIndex(of: item) {
+            // Get approximate position of the selected tab
+            let tabWidth = tabBar.bounds.width / CGFloat(tabBar.items?.count ?? 1)
+            let tabCenterX = tabWidth * CGFloat(index) + tabWidth / 2
+            let burstPoint = CGPoint(x: tabCenterX, y: 25) // Middle of tab bar item
+            
+            // Create burst effect at tab location
+            TabTransitionAnimator.createTabTransitionBurst(at: burstPoint, in: tabBar)
+        }
+        
+        // Also create a corner burst in the main view
+        TabTransitionAnimator.createCornerBurst(in: self.view, corner: .bottomRight)
         
         // First stop any dashboard updates to avoid unnecessary refreshes
         stopDashboardUpdates()

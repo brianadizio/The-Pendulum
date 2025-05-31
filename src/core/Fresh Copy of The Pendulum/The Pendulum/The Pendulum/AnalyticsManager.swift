@@ -41,6 +41,14 @@ class AnalyticsManager {
     private var currentLevel: Int = 0
     private var levelPhaseSpaceData: [Int: [(theta: Double, omega: Double)]] = [:]
     
+    // Historical session tracking
+    private var sessionMetrics: [UUID: [String: Any]] = [:]
+    private var sessionInteractions: [UUID: [[String: Any]]] = [:]
+    private var historicalSessionDates: [UUID: Date] = [:]
+    private var totalSessions: Int = 0
+    private var totalScore: Int = 0
+    private var totalBalanceTime: TimeInterval = 0
+    
     // MARK: - Data Models
     
     struct InteractionEventData {
@@ -421,11 +429,72 @@ class AnalyticsManager {
     
     // MARK: - Long-term Analytics
     
-    private func updateAggregatedAnalytics() {
+    func updateAggregatedAnalytics() {
         // This method will be called periodically to update aggregated statistics
         updateDailyAnalytics()
         updateWeeklyAnalytics()
         updateMonthlyAnalytics()
+    }
+    
+    // MARK: - Historical Data Methods
+    
+    func createHistoricalSession(
+        sessionId: UUID,
+        date: Date,
+        duration: TimeInterval,
+        score: Int,
+        levelsCompleted: Int,
+        skillLevel: AISkillLevel
+    ) {
+        // Store the historical date for this session
+        historicalSessionDates[sessionId] = date
+        
+        // Create session metrics with historical context
+        sessionMetrics[sessionId] = [
+            "sessionId": sessionId.uuidString,
+            "startTime": date,
+            "duration": duration,
+            "score": Double(score),
+            "levelsCompleted": Double(levelsCompleted),
+            "skillLevel": skillLevel.rawValue
+        ]
+        
+        // Track for aggregation
+        totalSessions += 1
+        totalScore += score
+        totalBalanceTime += duration
+    }
+    
+    func createHistoricalInteraction(
+        sessionId: UUID,
+        timestamp: Date,
+        eventType: String,
+        direction: String,
+        magnitude: Double
+    ) {
+        // Create interaction record with historical timestamp
+        let interaction: [String: Any] = [
+            "sessionId": sessionId.uuidString,
+            "timestamp": timestamp,
+            "eventType": eventType,
+            "direction": direction,
+            "magnitude": magnitude,
+            "angle": Double.random(in: -0.5...0.5), // Simulate angle data
+            "angleVelocity": Double.random(in: -1.0...1.0) // Simulate velocity data
+        ]
+        
+        // Store in session interactions
+        if sessionInteractions[sessionId] == nil {
+            sessionInteractions[sessionId] = []
+        }
+        sessionInteractions[sessionId]?.append(interaction)
+        
+        // Update directional counters
+        if direction == "left" {
+            directionalPushes["left", default: 0] += 1
+        } else if direction == "right" {
+            directionalPushes["right", default: 0] += 1
+        }
     }
     
     private func updateDailyAnalytics() {

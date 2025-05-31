@@ -259,7 +259,13 @@ fi
 # === 6. RUN SONAR-SCANNER (if configured) ===
 if [ -f "sonar-project.properties" ] && command -v sonar-scanner &> /dev/null; then
     echo "🚀 Running SonarQube analysis..."
-    sonar-scanner \
+    SONAR_TOKEN=$SONAR_TOKEN_The_Pendulum sonar-scanner \
+        -Dsonar.organization=brianadizio \
+        -Dsonar.projectKey=brianadizio_The-Pendulum \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=https://sonarcloud.io
+    
+    #sonar-scanner \
       -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
       -Dsonar.sources=./ \
       -Dsonar.coverageReportPaths="$LCOV_FILE" \
