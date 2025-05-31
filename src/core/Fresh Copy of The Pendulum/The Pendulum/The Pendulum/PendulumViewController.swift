@@ -2,7 +2,7 @@ import UIKit
 import SpriteKit
 import QuartzCore
 
-class PendulumViewController: UIViewController, UITabBarDelegate {
+class PendulumViewController: UIViewController, UITabBarDelegate, PendulumParticleDelegate {
     
     let viewModel = PendulumViewModel()
     private var scene: PendulumScene?
@@ -154,6 +154,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         return button
     }()
     
+    // MARK: - Particle Effects
+    
+    /// Creates full-screen particle effects for level completion
+    func showLevelCompletionParticles(level: Int) {
+        // Use the new ViewControllerParticleSystem for full-screen effects
+        ViewControllerParticleSystem.createMultipleExplosions(in: view, count: 3 + (level % 3))
+        
+        // Add a celebration effect for higher levels
+        if level >= 5 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                ViewControllerParticleSystem.createAchievementCelebration(in: self.view)
+            }
+        }
+    }
+    
+    /// Creates achievement celebration particles
+    func showAchievementParticles() {
+        ViewControllerParticleSystem.createAchievementCelebration(in: view)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -167,6 +187,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
 
         // Initialize settings
         initializeSettings()
+        
+        // Set particle delegate
+        viewModel.particleDelegate = self
         
         // Initialize sound mode from saved settings
         if let savedSoundMode = UserDefaults.standard.string(forKey: "setting_Sounds") {
@@ -3461,7 +3484,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             
             // Update UI
             updateGameMessageLabel("Game resumed")
-            startButton.setTitle("Restart", for: .normal)
+            startButton.setTitle("Pause", for: .normal)
             return
         }
         
@@ -3482,7 +3505,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
         } else {
             // Start the game normally
             viewModel.startGame()
-            startButton.setTitle("Restart", for: .normal)
+            startButton.setTitle("Pause", for: .normal)
         }
     }
     
@@ -3550,7 +3573,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             
             // Update UI
             updateGameMessageLabel("Game resumed")
-            startButton.setTitle("Restart", for: .normal)
+            startButton.setTitle("Pause", for: .normal)
         }
         
         // Use a fixed baseline for the push direction with increased magnitude
@@ -3586,7 +3609,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate {
             
             // Update UI
             updateGameMessageLabel("Game resumed")
-            startButton.setTitle("Restart", for: .normal)
+            startButton.setTitle("Pause", for: .normal)
         }
         
         // Use a fixed baseline for the push direction with increased magnitude

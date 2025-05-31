@@ -3,6 +3,13 @@ import SwiftUI
 import SpriteKit
 import CoreData
 
+// MARK: - Particle Effects Delegate Protocol
+
+protocol PendulumParticleDelegate: AnyObject {
+    func showLevelCompletionParticles(level: Int)
+    func showAchievementParticles()
+}
+
 class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var currentState = PendulumState(theta: Double.pi + 0.1, thetaDot: 0, time: 0)
     @Published var simulationError: Double = 0
@@ -127,6 +134,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     
     // Reference to the scene for visual updates
     weak var scene: PendulumScene?
+    
+    // Particle effects delegate
+    weak var particleDelegate: PendulumParticleDelegate?
     
     // Core Data manager
     private let coreDataManager = CoreDataManager.shared
@@ -446,9 +456,13 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Store completed level for celebration
         let completedLevel = currentLevel
         
-        // Show level completion effect using total completions for color variety
-        // This ensures colors change even when replaying the same level in Primary mode
-        self.scene?.showLevelCompletionEffect(at: nil, level: totalCompletions)
+        // Show level completion effect using new ViewControllerParticleSystem
+        if let delegate = particleDelegate {
+            delegate.showLevelCompletionParticles(level: totalCompletions)
+        } else {
+            // Fallback to SpriteKit scene effect
+            self.scene?.showLevelCompletionEffect(at: nil, level: totalCompletions)
+        }
 
         // Handle level progression based on game mode
         if isQuasiPeriodicMode {
@@ -1290,8 +1304,13 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 // Show achievement notification
                 print("Achievement unlocked: \(achievement.name ?? "Unknown") - \(achievement.achievementDescription ?? "")")
 
-                // Show achievement particle effect
-                scene?.showAchievementEffect()
+                // Show achievement particle effect using new ViewControllerParticleSystem
+                if let delegate = particleDelegate {
+                    delegate.showAchievementParticles()
+                } else {
+                    // Fallback to scene-based effect
+                    scene?.showAchievementEffect()
+                }
 
                 // Add bonus points for achievement
                 let bonusPoints = Int(achievement.points) * 10
