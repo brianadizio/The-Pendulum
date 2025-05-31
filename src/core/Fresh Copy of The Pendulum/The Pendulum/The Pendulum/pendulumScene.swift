@@ -99,16 +99,11 @@ class PendulumScene: SKScene {
         pendulumRod.alpha = 1.0  // Ensure full opacity
         addChild(pendulumRod)
 
-        // Setup bob with shape node for now - ensure it's visible
-        print("DEBUG: Creating pendulum bob")
-        let shapeNode = SKShapeNode(circleOfRadius: 23) // 30% bigger (18 * 1.3 = 23.4)
-        shapeNode.fillColor = UIColor(red: 0.0, green: 0.4, blue: 0.8, alpha: 1.0) // Rich blue
-        shapeNode.strokeColor = UIColor(red: 0.0, green: 0.2, blue: 0.6, alpha: 1.0) // Darker blue stroke
-        shapeNode.lineWidth = 3 // Thicker stroke
-        shapeNode.glowWidth = 0 // Remove glow to eliminate shadow
-        shapeNode.zPosition = 15
-        shapeNode.alpha = 1.0  // Ensure full opacity
-        pendulumBob = shapeNode
+        // Setup bob using the proper asset loading method
+        print("DEBUG: Creating pendulum bob with assets")
+        pendulumBob = createPendulumBob(radius: 23) // 30% bigger (18 * 1.3 = 23.4)
+        pendulumBob.zPosition = 15
+        pendulumBob.alpha = 1.0  // Ensure full opacity
         print("DEBUG: Pendulum bob created - zPosition: \(pendulumBob.zPosition), alpha: \(pendulumBob.alpha)")
         addChild(pendulumBob)
         
@@ -117,6 +112,11 @@ class PendulumScene: SKScene {
         
         // Setup control buttons (following UI designs in slides)
         setupControlButtonsUI()
+        
+        // Ensure bob asset is loaded after scene setup
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.refreshPendulumBobAsset()
+        }
         
         // Setup status message label in center of scene
         setupStatusMessageLabel()
@@ -1905,6 +1905,38 @@ class PendulumScene: SKScene {
         shapeNode.addChild(innerCircle)
         
         return shapeNode
+    }
+    
+    /// Refreshes the pendulum bob to ensure it uses the correct asset
+    private func refreshPendulumBobAsset() {
+        let currentBob = pendulumBob
+        
+        // Check if current bob is using an asset or is the blue fallback
+        if currentBob is SKShapeNode {
+            // Current bob is a shape node (blue fallback), try to replace with asset
+            let newBob = createPendulumBob(radius: 23)
+            
+            // Only replace if we successfully loaded an asset (not another shape node)
+            if newBob is SKSpriteNode {
+                let currentPosition = currentBob.position
+                let currentZPosition = currentBob.zPosition
+                let currentAlpha = currentBob.alpha
+                
+                // Remove old bob
+                currentBob.removeFromParent()
+                
+                // Set up new bob with same properties
+                newBob.position = currentPosition
+                newBob.zPosition = currentZPosition
+                newBob.alpha = currentAlpha
+                
+                // Add new bob
+                addChild(newBob)
+                pendulumBob = newBob
+                
+                print("✅ Successfully refreshed pendulum bob with asset")
+            }
+        }
     }
     
     /// Creates a sunset gradient texture
