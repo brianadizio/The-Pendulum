@@ -315,6 +315,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             AnalyticsManager.shared.startTracking(for: sessionId)
         }
         
+        // Start session time tracking
+        SessionTimeManager.shared.startSession()
+        
         // Reset game state
         score = 0
         gameOverReason = nil
@@ -572,6 +575,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 AnalyticsManager.shared.stopTracking()
             }
             
+            // End session time tracking
+            SessionTimeManager.shared.endSession()
+            
             // Update Core Data session
             if let sessionId = currentSessionId {
                 coreDataManager.updatePlaySession(
@@ -613,6 +619,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             isPaused = true
             stopSimulation() // Stop the timer
             gameOverReason = "Game Paused"
+            
+            // Pause session time tracking
+            SessionTimeManager.shared.pauseSession()
         }
     }
     
@@ -622,6 +631,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             isPaused = false
             gameOverReason = nil
             startSimulation() // Restart the timer
+            
+            // Resume session time tracking
+            SessionTimeManager.shared.resumeSession()
         }
     }
     
