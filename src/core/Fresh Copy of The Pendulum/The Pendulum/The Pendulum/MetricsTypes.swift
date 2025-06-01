@@ -175,7 +175,7 @@ enum MetricType: String, CaseIterable {
     
     var isTimeSeries: Bool {
         switch self {
-        case .stabilityScore, .cpuUsage, .frameRate, .responseLatency, .realtimeStability, .phaseTrajectory, .learningCurve, .windingNumber, .separatrixCrossings, .angularDeviation, .averageCorrectionTime, .reactionTimeAnalysis, .pendulumParametersOverTime:
+        case .cpuUsage, .frameRate, .responseLatency, .realtimeStability, .phaseTrajectory, .learningCurve, .windingNumber, .separatrixCrossings, .angularDeviation, .reactionTimeAnalysis, .pendulumParametersOverTime:
             return true
         default:
             return false

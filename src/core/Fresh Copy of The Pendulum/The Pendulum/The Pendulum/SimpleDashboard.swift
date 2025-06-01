@@ -1,5 +1,108 @@
 import UIKit
 
+// MARK: - Metric Description Helper
+
+extension MetricType {
+    var metricDescription: String {
+        switch self {
+        case .stabilityScore:
+            return "Measures how well you keep the pendulum upright (0-100)."
+        case .efficiencyRating:
+            return "Shows how effectively you use force to maintain balance."
+        case .playerStyle:
+            return "Your playing pattern based on correction behavior."
+        case .averageCorrectionTime:
+            return "Average time to respond when pendulum becomes unstable."
+        case .directionalBias:
+            return "Tendency to favor left or right corrections."
+        case .sessionTime:
+            return "Total time spent playing in this period."
+        case .balanceDuration:
+            return "Time spent maintaining successful balance."
+        case .pushCount:
+            return "Total number of corrections applied."
+        case .currentLevel:
+            return "The level you're currently playing."
+        case .overcorrectionRate:
+            return "How often you apply opposite forces too quickly."
+        case .responseDelay:
+            return "Time delay between instability and correction."
+        case .angularDeviation:
+            return "Shows pendulum deviation from vertical over time - lower values mean better stability."
+        case .forceDistribution, .pushMagnitudeDistribution:
+            return "Strength of your corrections - smaller forces indicate more precise control."
+        case .reactionTimeAnalysis:
+            return "Speed of response to instability - faster reactions typically yield better control."
+        case .learningCurve:
+            return "Your improvement trend over time based on stability scores."
+        case .fullDirectionalBias:
+            return "Balance between left and right corrections - centered distribution shows unbiased control."
+        case .levelCompletionsOverTime:
+            return "Number of levels successfully completed in each time period."
+        case .pendulumParametersOverTime:
+            return "How game physics parameters change across levels to increase difficulty."
+        case .phaseTrajectory:
+            return "Pendulum's angle vs velocity patterns - tighter loops indicate better control."
+        case .inputFrequencySpectrum:
+            return "Frequency analysis of your control inputs - reveals timing patterns."
+        case .phaseSpaceCoverage:
+            return "Percentage of possible pendulum states explored during play."
+        case .energyManagement:
+            return "How efficiently you manage the pendulum's kinetic and potential energy."
+        case .lyapunovExponent:
+            return "Measure of system chaos - higher values mean less predictable dynamics."
+        case .controlStrategy:
+            return "Your dominant control approach pattern during gameplay."
+        case .stateTransitionFreq:
+            return "How often the pendulum changes between different motion states."
+        case .failureModeAnalysis:
+            return "Common patterns in how you lose balance - helps identify weaknesses."
+        case .adaptationRate:
+            return "How quickly you adjust to new challenges and level changes."
+        case .skillRetention:
+            return "How well you maintain performance over extended play sessions."
+        case .challengeThreshold:
+            return "The difficulty level where you're most engaged and performing best."
+        case .persistenceScore:
+            return "Number of attempts before giving up on challenging levels."
+        case .improvementRate:
+            return "Speed of skill improvement over multiple sessions."
+        case .windingNumber:
+            return "Count of full rotations around vertical - indicates extreme swings."
+        case .rotationNumber:
+            return "Average rotation rate in phase space - characterizes motion type."
+        case .homoclinicTangle:
+            return "Complexity measure of chaotic pendulum trajectories."
+        case .periodicOrbitCount:
+            return "Number of repeating motion patterns in your control strategy."
+        case .basinStability:
+            return "Size of stable region - larger means more forgiving dynamics."
+        case .topologicalEntropy:
+            return "Information content of pendulum dynamics - complexity measure."
+        case .bettinumbers:
+            return "Topological features revealing phase space structure."
+        case .persistentHomology:
+            return "Long-lasting patterns in pendulum dynamics across time scales."
+        case .separatrixCrossings:
+            return "Transitions between different motion regimes (oscillation vs rotation)."
+        case .phasePortraitStructure:
+            return "Overall shape and type of phase space dynamics."
+        case .realtimeStability:
+            return "Consistency of performance metrics."
+        case .cpuUsage:
+            return "Processor load from game simulation."
+        case .frameRate:
+            return "Visual smoothness in frames per second."
+        case .responseLatency:
+            return "Delay between input and visual response."
+        case .memoryEfficiency:
+            return "RAM usage by the application."
+        case .batteryImpact:
+            return "Power consumption during gameplay."
+        }
+    }
+}
+
 class SimpleDashboard: UITableViewController {
     
     // MARK: - Properties
@@ -144,7 +247,7 @@ class SimpleDashboard: UITableViewController {
         case 1: return 100 // Controls
         case 2:
             let metric = metrics[indexPath.row]
-            return (metric.type.isDistribution || metric.type.isTimeSeries) ? 250 : 80
+            return (metric.type.isDistribution || metric.type.isTimeSeries) ? 300 : 120 // Increased from 110 to 120 for value below description
         default: return 44
         }
     }
@@ -281,6 +384,7 @@ class MetricCell: UITableViewCell {
     private let cardView = UIView()
     private let iconLabel = UILabel()
     private let titleLabel = UILabel()
+    private let descriptionLabel = UILabel()
     private let valueLabel = UILabel()
     private let unitLabel = UILabel()
     
@@ -319,18 +423,25 @@ class MetricCell: UITableViewCell {
         titleLabel.textColor = .label
         cardView.addSubview(titleLabel)
         
+        // Description
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.font = .systemFont(ofSize: 11, weight: .regular)
+        descriptionLabel.textColor = .secondaryLabel
+        descriptionLabel.numberOfLines = 0
+        cardView.addSubview(descriptionLabel)
+        
         // Value
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
-        valueLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        valueLabel.font = .systemFont(ofSize: 18, weight: .bold)
         valueLabel.textColor = .goldenPrimary
-        valueLabel.textAlignment = .right
+        valueLabel.textAlignment = .left
         cardView.addSubview(valueLabel)
         
         // Unit
         unitLabel.translatesAutoresizingMaskIntoConstraints = false
-        unitLabel.font = .systemFont(ofSize: 12)
+        unitLabel.font = .systemFont(ofSize: 14)
         unitLabel.textColor = .secondaryLabel
-        unitLabel.textAlignment = .right
+        unitLabel.textAlignment = .left
         cardView.addSubview(unitLabel)
         
         NSLayoutConstraint.activate([
@@ -340,36 +451,51 @@ class MetricCell: UITableViewCell {
             cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
             
             iconLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
-            iconLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            iconLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
             iconLabel.widthAnchor.constraint(equalToConstant: 30),
             
             titleLabel.leadingAnchor.constraint(equalTo: iconLabel.trailingAnchor, constant: 12),
-            titleLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
-            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: valueLabel.leadingAnchor, constant: -8),
+            titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             
-            valueLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
-            valueLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor, constant: -6),
+            descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
+            descriptionLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             
-            unitLabel.trailingAnchor.constraint(equalTo: valueLabel.trailingAnchor),
-            unitLabel.topAnchor.constraint(equalTo: valueLabel.bottomAnchor, constant: 2)
+            valueLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            valueLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
+            
+            unitLabel.leadingAnchor.constraint(equalTo: valueLabel.trailingAnchor, constant: 6),
+            unitLabel.centerYAnchor.constraint(equalTo: valueLabel.centerYAnchor)
         ])
     }
     
     func configure(with metric: MetricValue) {
         titleLabel.text = metric.type.rawValue
-        valueLabel.text = metric.formattedValue
+        descriptionLabel.text = metric.type.metricDescription
         
-        // Debug logging
-        print("DEBUG: MetricCell - \(metric.type.rawValue): value='\(metric.formattedValue)' unit='\(metric.type.unit)'")
+        // Format value with unit inline if appropriate
+        let formattedValue = metric.formattedValue
+        let unit = metric.type.unit
         
-        // Only show unit label for metrics that have meaningful units
-        if metric.type.unit == "category" || metric.type.unit == "path" || 
-           metric.type.unit == "distribution" || metric.type.unit == "values" ||
-           metric.type.unit == "dimension" || metric.type.unit == "complexity" {
+        // Check if unit is already included in formatted value or should be hidden
+        let hideUnit = unit == "category" || unit == "path" || 
+                      unit == "distribution" || unit == "values" ||
+                      unit == "dimension" || unit == "complexity" ||
+                      formattedValue.contains("%") || formattedValue.contains("s") ||
+                      formattedValue.contains("ms") || formattedValue.contains("fps") ||
+                      formattedValue.contains("Level") || formattedValue.contains("attempts")
+        
+        if hideUnit {
+            valueLabel.text = formattedValue
             unitLabel.text = ""
         } else {
-            unitLabel.text = metric.type.unit
+            valueLabel.text = formattedValue
+            unitLabel.text = unit
         }
+        
+        // Debug logging
+        print("DEBUG: MetricCell - \(metric.type.rawValue): value='\(formattedValue)' unit='\(unit)'")
         
         // Set icon based on metric type
         switch metric.type {
@@ -391,10 +517,28 @@ class MetricCell: UITableViewCell {
     }
     
     func updateValue(_ metric: MetricValue) {
-        valueLabel.text = metric.formattedValue
+        // Format value with unit inline if appropriate
+        let formattedValue = metric.formattedValue
+        let unit = metric.type.unit
+        
+        // Check if unit is already included in formatted value or should be hidden
+        let hideUnit = unit == "category" || unit == "path" || 
+                      unit == "distribution" || unit == "values" ||
+                      unit == "dimension" || unit == "complexity" ||
+                      formattedValue.contains("%") || formattedValue.contains("s") ||
+                      formattedValue.contains("ms") || formattedValue.contains("fps") ||
+                      formattedValue.contains("Level") || formattedValue.contains("attempts")
+        
+        if hideUnit {
+            valueLabel.text = formattedValue
+            unitLabel.text = ""
+        } else {
+            valueLabel.text = formattedValue
+            unitLabel.text = unit
+        }
         
         // Debug logging
-        print("DEBUG: MetricCell update - \(metric.type.rawValue): value='\(metric.formattedValue)'")
+        print("DEBUG: MetricCell update - \(metric.type.rawValue): value='\(formattedValue)'")
         
         if let confidence = metric.confidence {
             valueLabel.textColor = confidenceColor(for: confidence)
@@ -420,6 +564,7 @@ class ChartCell: UITableViewCell {
     
     private let cardView = UIView()
     private let titleLabel = UILabel()
+    private let descriptionLabel = UILabel()
     private let chartContainer = UIView()
     private var currentChart: UIView?
     
@@ -452,6 +597,22 @@ class ChartCell: UITableViewCell {
         titleLabel.textColor = .label
         cardView.addSubview(titleLabel)
         
+        // Description
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        descriptionLabel.textColor = .secondaryLabel
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.backgroundColor = .systemGray6
+        descriptionLabel.layer.cornerRadius = 6
+        descriptionLabel.layer.masksToBounds = true
+        descriptionLabel.textAlignment = .left
+        descriptionLabel.lineBreakMode = .byWordWrapping
+        
+        // Add some internal padding to the description label
+        descriptionLabel.layer.borderWidth = 0
+        
+        cardView.addSubview(descriptionLabel)
+        
         // Chart container
         chartContainer.translatesAutoresizingMaskIntoConstraints = false
         chartContainer.backgroundColor = .systemGray6
@@ -468,7 +629,12 @@ class ChartCell: UITableViewCell {
             titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             
-            chartContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            descriptionLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
+            descriptionLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+            descriptionLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
+            
+            chartContainer.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 12),
             chartContainer.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
             chartContainer.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             chartContainer.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16)
@@ -477,6 +643,7 @@ class ChartCell: UITableViewCell {
     
     func configure(with metric: MetricValue) {
         titleLabel.text = metric.type.rawValue
+        descriptionLabel.text = metric.type.metricDescription
         
         // Remove existing chart
         currentChart?.removeFromSuperview()
@@ -648,4 +815,5 @@ class ChartCell: UITableViewCell {
             return (theta: theta, omega: omega)
         }
     }
+    
 }

@@ -20,12 +20,12 @@ class BalanceEffectManager {
         let paletteIndex = (level - 1) % DynamicParticleManager.allPalettes.count
         let selectedPalette = DynamicParticleManager.allPalettes[paletteIndex]
         
-        // Create floating particles around the balanced pendulum
-        for i in 0..<4 {
-            let angle = Double(i) * .pi / 2
+        // Create floating particles around the balanced pendulum - 3x more emitters
+        for i in 0..<12 {  // 3x more emitters (4 * 3 = 12)
+            let angle = Double(i) * .pi / 6  // Adjusted angle distribution for more emitters
             let offset = CGPoint(
-                x: position.x + cos(angle) * 30,
-                y: position.y + sin(angle) * 30
+                x: position.x + cos(angle) * 30 * 1.65,  // 1.65x wider spatial range
+                y: position.y + sin(angle) * 30 * 1.65   // 1.65x wider spatial range
             )
             
             let floatingEmitter = createFloatingParticle(color: selectedPalette[i % selectedPalette.count])
@@ -62,9 +62,9 @@ class BalanceEffectManager {
     private func createFloatingParticle(color: UIColor) -> SKEmitterNode {
         let emitter = SKEmitterNode()
         
-        // Configure for gentle floating particles
+        // Configure for gentle floating particles - 3x more particles
         emitter.particleTexture = createSoftGlowTexture()
-        emitter.particleBirthRate = 30
+        emitter.particleBirthRate = 90  // 3x more particles (30 * 3)
         emitter.particleLifetime = 3.0
         emitter.particleLifetimeRange = 1.0
         
@@ -81,11 +81,11 @@ class BalanceEffectManager {
         emitter.particleAlphaRange = 0.2
         emitter.particleAlphaSpeed = -0.2
         
-        // Gentle floating motion
+        // Gentle floating motion - 1.65x wider spatial range
         emitter.emissionAngle = -CGFloat.pi / 2
-        emitter.emissionAngleRange = CGFloat.pi / 4
-        emitter.particleSpeed = 20
-        emitter.particleSpeedRange = 10
+        emitter.emissionAngleRange = CGFloat.pi / 4 * 1.65  // 1.65x wider angle range
+        emitter.particleSpeed = 20 * 1.65  // 1.65x wider speed for distribution
+        emitter.particleSpeedRange = 10 * 1.65  // 1.65x wider speed variation
         
         // Float upward
         emitter.yAcceleration = 15
@@ -100,9 +100,9 @@ class BalanceEffectManager {
     private func createGlowEffect(colors: [UIColor]) -> SKEmitterNode {
         let emitter = SKEmitterNode()
         
-        // Configure for soft glow
+        // Configure for soft glow - 3x more particles
         emitter.particleTexture = createSoftGlowTexture()
-        emitter.particleBirthRate = 10
+        emitter.particleBirthRate = 30  // 3x more particles (10 * 3)
         emitter.particleLifetime = 4.0
         emitter.particleLifetimeRange = 1.0
         

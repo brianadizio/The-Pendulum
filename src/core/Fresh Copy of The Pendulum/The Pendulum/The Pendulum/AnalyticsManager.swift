@@ -14,10 +14,11 @@ class AnalyticsManager {
     }
     
     // Tracking state
-    private var isTracking: Bool = false
+    internal var isTracking: Bool = false
     
     // Current session tracking
     internal var currentSessionId: UUID?
+    internal var currentSessionMetrics: [String: Any]?
     private var sessionStartTime: Date?
     private var lastPushTime: Date?
     private var lastInstabilityTime: Date?
@@ -29,9 +30,13 @@ class AnalyticsManager {
     private var pushFrequencyBuffer: [TimeInterval] = []
     private var pushMagnitudeBuffer: [Double] = []
     var directionalPushes: [String: Int] = ["left": 0, "right": 0]
+    internal var directionalChanges: [(time: Double, fromDirection: String, toDirection: String)] = []
     
     // Performance tracking
     internal var angleBuffer: [Double] = [] // For variance calculation
+    internal var velocityBuffer: [Double] = [] // For velocity tracking
+    internal var phaseSpaceHistory: [(theta: Double, omega: Double)] = [] // Historical phase space points
+    internal var forceHistory: [(time: Double, force: Double, direction: String)] = [] // Force application history
     private var totalForceApplied: Double = 0
     private var correctionEfficiency: [Double] = [] // Force applied vs. stability gained
     internal var reactionTimes: [Double] = [] // Time from instability to correction
@@ -42,6 +47,7 @@ class AnalyticsManager {
     private var levelPhaseSpaceData: [Int: [(theta: Double, omega: Double)]] = [:]
     
     // Historical session tracking
+    internal var sessions: [UUID: Date] = [:] // Active sessions tracking
     private var sessionMetrics: [UUID: [String: Any]] = [:]
     private var sessionInteractions: [UUID: [[String: Any]]] = [:]
     private var historicalSessionDates: [UUID: Date] = [:]
@@ -67,6 +73,7 @@ class AnalyticsManager {
         currentSessionId = sessionId
         sessionStartTime = Date()
         isTracking = true
+        sessions[sessionId] = Date()
         
         // Reset all tracking buffers
         pendingInteractions = []
@@ -75,6 +82,9 @@ class AnalyticsManager {
         pushMagnitudeBuffer = []
         directionalPushes = ["left": 0, "right": 0]
         angleBuffer = []
+        velocityBuffer = []
+        phaseSpaceHistory = []
+        forceHistory = []
         totalForceApplied = 0
         correctionEfficiency = []
         reactionTimes = []
@@ -106,6 +116,19 @@ class AnalyticsManager {
     
     // MARK: - Interaction Tracking
     
+    // Overloaded method with force parameter (used by debug system)
+    func trackInteraction(eventType: String, force: Double, direction: String, angle: Double, velocity: Double, timestamp: Date) {
+        guard isTracking else { return }
+        
+        trackInteraction(
+            eventType: eventType,
+            angle: angle,
+            angleVelocity: velocity,
+            magnitude: force,
+            direction: direction
+        )
+    }
+    
     func trackPendulumState(angle: Double, angleVelocity: Double) {
         guard isTracking, currentSessionId != nil else {
             // Skip tracking if not actively tracking
@@ -115,9 +138,15 @@ class AnalyticsManager {
         // Store angle for variance calculation
         angleBuffer.append(angle)
         
+        // Store velocity
+        velocityBuffer.append(angleVelocity)
+        
         // Keep buffer size manageable by trimming oldest values if too large
         if angleBuffer.count > 1000 {
             angleBuffer.removeFirst(angleBuffer.count - 1000)
+        }
+        if velocityBuffer.count > 1000 {
+            velocityBuffer.removeFirst(velocityBuffer.count - 1000)
         }
         
         // Check for instability
@@ -136,11 +165,26 @@ class AnalyticsManager {
             return
         }
         
-        // Calculate reaction time if this is a correction
+        // Calculate reaction time if this is a correction during unstable period
         var reactionTime = 0.0
-        if eventType == "push" && lastInstabilityTime != nil {
-            reactionTime = Date().timeIntervalSince(lastInstabilityTime!)
-            reactionTimes.append(reactionTime)
+        if eventType == "push" {
+            let angleFromVertical = abs(normalizeAngle(angle - Double.pi))
+            
+            // If we're currently unstable and have a recorded instability time
+            if angleFromVertical > instabilityThreshold, let lastInstability = lastInstabilityTime {
+                reactionTime = Date().timeIntervalSince(lastInstability)
+                // Only record reasonable reaction times (0.1 to 3 seconds)
+                if reactionTime >= 0.1 && reactionTime <= 3.0 {
+                    reactionTimes.append(reactionTime)
+                    print("DEBUG: Recorded reaction time: \(reactionTime)s")
+                }
+            }
+            
+            // If we just became unstable, record the time but don't reset instability tracking yet
+            if angleFromVertical > instabilityThreshold && lastInstabilityTime == nil {
+                lastInstabilityTime = Date()
+                print("DEBUG: Started tracking instability at angle: \(angleFromVertical)")
+            }
         }
         
         // Track push frequency
@@ -151,11 +195,26 @@ class AnalyticsManager {
             }
             lastPushTime = Date()
             
-            // Track directional bias
-            directionalPushes[direction, default: 0] += 1
+            // Track directional bias - ensure proper categorization
+            let normalizedDirection = direction.lowercased().trimmingCharacters(in: .whitespaces)
+            if normalizedDirection.contains("left") || normalizedDirection == "left" {
+                directionalPushes["left", default: 0] += 1
+                print("DEBUG: Recorded LEFT push. Total left: \(directionalPushes["left", default: 0])")
+            } else if normalizedDirection.contains("right") || normalizedDirection == "right" {
+                directionalPushes["right", default: 0] += 1
+                print("DEBUG: Recorded RIGHT push. Total right: \(directionalPushes["right", default: 0])")
+            } else {
+                // Fallback for unclear directions
+                directionalPushes[normalizedDirection, default: 0] += 1
+                print("DEBUG: Recorded UNKNOWN direction push: '\(normalizedDirection)'")
+            }
             
             // Track magnitude for distribution analysis
             pushMagnitudeBuffer.append(abs(magnitude))
+            
+            // Track force history
+            let currentTime = Date().timeIntervalSince(sessionStartTime ?? Date())
+            forceHistory.append((time: currentTime, force: abs(magnitude), direction: direction))
             
             // Track total force applied
             totalForceApplied += abs(magnitude)
@@ -320,24 +379,31 @@ class AnalyticsManager {
     }
     
     internal func calculateEfficiencyRating() -> Double {
-        // If no force applied, return 0
-        guard totalForceApplied > 0 && !angleBuffer.isEmpty else { return 0 }
+        // If no meaningful force applied, return 0
+        guard totalForceApplied > 0.001 && !angleBuffer.isEmpty else { return 0 }
         
         // Calculate stability (inverse of angle variance)
         let stability = calculateStabilityScore()
+        guard stability > 0 else { return 0 }
         
         // Efficiency is stability achieved per unit of force
-        let normalizedForce = max(min(totalForceApplied, 100) / 100, 0.01) // Prevent division by zero
-        let efficiencyRating = stability / normalizedForce
+        // Use square root to reduce sensitivity to total force
+        let efficiencyRating = stability / sqrt(totalForceApplied)
         
-        // Debug check for NaN
+        // Debug logging for troubleshooting
+        print("DEBUG: Efficiency calculation - Stability: \(stability), TotalForce: \(totalForceApplied), Raw efficiency: \(efficiencyRating)")
+        
+        // Check for invalid values
         if efficiencyRating.isNaN || efficiencyRating.isInfinite {
-            print("ERROR: NaN/Infinite efficiency rating. Stability: \(stability), NormalizedForce: \(normalizedForce), TotalForce: \(totalForceApplied)")
+            print("ERROR: Invalid efficiency rating. Stability: \(stability), TotalForce: \(totalForceApplied)")
             return 0.0
         }
         
-        // Normalize to 0-100 scale
-        return min(efficiencyRating, 100)
+        // Scale appropriately (multiply by 10 to get reasonable range)
+        let scaledRating = min(efficiencyRating * 10, 100)
+        print("DEBUG: Final efficiency rating: \(scaledRating)")
+        
+        return scaledRating
     }
     
     internal func calculateDirectionalBias() -> Double {
@@ -642,11 +708,15 @@ class AnalyticsManager {
         guard isTracking else { return }
         
         phaseSpacePoints.append((theta: theta, omega: omega))
+        phaseSpaceHistory.append((theta: theta, omega: omega))
         
         // Limit the number of points to prevent memory issues
         let maxPoints = 1000
         if phaseSpacePoints.count > maxPoints {
             phaseSpacePoints.removeFirst()
+        }
+        if phaseSpaceHistory.count > maxPoints {
+            phaseSpaceHistory.removeFirst()
         }
     }
     
@@ -1057,5 +1127,84 @@ class AnalyticsManager {
         }
         
         return timeSeries
+    }
+    
+    // MARK: - Additional Methods for Testing
+    
+    func getAllSessions() -> [UUID] {
+        return Array(sessions.keys)
+    }
+    
+    func trackFailure(reason: String, finalAngle: Double, finalVelocity: Double, level: Int) {
+        guard isTracking, let sessionId = currentSessionId else { return }
+        
+        // Create failure data
+        let failureData: [String: Any] = [
+            "sessionId": sessionId.uuidString,
+            "reason": reason,
+            "finalAngle": finalAngle,
+            "finalVelocity": finalVelocity,
+            "level": level,
+            "timestamp": Date(),
+            "gameTime": Date().timeIntervalSince(sessionStartTime ?? Date())
+        ]
+        
+        // Store in session metrics
+        var currentMetrics = sessionMetrics[sessionId] ?? [:]
+        var failures = currentMetrics["failures"] as? [[String: Any]] ?? []
+        failures.append(failureData)
+        currentMetrics["failures"] = failures
+        sessionMetrics[sessionId] = currentMetrics
+        
+        print("Tracked failure: \(reason) at level \(level)")
+    }
+    
+    func trackLevelCompletion(level: Int, completionTime: Double, score: Int, perturbationType: String) {
+        guard isTracking, let sessionId = currentSessionId else { return }
+        
+        // Create level completion data
+        let completionData: [String: Any] = [
+            "sessionId": sessionId.uuidString,
+            "level": level,
+            "completionTime": completionTime,
+            "score": score,
+            "perturbationType": perturbationType,
+            "timestamp": Date()
+        ]
+        
+        // Store in session metrics
+        var currentMetrics = sessionMetrics[sessionId] ?? [:]
+        var completions = currentMetrics["levelCompletions"] as? [[String: Any]] ?? []
+        completions.append(completionData)
+        currentMetrics["levelCompletions"] = completions
+        sessionMetrics[sessionId] = currentMetrics
+        
+        print("Tracked level completion: Level \(level) in \(completionTime)s")
+    }
+    
+    func getPerformanceMetrics(for sessionId: UUID) -> [String: Any] {
+        // Return stored session metrics or calculate from current data
+        if let storedMetrics = sessionMetrics[sessionId] {
+            return storedMetrics
+        }
+        
+        // If no stored metrics, create basic metrics from current session data
+        guard sessionId == currentSessionId else {
+            return [:]
+        }
+        
+        let finalScore = angleBuffer.count * 10 // Simple scoring
+        let levelsCompleted = max(currentLevel, 1)
+        let totalPlayTime = Date().timeIntervalSince(sessionStartTime ?? Date())
+        let stabilityScore = calculateStabilityScore()
+        
+        return [
+            "finalScore": Double(finalScore),
+            "levelsCompleted": Double(levelsCompleted),
+            "totalPlayTime": totalPlayTime,
+            "stabilityScore": stabilityScore,
+            "pushCount": Double(directionalPushes.values.reduce(0, +)),
+            "averageReactionTime": reactionTimes.isEmpty ? 0.0 : reactionTimes.reduce(0, +) / Double(reactionTimes.count)
+        ]
     }
 }

@@ -4,6 +4,14 @@
 import Foundation
 import CoreGraphics
 
+// MARK: - Shared Enums
+
+enum PushDirection {
+    case left
+    case right
+    case none
+}
+
 // MARK: - AI Player Configuration
 
 enum AISkillLevel: String, CaseIterable {
@@ -91,12 +99,6 @@ class PendulumAIPlayer {
         let direction: PushDirection
         let scheduledTime: Date
         let magnitude: Double
-    }
-    
-    enum PushDirection {
-        case left
-        case right
-        case none
     }
     
     // MARK: - Initialization
@@ -430,31 +432,105 @@ class PendulumAIManager {
     private var aiPlayer: PendulumAIPlayer?
     private var updateTimer: Timer?
     private weak var viewModel: PendulumViewModel?
+    private var currentMode: AIMode = .demo
+    private var isAssisting: Bool = false
+    private var competitionScore: Int = 0
+    private var tutorialStep: Int = 0
+    
+    // AI Modes
+    enum AIMode {
+        case demo      // AI plays on its own
+        case assist    // AI helps when player struggles
+        case compete   // Player vs AI competition
+        case tutorial  // AI guides through basics
+    }
     
     private init() {}
     
-    /// Start AI playing with specified skill level
-    func startAIPlayer(skillLevel: AISkillLevel, viewModel: PendulumViewModel) {
+    /// Start AI playing with specified skill level and mode
+    func startAIPlayer(skillLevel: AISkillLevel, viewModel: PendulumViewModel, mode: AIMode = .demo) {
         self.viewModel = viewModel
+        self.currentMode = mode
         
-        // Create AI player
-        aiPlayer = PendulumAIPlayer(skillLevel: skillLevel)
-        
-        // Set up callbacks
-        aiPlayer?.onPushLeft = { [weak viewModel] in
-            viewModel?.applyForce(-2.0)
+        // Configure AI based on mode
+        switch mode {
+        case .demo:
+            // AI plays autonomously
+            aiPlayer = PendulumAIPlayer(skillLevel: skillLevel)
+            aiPlayer?.humanErrorEnabled = true
+            
+        case .assist:
+            // AI helps when needed
+            aiPlayer = PendulumAIPlayer(skillLevel: .expert)
+            aiPlayer?.humanErrorEnabled = false
+            isAssisting = false // Only assist when needed
+            
+        case .compete:
+            // AI plays at specified skill level
+            aiPlayer = PendulumAIPlayer(skillLevel: skillLevel)
+            aiPlayer?.humanErrorEnabled = true
+            competitionScore = 0
+            
+        case .tutorial:
+            // AI plays perfectly with guidance
+            aiPlayer = PendulumAIPlayer(skillLevel: .perfect)
+            aiPlayer?.humanErrorEnabled = false
+            tutorialStep = 0
         }
         
-        aiPlayer?.onPushRight = { [weak viewModel] in
-            viewModel?.applyForce(2.0)
-        }
+        // Set up callbacks based on mode
+        setupAICallbacks()
         
-        // Start playing
-        aiPlayer?.startPlaying()
+        // Start playing for demo and compete modes
+        if mode == .demo || mode == .compete {
+            aiPlayer?.startPlaying()
+        }
         
         // Start update loop
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             self?.updateAI()
+        }
+    }
+    
+    private func setupAICallbacks() {
+        switch currentMode {
+        case .demo, .compete:
+            // AI controls directly
+            aiPlayer?.onPushLeft = { [weak self] in
+                self?.viewModel?.applyForce(-2.0)
+                self?.showAIActionIndicator(direction: PushDirection.left)
+            }
+            
+            aiPlayer?.onPushRight = { [weak self] in
+                self?.viewModel?.applyForce(2.0)
+                self?.showAIActionIndicator(direction: PushDirection.right)
+            }
+            
+        case .assist:
+            // AI only assists when needed
+            aiPlayer?.onPushLeft = { [weak self] in
+                if self?.isAssisting == true {
+                    self?.viewModel?.applyForce(-2.0)
+                    self?.showAIAssistIndicator(direction: PushDirection.left)
+                }
+            }
+            
+            aiPlayer?.onPushRight = { [weak self] in
+                if self?.isAssisting == true {
+                    self?.viewModel?.applyForce(2.0)
+                    self?.showAIAssistIndicator(direction: PushDirection.right)
+                }
+            }
+            
+        case .tutorial:
+            // AI provides guidance
+            aiPlayer?.onPushLeft = { [weak self] in
+                self?.showTutorialHint(direction: PushDirection.left)
+            }
+            
+            aiPlayer?.onPushRight = { [weak self] in
+                self?.showTutorialHint(direction: PushDirection.right)
+            }
         }
     }
     
@@ -485,6 +561,38 @@ class PendulumAIManager {
             time: state.time
         )
         
+        // Handle mode-specific logic
+        switch currentMode {
+        case .assist:
+            // Check if player needs assistance
+            let angleFromVertical = abs(atan2(sin(state.theta), cos(state.theta)) - Double.pi)
+            if angleFromVertical > 0.5 && !isAssisting {
+                // Player is struggling, start assisting
+                isAssisting = true
+                aiPlayer.startPlaying()
+                showAssistanceStarted()
+            } else if angleFromVertical < 0.2 && isAssisting {
+                // Player has recovered, stop assisting
+                isAssisting = false
+                aiPlayer.stopPlaying()
+                showAssistanceStopped()
+            }
+            
+        case .compete:
+            // Track AI's performance for competition
+            if state.time.truncatingRemainder(dividingBy: 1.0) < 0.05 {
+                competitionScore += 1
+                updateCompetitionDisplay()
+            }
+            
+        case .tutorial:
+            // Provide tutorial guidance
+            checkTutorialProgress(state: state)
+            
+        default:
+            break
+        }
+        
         // Notify AI of balance status
         let angleFromVertical = abs(atan2(sin(state.theta), cos(state.theta)) - Double.pi)
         if angleFromVertical < 0.15 {
@@ -492,5 +600,100 @@ class PendulumAIManager {
         } else if angleFromVertical > 1.5 {
             aiPlayer.notifyBalanceFailure()
         }
+    }
+    
+    // MARK: - Visualization Methods
+    
+    private func showAIActionIndicator(direction: PushDirection) {
+        NotificationCenter.default.post(
+            name: Notification.Name("AIActionIndicator"),
+            object: nil,
+            userInfo: [
+                "direction": direction == PushDirection.left ? "left" : "right",
+                "mode": "demo"
+            ]
+        )
+    }
+    
+    private func showAIAssistIndicator(direction: PushDirection) {
+        NotificationCenter.default.post(
+            name: Notification.Name("AIActionIndicator"),
+            object: nil,
+            userInfo: [
+                "direction": direction == PushDirection.left ? "left" : "right",
+                "mode": "assist"
+            ]
+        )
+    }
+    
+    private func showTutorialHint(direction: PushDirection) {
+        NotificationCenter.default.post(
+            name: Notification.Name("AITutorialHint"),
+            object: nil,
+            userInfo: [
+                "direction": direction == PushDirection.left ? "left" : "right",
+                "step": tutorialStep
+            ]
+        )
+    }
+    
+    private func showAssistanceStarted() {
+        NotificationCenter.default.post(
+            name: Notification.Name("AIAssistanceStatus"),
+            object: nil,
+            userInfo: ["status": "started"]
+        )
+    }
+    
+    private func showAssistanceStopped() {
+        NotificationCenter.default.post(
+            name: Notification.Name("AIAssistanceStatus"),
+            object: nil,
+            userInfo: ["status": "stopped"]
+        )
+    }
+    
+    private func updateCompetitionDisplay() {
+        NotificationCenter.default.post(
+            name: Notification.Name("AICompetitionUpdate"),
+            object: nil,
+            userInfo: ["aiScore": competitionScore]
+        )
+    }
+    
+    private func checkTutorialProgress(state: PendulumState) {
+        // Check tutorial milestones
+        let angleFromVertical = abs(atan2(sin(state.theta), cos(state.theta)) - Double.pi)
+        
+        switch tutorialStep {
+        case 0:
+            // Step 1: Get pendulum upright
+            if angleFromVertical < 0.3 {
+                tutorialStep = 1
+                showTutorialProgress(message: "Great! Now try to keep it balanced.")
+            }
+        case 1:
+            // Step 2: Keep balanced for 5 seconds
+            if state.time > 5.0 && angleFromVertical < 0.3 {
+                tutorialStep = 2
+                showTutorialProgress(message: "Excellent! Now try using gentler pushes.")
+            }
+        case 2:
+            // Step 3: Use minimal force
+            if state.time > 10.0 {
+                tutorialStep = 3
+                showTutorialProgress(message: "You're doing great! Keep practicing!")
+            }
+        default:
+            break
+        }
+    }
+    
+    private func showTutorialProgress(message: String) {
+        NotificationCenter.default.post(
+            name: Notification.Name("AITutorialProgress"),
+            object: nil,
+            userInfo: ["message": message]
+        )
     }
 }

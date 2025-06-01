@@ -56,16 +56,21 @@ class SimpleChartView: UIView {
             return "°"
         } else if lowerTitle.contains("frequency") {
             return "/s"
-        } else if lowerTitle.contains("time") {
+        } else if lowerTitle.contains("time") && !lowerTitle.contains("completion") {
             return "s"
         } else if lowerTitle.contains("magnitude") {
             return "N"
         } else if lowerTitle.contains("reaction") {
             return "s"
-        } else if lowerTitle.contains("score") {
+        } else if lowerTitle.contains("score") || lowerTitle.contains("stability") || lowerTitle.contains("efficiency") {
             return "%"
         } else if lowerTitle.contains("level") && lowerTitle.contains("completion") {
+            return " levels"
+        } else if lowerTitle.contains("parameter") {
+            // Parameters have their own units
             return ""
+        } else if lowerTitle.contains("curve") || lowerTitle.contains("learning") {
+            return "%"
         }
         return ""
     }
@@ -232,23 +237,29 @@ class SimpleChartView: UIView {
         }
         
         let labelAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 10),
+            .font: UIFont.systemFont(ofSize: 9), // Smaller font for better fit
             .foregroundColor: UIColor.darkGray
         ]
         
+        // Calculate spacing based on chart type
         let stepWidth = labels.count > 1 ? chartArea.width / CGFloat(labels.count - 1) : chartArea.width
         
-        // Only draw a subset of labels if there are too many
-        let maxLabels = 5
+        // Adaptive label showing based on available space
+        let avgLabelWidth: CGFloat = 60 // Estimated average label width
+        let maxLabelsForSpace = Int(chartArea.width / avgLabelWidth)
+        let maxLabels = min(maxLabelsForSpace, 6) // Never show more than 6 labels
         let skipFactor = max(1, labels.count / maxLabels)
         
         for (index, label) in labels.enumerated() where index % skipFactor == 0 {
             let x = chartArea.minX + (CGFloat(index) * stepWidth)
             let labelSize = label.size(withAttributes: labelAttributes)
             
+            // Ensure label doesn't go outside chart bounds
+            let labelX = max(chartArea.minX, min(x - (labelSize.width / 2), chartArea.maxX - labelSize.width))
+            
             let labelRect = CGRect(
-                x: x - (labelSize.width / 2),
-                y: chartArea.maxY + 5,
+                x: labelX,
+                y: chartArea.maxY + 8, // More spacing from axis
                 width: labelSize.width,
                 height: labelSize.height
             )
@@ -264,12 +275,12 @@ class SimpleChartView: UIView {
               !maxValue.isNaN && !maxValue.isInfinite else { return }
         
         let labelAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 10),
+            .font: UIFont.systemFont(ofSize: 9), // Slightly smaller font to prevent overlap
             .foregroundColor: UIColor.darkGray
         ]
         
-        // Draw 5 tick marks (0%, 25%, 50%, 75%, 100%)
-        let tickCount = 5
+        // Determine optimal number of tick marks based on chart height and value range
+        let tickCount = chartArea.height > 120 ? 5 : 3 // Fewer ticks on smaller charts
         
         context.setStrokeColor(UIColor.lightGray.cgColor)
         context.setLineWidth(1)
@@ -288,17 +299,25 @@ class SimpleChartView: UIView {
             
             // Draw value label with appropriate formatting
             let labelText: String
-            if maxValue - minValue < 1 {
+            let valueRange = maxValue - minValue
+            
+            // Smart formatting based on value range
+            if valueRange < 0.1 {
+                labelText = String(format: "%.3f%@", value, unit)
+            } else if valueRange < 1 {
                 labelText = String(format: "%.2f%@", value, unit)
-            } else if maxValue - minValue > 100 {
-                labelText = String(format: "%.0f%@", value, unit)
-            } else {
+            } else if valueRange < 10 {
                 labelText = String(format: "%.1f%@", value, unit)
+            } else if valueRange > 1000 {
+                labelText = String(format: "%.0f%@", value / 1000, "k" + unit)
+            } else {
+                labelText = String(format: "%.0f%@", value, unit)
             }
+            
             let labelSize = labelText.size(withAttributes: labelAttributes)
             
             let labelRect = CGRect(
-                x: chartArea.minX - labelSize.width - 8,
+                x: chartArea.minX - labelSize.width - 10, // More spacing from axis
                 y: y - (labelSize.height / 2),
                 width: labelSize.width,
                 height: labelSize.height
@@ -314,6 +333,21 @@ class SimpleChartView: UIView {
 // MARK: - Line Chart
 
 class SimpleLineChartView: SimpleChartView {
+    // Custom unit override for special charts like Pendulum Parameters
+    var customUnit: String = ""
+    
+    func updateDataWithUnit(data: [Double], labels: [String], title: String, color: UIColor = .systemBlue, unit: String = "") {
+        self.customUnit = unit
+        updateData(data: data, labels: labels, title: title, color: color)
+    }
+    
+    override func getUnitFromTitle() -> String {
+        // Use custom unit if set, otherwise fall back to title-based detection
+        if !customUnit.isEmpty {
+            return customUnit
+        }
+        return super.getUnitFromTitle()
+    }
     
     override func drawChartContent(context: CGContext, in rect: CGRect) {
         let chartArea = getChartArea(in: rect)

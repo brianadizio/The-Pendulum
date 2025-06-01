@@ -393,7 +393,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             angleVarianceSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             angleVarianceSection.heightAnchor.constraint(equalToConstant: 300),
             
-            angleVarianceChart.topAnchor.constraint(equalTo: angleVarianceSection.topAnchor, constant: 80),
+            angleVarianceChart.topAnchor.constraint(equalTo: angleVarianceSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             angleVarianceChart.leadingAnchor.constraint(equalTo: angleVarianceSection.leadingAnchor, constant: 10),
             angleVarianceChart.trailingAnchor.constraint(equalTo: angleVarianceSection.trailingAnchor, constant: -10),
             angleVarianceChart.bottomAnchor.constraint(equalTo: angleVarianceSection.bottomAnchor, constant: -10),
@@ -404,7 +404,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             pushFrequencySection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             pushFrequencySection.heightAnchor.constraint(equalToConstant: 300),
             
-            pushFrequencyChart.topAnchor.constraint(equalTo: pushFrequencySection.topAnchor, constant: 80),
+            pushFrequencyChart.topAnchor.constraint(equalTo: pushFrequencySection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             pushFrequencyChart.leadingAnchor.constraint(equalTo: pushFrequencySection.leadingAnchor, constant: 10),
             pushFrequencyChart.trailingAnchor.constraint(equalTo: pushFrequencySection.trailingAnchor, constant: -10),
             pushFrequencyChart.bottomAnchor.constraint(equalTo: pushFrequencySection.bottomAnchor, constant: -10),
@@ -415,7 +415,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             pushMagnitudeSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             pushMagnitudeSection.heightAnchor.constraint(equalToConstant: 300),
             
-            pushMagnitudeChart.topAnchor.constraint(equalTo: pushMagnitudeSection.topAnchor, constant: 80),
+            pushMagnitudeChart.topAnchor.constraint(equalTo: pushMagnitudeSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             pushMagnitudeChart.leadingAnchor.constraint(equalTo: pushMagnitudeSection.leadingAnchor, constant: 10),
             pushMagnitudeChart.trailingAnchor.constraint(equalTo: pushMagnitudeSection.trailingAnchor, constant: -10),
             pushMagnitudeChart.bottomAnchor.constraint(equalTo: pushMagnitudeSection.bottomAnchor, constant: -10),
@@ -426,7 +426,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             reactionTimeSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             reactionTimeSection.heightAnchor.constraint(equalToConstant: 300),
             
-            reactionTimeChart.topAnchor.constraint(equalTo: reactionTimeSection.topAnchor, constant: 80),
+            reactionTimeChart.topAnchor.constraint(equalTo: reactionTimeSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             reactionTimeChart.leadingAnchor.constraint(equalTo: reactionTimeSection.leadingAnchor, constant: 10),
             reactionTimeChart.trailingAnchor.constraint(equalTo: reactionTimeSection.trailingAnchor, constant: -10),
             reactionTimeChart.bottomAnchor.constraint(equalTo: reactionTimeSection.bottomAnchor, constant: -10),
@@ -437,7 +437,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             learningCurveSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             learningCurveSection.heightAnchor.constraint(equalToConstant: 300),
             
-            learningCurveChart.topAnchor.constraint(equalTo: learningCurveSection.topAnchor, constant: 80),
+            learningCurveChart.topAnchor.constraint(equalTo: learningCurveSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             learningCurveChart.leadingAnchor.constraint(equalTo: learningCurveSection.leadingAnchor, constant: 10),
             learningCurveChart.trailingAnchor.constraint(equalTo: learningCurveSection.trailingAnchor, constant: -10),
             learningCurveChart.bottomAnchor.constraint(equalTo: learningCurveSection.bottomAnchor, constant: -10),
@@ -449,7 +449,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             directionalBiasSection.heightAnchor.constraint(equalToConstant: 320), // Increased from 300 to 320
             // Removed the bottom constraint to chartsContainer.bottomAnchor to prevent overlap
             
-            directionalBiasChart.topAnchor.constraint(equalTo: directionalBiasSection.topAnchor, constant: 80),
+            directionalBiasChart.topAnchor.constraint(equalTo: directionalBiasSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             directionalBiasChart.leadingAnchor.constraint(equalTo: directionalBiasSection.leadingAnchor, constant: 10),
             directionalBiasChart.trailingAnchor.constraint(equalTo: directionalBiasSection.trailingAnchor, constant: -10),
             directionalBiasChart.bottomAnchor.constraint(equalTo: directionalBiasSection.bottomAnchor, constant: -10)
@@ -483,7 +483,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             phaseSpaceSection.trailingAnchor.constraint(equalTo: chartsContainer.trailingAnchor),
             phaseSpaceSection.heightAnchor.constraint(equalToConstant: 400), // Taller for phase space
             
-            phaseSpaceChart.topAnchor.constraint(equalTo: phaseSpaceSection.topAnchor, constant: 80),
+            phaseSpaceChart.topAnchor.constraint(equalTo: phaseSpaceSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             phaseSpaceChart.leadingAnchor.constraint(equalTo: phaseSpaceSection.leadingAnchor, constant: 10),
             phaseSpaceChart.trailingAnchor.constraint(equalTo: phaseSpaceSection.trailingAnchor, constant: -10),
             phaseSpaceChart.bottomAnchor.constraint(equalTo: phaseSpaceSection.bottomAnchor, constant: -10)
@@ -585,7 +585,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             levelCompletionsSection.heightAnchor.constraint(equalToConstant: 300),
             levelCompletionsSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -400),
 
-            levelCompletionsChart.topAnchor.constraint(equalTo: levelCompletionsSection.topAnchor, constant: 80),
+            levelCompletionsChart.topAnchor.constraint(equalTo: levelCompletionsSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             levelCompletionsChart.leadingAnchor.constraint(equalTo: levelCompletionsSection.leadingAnchor, constant: 10),
             levelCompletionsChart.trailingAnchor.constraint(equalTo: levelCompletionsSection.trailingAnchor, constant: -10),
             levelCompletionsChart.bottomAnchor.constraint(equalTo: levelCompletionsSection.bottomAnchor, constant: -10),
@@ -623,7 +623,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             pendulumParametersSection.heightAnchor.constraint(equalToConstant: 350),
             pendulumParametersSection.bottomAnchor.constraint(equalTo: chartsContainer.bottomAnchor, constant: -20),
             
-            parameterSegmentControl.topAnchor.constraint(equalTo: pendulumParametersSection.topAnchor, constant: 80),
+            parameterSegmentControl.topAnchor.constraint(equalTo: pendulumParametersSection.topAnchor, constant: 110), // Increased from 80 to 110 for description space
             parameterSegmentControl.leadingAnchor.constraint(equalTo: pendulumParametersSection.leadingAnchor, constant: 10),
             parameterSegmentControl.trailingAnchor.constraint(equalTo: pendulumParametersSection.trailingAnchor, constant: -10),
             parameterSegmentControl.heightAnchor.constraint(equalToConstant: 30),
@@ -810,11 +810,11 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             labels = ["Level 1", "Level 2", "Level 3"]
         }
 
-        // Update chart
+        // Update chart - X-axis shows time periods, Y-axis shows number of levels completed
         chart.updateData(
             data: levels,
             labels: labels,
-            title: "Level Completions: \(timeRange)",
+            title: "Level Completions Over Time (\(timeRange))",
             color: .goldenPrimary
         )
     }
@@ -919,13 +919,24 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         titleLabel.textColor = .goldenDark
         container.addSubview(titleLabel)
         
-        // Description label
+        // Description label with better visibility
         let descriptionLabel = UILabel()
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         descriptionLabel.text = description
-        descriptionLabel.font = UIFont.systemFont(ofSize: 12)
-        descriptionLabel.textColor = (UIColor.goldenText as UIColor)
-        descriptionLabel.numberOfLines = 2
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium) // Larger font for better visibility
+        descriptionLabel.textColor = UIColor.label // Use system label color for better contrast
+        descriptionLabel.numberOfLines = 0 // Allow unlimited lines
+        descriptionLabel.backgroundColor = UIColor.systemGray6 // Light background for visibility testing
+        descriptionLabel.layer.cornerRadius = 6
+        descriptionLabel.layer.masksToBounds = true
+        
+        // Add padding to the label
+        descriptionLabel.textAlignment = .left
+        descriptionLabel.lineBreakMode = .byWordWrapping
+        
+        // Debug: Print when descriptions are created
+        print("DEBUG: Creating chart description: '\(description)' for title: '\(title)'")
+        
         container.addSubview(descriptionLabel)
         
         // Layout
@@ -934,9 +945,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
             
-            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            descriptionLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            descriptionLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16)
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12), // More space between title and description
+            descriptionLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20), // More padding
+            descriptionLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20), // More padding
+            descriptionLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50) // Larger minimum height for visibility
         ])
         
         return container
@@ -1318,20 +1330,23 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     }
     
     private func loadReactionTimeChart(timeRange: AnalyticsTimeRange, sessionId: UUID?) {
-        // For demo purposes, use sample data when appropriate
-        // In a real implementation, this would fetch from analytics
+        // Try to get real reaction time data first
+        let realReactionTimes = AnalyticsManager.shared.reactionTimes
         var reactionTimes: [Double] = []
         var labels: [String] = []
         
-        // Only show data if we're looking at session data and have a session ID
-        if timeRange == .session && sessionId != nil {
-            // Use sample data for demonstration
-            reactionTimes = [0.42, 0.53, 0.38, 0.65, 0.29, 0.47]
-            labels = ["1", "2", "3", "4", "5", "6"]
+        // Use real data if available, otherwise use sample data
+        if !realReactionTimes.isEmpty {
+            reactionTimes = Array(realReactionTimes.prefix(20)) // Limit to recent 20 data points
+            labels = reactionTimes.enumerated().map { "Push \($0.offset + 1)" }
+            print("DEBUG: Using real reaction time data: \(reactionTimes.count) points")
         } else {
-            // For a real implementation, this would fetch from AnalyticsManager
-            // For now, use placeholder data for different time ranges
+            // Provide sample data for all time ranges to demonstrate functionality
+            print("DEBUG: No real reaction time data, using sample data for timeRange: \(timeRange)")
             switch timeRange {
+            case .session:
+                reactionTimes = [0.42, 0.53, 0.38, 0.65, 0.29, 0.47]
+                labels = ["1", "2", "3", "4", "5", "6"]
             case .daily:
                 reactionTimes = [0.45, 0.51, 0.40, 0.38]
                 labels = ["Morning", "Noon", "Afternoon", "Evening"]
@@ -1344,10 +1359,6 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             case .yearly:
                 reactionTimes = [0.65, 0.62, 0.58, 0.54, 0.50, 0.48, 0.45, 0.43, 0.41, 0.39, 0.37, 0.35]
                 labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            default:
-                // Empty data for session without ID or other time ranges
-                reactionTimes = []
-                labels = []
             }
         }
         
@@ -1424,8 +1435,15 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         let directionalPushes = AnalyticsManager.shared.directionalPushes
         let leftCount = directionalPushes["left"] ?? 0
         let rightCount = directionalPushes["right"] ?? 0
+        
+        print("DEBUG: Retrieved directional data - Left: \(leftCount), Right: \(rightCount)")
 
-        // If no real data, provide sample data
+        // If we have real data, use it
+        if leftCount > 0 || rightCount > 0 {
+            return (leftCount, rightCount)
+        }
+        
+        // If no real data, provide sample data based on current time range
         if leftCount == 0 && rightCount == 0 {
             // Determine which time range we're in by checking the selected segment index
             let selectedSegment = timeSegmentControl.selectedSegmentIndex
@@ -1600,12 +1618,16 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         
         // Update the chart with a title that includes the unit
         let title = "\(parameter.rawValue)\(parameter.unit.isEmpty ? "" : " (\(parameter.unit))")"
-        pendulumParametersChart.updateData(
+        pendulumParametersChart.updateDataWithUnit(
             data: values,
             labels: labels,
             title: title,
-            color: .systemPurple
+            color: .systemPurple,
+            unit: parameter.unit
         )
+        
+        // Debug logging for parameter chart updates
+        print("DEBUG: Updated Pendulum Parameters chart for \(parameter.rawValue) with unit '\(parameter.unit)'")
     }
     
     private func updateAveragePhaseSpaceChart() {
