@@ -105,6 +105,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     private var statusLabel: UILabel?
     private var statusTimer: Timer?
     
+    // AI Mode visualization components
+    private var aiModeIndicator: UIView!
+    private var aiActionIndicator: UIView!
+    private var aiAssistanceLabel: UILabel!
+    private var aiCompetitionScoreLabel: UILabel!
+    private var aiTutorialHintLabel: UILabel!
+    private var aiPushIndicatorLeft: UIView!
+    private var aiPushIndicatorRight: UIView!
+    
     // Control buttons
     private lazy var startButton: UIButton = {
         let button = UIButton(type: .system)
@@ -708,13 +717,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Create buttons in the exact order requested
         let modeButtons: [(String, String, String, Int)] = [
-            ("Primary", "Basic Pendulum", "circle.dashed", 201),
-            ("Progressive", "Increasing Difficulty", "chart.line.uptrend.xyaxis", 202),
-            ("No Perturbation", "Gravity Only", "arrow.down", 301),
-            ("Random Impulses", "Sudden Forces", "bolt.circle", 302),
-            ("Sine Wave", "Periodic Force", "waveform", 303),
-            ("Data Driven", "CSV Based", "doc.chart", 304),
-            ("Compound", "Multi-Effect", "square.stack.3d.forward.dottedline", 305)
+            ("Primary", "Basic Pendulum", "pendulumModesPrimary", 201),
+            ("Progressive", "Increasing Difficulty", "pendulumModesProgressive", 202),
+            ("Random Impulses", "Sudden Forces", "pendulumModesRandomImpulses", 302),
+            ("Sine Wave", "Periodic Force", "pendulumModesSine", 303),
+            ("Data Driven", "CSV Based", "pendulumModesDataDriven1", 304),
+            ("Compound", "Multi-Effect", "pendulumModesCompound", 305)
         ]
         
         // Create one button per row
@@ -787,12 +795,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Coming soon buttons in the exact order requested
         let comingSoonButtons: [(String, String, String)] = [
-            ("Real Experiment", "Lab Data", "testtube.2"),
-            ("The Focus Calendar", "Productivity Mode", "calendar"),
-            ("Zero Gravity", "Space Station", "star"),
-            ("Rotating Room", "Spinning Chamber", "arrow.triangle.2.circlepath"),
-            ("The Maze", "Navigate Puzzles", "square.grid.3x3"),
-            ("Nature's Essence", "Natural Forces", "leaf")
+            ("Real Experiment", "Lab Data", "pendulumModesRealExperiment"),
+            ("The Focus Calendar", "Productivity Mode", "pendulumModesFocusCalendar"),
+            ("Zero Gravity", "Space Station", "pendulumModesZeroGravity"),
+            ("Rotating Room", "Spinning Chamber", "pendulumModesRotatingRoom"),
+            ("The Maze", "Navigate Puzzles", "pendulumModesTheMaze"),
+            ("Nature's Essence", "Natural Forces", "pendulumModesNaturesEssence")
         ]
         
         // Create one button per row
@@ -1382,16 +1390,26 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Icon background
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
-        iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.8)
+        iconContainer.backgroundColor = .clear  // Clear background for custom icons
         iconContainer.layer.cornerRadius = 25
+        iconContainer.clipsToBounds = true
         container.addSubview(iconContainer)
         
         // Icon
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
-        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
+        
+        // Use asset image
+        if let assetImage = UIImage(named: iconName) {
+            iconImageView.image = assetImage
+        } else {
+            // Fallback to system image if asset not found
+            let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+            iconImageView.image = UIImage(systemName: iconName, withConfiguration: iconConfig)
+            iconImageView.tintColor = .white
+        }
+        
         iconContainer.addSubview(iconImageView)
         
         // Title label
@@ -1418,6 +1436,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             
             iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
             iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 50),
+            iconImageView.heightAnchor.constraint(equalToConstant: 50),
             
             titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 15),
             titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 25),
@@ -1439,29 +1459,40 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     private func createComingSoonButton(title: String, subtitle: String, iconName: String) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.alpha = 0.7
+        // container.alpha = 0.7  // Removed fade effect
         FocusCalendarTheme.styleCard(container)
         
         // Icon background
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
-        iconContainer.backgroundColor = UIColor.systemGray.withAlphaComponent(0.5)
+        iconContainer.backgroundColor = .clear  // Clear background for custom icons
         iconContainer.layer.cornerRadius = 25
+        iconContainer.clipsToBounds = true
         container.addSubview(iconContainer)
         
         // Icon
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
-        let iconImageView = UIImageView(image: UIImage(systemName: iconName, withConfiguration: iconConfig))
+        let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white.withAlphaComponent(0.6)
+        
+        // Use asset image
+        if let assetImage = UIImage(named: iconName) {
+            iconImageView.image = assetImage
+            // iconImageView.alpha = 0.6  // Removed fade effect from icon
+        } else {
+            // Fallback to system image if asset not found
+            let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+            iconImageView.image = UIImage(systemName: iconName, withConfiguration: iconConfig)
+            iconImageView.tintColor = .white  // Removed alpha component
+        }
+        
         iconContainer.addSubview(iconImageView)
         
         // Title label
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = FocusCalendarTheme.titleFont
-        titleLabel.textColor = FocusCalendarTheme.primaryTextColor.withAlphaComponent(0.6)
+        titleLabel.textColor = FocusCalendarTheme.primaryTextColor  // Removed alpha component
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
         
@@ -1469,7 +1500,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let subtitleLabel = UILabel()
         subtitleLabel.text = subtitle
         subtitleLabel.font = FocusCalendarTheme.bodyFont
-        subtitleLabel.textColor = FocusCalendarTheme.secondaryTextColor.withAlphaComponent(0.6)
+        subtitleLabel.textColor = FocusCalendarTheme.secondaryTextColor  // Removed alpha component
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(subtitleLabel)
         
@@ -1493,6 +1524,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             
             iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
             iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 50),
+            iconImageView.heightAnchor.constraint(equalToConstant: 50),
             
             titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 15),
             titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 25),
@@ -2334,7 +2367,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let infoOptions = [
             ("general18", "About The Pendulum", true),
             ("general19", "Privacy Policy", true),
-            ("general20", "Contact Support", true)
+            ("general20", "Contact Support", true),
+            ("wrench.and.screwdriver", "Developer Tools", false)  // System icon
         ]
         
         previousView = nil
@@ -2497,6 +2531,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             showPrivacyPolicy()
         case 302: // Contact Support
             showContactSupport()
+        case 303: // Developer Tools
+            showDeveloperTools()
         default:
             break
         }
@@ -2504,64 +2540,38 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     
     // Settings action methods
     private func showBackgroundSettings() {
-        let backgroundOptions = [
-            "None", "AI", "Acadia", "Fluid", "Immersive Topology", "Joshua Tree",
-            "Outer Space", "Parchment", "Sachuest", "The Maze Guide", "The Portraits", "TSP"
-        ]
-        
-        showSettingsOptions(title: "Backgrounds", options: backgroundOptions) { selectedOption in
-            BackgroundManager.shared.updateBackgroundMode(selectedOption)
-            DispatchQueue.main.async {
-                BackgroundManager.shared.applyBackgroundToAllTabs(in: self)
-            }
-            UserDefaults.standard.set(selectedOption, forKey: "backgroundMode")
-        }
+        let vc = BackgroundsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
     
     private func showSoundSettings() {
-        let soundOptions = [
-            "Standard", "Enhanced", "Minimal", "Realistic", "None", "Educational"
-        ]
-        
-        showSettingsOptions(title: "Sounds", options: soundOptions) { selectedOption in
-            // Save sound preference
-            UserDefaults.standard.set(selectedOption, forKey: "soundMode")
-            print("Sound mode set to: \(selectedOption)")
-            // TODO: Apply sound settings to PendulumSoundManager
-        }
+        let vc = SoundsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
     
     private func showGraphicsSettings() {
-        let graphicsOptions = [
-            "Standard", "High Definition", "Low Power", "Simplified", "Detailed", "Experimental"
-        ]
-        
-        showSettingsOptions(title: "Graphics", options: graphicsOptions) { selectedOption in
-            // Save graphics preference
-            UserDefaults.standard.set(selectedOption, forKey: "graphicsMode")
-            print("Graphics mode set to: \(selectedOption)")
-            // TODO: Apply graphics settings to scene rendering
-        }
+        let vc = GraphicsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
     
     private func showMetricsSettings() {
-        let metricsOptions = [
-            "Basic", "Advanced", "Scientific", "Educational", "Topology", "Performance"
-        ]
-        
-        showSettingsOptions(title: "Metrics", options: metricsOptions) { selectedOption in
-            // Save metrics preference
-            UserDefaults.standard.set(selectedOption, forKey: "metricsMode")
-            print("Metrics mode set to: \(selectedOption)")
-            
-            // Update analytics display based on selection
-            let metricGroup = SettingsManager.shared.getMetricGroupType()
-            // SimpleDashboard handles metric group selection internally via controls
-            // Settings will be reflected when user switches to dashboard tab
-            
-            // SimpleDashboard automatically updates with latest data
-            // DashboardViewController shows basic stats only
-        }
+        let vc = MetricsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
+    }
+    
+    private func showDeveloperTools() {
+        let vc = DeveloperToolsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
     
     private func showGameControlSettings() {
@@ -3207,6 +3217,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         balanceProgressView.layer.cornerRadius = 4
         balanceProgressView.clipsToBounds = true
         hudContainer.addSubview(balanceProgressView)
+        
+        // Setup AI visualization components
+        setupAIVisualizationComponents()
 
         // Position HUD below the header with proper spacing
         NSLayoutConstraint.activate([
@@ -3664,33 +3677,27 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     @objc private func runAITest() {
-        let alert = UIAlertController(title: "AI Test", message: "Select test type", preferredStyle: .actionSheet)
+        // Now focused on "Play with AI" functionality
+        let alert = UIAlertController(title: "Play with AI", message: "Choose AI player mode", preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: "Quick Test (5 min)", style: .default) { _ in
-            AITestingSystem.generateQuickDashboardData()
-            self.updateGameMessageLabel("Running quick AI test...")
+        alert.addAction(UIAlertAction(title: "Watch AI Play", style: .default) { [weak self] _ in
+            self?.startAIOpponent(mode: .demo)
+            self?.updateGameMessageLabel("AI is demonstrating pendulum control")
         })
         
-        alert.addAction(UIAlertAction(title: "Generate 3 Months Data", style: .default) { _ in
-            self.updateGameMessageLabel("Generating 3 months of data...")
-            AITestingSystem.generateMonthsOfGameplayData(months: 3) { success in
-                DispatchQueue.main.async {
-                    self.updateGameMessageLabel(success ? "3 months data generated!" : "Data generation failed")
-                }
-            }
+        alert.addAction(UIAlertAction(title: "AI Assists You", style: .default) { [weak self] _ in
+            self?.startAIOpponent(mode: .assist)
+            self?.updateGameMessageLabel("AI will help when you're struggling")
         })
         
-        alert.addAction(UIAlertAction(title: "Full Testing Suite", style: .default) { _ in
-            self.updateGameMessageLabel("Running full test suite...")
-            ComprehensiveTestingSuite.shared.runCompleteSuite { results in
-                DispatchQueue.main.async {
-                    self.updateGameMessageLabel(results.overallSuccess ? "All tests passed!" : "Some tests failed")
-                }
-            }
+        alert.addAction(UIAlertAction(title: "Compete with AI", style: .default) { [weak self] _ in
+            self?.startAIOpponent(mode: .compete)
+            self?.updateGameMessageLabel("Try to beat the AI's score!")
         })
         
-        alert.addAction(UIAlertAction(title: "Play vs AI", style: .default) { [weak self] _ in
-            self?.startAIOpponent()
+        alert.addAction(UIAlertAction(title: "AI Tutorial Mode", style: .default) { [weak self] _ in
+            self?.startAIOpponent(mode: .tutorial)
+            self?.updateGameMessageLabel("AI will guide you through the basics")
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -3704,9 +3711,12 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         present(alert, animated: true)
     }
     
-    private func startAIOpponent() {
-        // Start AI player as opponent
-        PendulumAIManager.shared.startAIPlayer(skillLevel: .intermediate, viewModel: viewModel)
+    private func startAIOpponent(mode: PendulumAIManager.AIMode = .demo) {
+        // Start AI player with specified mode
+        PendulumAIManager.shared.startAIPlayer(skillLevel: .intermediate, viewModel: viewModel, mode: mode)
+        
+        // Show AI mode indicator
+        showAIModeIndicator(mode: mode)
         
         let alert = UIAlertController(
             title: "AI Opponent Active",
@@ -3714,9 +3724,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Stop AI", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: "Stop AI", style: .destructive) { [weak self] _ in
             PendulumAIManager.shared.stopAIPlayer()
-            self.updateGameMessageLabel("AI player stopped")
+            self?.updateGameMessageLabel("AI player stopped")
+            self?.hideAIModeIndicators()
         })
         
         present(alert, animated: true)
@@ -4201,5 +4212,299 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let physicsVC = InvertedPendulumPhysicsViewController()
         physicsVC.modalPresentationStyle = .fullScreen
         present(physicsVC, animated: true)
+    }
+    
+    // MARK: - AI Visualization Methods
+    
+    private func setupAIVisualizationComponents() {
+        // AI Mode Indicator (shows current AI mode)
+        aiModeIndicator = UIView()
+        aiModeIndicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.9)
+        aiModeIndicator.layer.cornerRadius = 15
+        aiModeIndicator.translatesAutoresizingMaskIntoConstraints = false
+        aiModeIndicator.isHidden = true
+        simulationView.addSubview(aiModeIndicator)
+        
+        // AI mode label inside the indicator
+        let modeLabel = UILabel()
+        modeLabel.textColor = .white
+        modeLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        modeLabel.textAlignment = .center
+        modeLabel.translatesAutoresizingMaskIntoConstraints = false
+        aiModeIndicator.addSubview(modeLabel)
+        
+        // AI Push Indicators (visual feedback for AI actions)
+        aiPushIndicatorLeft = createPushIndicator(isLeft: true)
+        aiPushIndicatorRight = createPushIndicator(isLeft: false)
+        simulationView.addSubview(aiPushIndicatorLeft)
+        simulationView.addSubview(aiPushIndicatorRight)
+        
+        // AI Assistance Label
+        aiAssistanceLabel = UILabel()
+        aiAssistanceLabel.text = "AI Assistance Active"
+        aiAssistanceLabel.textColor = .systemGreen
+        aiAssistanceLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        aiAssistanceLabel.textAlignment = .center
+        aiAssistanceLabel.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        aiAssistanceLabel.layer.cornerRadius = 10
+        aiAssistanceLabel.layer.masksToBounds = true
+        aiAssistanceLabel.translatesAutoresizingMaskIntoConstraints = false
+        aiAssistanceLabel.isHidden = true
+        simulationView.addSubview(aiAssistanceLabel)
+        
+        // AI Competition Score Label
+        aiCompetitionScoreLabel = UILabel()
+        aiCompetitionScoreLabel.text = "AI Score: 0"
+        aiCompetitionScoreLabel.textColor = .systemOrange
+        aiCompetitionScoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        aiCompetitionScoreLabel.textAlignment = .center
+        aiCompetitionScoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        aiCompetitionScoreLabel.isHidden = true
+        simulationView.addSubview(aiCompetitionScoreLabel)
+        
+        // AI Tutorial Hint Label
+        aiTutorialHintLabel = UILabel()
+        aiTutorialHintLabel.text = ""
+        aiTutorialHintLabel.textColor = .white
+        aiTutorialHintLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        aiTutorialHintLabel.textAlignment = .center
+        aiTutorialHintLabel.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.9)
+        aiTutorialHintLabel.layer.cornerRadius = 12
+        aiTutorialHintLabel.layer.masksToBounds = true
+        aiTutorialHintLabel.numberOfLines = 0
+        aiTutorialHintLabel.translatesAutoresizingMaskIntoConstraints = false
+        aiTutorialHintLabel.isHidden = true
+        simulationView.addSubview(aiTutorialHintLabel)
+        
+        // Setup constraints
+        NSLayoutConstraint.activate([
+            // AI Mode Indicator - top right corner
+            aiModeIndicator.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 80),
+            aiModeIndicator.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
+            aiModeIndicator.widthAnchor.constraint(equalToConstant: 100),
+            aiModeIndicator.heightAnchor.constraint(equalToConstant: 30),
+            
+            // Mode label inside indicator
+            modeLabel.centerXAnchor.constraint(equalTo: aiModeIndicator.centerXAnchor),
+            modeLabel.centerYAnchor.constraint(equalTo: aiModeIndicator.centerYAnchor),
+            
+            // Push indicators - sides of the screen
+            aiPushIndicatorLeft.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 20),
+            aiPushIndicatorLeft.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
+            aiPushIndicatorLeft.widthAnchor.constraint(equalToConstant: 60),
+            aiPushIndicatorLeft.heightAnchor.constraint(equalToConstant: 60),
+            
+            aiPushIndicatorRight.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
+            aiPushIndicatorRight.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
+            aiPushIndicatorRight.widthAnchor.constraint(equalToConstant: 60),
+            aiPushIndicatorRight.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Assistance label - below mode indicator
+            aiAssistanceLabel.topAnchor.constraint(equalTo: aiModeIndicator.bottomAnchor, constant: 10),
+            aiAssistanceLabel.centerXAnchor.constraint(equalTo: aiModeIndicator.centerXAnchor),
+            aiAssistanceLabel.widthAnchor.constraint(equalToConstant: 150),
+            aiAssistanceLabel.heightAnchor.constraint(equalToConstant: 30),
+            
+            // Competition score - below HUD
+            aiCompetitionScoreLabel.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 120),
+            aiCompetitionScoreLabel.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
+            
+            // Tutorial hint - bottom of screen
+            aiTutorialHintLabel.bottomAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -100),
+            aiTutorialHintLabel.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 40),
+            aiTutorialHintLabel.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -40),
+            aiTutorialHintLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        
+        // Store mode label reference
+        aiModeIndicator.subviews.first?.tag = 999 // Tag for later access
+        
+        // Add notification observers
+        setupAINotificationObservers()
+    }
+    
+    private func createPushIndicator(isLeft: Bool) -> UIView {
+        let indicator = UIView()
+        indicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        indicator.layer.cornerRadius = 30
+        indicator.layer.borderWidth = 3
+        indicator.layer.borderColor = UIColor.systemBlue.cgColor
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.isHidden = true
+        
+        // Add arrow icon
+        let arrow = UIImageView()
+        arrow.image = UIImage(systemName: isLeft ? "arrow.right" : "arrow.left")
+        arrow.tintColor = .systemBlue
+        arrow.contentMode = .scaleAspectFit
+        arrow.translatesAutoresizingMaskIntoConstraints = false
+        indicator.addSubview(arrow)
+        
+        NSLayoutConstraint.activate([
+            arrow.centerXAnchor.constraint(equalTo: indicator.centerXAnchor),
+            arrow.centerYAnchor.constraint(equalTo: indicator.centerYAnchor),
+            arrow.widthAnchor.constraint(equalToConstant: 30),
+            arrow.heightAnchor.constraint(equalToConstant: 30)
+        ])
+        
+        return indicator
+    }
+    
+    private func setupAINotificationObservers() {
+        // AI Action Indicator
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAIActionIndicator(_:)),
+            name: Notification.Name("AIActionIndicator"),
+            object: nil
+        )
+        
+        // AI Assistance Status
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAIAssistanceStatus(_:)),
+            name: Notification.Name("AIAssistanceStatus"),
+            object: nil
+        )
+        
+        // AI Competition Update
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAICompetitionUpdate(_:)),
+            name: Notification.Name("AICompetitionUpdate"),
+            object: nil
+        )
+        
+        // AI Tutorial Hint
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAITutorialHint(_:)),
+            name: Notification.Name("AITutorialHint"),
+            object: nil
+        )
+        
+        // AI Tutorial Progress
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAITutorialProgress(_:)),
+            name: Notification.Name("AITutorialProgress"),
+            object: nil
+        )
+    }
+    
+    @objc private func handleAIActionIndicator(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let direction = userInfo["direction"] as? String else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            let indicator = direction == "left" ? self?.aiPushIndicatorLeft : self?.aiPushIndicatorRight
+            
+            // Show and animate the indicator
+            indicator?.isHidden = false
+            indicator?.alpha = 1.0
+            indicator?.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+            
+            UIView.animate(withDuration: 0.3, animations: {
+                indicator?.transform = .identity
+            }) { _ in
+                UIView.animate(withDuration: 0.2, delay: 0.1, options: [], animations: {
+                    indicator?.alpha = 0.3
+                }, completion: { _ in
+                    indicator?.isHidden = true
+                })
+            }
+        }
+    }
+    
+    @objc private func handleAIAssistanceStatus(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let status = userInfo["status"] as? String else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            if status == "started" {
+                self?.aiAssistanceLabel.isHidden = false
+                self?.aiAssistanceLabel.alpha = 0
+                UIView.animate(withDuration: 0.3) {
+                    self?.aiAssistanceLabel.alpha = 1.0
+                }
+            } else {
+                UIView.animate(withDuration: 0.3, animations: {
+                    self?.aiAssistanceLabel.alpha = 0
+                }) { _ in
+                    self?.aiAssistanceLabel.isHidden = true
+                }
+            }
+        }
+    }
+    
+    @objc private func handleAICompetitionUpdate(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let aiScore = userInfo["aiScore"] as? Int else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.aiCompetitionScoreLabel.text = "AI Score: \(aiScore)"
+        }
+    }
+    
+    @objc private func handleAITutorialHint(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let direction = userInfo["direction"] as? String else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.aiTutorialHintLabel.text = "Push \(direction) now!"
+            self?.aiTutorialHintLabel.isHidden = false
+            
+            // Hide after 2 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self?.aiTutorialHintLabel.isHidden = true
+            }
+        }
+    }
+    
+    @objc private func handleAITutorialProgress(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let message = userInfo["message"] as? String else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.aiTutorialHintLabel.text = message
+            self?.aiTutorialHintLabel.isHidden = false
+            
+            // Hide after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                self?.aiTutorialHintLabel.isHidden = true
+            }
+        }
+    }
+    
+    private func showAIModeIndicator(mode: PendulumAIManager.AIMode) {
+        aiModeIndicator.isHidden = false
+        
+        // Update mode label
+        if let modeLabel = aiModeIndicator.viewWithTag(999) as? UILabel {
+            switch mode {
+            case .demo:
+                modeLabel.text = "AI Demo"
+                aiModeIndicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.9)
+            case .assist:
+                modeLabel.text = "AI Assist"
+                aiModeIndicator.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.9)
+            case .compete:
+                modeLabel.text = "AI Compete"
+                aiModeIndicator.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.9)
+                aiCompetitionScoreLabel.isHidden = false
+            case .tutorial:
+                modeLabel.text = "AI Tutorial"
+                aiModeIndicator.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.9)
+            }
+        }
+    }
+    
+    private func hideAIModeIndicators() {
+        aiModeIndicator.isHidden = true
+        aiAssistanceLabel.isHidden = true
+        aiCompetitionScoreLabel.isHidden = true
+        aiTutorialHintLabel.isHidden = true
+        aiPushIndicatorLeft.isHidden = true
+        aiPushIndicatorRight.isHidden = true
     }
 }

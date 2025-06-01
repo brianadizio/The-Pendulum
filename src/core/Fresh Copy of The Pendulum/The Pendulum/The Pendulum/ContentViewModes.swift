@@ -28,38 +28,33 @@ struct ContentViewModes: View {
                         .padding(.horizontal)
                     
                     // Primary Modes
-                    PerturbationModeButton(title: "Primary", subtitle: "Basic Pendulum", iconName: "circle.dashed", action: {
+                    PerturbationModeButton(title: "Primary", subtitle: "Basic Pendulum", iconName: "pendulumModesPrimary", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivatePrimaryMode"), object: nil)
                     })
                     .padding(.horizontal)
                     
-                    PerturbationModeButton(title: "Progressive", subtitle: "Increasing Difficulty", iconName: "chart.line.uptrend.xyaxis", action: {
+                    PerturbationModeButton(title: "Progressive", subtitle: "Increasing Difficulty", iconName: "pendulumModesProgressive", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivateProgressiveMode"), object: nil)
                     })
                     .padding(.horizontal)
                     
-                    // Perturbation Modes
-                    PerturbationModeButton(title: "No Perturbation", subtitle: "Gravity Only", iconName: "arrow.down", action: {
-                        NotificationCenter.default.post(name: Notification.Name("DeactivatePerturbation"), object: nil)
-                    })
-                    .padding(.horizontal)
-                    
-                    PerturbationModeButton(title: "Random Impulses", subtitle: "Sudden Forces", iconName: "bolt.circle", action: {
+                    // Perturbation Modes (No Perturbation removed)
+                    PerturbationModeButton(title: "Random Impulses", subtitle: "Sudden Forces", iconName: "pendulumModesRandomImpulses", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "impulse")
                     })
                     .padding(.horizontal)
                     
-                    PerturbationModeButton(title: "Sine Wave", subtitle: "Periodic Force", iconName: "waveform", action: {
+                    PerturbationModeButton(title: "Sine Wave", subtitle: "Periodic Force", iconName: "pendulumModesSine", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "sine")
                     })
                     .padding(.horizontal)
                     
-                    PerturbationModeButton(title: "Data Driven", subtitle: "CSV Based", iconName: "doc.chart", action: {
+                    PerturbationModeButton(title: "Data Driven", subtitle: "CSV Based", iconName: "pendulumModesDataDriven1", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "data")
                     })
                     .padding(.horizontal)
                     
-                    PerturbationModeButton(title: "Compound", subtitle: "Multi-Effect", iconName: "square.stack.3d.forward.dottedline", action: {
+                    PerturbationModeButton(title: "Compound", subtitle: "Multi-Effect", iconName: "pendulumModesCompound", isAssetImage: true, action: {
                         NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "compound")
                     })
                     .padding(.horizontal)
@@ -75,17 +70,17 @@ struct ContentViewModes: View {
                         .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
                         .padding(.horizontal)
                     
-                    ComingSoonButton(title: "Real Experiment", subtitle: "Lab Data", iconName: "testtube.2")
+                    ComingSoonButton(title: "Real Experiment", subtitle: "Lab Data", iconName: "pendulumModesRealExperiment", isAssetImage: true)
                         .padding(.horizontal)
-                    ComingSoonButton(title: "The Focus Calendar", subtitle: "Productivity Mode", iconName: "calendar")
+                    ComingSoonButton(title: "The Focus Calendar", subtitle: "Productivity Mode", iconName: "pendulumModesFocusCalendar", isAssetImage: true)
                         .padding(.horizontal)
-                    ComingSoonButton(title: "Zero Gravity", subtitle: "Space Station", iconName: "star")
+                    ComingSoonButton(title: "Zero Gravity", subtitle: "Space Station", iconName: "pendulumModesZeroGravity", isAssetImage: true)
                         .padding(.horizontal)
-                    ComingSoonButton(title: "Rotating Room", subtitle: "Spinning Chamber", iconName: "arrow.triangle.2.circlepath")
+                    ComingSoonButton(title: "Rotating Room", subtitle: "Spinning Chamber", iconName: "pendulumModesRotatingRoom", isAssetImage: true)
                         .padding(.horizontal)
-                    ComingSoonButton(title: "The Maze", subtitle: "Navigate Puzzles", iconName: "square.grid.3x3")
+                    ComingSoonButton(title: "The Maze", subtitle: "Navigate Puzzles", iconName: "pendulumModesTheMaze", isAssetImage: true)
                         .padding(.horizontal)
-                    ComingSoonButton(title: "Nature's Essence", subtitle: "Natural Forces", iconName: "leaf")
+                    ComingSoonButton(title: "Nature's Essence", subtitle: "Natural Forces", iconName: "pendulumModesNaturesEssence", isAssetImage: true)
                         .padding(.horizontal)
                 }
                 
@@ -123,18 +118,27 @@ struct PerturbationModeButton: View {
     let title: String
     let subtitle: String
     let iconName: String
+    var isAssetImage: Bool = false
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             HStack(spacing: 15) {
                 // Icon
-                Image(systemName: iconName)
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color.blue.opacity(0.8))
-                    .clipShape(Circle())
+                if isAssetImage {
+                    Image(iconName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 44, height: 44)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: iconName)
+                        .font(.system(size: 24))
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color.blue.opacity(0.8))
+                        .clipShape(Circle())
+                }
                 
                 // Text content
                 VStack(alignment: .leading, spacing: 4) {
@@ -173,18 +177,28 @@ struct ComingSoonButton: View {
     let title: String
     let subtitle: String
     let iconName: String
+    var isAssetImage: Bool = false
     
     var body: some View {
         Button(action: showComingSoonAlert) {
             ZStack {
                 HStack(spacing: 15) {
                     // Icon
-                    Image(systemName: iconName)
-                        .font(.system(size: 24))
-                        .foregroundColor(.white.opacity(0.6))
-                        .frame(width: 44, height: 44)
-                        .background(Color.gray.opacity(0.5))
-                        .clipShape(Circle())
+                    if isAssetImage {
+                        Image(iconName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
+                            .clipShape(Circle())
+                            .opacity(0.6)
+                    } else {
+                        Image(systemName: iconName)
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(width: 44, height: 44)
+                            .background(Color.gray.opacity(0.5))
+                            .clipShape(Circle())
+                    }
                     
                     // Text content
                     VStack(alignment: .leading, spacing: 4) {

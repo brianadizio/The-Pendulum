@@ -27,6 +27,14 @@ extension AnalyticsManager {
     // Performance monitoring
     private static var performanceMonitor = PerformanceMonitor()
     
+    // MARK: - Utility Methods
+    
+    private func getTimeframeForRange() -> TimeInterval {
+        // Default to session timeframe if not properly set
+        // This should be enhanced to use actual selected timeframe from UI
+        return -3600 // 1 hour default, should be updated based on UI selection
+    }
+    
     // MARK: - Enhanced Tracking Methods
     
     func trackEnhancedPendulumState(time: Double, angle: Double, angleVelocity: Double) {
@@ -264,8 +272,9 @@ extension AnalyticsManager {
             return createMetricValue(freq)
             
         case .angularDeviation:
-            // Return time series data for angular deviation
-            let timeSeriesData = getInteractionTimeSeries(timeframe: -300) // Last 5 minutes
+            // Return time series data for angular deviation with proper timeframe
+            let timeframe = getTimeframeForRange() // Use proper time range instead of hard-coded 5 minutes  
+            let timeSeriesData = getInteractionTimeSeries(timeframe: timeframe)
             let angleTimeSeries = timeSeriesData.map { data -> (Date, Double) in
                 let timestamp = data["timestamp"] as? Date ?? Date()
                 let angle = data["angle"] as? Double ?? 0
@@ -642,5 +651,58 @@ private class PerformanceMonitor {
         // This would require battery monitoring
         // Return estimated impact based on CPU/GPU usage
         return cpuUsage * 0.8 + frameRate / 60.0 * 20.0
+    }
+}
+
+// MARK: - Data Management Extensions
+
+extension AnalyticsManager {
+    
+    /// Clear all analytics data
+    func clearAllData() {
+        // Clear all buffers
+        angleBuffer.removeAll()
+        velocityBuffer.removeAll()
+        phaseSpaceHistory.removeAll()
+        forceHistory.removeAll()
+        reactionTimes.removeAll()
+        directionalPushes.removeAll()
+        directionalChanges.removeAll()
+        
+        // Clear session data
+        sessions.removeAll()
+        currentSessionId = nil
+        currentSessionMetrics = nil
+        isTracking = false
+        
+        // Clear UserDefaults
+        let defaults = UserDefaults.standard
+        let keys = defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix("analytics_") }
+        keys.forEach { defaults.removeObject(forKey: $0) }
+        
+        print("✅ All analytics data cleared")
+    }
+    
+    /// Get debug info about current buffers
+    func getDebugInfo() -> [String: Int] {
+        return [
+            "angleBuffer": angleBuffer.count,
+            "velocityBuffer": velocityBuffer.count,
+            "phaseSpaceHistory": phaseSpaceHistory.count,
+            "forceHistory": forceHistory.count,
+            "reactionTimes": reactionTimes.count,
+            "directionalPushes": directionalPushes.count,
+            "sessions": sessions.count
+        ]
+    }
+    
+    /// Track reaction time for corrections
+    func trackReactionTime(_ time: Double) {
+        reactionTimes.append(time)
+        
+        // Keep buffer size manageable
+        if reactionTimes.count > 1000 {
+            reactionTimes.removeFirst()
+        }
     }
 }

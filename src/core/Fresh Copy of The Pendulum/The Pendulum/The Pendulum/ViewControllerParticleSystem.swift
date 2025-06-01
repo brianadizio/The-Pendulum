@@ -73,6 +73,12 @@ class ViewControllerParticleSystem {
     
     /// Creates a single texture-based particle with glow
     static func createTextureParticle(at origin: CGPoint, in view: UIView, colorIndex: Int) {
+        // 50% chance to create a colored particle instead of texture
+        if Int.random(in: 0...9) < 5 {
+            createFallbackParticle(at: origin, in: view, colorIndex: colorIndex)
+            return
+        }
+        
         // Random texture from assets
         let allTextures = coastTextures + starTextures
         guard let textureName = allTextures.randomElement(),
@@ -91,16 +97,8 @@ class ViewControllerParticleSystem {
         particle.layer.cornerRadius = particleSize / 2
         particle.clipsToBounds = true
         
-        // Apply bright color tint - now uses specific color index for full spectrum
-        let color = rainbowColors[colorIndex % rainbowColors.count]
-        particle.tintColor = color
+        // Don't tint the texture - let it show its natural colors
         particle.alpha = 0.9
-        
-        // Add glow effect
-        particle.layer.shadowColor = color.cgColor
-        particle.layer.shadowOffset = .zero
-        particle.layer.shadowRadius = 8
-        particle.layer.shadowOpacity = 0.8
         
         view.addSubview(particle)
         
@@ -254,6 +252,41 @@ class ViewControllerParticleSystem {
             let delay = Double(i) * (duration / Double(particleCount))
             
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                // 50% chance for colored particle
+                if Int.random(in: 0...9) < 5 {
+                    // Create colored raindrop
+                    let particleSize = CGFloat.random(in: 10...18)
+                    let particle = UIView(frame: CGRect(x: 0, y: 0, width: particleSize, height: particleSize))
+                    let color = rainbowColors[i % rainbowColors.count]
+                    particle.backgroundColor = color
+                    particle.layer.cornerRadius = particleSize / 2
+                    particle.alpha = 0.8
+                    
+                    // Add glow
+                    particle.layer.shadowColor = color.cgColor
+                    particle.layer.shadowOffset = .zero
+                    particle.layer.shadowRadius = 4
+                    particle.layer.shadowOpacity = 0.6
+                    
+                    // Start above screen
+                    let startX = CGFloat.random(in: 0...view.bounds.width)
+                    particle.center = CGPoint(x: startX, y: -particleSize)
+                    
+                    view.addSubview(particle)
+                    
+                    // Fall down animation
+                    let endX = startX + CGFloat.random(in: -50...50)
+                    let endY = view.bounds.height + particleSize
+                    
+                    UIView.animate(withDuration: 1.64, delay: 0, options: .curveLinear, animations: {
+                        particle.center = CGPoint(x: endX, y: endY)
+                        particle.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
+                    }) { _ in
+                        particle.removeFromSuperview()
+                    }
+                    return
+                }
+                
                 // Random texture
                 let allTextures = coastTextures + starTextures
                 guard let textureName = allTextures.randomElement(),
@@ -267,8 +300,7 @@ class ViewControllerParticleSystem {
                 particle.layer.cornerRadius = particleSize / 2
                 particle.clipsToBounds = true
                 
-                // Cycle through all rainbow colors systematically
-                particle.tintColor = rainbowColors[i % rainbowColors.count]
+                // Don't tint - show natural texture colors
                 particle.alpha = 0.7
                 
                 // Start above screen

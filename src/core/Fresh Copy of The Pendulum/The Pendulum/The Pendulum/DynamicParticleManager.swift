@@ -359,23 +359,25 @@ class DynamicParticleManager {
     /// Creates a full rainbow palette matching the painting's spectrum
     static func createFullRainbowPalette() -> [UIColor] {
         return [
-            // Yellow spectrum (top left of painting)
-            UIColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0),    // Bright yellow
-            UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0),   // Golden yellow
-            // Orange spectrum (transition)
-            UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0),    // Bright orange
-            UIColor(red: 0.95, green: 0.4, blue: 0.1, alpha: 1.0),   // Red-orange
-            // Red spectrum (top right)
-            UIColor(red: 0.9, green: 0.3, blue: 0.15, alpha: 1.0),   // Warm red
-            // Purple/Magenta spectrum (bottom right)
-            UIColor(red: 0.7, green: 0.2, blue: 0.5, alpha: 1.0),    // Magenta
-            UIColor(red: 0.5, green: 0.2, blue: 0.5, alpha: 1.0),    // Purple
-            // Blue spectrum (bottom left)
-            UIColor(red: 0.2, green: 0.55, blue: 0.6, alpha: 1.0),   // Teal blue
-            UIColor(red: 0.1, green: 0.4, blue: 0.6, alpha: 1.0),    // Deep blue
-            // Green spectrum (transition back to yellow)
-            UIColor(red: 0.3, green: 0.6, blue: 0.4, alpha: 1.0),    // Green
-            UIColor(red: 0.8, green: 0.7, blue: 0.3, alpha: 1.0)     // Yellow-green
+            // Yellow spectrum (top left of painting) - ENHANCED VIBRANCY
+            UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0),    // Pure yellow
+            UIColor(red: 1.0, green: 0.9, blue: 0.0, alpha: 1.0),    // Bright golden yellow
+            // Orange spectrum (transition) - ENHANCED VIBRANCY
+            UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0),    // Pure orange
+            UIColor(red: 1.0, green: 0.3, blue: 0.0, alpha: 1.0),    // Deep orange
+            // Red spectrum (top right) - ENHANCED VIBRANCY
+            UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0),    // Pure red
+            UIColor(red: 1.0, green: 0.0, blue: 0.2, alpha: 1.0),    // Crimson
+            // Purple/Magenta spectrum (bottom right) - ENHANCED VIBRANCY
+            UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0),    // Pure magenta
+            UIColor(red: 0.6, green: 0.0, blue: 1.0, alpha: 1.0),    // Violet
+            // Blue spectrum (bottom left) - ENHANCED VIBRANCY
+            UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0),    // Pure blue
+            UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0),    // Sky blue
+            UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0),    // Cyan
+            // Green spectrum (transition back to yellow) - ENHANCED VIBRANCY
+            UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0),    // Pure green
+            UIColor(red: 0.5, green: 1.0, blue: 0.0, alpha: 1.0)     // Lime green
         ]
     }
     
@@ -390,9 +392,9 @@ class DynamicParticleManager {
             // Use glow textures for each color
             emitter.particleTexture = createGlowTexture(color: color)
             
-            // Explosion configuration - reduce particles per emitter since we have many
-            emitter.particleBirthRate = 800 / CGFloat(palette.count)
-            emitter.numParticlesToEmit = 20
+            // Explosion configuration - 6x more particles per emitter for debugging
+            emitter.particleBirthRate = (800 * 6) / CGFloat(palette.count)  // 6x more particles for debugging
+            emitter.numParticlesToEmit = 120  // 6x more particles (20 * 6) for debugging
             emitter.particleLifetime = 2.0
             emitter.particleLifetimeRange = 0.5
             
@@ -401,24 +403,25 @@ class DynamicParticleManager {
             emitter.particleScaleRange = 1.0
             emitter.particleScaleSpeed = -0.8
             
-            // CRITICAL: Use texture color, not particle color
-            emitter.particleColorBlendFactor = 0.0  // Use texture color ONLY
+            // CRITICAL: Blend texture with particle color for more vibrant colors
+            emitter.particleColorBlendFactor = 1.0  // Full color blending for maximum vibrancy
+            emitter.particleColor = color  // Set particle color explicitly
             
-            // Explosion pattern - spread out angles for each color
+            // Explosion pattern - spread out angles for each color with 1.65x wider range
             let angleSpread = (CGFloat.pi * 2) / CGFloat(palette.count)
             let baseAngle = angleSpread * CGFloat(index)
             emitter.emissionAngle = baseAngle
-            emitter.emissionAngleRange = angleSpread * 1.2 // Slight overlap
-            emitter.particleSpeed = 400
-            emitter.particleSpeedRange = 100
+            emitter.emissionAngleRange = angleSpread * 1.2 * 1.65 // 1.65x wider spatial range
+            emitter.particleSpeed = 400 * 1.65  // 1.65x wider speed range for wider distribution
+            emitter.particleSpeedRange = 100 * 1.65  // 1.65x wider speed variation
             
             // Physics
             emitter.particleAlpha = 1.0
             emitter.particleAlphaSpeed = -0.5
             emitter.yAcceleration = -200
             
-            // Use alpha blend instead of add to preserve colors
-            emitter.particleBlendMode = .alpha
+            // Use add blend mode for more vibrant, glowing particles
+            emitter.particleBlendMode = .add
             
             scene.addChild(emitter)
             
@@ -451,9 +454,9 @@ class DynamicParticleManager {
                 emitter.particleColorBlendFactor = 0.0
             }
             
-            // Ring configuration
-            emitter.particleBirthRate = 800
-            emitter.numParticlesToEmit = 150
+            // Ring configuration - 6x more particles for debugging
+            emitter.particleBirthRate = 800 * 6  // 6x more particles for debugging
+            emitter.numParticlesToEmit = 900  // 6x more particles (150 * 6) for debugging
             emitter.particleLifetime = 1.5
             emitter.particleLifetimeRange = 0.3
             
@@ -462,11 +465,11 @@ class DynamicParticleManager {
             emitter.particleScaleRange = 0.5
             emitter.particleScaleSpeed = -0.7
             
-            // Ring pattern
+            // Ring pattern - 1.65x wider spatial range
             emitter.emissionAngle = 0
             emitter.emissionAngleRange = CGFloat.pi * 2
-            emitter.particleSpeed = 300
-            emitter.particleSpeedRange = 50
+            emitter.particleSpeed = 300 * 1.65  // 1.65x wider speed for wider distribution
+            emitter.particleSpeedRange = 50 * 1.65  // 1.65x wider speed variation
             
             // Physics
             emitter.particleAlpha = 1.0
@@ -478,8 +481,8 @@ class DynamicParticleManager {
             emitter.particleRotationRange = CGFloat.pi * 2
             emitter.particleRotationSpeed = CGFloat.pi * 4
             
-            // Use alpha blend for better color preservation
-            emitter.particleBlendMode = .alpha
+            // Use add blend mode for more vibrant, glowing particles
+            emitter.particleBlendMode = .add
             
             scene.addChild(emitter)
             
@@ -493,12 +496,14 @@ class DynamicParticleManager {
     
     /// Creates a field of sparkles
     private static func createSparkleField(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
-        for i in 0..<20 {
-            let delay = Double(i) * 0.05
+        // 6x more sparkle emitters (20 * 6 = 120) for debugging
+        for i in 0..<120 {
+            let delay = Double(i) * 0.025  // Reduced delay to accommodate more sparkles
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                // 1.65x wider spatial range for sparkle positioning
                 let sparklePosition = CGPoint(
-                    x: position.x + CGFloat.random(in: -100...100),
-                    y: position.y + CGFloat.random(in: -100...100)
+                    x: position.x + CGFloat.random(in: -165...165),  // 1.65x wider (-100 * 1.65)
+                    y: position.y + CGFloat.random(in: -165...165)   // 1.65x wider (-100 * 1.65)
                 )
                 
                 let emitter = SKEmitterNode()
@@ -507,7 +512,7 @@ class DynamicParticleManager {
                 
                 // Use coast textures for sparkles
                 let sparkleColor = palette.randomElement() ?? UIColor.white
-                if let coastTexture = getCoastTexture(index: i) {
+                if let coastTexture = getCoastTexture(index: i % coastTextures.count) {
                     emitter.particleTexture = coastTexture
                     emitter.particleColor = sparkleColor
                     emitter.particleColorBlendFactor = 0.9  // Strong color tinting for sparkles
@@ -517,9 +522,9 @@ class DynamicParticleManager {
                     emitter.particleColorBlendFactor = 0.0
                 }
                 
-                // Sparkle configuration
-                emitter.particleBirthRate = 30
-                emitter.numParticlesToEmit = 10
+                // Sparkle configuration - 6x more particles per sparkle for debugging
+                emitter.particleBirthRate = 180  // 6x more particles (30 * 6) for debugging
+                emitter.numParticlesToEmit = 60  // 6x more particles (10 * 6) for debugging
                 emitter.particleLifetime = 1.0
                 emitter.particleLifetimeRange = 0.3
                 
@@ -528,18 +533,18 @@ class DynamicParticleManager {
                 emitter.particleScaleRange = 0.5
                 emitter.particleScaleSpeed = -0.8
                 
-                // Gentle movement
+                // Gentle movement with 1.65x wider range
                 emitter.emissionAngle = -CGFloat.pi / 2
-                emitter.emissionAngleRange = CGFloat.pi / 4
-                emitter.particleSpeed = 50
-                emitter.particleSpeedRange = 30
+                emitter.emissionAngleRange = CGFloat.pi / 4 * 1.65  // 1.65x wider angle range
+                emitter.particleSpeed = 50 * 1.65  // 1.65x wider speed for distribution
+                emitter.particleSpeedRange = 30 * 1.65  // 1.65x wider speed variation
                 
                 emitter.particleAlpha = 0.9
                 emitter.particleAlphaSpeed = -0.8
                 emitter.yAcceleration = 30  // Float upward
                 
-                // Use alpha blend to preserve colors
-                emitter.particleBlendMode = .alpha
+                // Use add blend mode for more vibrant, glowing sparkles
+                emitter.particleBlendMode = .add
                 
                 scene.addChild(emitter)
                 
@@ -554,15 +559,16 @@ class DynamicParticleManager {
     
     /// Creates trailing star effects
     private static func createTrailingStars(palette: [UIColor], at position: CGPoint, in scene: SKScene) {
-        for i in 0..<6 {
-            let angle = Double(i) * .pi / 3.0
+        // 6x more trailing star directions (6 * 6 = 36) for debugging
+        for i in 0..<36 {
+            let angle = Double(i) * .pi / 18.0  // Adjusted angle distribution for 36 trails
             let emitter = SKEmitterNode()
             emitter.position = position
             emitter.zPosition = 99
             
             // Use coast textures for trails
             let trailColor = palette[min(2, palette.count - 1)]
-            if let coastTexture = getCoastTexture(index: i) {
+            if let coastTexture = getCoastTexture(index: i % coastTextures.count) {
                 emitter.particleTexture = coastTexture
                 emitter.particleColor = trailColor
                 emitter.particleColorBlendFactor = 0.7  // Moderate color blending for trails
@@ -572,9 +578,9 @@ class DynamicParticleManager {
                 emitter.particleColorBlendFactor = 0.0
             }
             
-            // Trail configuration
-            emitter.particleBirthRate = 200
-            emitter.numParticlesToEmit = 100
+            // Trail configuration - 6x more particles per trail for debugging
+            emitter.particleBirthRate = 1200  // 6x more particles (200 * 6) for debugging
+            emitter.numParticlesToEmit = 600  // 6x more particles (100 * 6) for debugging
             emitter.particleLifetime = 1.5
             emitter.particleLifetimeRange = 0.5
             
@@ -583,18 +589,18 @@ class DynamicParticleManager {
             emitter.particleScaleRange = 0.5
             emitter.particleScaleSpeed = -0.5
             
-            // Directional emission
+            // Directional emission with 1.65x wider range
             emitter.emissionAngle = CGFloat(angle)
-            emitter.emissionAngleRange = CGFloat.pi / 12
-            emitter.particleSpeed = 500
-            emitter.particleSpeedRange = 100
+            emitter.emissionAngleRange = CGFloat.pi / 12 * 1.65  // 1.65x wider angle range
+            emitter.particleSpeed = 500 * 1.65  // 1.65x wider speed for distribution
+            emitter.particleSpeedRange = 100 * 1.65  // 1.65x wider speed variation
             
             emitter.particleAlpha = 1.0
             emitter.particleAlphaSpeed = -0.6
             emitter.yAcceleration = -80
             
-            // Use alpha blend to preserve colors
-            emitter.particleBlendMode = .alpha
+            // Use add blend mode for more vibrant, glowing trails
+            emitter.particleBlendMode = .add
             
             scene.addChild(emitter)
             
