@@ -56,6 +56,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     // Time tracking for no-force achievement
     private var lastForcePressTime: Date?
     
+    // Achievement tracking
+    private var previousAngle: Double = Double.pi
+    private var lastAchievementCheck: Date = Date()
+    private let achievementManager = AchievementManager.shared
+    
     // Current session ID (made public for analytics dashboard)
     var currentSessionId: UUID?
     
@@ -248,8 +253,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         let achievements = coreDataManager.getUnlockedAchievements()
         
         // Track achievement IDs and total points
-        unlockedAchievements = achievements.compactMap { $0.id }
-        achievementPoints = achievements.reduce(0) { $0 + Int($1.points) }
+        unlockedAchievements = achievements.compactMap { $0.value(forKey: "id") as? String }
+        achievementPoints = achievements.reduce(0) { result, achievement in
+            let points = achievement.value(forKey: "points") as? Int32 ?? 0
+            return result + Int(points)
+        }
     }
     
     private func loadInitialParameters() {
@@ -710,6 +718,10 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 )
             }
             
+            // Track achievements
+            checkForAchievements(currentAngle: currentState.theta, previousAngle: previousAngle)
+            previousAngle = currentState.theta
+            
             // Track max angle for recovery achievement
             if angleFromTop > maxAngleRecovered && angleFromTop < failureAngleThreshold {
                 maxAngleRecovered = angleFromTop
@@ -950,6 +962,15 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         }
         
         print("AFTER force application - theta: \(currentState.theta), thetaDot: \(currentState.thetaDot)")
+        
+        // Track force efficiency for achievements
+        let angleFromVertical = abs(normalizeAngle(currentState.theta - Double.pi))
+        let isImprovement = angleFromVertical < 0.3 // Within reasonable balance
+        achievementManager.trackForceEfficiency(
+            force: abs(scaledMagnitude),
+            improvement: isImprovement,
+            level: levelManager.currentLevel
+        )
     }
     
     // normalizeAngle is already defined above
@@ -1294,15 +1315,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             
             // Get achievement details for display
             let achievements = coreDataManager.getAllAchievements()
-            if let achievement = achievements.first(where: { $0.id == id }) {
+            if let achievement = achievements.first(where: { ($0.value(forKey: "id") as? String) == id }) {
                 // Update achievement points
-                achievementPoints += Int(achievement.points)
+                let points = achievement.value(forKey: "points") as? Int32 ?? 0
+                achievementPoints += Int(points)
                 
                 // Store achievement info for UI display
-                recentAchievement = (achievement.name ?? "Achievement Unlocked", achievement.achievementDescription ?? "")
+                let name = achievement.value(forKey: "name") as? String ?? "Achievement Unlocked"
+                let description = achievement.value(forKey: "achievementDescription") as? String ?? ""
+                recentAchievement = (name, description)
                 
                 // Show achievement notification
-                print("Achievement unlocked: \(achievement.name ?? "Unknown") - \(achievement.achievementDescription ?? "")")
+                print("Achievement unlocked: \(name) - \(description)")
 
                 // Show achievement particle effect using new ViewControllerParticleSystem
                 if let delegate = particleDelegate {
@@ -1313,7 +1337,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 }
 
                 // Add bonus points for achievement
-                let bonusPoints = Int(achievement.points) * 10
+                let bonusPoints = Int(points) * 10
                 score += bonusPoints
                 print("Achievement bonus: +\(bonusPoints) points")
                 
@@ -1367,5 +1391,48 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             timeBalanced: totalBalanceTime,
             playerName: playerName
         )
+    }
+    
+    // MARK: - Achievement Tracking
+    
+    private func checkForAchievements(currentAngle: Double, previousAngle: Double) {
+        // Only check achievements every 0.1 seconds to avoid spam
+        let now = Date()
+        guard now.timeIntervalSince(lastAchievementCheck) >= 0.1 else { return }
+        lastAchievementCheck = now
+        
+        let currentAngleFromVertical = abs(normalizeAngle(currentAngle - Double.pi))
+        let previousAngleFromVertical = abs(normalizeAngle(previousAngle - Double.pi))
+        
+        // Track recovery achievements
+        if previousAngleFromVertical > currentAngleFromVertical + 0.3 && currentAngleFromVertical < 0.3 {
+            achievementManager.trackRecovery(
+                fromAngle: previousAngle,
+                toAngle: currentAngle,
+                level: levelManager.currentLevel
+            )
+        }
+        
+        // Track balance achievements
+        achievementManager.trackBalance(
+            angle: currentAngle,
+            time: now,
+            level: levelManager.currentLevel
+        )
+        
+        // Track improvement (stability score)
+        let currentStability = calculateStabilityScore()
+        achievementManager.trackImprovement(
+            currentScore: currentStability,
+            level: levelManager.currentLevel
+        )
+    }
+    
+    private func calculateStabilityScore() -> Double {
+        // Simple stability calculation based on current angle
+        let angleFromVertical = abs(normalizeAngle(currentState.theta - Double.pi))
+        let maxAngle = 1.5 // ~86 degrees
+        let stability = max(0, (maxAngle - angleFromVertical) / maxAngle * 100)
+        return stability
     }
 }

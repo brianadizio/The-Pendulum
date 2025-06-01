@@ -3220,6 +3220,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Setup AI visualization components
         setupAIVisualizationComponents()
+        
+        // Setup achievement display
+        AchievementDisplayManager.shared.setParentView(simulationView)
 
         // Position HUD below the header with proper spacing
         NSLayoutConstraint.activate([

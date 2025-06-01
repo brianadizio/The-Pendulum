@@ -48,7 +48,7 @@ class AnalyticsManager {
     
     // Historical session tracking
     internal var sessions: [UUID: Date] = [:] // Active sessions tracking
-    private var sessionMetrics: [UUID: [String: Any]] = [:]
+    internal var sessionMetrics: [UUID: [String: Any]] = [:]
     private var sessionInteractions: [UUID: [[String: Any]]] = [:]
     private var historicalSessionDates: [UUID: Date] = [:]
     private var totalSessions: Int = 0

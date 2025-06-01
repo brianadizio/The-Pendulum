@@ -77,7 +77,7 @@ class CoreDataManager {
     // MARK: - Achievement Methods
     
     func achievementExists(id: String) -> Bool {
-        let fetchRequest: NSFetchRequest<Achievement> = Achievement.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Achievement")
         fetchRequest.predicate = NSPredicate(format: "id == %@", id)
         
         do {
@@ -92,26 +92,28 @@ class CoreDataManager {
     func createAchievement(id: String, name: String, description: String, points: Int) {
         // Only create if it doesn't exist
         if !achievementExists(id: id) {
-            let achievement = Achievement(context: context)
-            achievement.id = id
-            achievement.name = name
-            achievement.achievementDescription = description
-            achievement.points = Int32(points)
-            achievement.unlocked = false
+            let achievement = NSEntityDescription.insertNewObject(forEntityName: "Achievement", into: context)
+            achievement.setValue(id, forKey: "id")
+            achievement.setValue(name, forKey: "name")
+            achievement.setValue(description, forKey: "achievementDescription")
+            achievement.setValue(Int32(points), forKey: "points")
+            achievement.setValue(false, forKey: "unlocked")
             
             saveContext()
         }
     }
     
     func unlockAchievement(id: String) -> Bool {
-        let fetchRequest: NSFetchRequest<Achievement> = Achievement.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Achievement")
         fetchRequest.predicate = NSPredicate(format: "id == %@", id)
         
         do {
             let achievements = try context.fetch(fetchRequest)
-            if let achievement = achievements.first, !achievement.unlocked {
-                achievement.unlocked = true
-                achievement.achievedDate = Date()
+            if let achievement = achievements.first,
+               let unlocked = achievement.value(forKey: "unlocked") as? Bool,
+               !unlocked {
+                achievement.setValue(true, forKey: "unlocked")
+                achievement.setValue(Date(), forKey: "achievedDate")
                 saveContext()
                 return true
             }
@@ -122,8 +124,8 @@ class CoreDataManager {
         }
     }
     
-    func getUnlockedAchievements() -> [Achievement] {
-        let fetchRequest: NSFetchRequest<Achievement> = Achievement.fetchRequest()
+    func getUnlockedAchievements() -> [NSManagedObject] {
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Achievement")
         fetchRequest.predicate = NSPredicate(format: "unlocked == YES")
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "achievedDate", ascending: false)]
         
@@ -135,8 +137,8 @@ class CoreDataManager {
         }
     }
     
-    func getAllAchievements() -> [Achievement] {
-        let fetchRequest: NSFetchRequest<Achievement> = Achievement.fetchRequest()
+    func getAllAchievements() -> [NSManagedObject] {
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Achievement")
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         
         do {
@@ -187,11 +189,14 @@ class CoreDataManager {
             if let session = try context.fetch(fetchRequest).first {
                 // Link earned achievements to this session
                 for achievementId in achievements {
-                    let achievementFetch: NSFetchRequest<Achievement> = Achievement.fetchRequest()
+                    let achievementFetch = NSFetchRequest<NSManagedObject>(entityName: "Achievement")
                     achievementFetch.predicate = NSPredicate(format: "id == %@", achievementId)
                     
                     if let achievement = try context.fetch(achievementFetch).first {
-                        session.addToAchievements(achievement)
+                        // Use setValue instead of direct property access
+                        var achievementSet = session.value(forKey: "achievements") as? NSMutableSet ?? NSMutableSet()
+                        achievementSet.add(achievement)
+                        session.setValue(achievementSet, forKey: "achievements")
                     }
                 }
                 saveContext()
