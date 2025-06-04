@@ -33,7 +33,7 @@ class EnhancedAnalyticsDashboard: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.translatesAutoresizingMaskIntoConstraints = false
-        print("DEBUG: EnhancedAnalyticsDashboard init - translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         setupUI()
         startMetricUpdates()
     }
@@ -54,11 +54,11 @@ class EnhancedAnalyticsDashboard: UIView {
         // Only log once per significant change to avoid spam
         if abs(frame.width - lastLoggedWidth) > 10 {
             lastLoggedWidth = frame.width
-            print("DEBUG: EnhancedAnalyticsDashboard layoutSubviews called")
-            print("DEBUG: Frame: \(frame)")
-            print("DEBUG: ScrollView frame: \(scrollView.frame)")
-            print("DEBUG: ContentView frame: \(contentView.frame)")
-            print("DEBUG: ScrollView contentSize: \(scrollView.contentSize)")
+            // Removed debug print
+            // Removed debug print
+            // Removed debug print
+            // Removed debug print
+            // Removed debug print
             
             // Check if any subviews have autoresizing masks
             checkAutoresizingMasks(in: self)
@@ -67,7 +67,7 @@ class EnhancedAnalyticsDashboard: UIView {
             checkForZeroWidthViews(in: self)
             
             // Check scroll view state but don't force reset 
-            print("DEBUG: ScrollView contentOffset.y: \(scrollView.contentOffset.y)")
+            // Removed debug print
         }
     }
     
@@ -105,13 +105,13 @@ class EnhancedAnalyticsDashboard: UIView {
     // MARK: - UI Setup
     
     private func setupUI() {
-        print("DEBUG: EnhancedAnalyticsDashboard.setupUI() called")
-        print("DEBUG: Setting translatesAutoresizingMaskIntoConstraints = false on main view")
+        // Removed debug print
+        // Removed debug print
         self.translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .goldenBackground
         
         // Setup scroll view
-        print("DEBUG: Setting up scroll view with translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = true
         scrollView.alwaysBounceVertical = true
@@ -119,11 +119,11 @@ class EnhancedAnalyticsDashboard: UIView {
         scrollView.delaysContentTouches = false
         addSubview(scrollView)
         
-        print("DEBUG: Setting up content view with translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentView)
         
-        print("DEBUG: Activating main layout constraints")
+        // Removed debug print
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -278,7 +278,7 @@ class EnhancedAnalyticsDashboard: UIView {
             timeRangeControl.isUserInteractionEnabled = true
             timeRangeControl.layer.zPosition = 100 // Ensure it's on top
             
-            print("DEBUG: Creating time range control with isUserInteractionEnabled = true")
+            // Removed debug print
             
             // Style to match old dashboard
             timeRangeControl.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)
@@ -438,12 +438,12 @@ class EnhancedAnalyticsDashboard: UIView {
             previousView = directionalBiasContainer
             
             // Additional Statistics section
-            print("DEBUG: Creating Additional Statistics section")
-            print("DEBUG: previousView is: \(type(of: previousView))")
+            // Removed debug print
+            // Removed debug print
             let additionalHeader = createSectionHeader(title: "Additional Statistics", icon: "📈")
             contentView.addSubview(additionalHeader)
             
-            print("DEBUG: Constraining additionalHeader to previousView at: \(previousView.frame)")
+            // Removed debug print
             NSLayoutConstraint.activate([
                 additionalHeader.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
                 additionalHeader.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
@@ -556,7 +556,7 @@ class EnhancedAnalyticsDashboard: UIView {
         
         // Set content view bottom constraint to last view to determine content size
         if let lastView = previousView as? UIView {
-            print("DEBUG: Setting content view bottom to last view: \(type(of: lastView))")
+            // Removed debug print
             let bottomConstraint = lastView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
             bottomConstraint.priority = .required
             bottomConstraint.isActive = true
@@ -796,7 +796,7 @@ class EnhancedAnalyticsDashboard: UIView {
     private func createStatCard(for metric: MetricType) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        print("DEBUG: Creating stat card for metric \(metric.rawValue) with translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         card.backgroundColor = .white
         card.layer.cornerRadius = 12
         card.layer.shadowColor = UIColor.black.cgColor
@@ -880,7 +880,7 @@ class EnhancedAnalyticsDashboard: UIView {
     private func createDirectionalBiasCard() -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        print("DEBUG: Creating directional bias card with translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         card.backgroundColor = .white
         card.layer.cornerRadius = 12
         card.layer.shadowColor = UIColor.black.cgColor
@@ -1110,7 +1110,7 @@ class EnhancedAnalyticsDashboard: UIView {
     private func createAdditionalStatCard(title: String, icon: String, value: String) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        print("DEBUG: Creating additional stat card with title '\(title)' - translatesAutoresizingMaskIntoConstraints = false")
+        // Removed debug print
         card.backgroundColor = .white
         card.layer.cornerRadius = 12
         card.layer.shadowColor = UIColor.black.cgColor
@@ -1202,7 +1202,7 @@ class EnhancedAnalyticsDashboard: UIView {
     }
     
     @objc private func timeRangeChanged(_ sender: UISegmentedControl) {
-        print("DEBUG: timeRangeChanged called with selectedSegmentIndex: \(sender.selectedSegmentIndex)")
+        // Removed debug print
         let ranges: [AnalyticsTimeRange] = [.session, .daily, .weekly, .monthly, .yearly]
         currentTimeRange = ranges[sender.selectedSegmentIndex]
         updateMetrics()
@@ -1577,15 +1577,15 @@ class EnhancedAnalyticsDashboard: UIView {
     
     private func updateChart(_ chartView: UIView, with metricValue: MetricValue) {
         // Debug logging
-        print("DEBUG: Updating chart for metric \(metricValue.type.rawValue)")
-        print("DEBUG: Metric value type: \(type(of: metricValue.value))")
+        // Removed debug print
+        // Removed debug print
         
         // Check if the metric value itself is NaN
         if let doubleValue = metricValue.value as? Double {
-            print("DEBUG: Double value: \(doubleValue)")
+            // Removed debug print
             if doubleValue.isNaN || doubleValue.isInfinite {
                 print("ERROR: NaN/Infinite metric value for \(metricValue.type.rawValue): \(doubleValue)")
-                print("DEBUG: Stack trace:")
+                // Removed debug print
                 Thread.callStackSymbols.forEach { print($0) }
             }
         }
@@ -1610,7 +1610,7 @@ class EnhancedAnalyticsDashboard: UIView {
         
         switch metricValue.value {
         case let distribution as [Double]:
-            print("DEBUG: Distribution data for \(metricValue.type.rawValue): \(distribution)")
+            // Removed debug print
             // Check for NaN in distribution data
             for (index, value) in distribution.enumerated() {
                 if value.isNaN || value.isInfinite {
@@ -1623,7 +1623,7 @@ class EnhancedAnalyticsDashboard: UIView {
             }
             
         case let timeSeries as [(Date, Double)]:
-            print("DEBUG: Time series data for \(metricValue.type.rawValue): \(timeSeries.count) points")
+            // Removed debug print
             // Check for NaN in time series data
             for (index, point) in timeSeries.enumerated() {
                 if point.1.isNaN || point.1.isInfinite {

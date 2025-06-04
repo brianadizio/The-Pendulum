@@ -63,7 +63,7 @@ class PendulumScene: SKScene {
         
         // Set background color to white for clean appearance
         self.backgroundColor = UIColor.white
-        print("DEBUG: Background color set to white")
+        // Removed debug print - background color set to white
         
         // Set up the background based on current state (after initial setup)
         // updateSceneBackground()  // Disabled - causing visibility issues
@@ -100,11 +100,11 @@ class PendulumScene: SKScene {
         addChild(pendulumRod)
 
         // Setup bob using the proper asset loading method
-        print("DEBUG: Creating pendulum bob with assets")
+        // Removed debug print - creating pendulum bob with assets
         pendulumBob = createPendulumBob(radius: 23) // 30% bigger (18 * 1.3 = 23.4)
         pendulumBob.zPosition = 15
         pendulumBob.alpha = 1.0  // Ensure full opacity
-        print("DEBUG: Pendulum bob created - zPosition: \(pendulumBob.zPosition), alpha: \(pendulumBob.alpha)")
+        // Removed debug print - pendulum bob created with zPosition and alpha
         addChild(pendulumBob)
         
         // Setup trail with better appearance
@@ -328,7 +328,7 @@ class PendulumScene: SKScene {
     }
     
     private func setupGrid() {
-        print("DEBUG: setupGrid called - scene size: \(size)")
+        // Removed debug print - setupGrid called with scene size
         
         // Create a grid for perspective/aesthetic based on UI designs
         let gridNode = SKNode()
@@ -341,7 +341,7 @@ class PendulumScene: SKScene {
         let horizontalSpacing = size.height / CGFloat(horizontalLines)
         let verticalSpacing = size.width / CGFloat(verticalLines)
         
-        print("DEBUG: Grid spacing - horizontal: \(horizontalSpacing), vertical: \(verticalSpacing)")
+        // Removed debug print - grid spacing calculations
         
         // Add horizontal grid lines
         for i in 0...horizontalLines {
@@ -372,7 +372,7 @@ class PendulumScene: SKScene {
         }
         
         addChild(gridNode)
-        print("DEBUG: Grid added with \(gridNode.children.count) lines")
+        // Removed debug print - grid added with line count
     }
     
     // Create a modern visualization background based on UI designs
@@ -419,8 +419,7 @@ class PendulumScene: SKScene {
         
         // Debug logging
         if Int.random(in: 0...60) == 0 { // Log every ~1 second at 60fps
-            print("DEBUG: Pendulum - bob position: \(bobPosition), angle: \(angle), visible: \(pendulumBob.parent != nil)")
-            print("DEBUG: Pendulum - scene size: \(self.size), frame: \(self.frame)")
+            // Removed debug print - pendulum position and scene information
         }
 
         // Add subtle rotation to the bob based on velocity for more dynamic feel

@@ -6,7 +6,7 @@ import CoreData
 extension AnalyticsManager {
     
     // MARK: - Properties
-    private static let metricsCalculatorKey = "metricsCalculator"
+    private static let metricsCalculatorKey = UnsafeRawPointer(UnsafeMutablePointer<Int8>.allocate(capacity: 1))
     
     private var metricsCalculator: MetricsCalculator {
         get {
@@ -15,6 +15,7 @@ extension AnalyticsManager {
             } else {
                 let calculator = MetricsCalculator()
                 objc_setAssociatedObject(self, AnalyticsManager.metricsCalculatorKey, calculator, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                print("📊 Created new MetricsCalculator instance")
                 return calculator
             }
         }
@@ -46,6 +47,11 @@ extension AnalyticsManager {
         
         // Track in metrics calculator
         metricsCalculator.recordState(time: time, angle: angle, velocity: angleVelocity)
+        
+        // Debug: Log every 1000th data point
+        if Int(time * 100) % 1000 == 0 {
+            print("📊 Tracked state - Time: \(String(format: "%.2f", time)), Angle: \(String(format: "%.2f", angle)), Calculator: \(Unmanaged.passUnretained(metricsCalculator).toOpaque())")
+        }
     }
     
     func trackEnhancedInteraction(time: Double, eventType: String, angle: Double, angleVelocity: Double, magnitude: Double, direction: String) {
@@ -84,12 +90,12 @@ extension AnalyticsManager {
     private func calculateMetric(type: MetricType) -> MetricValue? {
         let timestamp = Date()
         
-        print("DEBUG: Calculating metric: \(type.rawValue)")
+        // Removed debug print - calculating metric
         
         // Add debugging to catch NaN at the source
         defer {
             // Check after calculation
-            print("DEBUG: Finished calculating metric: \(type.rawValue)")
+            // Removed debug print - finished calculating metric
         }
         
         // Create a metric value and check for NaN before returning
@@ -101,20 +107,20 @@ extension AnalyticsManager {
             case let doubleValue as Double:
                 if doubleValue.isNaN || doubleValue.isInfinite {
                     print("ERROR: NaN/Infinite metric value created for \(type.rawValue): \(doubleValue)")
-                    print("DEBUG: Creating metric from group: \(MetricGroupDefinition.group(for: type)?.rawValue ?? "unknown")")
+                    // Removed debug print - creating metric from group
                 }
             case let distribution as [Double]:
                 for (index, val) in distribution.enumerated() {
                     if val.isNaN || val.isInfinite {
                         print("ERROR: NaN/Infinite in distribution for \(type.rawValue) at index \(index): \(val)")
-                        print("DEBUG: Creating metric from group: \(MetricGroupDefinition.group(for: type)?.rawValue ?? "unknown")")
+                        // Removed debug print - creating metric from group
                     }
                 }
             case let timeSeries as [(Date, Double)]:
                 for (index, point) in timeSeries.enumerated() {
                     if point.1.isNaN || point.1.isInfinite {
                         print("ERROR: NaN/Infinite in time series for \(type.rawValue) at index \(index): \(point.1)")
-                        print("DEBUG: Creating metric from group: \(MetricGroupDefinition.group(for: type)?.rawValue ?? "unknown")")
+                        // Removed debug print - creating metric from group
                     }
                 }
             default:
@@ -128,7 +134,7 @@ extension AnalyticsManager {
         // Basic Metrics
         case .stabilityScore:
             let score = calculateStabilityScore()
-            print("DEBUG: Stability score calculated: \(score)")
+            // Removed debug print - stability score calculated
             if score.isNaN || score.isInfinite {
                 print("ERROR: NaN/Infinite stability score detected: \(score)")
                 return createMetricValue(0.0)
@@ -162,7 +168,7 @@ extension AnalyticsManager {
         // Advanced Metrics
         case .efficiencyRating:
             let rating = calculateEfficiencyRating()
-            print("DEBUG: Efficiency rating calculated: \(rating)")
+            // Removed debug print - efficiency rating calculated
             if rating.isNaN || rating.isInfinite {
                 print("ERROR: NaN/Infinite efficiency rating detected: \(rating)")
                 return createMetricValue(0.0)
@@ -171,7 +177,7 @@ extension AnalyticsManager {
             
         case .directionalBias:
             let bias = calculateDirectionalBias()
-            print("DEBUG: Directional bias calculated: \(bias)")
+            // Removed debug print - directional bias calculated
             if bias.isNaN || bias.isInfinite {
                 print("ERROR: NaN/Infinite directional bias detected: \(bias)")
                 return createMetricValue(0.0)
@@ -180,7 +186,7 @@ extension AnalyticsManager {
             
         case .averageCorrectionTime:
             let avgTime = reactionTimes.isEmpty ? 0 : reactionTimes.reduce(0, +) / Double(reactionTimes.count)
-            print("DEBUG: Average correction time calculated: \(avgTime)")
+            // Removed debug print - average correction time calculated
             if avgTime.isNaN || avgTime.isInfinite {
                 print("ERROR: NaN/Infinite average correction time detected: \(avgTime)")
                 return createMetricValue(0.0)
@@ -193,7 +199,7 @@ extension AnalyticsManager {
             
         case .forceDistribution:
             let distribution = metricsCalculator.calculateForceDistribution()
-            print("DEBUG: Force distribution calculated: \(distribution)")
+            // Removed debug print - force distribution calculated
             // Check for NaN in distribution
             for (index, value) in distribution.enumerated() {
                 if value.isNaN || value.isInfinite {
@@ -236,8 +242,7 @@ extension AnalyticsManager {
             let rightCount = Double(directionalPushes["right"] ?? 0)
             
             // Debug logging
-            print("DEBUG: Full Directional Bias - left: \(leftCount), right: \(rightCount)")
-            print("DEBUG: Full Directional Bias - directionalPushes: \(directionalPushes)")
+            // Removed debug print - full directional bias calculations
             
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
@@ -252,7 +257,9 @@ extension AnalyticsManager {
             
         // Scientific Metrics
         case .phaseSpaceCoverage:
+            print("📊 Calculating Phase Space Coverage - Calculator: \(Unmanaged.passUnretained(metricsCalculator).toOpaque())")
             let coverage = metricsCalculator.calculatePhaseSpaceCoverage()
+            print("📊 Phase Space Coverage Result: \(coverage)")
             return createMetricValue(coverage)
             
         case .energyManagement:
@@ -280,7 +287,7 @@ extension AnalyticsManager {
                 let angle = data["angle"] as? Double ?? 0
                 return (timestamp, angle)
             }
-            print("DEBUG: Angular deviation time series: \(angleTimeSeries.count) points")
+            // Removed debug print - angular deviation points
             // Check for NaN in time series
             for (index, point) in angleTimeSeries.enumerated() {
                 if point.1.isNaN || point.1.isInfinite {
@@ -294,7 +301,7 @@ extension AnalyticsManager {
             let averagePhaseData = getAveragePhaseSpaceData()
             
             // Debug: Log phase space data
-            print("DEBUG: Phase trajectory - averagePhaseData levels: \(averagePhaseData.keys.sorted())")
+            // Removed debug print - phase trajectory levels
             
             // Combine all level data into a single trajectory
             var combinedTrajectory: [(theta: Double, omega: Double)] = []
@@ -305,7 +312,7 @@ extension AnalyticsManager {
                 for level in averagePhaseData.keys.sorted() {
                     if let levelData = averagePhaseData[level] {
                         combinedTrajectory.append(contentsOf: levelData)
-                        print("DEBUG: Phase trajectory - added \(levelData.count) points from level \(level)")
+                        // Removed debug print - added points from level
                     }
                 }
             }
@@ -314,7 +321,7 @@ extension AnalyticsManager {
             if combinedTrajectory.isEmpty {
                 // Use current phase space points if available
                 combinedTrajectory = Array(phaseSpacePoints.suffix(200))
-                print("DEBUG: Phase trajectory - using current session data: \(combinedTrajectory.count) points")
+                // Removed debug print - using current session data
             }
             
             // Limit to reasonable number of points for display
@@ -327,7 +334,7 @@ extension AnalyticsManager {
                     combinedTrajectory
             }
             
-            print("DEBUG: Phase trajectory - returning \(combinedTrajectory.count) total points")
+            // Removed debug print - returning total points
             return createMetricValue(combinedTrajectory)
             
         // Educational Metrics

@@ -6,9 +6,9 @@ extension MetricsCalculator {
     // MARK: - Winding Number
     /// Calculates the winding number - how many times the pendulum completes a full rotation
     func calculateWindingNumber() -> Double {
-        print("DEBUG: calculateWindingNumber - history count: \(angleHistory.count)")
+        // Removed debug print - winding number history count
         guard angleHistory.count > 10 else {
-            print("DEBUG: calculateWindingNumber - insufficient data, returning 0")
+            // Removed debug print
             return 0
         }
         
@@ -39,9 +39,9 @@ extension MetricsCalculator {
     // MARK: - Rotation Number
     /// Calculates the average rotation rate (asymptotic winding number per unit time)
     func calculateRotationNumber() -> Double {
-        print("DEBUG: calculateRotationNumber - history count: \(angleHistory.count)")
+        // Removed debug print - rotation number history count
         guard angleHistory.count > 100 else {
-            print("DEBUG: calculateRotationNumber - insufficient data, returning 0")
+            // Removed debug print
             return 0
         }
         
@@ -60,7 +60,7 @@ extension MetricsCalculator {
         
         let windingNumber = calculateWindingNumber()
         let rotationNumber = windingNumber / timeSpan
-        print("DEBUG: calculateRotationNumber - winding: \(windingNumber), timeSpan: \(timeSpan), rotation: \(rotationNumber)")
+        // Removed debug print
         
         // Validate result
         if rotationNumber.isNaN || rotationNumber.isInfinite {

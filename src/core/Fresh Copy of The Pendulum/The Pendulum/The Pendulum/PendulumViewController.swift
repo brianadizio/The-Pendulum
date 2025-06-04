@@ -3680,28 +3680,35 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     @objc private func runAITest() {
-        // Now focused on "Play with AI" functionality
+        // Ensure AI visualization is set up
+        ensureAIVisualizationSetup()
+        
         let alert = UIAlertController(title: "Play with AI", message: "Choose AI player mode", preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Watch AI Play", style: .default) { [weak self] _ in
-            self?.startAIOpponent(mode: .demo)
-            self?.updateGameMessageLabel("AI is demonstrating pendulum control")
+            self?.startAIWithVisualFeedback(mode: .demo)
         })
         
         alert.addAction(UIAlertAction(title: "AI Assists You", style: .default) { [weak self] _ in
-            self?.startAIOpponent(mode: .assist)
-            self?.updateGameMessageLabel("AI will help when you're struggling")
+            self?.startAIWithVisualFeedback(mode: .assist)
         })
         
         alert.addAction(UIAlertAction(title: "Compete with AI", style: .default) { [weak self] _ in
-            self?.startAIOpponent(mode: .compete)
-            self?.updateGameMessageLabel("Try to beat the AI's score!")
+            self?.startAIWithVisualFeedback(mode: .compete)
         })
         
         alert.addAction(UIAlertAction(title: "AI Tutorial Mode", style: .default) { [weak self] _ in
-            self?.startAIOpponent(mode: .tutorial)
-            self?.updateGameMessageLabel("AI will guide you through the basics")
+            self?.startAIWithVisualFeedback(mode: .tutorial)
         })
+        
+        // Add Stop AI option if AI is playing
+        if PendulumAIManager.shared.isAIPlaying() {
+            alert.addAction(UIAlertAction(title: "Stop AI", style: .destructive) { [weak self] _ in
+                PendulumAIManager.shared.stopAIPlayer()
+                self?.hideAIModeIndicators()
+                self?.updateGameMessageLabel("AI player stopped")
+            })
+        }
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         
@@ -3714,27 +3721,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         present(alert, animated: true)
     }
     
-    private func startAIOpponent(mode: PendulumAIManager.AIMode = .demo) {
-        // Start AI player with specified mode
-        PendulumAIManager.shared.startAIPlayer(skillLevel: .intermediate, viewModel: viewModel, mode: mode)
-        
-        // Show AI mode indicator
-        showAIModeIndicator(mode: mode)
-        
-        let alert = UIAlertController(
-            title: "AI Opponent Active",
-            message: "The AI is now playing. Watch it balance the pendulum!",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Stop AI", style: .destructive) { [weak self] _ in
-            PendulumAIManager.shared.stopAIPlayer()
-            self?.updateGameMessageLabel("AI player stopped")
-            self?.hideAIModeIndicators()
-        })
-        
-        present(alert, animated: true)
-    }
+    // Removed - using startAIWithVisualFeedback from AIVisualizationFix.swift instead
     
     @objc private func sliderValueChanged(_ slider: UISlider) {
         // Update the value label
