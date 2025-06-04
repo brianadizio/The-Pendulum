@@ -176,14 +176,14 @@ class AnalyticsManager {
                 // Only record reasonable reaction times (0.1 to 3 seconds)
                 if reactionTime >= 0.1 && reactionTime <= 3.0 {
                     reactionTimes.append(reactionTime)
-                    print("DEBUG: Recorded reaction time: \(reactionTime)s")
+                    // Removed debug print - reaction time recorded
                 }
             }
             
             // If we just became unstable, record the time but don't reset instability tracking yet
             if angleFromVertical > instabilityThreshold && lastInstabilityTime == nil {
                 lastInstabilityTime = Date()
-                print("DEBUG: Started tracking instability at angle: \(angleFromVertical)")
+                // Removed debug print - instability tracking started
             }
         }
         
@@ -199,14 +199,14 @@ class AnalyticsManager {
             let normalizedDirection = direction.lowercased().trimmingCharacters(in: .whitespaces)
             if normalizedDirection.contains("left") || normalizedDirection == "left" {
                 directionalPushes["left", default: 0] += 1
-                print("DEBUG: Recorded LEFT push. Total left: \(directionalPushes["left", default: 0])")
+                // Removed debug print - left push recorded
             } else if normalizedDirection.contains("right") || normalizedDirection == "right" {
                 directionalPushes["right", default: 0] += 1
-                print("DEBUG: Recorded RIGHT push. Total right: \(directionalPushes["right", default: 0])")
+                // Removed debug print - right push recorded
             } else {
                 // Fallback for unclear directions
                 directionalPushes[normalizedDirection, default: 0] += 1
-                print("DEBUG: Recorded UNKNOWN direction push: '\(normalizedDirection)'")
+                // Removed debug print - unknown direction push
             }
             
             // Track magnitude for distribution analysis
@@ -391,7 +391,7 @@ class AnalyticsManager {
         let efficiencyRating = stability / sqrt(totalForceApplied)
         
         // Debug logging for troubleshooting
-        print("DEBUG: Efficiency calculation - Stability: \(stability), TotalForce: \(totalForceApplied), Raw efficiency: \(efficiencyRating)")
+        // Removed debug print - efficiency calculation
         
         // Check for invalid values
         if efficiencyRating.isNaN || efficiencyRating.isInfinite {
@@ -401,7 +401,7 @@ class AnalyticsManager {
         
         // Scale appropriately (multiply by 10 to get reasonable range)
         let scaledRating = min(efficiencyRating * 10, 100)
-        print("DEBUG: Final efficiency rating: \(scaledRating)")
+        // Removed debug print - final efficiency
         
         return scaledRating
     }

@@ -146,15 +146,15 @@ class MetricsCalculator {
     }
     
     func calculateForceDistribution() -> [Double] {
-        print("DEBUG: calculateForceDistribution - force history count: \(forceHistory.count)")
+        // Removed debug print - force history count
         guard !forceHistory.isEmpty else {
-            print("DEBUG: calculateForceDistribution - no force history, returning empty array")
+            // Removed debug print
             return []
         }
         let magnitudes = forceHistory.map { abs($0.force) }
-        print("DEBUG: calculateForceDistribution - magnitudes: \(magnitudes.prefix(5))...") // Show first 5
+        // Removed debug print - force magnitudes
         let distribution = createHistogram(data: magnitudes, bins: 20)
-        print("DEBUG: calculateForceDistribution - histogram bins: \(distribution.count)")
+        // Removed debug print
         return distribution
     }
     
@@ -185,9 +185,9 @@ class MetricsCalculator {
     // MARK: - Scientific Metrics
     
     func calculatePhaseSpaceCoverage() -> Double {
-        print("DEBUG: calculatePhaseSpaceCoverage - history count: \(phaseSpaceHistory.count)")
+        // Removed debug print - phase space history count
         guard phaseSpaceHistory.count > 100 else {
-            print("DEBUG: calculatePhaseSpaceCoverage - insufficient data, returning 0")
+            // Removed debug print - insufficient data
             return 0
         }
         
@@ -223,7 +223,7 @@ class MetricsCalculator {
         let totalCells = gridSize * gridSize
         
         let coverage = Double(visitedCells) / Double(totalCells) * 100.0
-        print("DEBUG: calculatePhaseSpaceCoverage - visited: \(visitedCells), total: \(totalCells), coverage: \(coverage)%")
+        // Removed debug print - phase space coverage
         
         // Validate result
         if coverage.isNaN || coverage.isInfinite {
@@ -235,9 +235,9 @@ class MetricsCalculator {
     }
     
     func calculateEnergyManagementEfficiency() -> Double {
-        print("DEBUG: calculateEnergyManagementEfficiency - history count: \(energyHistory.count)")
+        // Removed debug print - energy history count
         guard energyHistory.count > 10 else {
-            print("DEBUG: calculateEnergyManagementEfficiency - insufficient data, returning 0")
+            // Removed debug print - insufficient energy data
             return 0
         }
         
@@ -256,7 +256,7 @@ class MetricsCalculator {
         let normalizedVariance = min(variance / (meanEnergy * meanEnergy), 1.0)
         let efficiency = (1.0 - normalizedVariance) * 100.0
         
-        print("DEBUG: calculateEnergyManagementEfficiency - variance: \(variance), mean: \(meanEnergy), efficiency: \(efficiency)")
+        // Removed debug print
         
         // Validate result
         if efficiency.isNaN || efficiency.isInfinite {
@@ -268,9 +268,9 @@ class MetricsCalculator {
     }
     
     func calculateLyapunovExponent() -> Double {
-        print("DEBUG: calculateLyapunovExponent - history count: \(angleHistory.count)")
+        // Removed debug print - angle history count
         guard angleHistory.count > 1000 else {
-            print("DEBUG: calculateLyapunovExponent - insufficient data, returning 0")
+            // Removed debug print - insufficient lyapunov data
             return 0
         }
         
@@ -302,12 +302,12 @@ class MetricsCalculator {
         
         // Return 0 if no valid eigenvalues were found
         guard validCount > 0 else {
-            print("DEBUG: calculateLyapunovExponent - no valid eigenvalues found, returning 0")
+            // Removed debug print
             return 0
         }
         
         let exponent = lyapunovSum / Double(validCount) / dt
-        print("DEBUG: calculateLyapunovExponent - sum: \(lyapunovSum), count: \(validCount), exponent: \(exponent)")
+        // Removed debug print
         
         // Validate result
         if exponent.isNaN || exponent.isInfinite {
@@ -564,15 +564,15 @@ class MetricsCalculator {
     }
     
     private func createHistogram(data: [Double], bins: Int) -> [Double] {
-        print("DEBUG: createHistogram - data count: \(data.count), bins: \(bins)")
+        // Removed debug print
         guard !data.isEmpty && bins > 0 else {
-            print("DEBUG: createHistogram - empty data or invalid bins, returning empty")
+            // Removed debug print
             return []
         }
         
         let minValue = data.min() ?? 0
         let maxValue = data.max() ?? 1
-        print("DEBUG: createHistogram - min: \(minValue), max: \(maxValue)")
+        // Removed debug print
         
         // Handle case where all values are the same
         if maxValue == minValue {
@@ -582,7 +582,7 @@ class MetricsCalculator {
         }
         
         let binWidth = (maxValue - minValue) / Double(bins)
-        print("DEBUG: createHistogram - binWidth: \(binWidth)")
+        // Removed debug print
         
         // Check for NaN in binWidth
         if binWidth.isNaN || binWidth.isInfinite || binWidth == 0 {
@@ -611,7 +611,7 @@ class MetricsCalculator {
         let total = Double(data.count)
         if total > 0 {
             let normalized = histogram.map { $0 / total }
-            print("DEBUG: createHistogram - returning \(normalized.count) bins")
+            // Removed debug print
             return normalized
         } else {
             print("WARNING: createHistogram - total is 0, returning zeros")

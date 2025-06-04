@@ -431,7 +431,7 @@ class PendulumAIManager {
     
     private var aiPlayer: PendulumAIPlayer?
     private var updateTimer: Timer?
-    private weak var viewModel: PendulumViewModel?
+    weak var viewModel: PendulumViewModel? // Made public for AI testing
     private var currentMode: AIMode = .demo
     private var isAssisting: Bool = false
     private var competitionScore: Int = 0

@@ -111,6 +111,7 @@ class SimpleDashboard: UITableViewController {
     private var updateTimer: Timer?
     private var currentMetricGroup: MetricGroupType = .basic
     private var currentTimeRange: AnalyticsTimeRange = .daily
+    private var capturedSessionTime: TimeInterval?
     
     // MARK: - Lifecycle
     
@@ -120,8 +121,23 @@ class SimpleDashboard: UITableViewController {
         startMetricUpdates()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Capture session time when dashboard appears
+        captureSessionTime()
+    }
+    
     deinit {
         updateTimer?.invalidate()
+    }
+    
+    // Public method to capture current session time
+    func captureSessionTime() {
+        // Only capture if we're showing session time range
+        if currentTimeRange == .session {
+            capturedSessionTime = SessionTimeManager.shared.getDashboardSessionDuration()
+            // Silent capture - removed debug print
+        }
     }
     
     // MARK: - Setup
@@ -148,7 +164,24 @@ class SimpleDashboard: UITableViewController {
     }
     
     private func loadMetrics() {
-        let newMetrics = AnalyticsManager.shared.calculateMetrics(for: currentMetricGroup)
+        var newMetrics = AnalyticsManager.shared.calculateMetrics(for: currentMetricGroup)
+        
+        // Override session time with captured value if in session time range
+        if currentTimeRange == .session && capturedSessionTime != nil {
+            for (index, metric) in newMetrics.enumerated() {
+                if metric.type == .sessionTime {
+                    // Replace with captured session time
+                    newMetrics[index] = MetricValue(
+                        type: .sessionTime,
+                        value: capturedSessionTime!,
+                        timestamp: metric.timestamp,
+                        confidence: metric.confidence
+                    )
+                    // Silent override - removed debug print
+                    break
+                }
+            }
+        }
         
         // Only reload if metrics count changed to avoid unnecessary reloads
         if newMetrics.count != metrics.count {
@@ -214,6 +247,10 @@ class SimpleDashboard: UITableViewController {
                 },
                 onTimeRangeChanged: { [weak self] range in
                     self?.currentTimeRange = range
+                    // Capture session time when switching to session view
+                    if range == .session {
+                        self?.captureSessionTime()
+                    }
                     self?.loadMetrics()
                     // Force table reload to update all visible charts
                     DispatchQueue.main.async {
@@ -495,7 +532,7 @@ class MetricCell: UITableViewCell {
         }
         
         // Debug logging
-        print("DEBUG: MetricCell - \(metric.type.rawValue): value='\(formattedValue)' unit='\(unit)'")
+        // Removed debug print
         
         // Set icon based on metric type
         switch metric.type {
@@ -538,7 +575,7 @@ class MetricCell: UITableViewCell {
         }
         
         // Debug logging
-        print("DEBUG: MetricCell update - \(metric.type.rawValue): value='\(formattedValue)'")
+        // Removed debug print
         
         if let confidence = metric.confidence {
             valueLabel.textColor = confidenceColor(for: confidence)

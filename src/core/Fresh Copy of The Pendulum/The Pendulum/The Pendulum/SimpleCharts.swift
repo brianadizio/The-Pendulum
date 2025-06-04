@@ -79,9 +79,8 @@ class SimpleChartView: UIView {
     override func draw(_ rect: CGRect) {
         super.draw(rect)
         
-        // Debug: Log chart drawing with unique identifier
+        // Removed debug print - chart drawing with unique identifier
         let chartId = "\(type(of: self))_\(title)"
-        print("DEBUG: Drawing chart '\(chartId)' with \(dataPoints.count) points")
         
         // Debug: Check for NaN in data points
         var hasNaN = false
@@ -529,7 +528,7 @@ class SimplePieChartView: SimpleChartView {
     }
     
     override func drawChartContent(context: CGContext, in rect: CGRect) {
-        print("DEBUG: Drawing pie chart with \(segments.count) segments")
+        // Removed debug print - pie chart segment count
         guard !segments.isEmpty else { return }
         
         let chartArea = getChartArea(in: rect)

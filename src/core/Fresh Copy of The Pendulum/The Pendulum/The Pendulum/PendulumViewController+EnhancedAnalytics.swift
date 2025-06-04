@@ -146,6 +146,9 @@ extension PendulumViewController {
         // SimpleDashboard automatically refreshes via its timer
         // No manual refresh needed
         print("Analytics tab selected - SimpleDashboard will update automatically")
+        
+        // Capture session time when analytics tab is selected
+        simpleDashboard?.captureSessionTime()
     }
 }
 

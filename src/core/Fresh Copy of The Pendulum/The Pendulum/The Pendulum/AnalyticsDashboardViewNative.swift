@@ -38,6 +38,13 @@ enum PendulumParameter: String, CaseIterable {
 
 class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     
+    // Public method to capture session time when dashboard is shown
+    func captureSessionTime() {
+        // Capture the current session duration from SessionTimeManager
+        initialSessionTime = SessionTimeManager.shared.getDashboardSessionDuration()
+        // Removed debug print
+    }
+    
     // MARK: - Properties
     
     private let scrollView = UIScrollView()
@@ -935,7 +942,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         descriptionLabel.lineBreakMode = .byWordWrapping
         
         // Debug: Print when descriptions are created
-        print("DEBUG: Creating chart description: '\(description)' for title: '\(title)'")
+        // Removed debug print
         
         container.addSubview(descriptionLabel)
         
@@ -958,6 +965,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     
     // The selected time range - use this to track the current state
     internal var selectedTimeRange: AnalyticsTimeRange = .session
+    
+    // Store the initial session time to prevent updates
+    private var initialSessionTime: TimeInterval?
 
     func updateDashboard(timeRange: AnalyticsTimeRange? = nil, sessionId: UUID? = nil) {
         // Only update the selectedTimeRange if explicitly provided
@@ -1038,6 +1048,9 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     
     private func loadSummaryMetrics(timeRange: AnalyticsTimeRange, sessionId: UUID?) {
         var metrics: [String: Any] = [:]
+        
+        // Store current session time text if we're in session view
+        let previousSessionTimeText = (timeRange == .session) ? sessionTimeLabel?.text : nil
 
         // Try to get metrics from AnalyticsManager, handle empty case gracefully
         do {
@@ -1129,9 +1142,14 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
             formatDirectionalBias($0)
         } ?? "N/A"
 
-        sessionTimeLabel.text = (metrics["totalPlayTime"] as? Double).map {
-            formatTimeInterval($0)
-        } ?? "N/A"
+        // For session time range, preserve the previous value to prevent constant updates
+        if timeRange == .session && previousSessionTimeText != nil && previousSessionTimeText != "N/A" {
+            sessionTimeLabel.text = previousSessionTimeText
+        } else {
+            sessionTimeLabel.text = (metrics["totalPlayTime"] as? Double).map {
+                formatTimeInterval($0)
+            } ?? "N/A"
+        }
     }
     
     private func loadAngleVarianceChart(timeRange: AnalyticsTimeRange, sessionId: UUID?) {
@@ -1339,10 +1357,10 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         if !realReactionTimes.isEmpty {
             reactionTimes = Array(realReactionTimes.prefix(20)) // Limit to recent 20 data points
             labels = reactionTimes.enumerated().map { "Push \($0.offset + 1)" }
-            print("DEBUG: Using real reaction time data: \(reactionTimes.count) points")
+            // Removed debug print
         } else {
             // Provide sample data for all time ranges to demonstrate functionality
-            print("DEBUG: No real reaction time data, using sample data for timeRange: \(timeRange)")
+            // Removed debug print
             switch timeRange {
             case .session:
                 reactionTimes = [0.42, 0.53, 0.38, 0.65, 0.29, 0.47]
@@ -1436,7 +1454,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         let leftCount = directionalPushes["left"] ?? 0
         let rightCount = directionalPushes["right"] ?? 0
         
-        print("DEBUG: Retrieved directional data - Left: \(leftCount), Right: \(rightCount)")
+        // Removed debug print
 
         // If we have real data, use it
         if leftCount > 0 || rightCount > 0 {
@@ -1627,7 +1645,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         )
         
         // Debug logging for parameter chart updates
-        print("DEBUG: Updated Pendulum Parameters chart for \(parameter.rawValue) with unit '\(parameter.unit)'")
+        // Removed debug print
     }
     
     private func updateAveragePhaseSpaceChart() {
