@@ -761,8 +761,8 @@ class ChartCell: UITableViewCell {
                     trajectoryData = getSampleTrajectoryData()
                 }
                 
-                let currentLevel = 1 // Default to level 1 for charts
-                phaseChart.updateLevelData([currentLevel: trajectoryData])
+                // Hide level selector and use simplified display
+                phaseChart.showSimpleTrajectory(trajectoryData)
             }
             
         default:

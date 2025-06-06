@@ -23,11 +23,11 @@ class AchievementDisplayView: UIView {
     }
     
     private func setupUI() {
-        // Main background with glassmorphism effect
-        backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        // Main background with lighter gray glassmorphism effect
+        backgroundView.backgroundColor = UIColor.systemGray4.withAlphaComponent(0.95)  // Lighter gray
         backgroundView.layer.cornerRadius = 16
         backgroundView.layer.borderWidth = 1
-        backgroundView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        backgroundView.layer.borderColor = UIColor.systemGray3.withAlphaComponent(0.5).cgColor
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(backgroundView)
         
@@ -37,22 +37,22 @@ class AchievementDisplayView: UIView {
         glowView.translatesAutoresizingMaskIntoConstraints = false
         insertSubview(glowView, belowSubview: backgroundView)
         
-        // Icon
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundView.addSubview(iconImageView)
+        // Icon - Removed per user request
+        // iconImageView.contentMode = .scaleAspectFit
+        // iconImageView.tintColor = .white
+        // iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        // backgroundView.addSubview(iconImageView)
         
         // Title label
         titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = .white
+        titleLabel.textColor = .label  // Dark text for light background
         titleLabel.textAlignment = .left
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.addSubview(titleLabel)
         
         // Description label
         descriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        descriptionLabel.textColor = UIColor.white.withAlphaComponent(0.9)
+        descriptionLabel.textColor = UIColor.secondaryLabel  // Secondary text color
         descriptionLabel.textAlignment = .left
         descriptionLabel.numberOfLines = 2
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -79,15 +79,11 @@ class AchievementDisplayView: UIView {
             glowView.trailingAnchor.constraint(equalTo: trailingAnchor),
             glowView.bottomAnchor.constraint(equalTo: bottomAnchor),
             
-            // Icon
-            iconImageView.leadingAnchor.constraint(equalTo: backgroundView.leadingAnchor, constant: 16),
-            iconImageView.centerYAnchor.constraint(equalTo: backgroundView.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 40),
-            iconImageView.heightAnchor.constraint(equalToConstant: 40),
+            // Icon constraints removed
             
-            // Title
+            // Title - now starts from the leading edge
             titleLabel.topAnchor.constraint(equalTo: backgroundView.topAnchor, constant: 12),
-            titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: backgroundView.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: pointsLabel.leadingAnchor, constant: -8),
             
             // Description
@@ -104,21 +100,18 @@ class AchievementDisplayView: UIView {
     }
     
     func configure(with achievement: AchievementType, points: Int) {
-        // Set icon
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .bold)
-        iconImageView.image = UIImage(systemName: achievement.icon, withConfiguration: config)
-        iconImageView.tintColor = achievement.color
+        // Icon removed - text only display
         
         // Set texts
         titleLabel.text = achievement.rawValue
         descriptionLabel.text = achievement.description
         pointsLabel.text = "+\(points)"
         
-        // Set glow color
-        glowView.backgroundColor = achievement.color.withAlphaComponent(0.3)
+        // Set glow color with softer effect for light background
+        glowView.backgroundColor = achievement.color.withAlphaComponent(0.2)
         
-        // Set border color
-        backgroundView.layer.borderColor = achievement.color.withAlphaComponent(0.5).cgColor
+        // Set border color - more subtle for light background
+        backgroundView.layer.borderColor = achievement.color.withAlphaComponent(0.3).cgColor
     }
     
     func animateIn() {

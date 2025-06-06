@@ -165,17 +165,21 @@ class AchievementManager {
     private var lastStabilityScore: Double = 0
     private var consecutiveGoodMoves = 0
     
-    // Thresholds for achievements
+    // Thresholds for achievements - made more challenging
     private let recoveryThresholds = [
-        AchievementType.goodRecovery: 0.8,      // 45+ degrees
-        AchievementType.amazingRecovery: 1.2,   // 69+ degrees  
-        AchievementType.impossibleRecovery: 1.4  // 80+ degrees
+        AchievementType.goodRecovery: 1.0,      // 57+ degrees
+        AchievementType.amazingRecovery: 1.3,   // 74+ degrees  
+        AchievementType.impossibleRecovery: 1.5  // 86+ degrees
     ]
     
     private let balanceTimeThresholds = [
-        AchievementType.steadyHands: 30.0,      // 30 seconds
-        AchievementType.zenMaster: 120.0        // 2 minutes
+        AchievementType.steadyHands: 60.0,      // 1 minute (increased from 30 seconds)
+        AchievementType.zenMaster: 180.0        // 3 minutes (increased from 2 minutes)
     ]
+    
+    // Add cooldown tracking
+    private var lastAchievementTime: Date = Date()
+    private let globalAchievementCooldown: TimeInterval = 10.0  // 10 seconds between any achievements
     
     private init() {}
     
@@ -219,12 +223,16 @@ class AchievementManager {
                 balanceStartTime = time
             }
             
-            // Check for perfect balance (< 3 degrees)
-            if angleFromVertical < 0.05 {
-                triggerAchievement(.perfectBalance, level: level, context: [
-                    "angle": angleFromVertical,
-                    "precision": 0.05 - angleFromVertical
-                ])
+            // Check for perfect balance (< 2 degrees) - only once per balance session
+            if angleFromVertical < 0.035 && balanceStartTime != nil {  // ~2 degrees
+                let duration = time.timeIntervalSince(balanceStartTime!)
+                if duration > 5.0 {  // Only after maintaining balance for 5+ seconds
+                    triggerAchievement(.perfectBalance, level: level, context: [
+                        "angle": angleFromVertical,
+                        "precision": 0.035 - angleFromVertical,
+                        "duration": duration
+                    ])
+                }
             }
             
             // Check balance duration
@@ -269,16 +277,16 @@ class AchievementManager {
                 ])
             }
             
-            // Check force efficiency
-            if force < 0.5 {
-                triggerAchievement(.gentleTouch, level: level, context: [
-                    "force": force,
-                    "efficiency": 0.5 - force
-                ])
-            } else if force < 0.3 {
+            // Check force efficiency - only for very small forces
+            if force < 0.2 {  // Much stricter threshold
                 triggerAchievement(.minimalForce, level: level, context: [
                     "force": force,
-                    "efficiency": 0.3 - force
+                    "efficiency": 0.2 - force
+                ])
+            } else if force < 0.4 {  // Adjusted threshold
+                triggerAchievement(.gentleTouch, level: level, context: [
+                    "force": force,
+                    "efficiency": 0.4 - force
                 ])
             }
         } else {
@@ -287,21 +295,28 @@ class AchievementManager {
     }
     
     func trackImprovement(currentScore: Double, level: Int) {
+        // Only track meaningful improvements, not small fluctuations
+        guard lastStabilityScore > 0 else {
+            lastStabilityScore = currentScore
+            return
+        }
+        
         let improvement = currentScore - lastStabilityScore
         
-        if improvement > 10.0 {
+        // Require larger improvements and sustained performance
+        if improvement > 20.0 && currentScore > 70.0 {  // Increased thresholds
             triggerAchievement(.breakthrough, level: level, context: [
                 "improvement": improvement,
                 "previousScore": lastStabilityScore,
                 "currentScore": currentScore
             ])
-        } else if improvement > 5.0 {
+        } else if improvement > 15.0 && currentScore > 50.0 {  // Increased thresholds
             triggerAchievement(.improvementSpurt, level: level, context: [
                 "improvement": improvement,
                 "previousScore": lastStabilityScore,
                 "currentScore": currentScore
             ])
-        } else if improvement > 2.0 {
+        } else if improvement > 10.0 && currentScore > 30.0 {  // Increased thresholds
             triggerAchievement(.quickLearner, level: level, context: [
                 "improvement": improvement,
                 "previousScore": lastStabilityScore,
@@ -315,16 +330,22 @@ class AchievementManager {
     // MARK: - Achievement Management
     
     private func triggerAchievement(_ type: AchievementType, level: Int, context: [String: Any] = [:]) {
-        // Prevent duplicate achievements within short time periods
+        // Global cooldown - prevent any achievement within cooldown period
+        guard Date().timeIntervalSince(lastAchievementTime) >= globalAchievementCooldown else { return }
+        
+        // Prevent duplicate achievements within longer time periods
         let recentAchievements = achievements.filter { 
-            $0.type == type && Date().timeIntervalSince($0.timestamp) < 5.0 
+            $0.type == type && Date().timeIntervalSince($0.timestamp) < 30.0  // Increased from 5 to 30 seconds
         }
         guard recentAchievements.isEmpty else { return }
         
         let achievement = AchievementRecord(type: type, level: level, context: context)
         achievements.append(achievement)
         
-        // Notify UI to show achievement
+        // Update last achievement time
+        lastAchievementTime = Date()
+        
+        // Notify UI to show achievement and add points
         NotificationCenter.default.post(
             name: Notification.Name("AchievementUnlocked"),
             object: nil,
@@ -336,6 +357,13 @@ class AchievementManager {
                 "color": type.color,
                 "points": type.points
             ]
+        )
+        
+        // Also notify to add points to score
+        NotificationCenter.default.post(
+            name: Notification.Name("AddAchievementPoints"),
+            object: nil,
+            userInfo: ["points": type.points]
         )
         
         // Track in analytics

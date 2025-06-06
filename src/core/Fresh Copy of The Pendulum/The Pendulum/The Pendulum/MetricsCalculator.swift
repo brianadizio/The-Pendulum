@@ -11,8 +11,14 @@ class MetricsCalculator {
     private var energyHistory: [(time: Double, kinetic: Double, potential: Double)] = []
     internal var phaseSpaceHistory: [(theta: Double, omega: Double)] = []
     
-    private let maxHistorySize = 10000
+    private let maxHistorySize = 2000  // Reduced from 10000 to improve performance
     private var sessionStartTime: Date = Date()
+    
+    // Cache for expensive calculations
+    private var cachedPhaseSpaceCoverage: (timestamp: Date, value: Double)?
+    private var cachedEnergyEfficiency: (timestamp: Date, value: Double)?
+    private var cachedLyapunovExponent: (timestamp: Date, value: Double)?
+    private let cacheValidityDuration: TimeInterval = 5.0  // Cache for 5 seconds
     
     // System parameters
     internal var mass: Double = 1.0
@@ -31,6 +37,11 @@ class MetricsCalculator {
         energyHistory.removeAll()
         phaseSpaceHistory.removeAll()
         sessionStartTime = Date()
+        
+        // Clear cache
+        cachedPhaseSpaceCoverage = nil
+        cachedEnergyEfficiency = nil
+        cachedLyapunovExponent = nil
     }
     
     func updateSystemParameters(mass: Double, length: Double, gravity: Double) {
@@ -185,6 +196,12 @@ class MetricsCalculator {
     // MARK: - Scientific Metrics
     
     func calculatePhaseSpaceCoverage() -> Double {
+        // Check cache first
+        if let cached = cachedPhaseSpaceCoverage,
+           Date().timeIntervalSince(cached.timestamp) < cacheValidityDuration {
+            return cached.value
+        }
+        
         // Removed debug print - phase space history count
         guard phaseSpaceHistory.count > 100 else {
             // Removed debug print - insufficient data
@@ -231,6 +248,9 @@ class MetricsCalculator {
             return 0.0
         }
         
+        // Cache the result
+        cachedPhaseSpaceCoverage = (timestamp: Date(), value: coverage)
+        
         return coverage
     }
     
@@ -268,6 +288,12 @@ class MetricsCalculator {
     }
     
     func calculateLyapunovExponent() -> Double {
+        // Check cache first
+        if let cached = cachedLyapunovExponent,
+           Date().timeIntervalSince(cached.timestamp) < cacheValidityDuration {
+            return cached.value
+        }
+        
         // Removed debug print - angle history count
         guard angleHistory.count > 1000 else {
             // Removed debug print - insufficient lyapunov data
@@ -279,7 +305,10 @@ class MetricsCalculator {
         var validCount = 0
         let dt = 0.01
         
-        for i in 1..<angleHistory.count-1 {
+        // Sample every 10th point to reduce computation
+        let stride = max(1, angleHistory.count / 200)  // Process ~200 points max
+        
+        for i in Swift.stride(from: 1, to: angleHistory.count-1, by: stride) {
             let angle = angleHistory[i].angle
             let velocity = velocityHistory[i].velocity
             
@@ -314,6 +343,9 @@ class MetricsCalculator {
             print("ERROR: calculateLyapunovExponent produced NaN/Infinite: \(exponent)")
             return 0.0
         }
+        
+        // Cache the result
+        cachedLyapunovExponent = (timestamp: Date(), value: exponent)
         
         return exponent
     }

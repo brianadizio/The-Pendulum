@@ -5,9 +5,9 @@ class PhaseSpaceChartView: UIView {
     private var selectedLevel: Int?
     private var levelSelector: UISegmentedControl!
     
-    // Scaling factors (same as PhaseSpaceView)
-    private let thetaScale: CGFloat = 100.0 // pixels per radian
-    private let omegaScale: CGFloat = 50.0  // pixels per radian/sec
+    // Scaling factors - adjusted for better visualization
+    private let thetaScale: CGFloat = 40.0  // pixels per radian (reduced from 100)
+    private let omegaScale: CGFloat = 20.0  // pixels per radian/sec (reduced from 50)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -68,6 +68,18 @@ class PhaseSpaceChartView: UIView {
         setNeedsDisplay()
     }
     
+    // New method for simple trajectory display without level selector
+    func showSimpleTrajectory(_ trajectory: [(theta: Double, omega: Double)]) {
+        // Hide the level selector
+        levelSelector.isHidden = true
+        
+        // Store trajectory data without level association
+        levelData = [0: trajectory]  // Use 0 as a special key for simple display
+        selectedLevel = 0
+        
+        setNeedsDisplay()
+    }
+    
     func updateLevelData(_ data: [Int: [(theta: Double, omega: Double)]]) {
         levelData = data
         
@@ -91,21 +103,31 @@ class PhaseSpaceChartView: UIView {
     private func convert(theta: Double, omega: Double) -> CGPoint {
         // Check for NaN or infinite values
         guard !theta.isNaN && !theta.isInfinite && !omega.isNaN && !omega.isInfinite else {
-            return CGPoint(x: bounds.width / 2, y: (bounds.height - 52) / 2 + 52)
+            let offset: CGFloat = levelSelector.isHidden ? 0 : 52
+            return CGPoint(x: bounds.width / 2, y: (bounds.height - offset) / 2 + offset)
         }
         
         // Convert physics coordinates to view coordinates
-        // Center of phase space area (accounting for level selector)
+        // Center of phase space area (accounting for level selector if visible)
         let centerX = bounds.width / 2
-        let centerY = (bounds.height - 52) / 2 + 52 // Offset for level selector
+        let selectorOffset: CGFloat = levelSelector.isHidden ? 0 : 52
+        let centerY = (bounds.height - selectorOffset) / 2 + selectorOffset
         
         // Normalize angle to [-π, π] for inverted pendulum
         let normalizedTheta = atan2(sin(theta - Double.pi), cos(theta - Double.pi))
         
-        let x = centerX + CGFloat(normalizedTheta) * thetaScale
-        let y = centerY - CGFloat(omega) * omegaScale // Negative because UI coordinates go down
+        // Clamp omega to reasonable bounds to prevent extreme values
+        let clampedOmega = max(-10.0, min(10.0, omega)) // Limit to ±10 rad/s
         
-        return CGPoint(x: x, y: y)
+        let x = centerX + CGFloat(normalizedTheta) * thetaScale
+        let y = centerY - CGFloat(clampedOmega) * omegaScale // Negative because UI coordinates go down
+        
+        // Ensure point stays within bounds with some margin
+        let margin: CGFloat = 10
+        let clampedX = max(margin, min(bounds.width - margin, x))
+        let clampedY = max(selectorOffset + margin, min(bounds.height - margin, y))
+        
+        return CGPoint(x: clampedX, y: clampedY)
     }
     
     private func getRainbowColor(for progress: CGFloat) -> UIColor {
@@ -125,7 +147,8 @@ class PhaseSpaceChartView: UIView {
         
         // Draw axes
         let centerX = bounds.width / 2
-        let centerY = (bounds.height - 52) / 2 + 52
+        let selectorOffset: CGFloat = levelSelector.isHidden ? 0 : 52
+        let centerY = (bounds.height - selectorOffset) / 2 + selectorOffset
         
         context.setLineWidth(1.0)
         context.setStrokeColor(FocusCalendarTheme.tertiaryTextColor.cgColor)
@@ -135,7 +158,8 @@ class PhaseSpaceChartView: UIView {
         context.addLine(to: CGPoint(x: bounds.width - 10, y: centerY))
         
         // Y-axis (omega)
-        context.move(to: CGPoint(x: centerX, y: 52))
+        let axisTop: CGFloat = levelSelector.isHidden ? 10 : 52
+        context.move(to: CGPoint(x: centerX, y: axisTop))
         context.addLine(to: CGPoint(x: centerX, y: bounds.height - 10))
         
         context.strokePath()
@@ -160,20 +184,21 @@ class PhaseSpaceChartView: UIView {
         context.setLineWidth(0.5)
         context.setStrokeColor(FocusCalendarTheme.lightBorderColor.cgColor)
         
-        let gridSpacing: CGFloat = 50
+        let gridSpacing: CGFloat = 40  // Match the new theta scale
+        let gridTop: CGFloat = levelSelector.isHidden ? 10 : 52
         for i in stride(from: centerX, to: bounds.width, by: gridSpacing) {
-            context.move(to: CGPoint(x: i, y: 52))
+            context.move(to: CGPoint(x: i, y: gridTop))
             context.addLine(to: CGPoint(x: i, y: bounds.height))
         }
         for i in stride(from: centerX, to: 0, by: -gridSpacing) {
-            context.move(to: CGPoint(x: i, y: 52))
+            context.move(to: CGPoint(x: i, y: gridTop))
             context.addLine(to: CGPoint(x: i, y: bounds.height))
         }
         for i in stride(from: centerY, to: bounds.height, by: gridSpacing) {
             context.move(to: CGPoint(x: 0, y: i))
             context.addLine(to: CGPoint(x: bounds.width, y: i))
         }
-        for i in stride(from: centerY, to: 52, by: -gridSpacing) {
+        for i in stride(from: centerY, to: gridTop, by: -gridSpacing) {
             context.move(to: CGPoint(x: 0, y: i))
             context.addLine(to: CGPoint(x: bounds.width, y: i))
         }
@@ -220,14 +245,6 @@ class PhaseSpaceChartView: UIView {
             context.fillEllipse(in: CGRect(x: finalPoint.x - 5, y: finalPoint.y - 5, width: 10, height: 10))
         }
         
-        // Draw level label
-        let levelText = "Level \(selectedLevel) Average Phase Space"
-        let levelAttrs: [NSAttributedString.Key: Any] = [
-            .font: FocusCalendarTheme.titleFont,
-            .foregroundColor: FocusCalendarTheme.primaryTextColor
-        ]
-        
-        let levelSize = levelText.size(withAttributes: levelAttrs)
-        levelText.draw(at: CGPoint(x: (bounds.width - levelSize.width) / 2, y: bounds.height - 30), withAttributes: levelAttrs)
+        // Don't draw any level labels - keep phase space clean
     }
 }

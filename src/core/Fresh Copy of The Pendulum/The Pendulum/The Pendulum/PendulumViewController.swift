@@ -1391,7 +1391,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
         iconContainer.backgroundColor = .clear  // Clear background for custom icons
-        iconContainer.layer.cornerRadius = 25
+        iconContainer.layer.cornerRadius = 12
         iconContainer.clipsToBounds = true
         container.addSubview(iconContainer)
         
@@ -1399,6 +1399,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
+        iconImageView.layer.cornerRadius = 12
+        iconImageView.clipsToBounds = true
         
         // Use asset image
         if let assetImage = UIImage(named: iconName) {
@@ -1466,7 +1468,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconContainer = UIView()
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
         iconContainer.backgroundColor = .clear  // Clear background for custom icons
-        iconContainer.layer.cornerRadius = 25
+        iconContainer.layer.cornerRadius = 12
         iconContainer.clipsToBounds = true
         container.addSubview(iconContainer)
         
@@ -1474,6 +1476,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
+        iconImageView.layer.cornerRadius = 12
+        iconImageView.clipsToBounds = true
         
         // Use asset image
         if let assetImage = UIImage(named: iconName) {
@@ -1883,6 +1887,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
+        iconImageView.layer.cornerRadius = 12
+        iconImageView.clipsToBounds = true
         
         if isCustomImage {
             // Use custom image from assets
@@ -2433,6 +2439,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let iconImageView = UIImageView()
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconImageView.contentMode = .scaleAspectFit
+        iconImageView.layer.cornerRadius = 12
+        iconImageView.clipsToBounds = true
         
         if isCustomImage {
             // Use custom image from assets
