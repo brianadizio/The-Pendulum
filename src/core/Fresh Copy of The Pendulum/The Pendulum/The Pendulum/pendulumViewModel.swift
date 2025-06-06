@@ -76,10 +76,21 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     // Flag to prevent recursive parameter updates
     private var isUpdatingParameters = false
     
+    // Track if user has customized parameters
+    private var hasCustomParameters = false
+    private var customMass: Double?
+    private var customLength: Double?
+    private var customDamping: Double?
+    private var customGravity: Double?
+    private var customSpringConstant: Double?
+    private var customMomentOfInertia: Double?
+    
     // Parameter properties with reactive updating
     @Published var mass: Double = 1.0 {
         didSet {
             if !isUpdatingParameters {
+                customMass = mass  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -88,6 +99,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var length: Double = 1.0 {
         didSet {
             if !isUpdatingParameters {
+                customLength = length  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -96,6 +109,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var damping: Double = 0.0 {  // Zero damping to allow completely natural falling
         didSet {
             if !isUpdatingParameters {
+                customDamping = damping  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -104,6 +119,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var gravity: Double = 15.0 {  // Increased gravity significantly for more pronounced falling behavior
         didSet {
             if !isUpdatingParameters {
+                customGravity = gravity  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -113,6 +130,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var springConstant: Double = 0.1 {  // Small spring constant for slight stabilization
         didSet {
             if !isUpdatingParameters {
+                customSpringConstant = springConstant  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -122,6 +141,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @Published var momentOfInertia: Double = 0.5 {  // Default moment of inertia
         didSet {
             if !isUpdatingParameters {
+                customMomentOfInertia = momentOfInertia  // Store custom value
+                hasCustomParameters = true
                 updatePhysicsParameters()
             }
         }
@@ -181,6 +202,27 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
 
         // Set quasi-periodic mode (Primary mode) as the default
         enableQuasiPeriodicMode()
+        
+        // Listen for achievement points to add to score
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAchievementPoints(_:)),
+            name: Notification.Name("AddAchievementPoints"),
+            object: nil
+        )
+    }
+    
+    @objc private func handleAchievementPoints(_ notification: Notification) {
+        guard let points = notification.userInfo?["points"] as? Int else { return }
+        
+        // Add achievement points to score
+        score += points
+        print("Added \(points) achievement points to score. New score: \(score)")
+    }
+    
+    deinit {
+        // Clean up notification observer
+        NotificationCenter.default.removeObserver(self, name: Notification.Name("AddAchievementPoints"), object: nil)
     }
     
     // MARK: - LevelProgressionDelegate Methods
@@ -204,23 +246,33 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     }
     
     func updateDifficultyParameters(config: LevelConfig) {
-        // Apply the difficulty parameters from the level configuration
-        mass = LevelManager.baseMass * config.massMultiplier
-        length = LevelManager.baseLength * config.lengthMultiplier
-        damping = config.dampingValue
-        gravity = LevelManager.baseGravity * config.gravityMultiplier
-        springConstant = config.springConstantValue
+        // Only update initial perturbation and balance requirements from level config
+        // Preserve user's custom physics parameters if they've been set
         initialPerturbation = config.initialPerturbation
+        
+        // If user hasn't customized parameters, use level defaults
+        if !hasCustomParameters {
+            isUpdatingParameters = true
+            mass = LevelManager.baseMass * config.massMultiplier
+            length = LevelManager.baseLength * config.lengthMultiplier
+            damping = config.dampingValue
+            gravity = LevelManager.baseGravity * config.gravityMultiplier
+            springConstant = config.springConstantValue
+            isUpdatingParameters = false
+        } else {
+            // Preserve custom parameters
+            print("Preserving custom parameters through level transition")
+        }
         
         // Update the simulation parameters
         updateSimulationParameters()
         
-        print("Updated parameters for level \(config.number):")
-        print("Mass: \(mass)")
-        print("Length: \(length)")
-        print("Damping: \(damping)")
-        print("Gravity: \(gravity)")
-        print("Spring Constant: \(springConstant)")
+        print("Parameters for level \(config.number):")
+        print("Mass: \(mass) \(hasCustomParameters && customMass != nil ? "(custom)" : "")")
+        print("Length: \(length) \(hasCustomParameters && customLength != nil ? "(custom)" : "")")
+        print("Damping: \(damping) \(hasCustomParameters && customDamping != nil ? "(custom)" : "")")
+        print("Gravity: \(gravity) \(hasCustomParameters && customGravity != nil ? "(custom)" : "")")
+        print("Spring Constant: \(springConstant) \(hasCustomParameters && customSpringConstant != nil ? "(custom)" : "")")
         print("Initial Perturbation: \(initialPerturbation) degrees")
     }
     
@@ -231,12 +283,18 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         levelSuccessTime = config.balanceRequiredTime
         currentLevelDescription = config.description
         
-        // Update physics parameters
-        mass = LevelManager.baseMass * config.massMultiplier
-        length = LevelManager.baseLength * config.lengthMultiplier
-        damping = config.dampingValue
-        gravity = LevelManager.baseGravity * config.gravityMultiplier
-        springConstant = config.springConstantValue
+        // Update physics parameters only if user hasn't customized them
+        if !hasCustomParameters {
+            isUpdatingParameters = true
+            mass = LevelManager.baseMass * config.massMultiplier
+            length = LevelManager.baseLength * config.lengthMultiplier
+            damping = config.dampingValue
+            gravity = LevelManager.baseGravity * config.gravityMultiplier
+            springConstant = config.springConstantValue
+            isUpdatingParameters = false
+        }
+        
+        // Always update initial perturbation from level config
         initialPerturbation = config.initialPerturbation
     }
     
@@ -1005,7 +1063,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Get level 1 configuration
         let config = levelManager.getConfigForLevel(1)
         
-        // Apply level 1 configuration
+        // Apply level 1 configuration (will preserve custom parameters if set)
         applyLevelConfiguration(config)
         
         // Make sure simulation has latest parameter values
@@ -1014,11 +1072,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         print("Reset to level 1:")
         print("Balance threshold: \(balanceThreshold * 180 / Double.pi) degrees")
         print("Level success time: \(levelSuccessTime) seconds")
-        print("Mass: \(mass)")
-        print("Length: \(length)")
-        print("Damping: \(damping)")
-        print("Gravity: \(gravity)")
-        print("Spring constant: \(springConstant)")
+        print("Mass: \(mass) \(hasCustomParameters ? "(custom)" : "")")
+        print("Length: \(length) \(hasCustomParameters ? "(custom)" : "")")
+        print("Damping: \(damping) \(hasCustomParameters ? "(custom)" : "")")
+        print("Gravity: \(gravity) \(hasCustomParameters ? "(custom)" : "")")
+        print("Spring constant: \(springConstant) \(hasCustomParameters ? "(custom)" : "")")
     }
     
     // Reset and immediately start a new game
@@ -1268,6 +1326,24 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         print("Parameters directly updated through updateSimulationParameters()")
     }
     
+    // Reset to level defaults, clearing custom parameters
+    func resetToLevelDefaults() {
+        hasCustomParameters = false
+        customMass = nil
+        customLength = nil
+        customDamping = nil
+        customGravity = nil
+        customSpringConstant = nil
+        customMomentOfInertia = nil
+        
+        // Apply current level's default configuration
+        let config = levelManager.getConfigForLevel(currentLevel)
+        applyLevelConfiguration(config)
+        updateSimulationParameters()
+        
+        print("Reset to level \(currentLevel) default parameters")
+    }
+    
     // Method to update multiple parameters at once without triggering multiple updates
     func updateAllParameters(mass: Double? = nil, 
                            length: Double? = nil, 
@@ -1335,11 +1411,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     // Fallback to scene-based effect
                     scene?.showAchievementEffect()
                 }
-
-                // Add bonus points for achievement
-                let bonusPoints = Int(points) * 10
-                score += bonusPoints
-                print("Achievement bonus: +\(bonusPoints) points")
+                
+                // Points are now added via notification, no need for bonus multiplication
                 
                 // Clear achievement notification after 5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
@@ -1396,21 +1469,25 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     // MARK: - Achievement Tracking
     
     private func checkForAchievements(currentAngle: Double, previousAngle: Double) {
-        // Only check achievements every 0.1 seconds to avoid spam
+        // Only check achievements every 0.5 seconds to reduce frequency
         let now = Date()
-        guard now.timeIntervalSince(lastAchievementCheck) >= 0.1 else { return }
+        guard now.timeIntervalSince(lastAchievementCheck) >= 0.5 else { return }
         lastAchievementCheck = now
         
         let currentAngleFromVertical = abs(normalizeAngle(currentAngle - Double.pi))
         let previousAngleFromVertical = abs(normalizeAngle(previousAngle - Double.pi))
         
-        // Track recovery achievements
-        if previousAngleFromVertical > currentAngleFromVertical + 0.3 && currentAngleFromVertical < 0.3 {
-            achievementManager.trackRecovery(
-                fromAngle: previousAngle,
-                toAngle: currentAngle,
-                level: levelManager.currentLevel
-            )
+        // Track recovery achievements - only for significant recoveries
+        if previousAngleFromVertical > 0.8 && currentAngleFromVertical < 0.2 {  // From >45° to <11°
+            // Only track if it's a real recovery (not just oscillation)
+            let recoveryAmount = previousAngleFromVertical - currentAngleFromVertical
+            if recoveryAmount > 0.6 {  // At least 34 degrees of recovery
+                achievementManager.trackRecovery(
+                    fromAngle: previousAngle,
+                    toAngle: currentAngle,
+                    level: levelManager.currentLevel
+                )
+            }
         }
         
         // Track balance achievements

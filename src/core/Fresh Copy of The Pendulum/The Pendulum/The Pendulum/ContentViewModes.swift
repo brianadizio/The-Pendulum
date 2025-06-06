@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ContentViewModes: View {
     var body: some View {
-        print("ContentViewModes loaded - showing new HORIZONTAL layout v2")
+        print("ContentViewModes loaded - showing GRID layout with rounded square buttons")
         return ScrollView {
             VStack(spacing: 20) {
                 // Header
@@ -27,36 +27,34 @@ struct ContentViewModes: View {
                         .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
                         .padding(.horizontal)
                     
-                    // Primary Modes
-                    PerturbationModeButton(title: "Primary", subtitle: "Basic Pendulum", iconName: "pendulumModesPrimary", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivatePrimaryMode"), object: nil)
-                    })
-                    .padding(.horizontal)
-                    
-                    PerturbationModeButton(title: "Progressive", subtitle: "Increasing Difficulty", iconName: "pendulumModesProgressive", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivateProgressiveMode"), object: nil)
-                    })
-                    .padding(.horizontal)
-                    
-                    // Perturbation Modes (No Perturbation removed)
-                    PerturbationModeButton(title: "Random Impulses", subtitle: "Sudden Forces", iconName: "pendulumModesRandomImpulses", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "impulse")
-                    })
-                    .padding(.horizontal)
-                    
-                    PerturbationModeButton(title: "Sine Wave", subtitle: "Periodic Force", iconName: "pendulumModesSine", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "sine")
-                    })
-                    .padding(.horizontal)
-                    
-                    PerturbationModeButton(title: "Data Driven", subtitle: "CSV Based", iconName: "pendulumModesDataDriven1", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "data")
-                    })
-                    .padding(.horizontal)
-                    
-                    PerturbationModeButton(title: "Compound", subtitle: "Multi-Effect", iconName: "pendulumModesCompound", isAssetImage: true, action: {
-                        NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "compound")
-                    })
+                    // Grid layout for active modes
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        // Primary Modes
+                        RoundedSquareModeButton(title: "Primary", iconName: "pendulumModesPrimary", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivatePrimaryMode"), object: nil)
+                        })
+                        
+                        RoundedSquareModeButton(title: "Progressive", iconName: "pendulumModesProgressive", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateProgressiveMode"), object: nil)
+                        })
+                        
+                        // Perturbation Modes
+                        RoundedSquareModeButton(title: "Random", iconName: "pendulumModesRandomImpulses", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "impulse")
+                        })
+                        
+                        RoundedSquareModeButton(title: "Sine Wave", iconName: "pendulumModesSine", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "sine")
+                        })
+                        
+                        RoundedSquareModeButton(title: "Data Driven", iconName: "pendulumModesDataDriven1", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "data")
+                        })
+                        
+                        RoundedSquareModeButton(title: "Compound", iconName: "pendulumModesCompound", isAssetImage: true, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ActivateSpecialPerturbation"), object: "compound")
+                        })
+                    }
                     .padding(.horizontal)
                 }
                 
@@ -70,18 +68,16 @@ struct ContentViewModes: View {
                         .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
                         .padding(.horizontal)
                     
-                    ComingSoonButton(title: "Real Experiment", subtitle: "Lab Data", iconName: "pendulumModesRealExperiment", isAssetImage: true)
-                        .padding(.horizontal)
-                    ComingSoonButton(title: "The Focus Calendar", subtitle: "Productivity Mode", iconName: "pendulumModesFocusCalendar", isAssetImage: true)
-                        .padding(.horizontal)
-                    ComingSoonButton(title: "Zero Gravity", subtitle: "Space Station", iconName: "pendulumModesZeroGravity", isAssetImage: true)
-                        .padding(.horizontal)
-                    ComingSoonButton(title: "Rotating Room", subtitle: "Spinning Chamber", iconName: "pendulumModesRotatingRoom", isAssetImage: true)
-                        .padding(.horizontal)
-                    ComingSoonButton(title: "The Maze", subtitle: "Navigate Puzzles", iconName: "pendulumModesTheMaze", isAssetImage: true)
-                        .padding(.horizontal)
-                    ComingSoonButton(title: "Nature's Essence", subtitle: "Natural Forces", iconName: "pendulumModesNaturesEssence", isAssetImage: true)
-                        .padding(.horizontal)
+                    // Grid layout for coming soon modes
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        RoundedSquareComingSoonButton(title: "Real Lab", iconName: "pendulumModesRealExperiment", isAssetImage: true)
+                        RoundedSquareComingSoonButton(title: "Calendar", iconName: "pendulumModesFocusCalendar", isAssetImage: true)
+                        RoundedSquareComingSoonButton(title: "Zero G", iconName: "pendulumModesZeroGravity", isAssetImage: true)
+                        RoundedSquareComingSoonButton(title: "Rotating", iconName: "pendulumModesRotatingRoom", isAssetImage: true)
+                        RoundedSquareComingSoonButton(title: "The Maze", iconName: "pendulumModesTheMaze", isAssetImage: true)
+                        RoundedSquareComingSoonButton(title: "Nature", iconName: "pendulumModesNaturesEssence", isAssetImage: true)
+                    }
+                    .padding(.horizontal)
                 }
                 
                 Divider()
@@ -94,9 +90,15 @@ struct ContentViewModes: View {
                         .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
                         .padding(.horizontal)
                     
-                    PerturbationModeButton(title: "Inverted Pendulum", subtitle: "Physics & Algorithms", iconName: "doc.text", action: {
-                        NotificationCenter.default.post(name: Notification.Name("ShowPendulumPhysics"), object: nil)
-                    })
+                    // Single button centered
+                    HStack {
+                        Spacer()
+                        RoundedSquareModeButton(title: "Physics", iconName: "doc.text", isAssetImage: false, action: {
+                            NotificationCenter.default.post(name: Notification.Name("ShowPendulumPhysics"), object: nil)
+                        })
+                        .frame(width: 160)
+                        Spacer()
+                    }
                     .padding(.horizontal)
                 }
                 
@@ -112,138 +114,119 @@ struct ContentViewModes: View {
     }
 }
 
-// MARK: - Mode Button Styles
+// MARK: - Rounded Square Mode Button Styles
 
-struct PerturbationModeButton: View {
+struct RoundedSquareModeButton: View {
     let title: String
-    let subtitle: String
     let iconName: String
     var isAssetImage: Bool = false
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 15) {
+            VStack(spacing: 8) {
                 // Icon
                 if isAssetImage {
                     Image(iconName)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     Image(systemName: iconName)
-                        .font(.system(size: 24))
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Color.blue.opacity(0.8))
-                        .clipShape(Circle())
+                        .font(.system(size: 36, weight: .medium))
+                        .foregroundColor(Color(FocusCalendarTheme.accentGold))
+                        .frame(width: 60, height: 60)
                 }
                 
-                // Text content
-                VStack(alignment: .leading, spacing: 4) {
-                    // Title
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
-                    // Subtitle
-                    Text(subtitle)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-                
-                Spacer()
-                
-                // Chevron
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
+                // Title
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(FocusCalendarTheme.primaryTextColor))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
-            .background(Color.red.opacity(0.1)) // DEBUG: Red background to see actual width
+            .frame(height: 120)
             .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color(FocusCalendarTheme.lightBorderColor), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(ScaleButtonStyle())
     }
 }
 
-struct ComingSoonButton: View {
+struct RoundedSquareComingSoonButton: View {
     let title: String
-    let subtitle: String
     let iconName: String
     var isAssetImage: Bool = false
     
     var body: some View {
         Button(action: showComingSoonAlert) {
             ZStack {
-                HStack(spacing: 15) {
+                VStack(spacing: 8) {
                     // Icon
                     if isAssetImage {
                         Image(iconName)
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                            .opacity(0.6)
+                            .frame(width: 60, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .opacity(0.4)
                     } else {
                         Image(systemName: iconName)
-                            .font(.system(size: 24))
-                            .foregroundColor(.white.opacity(0.6))
-                            .frame(width: 44, height: 44)
-                            .background(Color.gray.opacity(0.5))
-                            .clipShape(Circle())
+                            .font(.system(size: 36, weight: .medium))
+                            .foregroundColor(Color.gray.opacity(0.5))
+                            .frame(width: 60, height: 60)
                     }
                     
-                    // Text content
-                    VStack(alignment: .leading, spacing: 4) {
-                        // Title
-                        Text(title)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary.opacity(0.6))
-                            .lineLimit(1)
-                        
-                        // Subtitle
-                        Text(subtitle)
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary.opacity(0.6))
-                            .lineLimit(1)
-                    }
-                    
-                    Spacer()
-                    
-                    // Chevron (disabled look)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary.opacity(0.4))
+                    // Title
+                    Text(title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color(FocusCalendarTheme.primaryTextColor).opacity(0.5))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 4)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
+                .frame(height: 120)
                 
-                // Coming Soon overlay
-                Text("COMING SOON")
+                // Coming Soon badge
+                Text("SOON")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
                     .background(Color.orange)
-                    .cornerRadius(6)
-                    .offset(x: -20, y: 0)
+                    .cornerRadius(4)
+                    .offset(x: 25, y: -45)
             }
-            .background(Color(UIColor.secondarySystemBackground).opacity(0.7))
-            .cornerRadius(12)
+            .background(Color(UIColor.secondarySystemBackground).opacity(0.6))
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color(FocusCalendarTheme.lightBorderColor).opacity(0.5), lineWidth: 1)
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }
     
     private func showComingSoonAlert() {
         NotificationCenter.default.post(name: Notification.Name("ShowComingSoonAlert"), object: nil)
+    }
+}
+
+// Custom button style for scale animation on press
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
