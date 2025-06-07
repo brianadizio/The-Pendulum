@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		D60471DB2DF4894E000E8FA3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D60471DA2DF4894E000E8FA3 /* FirebaseFirestore */; };
+		D60471E82DF49452000E8FA3 /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = D60471E72DF49452000E8FA3 /* Singular */; };
+		D60471ED2DF49462000E8FA3 /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = D60471EC2DF49462000E8FA3 /* DGCharts */; };
+		D60471EF2DF49462000E8FA3 /* DGChartsDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = D60471EE2DF49462000E8FA3 /* DGChartsDynamic */; };
 		D632FDBD2DF4826800A8B4FC /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = D632FDBC2DF4826800A8B4FC /* FirebaseAI */; };
 		D632FDBF2DF4826800A8B4FC /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D632FDBE2DF4826800A8B4FC /* FirebaseAnalytics */; };
 		D632FDC12DF4826800A8B4FC /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = D632FDC02DF4826800A8B4FC /* FirebaseAnalyticsCore */; };
@@ -63,7 +66,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D60471E82DF49452000E8FA3 /* Singular in Frameworks */,
 				D632FDBF2DF4826800A8B4FC /* FirebaseAnalytics in Frameworks */,
+				D60471EF2DF49462000E8FA3 /* DGChartsDynamic in Frameworks */,
+				D60471ED2DF49462000E8FA3 /* DGCharts in Frameworks */,
 				D632FDC52DF4826800A8B4FC /* FirebaseCore in Frameworks */,
 				D632FDC12DF4826800A8B4FC /* FirebaseAnalyticsCore in Frameworks */,
 				D632FDC72DF4826800A8B4FC /* FirebaseCrashlytics in Frameworks */,
@@ -218,6 +224,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D632FDBB2DF4826800A8B4FC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D60471E62DF49449000E8FA3 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
+				D60471EB2DF49462000E8FA3 /* XCRemoteSwiftPackageReference "Charts" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D67B2C8E2DBF2EDE00FC0011 /* Products */;
@@ -578,6 +586,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		D60471E62DF49449000E8FA3 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/singular-labs/Singular-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+		D60471EB2DF49462000E8FA3 /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
 		D632FDBB2DF4826800A8B4FC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -593,6 +617,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D632FDBB2DF4826800A8B4FC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		D60471E72DF49452000E8FA3 /* Singular */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D60471E62DF49449000E8FA3 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */;
+			productName = Singular;
+		};
+		D60471EC2DF49462000E8FA3 /* DGCharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D60471EB2DF49462000E8FA3 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGCharts;
+		};
+		D60471EE2DF49462000E8FA3 /* DGChartsDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D60471EB2DF49462000E8FA3 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGChartsDynamic;
 		};
 		D632FDBC2DF4826800A8B4FC /* FirebaseAI */ = {
 			isa = XCSwiftPackageProductDependency;
