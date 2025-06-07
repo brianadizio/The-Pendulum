@@ -14,6 +14,7 @@ class DeveloperToolsViewController: UIViewController {
         case testAIPendulumMovement = "Test AI Pendulum Movement"
         case debugDashboard = "Debug Dashboard Metrics"
         case diagnosticScientificMetrics = "Diagnostic: Why Are Scientific Metrics 0.00?"
+        case testFirebase = "Test Firebase Integration"
         case clearAllData = "Clear All Analytics Data"
         
         var subtitle: String {
@@ -34,6 +35,8 @@ class DeveloperToolsViewController: UIViewController {
                 return "Show diagnostic report for metrics"
             case .diagnosticScientificMetrics:
                 return "Run comprehensive diagnostic to identify scientific metrics issues"
+            case .testFirebase:
+                return "Verify Firebase SDK installation and test features"
             case .clearAllData:
                 return "Remove all analytics data (caution!)"
             }
@@ -53,6 +56,8 @@ class DeveloperToolsViewController: UIViewController {
                 return "wrench.and.screwdriver"
             case .diagnosticScientificMetrics:
                 return "stethoscope"
+            case .testFirebase:
+                return "flame.fill"
             case .clearAllData:
                 return "trash"
             }
@@ -175,6 +180,8 @@ extension DeveloperToolsViewController: UITableViewDelegate {
                     self?.showDebugReportView(report)
                 }
             }
+        case .testFirebase:
+            testFirebaseIntegration()
         case .clearAllData:
             confirmClearAllData()
         }
@@ -390,6 +397,14 @@ extension DeveloperToolsViewController: UITableViewDelegate {
     private func testAIPendulumMovement() {
         // Use the scientific metrics validation test
         runScientificMetricsValidation()
+    }
+    
+    // MARK: - Firebase Test
+    
+    private func testFirebaseIntegration() {
+        let firebaseTestVC = FirebaseTestViewController()
+        let nav = UINavigationController(rootViewController: firebaseTestVC)
+        present(nav, animated: true)
     }
     
     // MARK: - SimpleDashboard Data Generation

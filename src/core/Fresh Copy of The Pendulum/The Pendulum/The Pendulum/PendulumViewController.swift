@@ -2346,6 +2346,63 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         previousView = controlView
         
+        // ACCOUNT Section
+        let accountLabel = UILabel()
+        accountLabel.text = "ACCOUNT"
+        accountLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        accountLabel.textColor = FocusCalendarTheme.tertiaryTextColor
+        accountLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(accountLabel)
+        
+        NSLayoutConstraint.activate([
+            accountLabel.topAnchor.constraint(equalTo: controlsCard.bottomAnchor, constant: 40),
+            accountLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
+        ])
+        
+        // Account card
+        let accountCard = createSettingsCard()
+        contentView.addSubview(accountCard)
+        
+        NSLayoutConstraint.activate([
+            accountCard.topAnchor.constraint(equalTo: accountLabel.bottomAnchor, constant: 10),
+            accountCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            accountCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+        ])
+        
+        // Add account options based on authentication status
+        var accountOptions: [(String, String, Bool)] = []
+        if AuthenticationManager.shared.isAuthenticated {
+            accountOptions = [
+                ("person.crop.circle", "Profile", false),
+                ("rectangle.portrait.and.arrow.right", "Sign Out", false)
+            ]
+        } else {
+            accountOptions = [
+                ("person.crop.circle.badge.plus", "Sign In", false)
+            ]
+        }
+        
+        previousView = nil
+        for (index, option) in accountOptions.enumerated() {
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 400 + index, isCustomImage: option.2)
+            accountCard.addSubview(optionView)
+            
+            NSLayoutConstraint.activate([
+                optionView.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? accountCard.topAnchor),
+                optionView.leadingAnchor.constraint(equalTo: accountCard.leadingAnchor),
+                optionView.trailingAnchor.constraint(equalTo: accountCard.trailingAnchor),
+                optionView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            if index < accountOptions.count - 1 {
+                addSeparator(to: optionView, in: accountCard)
+            }
+            
+            previousView = optionView
+        }
+        
+        accountCard.bottomAnchor.constraint(equalTo: previousView!.bottomAnchor).isActive = true
+        
         // INFORMATION Section
         let infoLabel = UILabel()
         infoLabel.text = "INFORMATION"
@@ -2355,7 +2412,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         contentView.addSubview(infoLabel)
         
         NSLayoutConstraint.activate([
-            infoLabel.topAnchor.constraint(equalTo: controlsCard.bottomAnchor, constant: 40),
+            infoLabel.topAnchor.constraint(equalTo: accountCard.bottomAnchor, constant: 40),
             infoLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
         ])
         
@@ -2532,6 +2589,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Controls options
         case 200: // Game Controls
             showGameControlSettings()
+        // Account options
+        case 400: // Sign In or Profile
+            if AuthenticationManager.shared.isAuthenticated {
+                showUserProfile()
+            } else {
+                showSignIn()
+            }
+        case 401: // Sign Out
+            signOut()
         // Information options
         case 300: // About
             showAboutInfo()
@@ -2580,6 +2646,76 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .formSheet
         present(nav, animated: true)
+    }
+    
+    // MARK: - Authentication Methods
+    
+    private func showSignIn() {
+        let signInVC = SignInViewController()
+        let nav = UINavigationController(rootViewController: signInVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true) { [weak self] in
+            // Refresh settings view when sign in is presented
+            NotificationCenter.default.addObserver(
+                self!,
+                selector: #selector(self?.authStateChanged),
+                name: .authStateDidChange,
+                object: nil
+            )
+        }
+    }
+    
+    private func showUserProfile() {
+        guard let user = AuthenticationManager.shared.currentUser else { return }
+        
+        let alert = UIAlertController(
+            title: "Profile",
+            message: """
+            Name: \(user.displayName ?? "Player")
+            Email: \(user.email ?? "Not available")
+            User ID: \(user.uid)
+            """,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func signOut() {
+        let alert = UIAlertController(
+            title: "Sign Out",
+            message: "Are you sure you want to sign out?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Sign Out", style: .destructive) { [weak self] _ in
+            AuthenticationManager.shared.signOut()
+            self?.updateStatusLabel("Signed out successfully")
+            self?.refreshSettingsView()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    @objc private func authStateChanged() {
+        // Refresh settings view when auth state changes
+        refreshSettingsView()
+        NotificationCenter.default.removeObserver(self, name: .authStateDidChange, object: nil)
+    }
+    
+    private func refreshSettingsView() {
+        // Remove old settings view
+        settingsView.subviews.forEach { $0.removeFromSuperview() }
+        
+        // Recreate settings view with updated auth state
+        setupSettingsView()
+        
+        // If settings view is currently visible, make sure it stays visible
+        if currentView == settingsView {
+            settingsView.isHidden = false
+        }
     }
     
     private func showGameControlSettings() {
