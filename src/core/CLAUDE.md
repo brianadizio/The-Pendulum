@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Location
+The active project is located in: `Fresh Copy of The Pendulum/The Pendulum`
+
 ## Build/Lint/Test Commands
 - Build project: `xcodebuild -workspace "The Pendulum/The Maze.xcworkspace" -scheme "The Pendulum" build`
 - Run project: `xcodebuild -workspace "The Pendulum/The Maze.xcworkspace" -scheme "The Pendulum" run`

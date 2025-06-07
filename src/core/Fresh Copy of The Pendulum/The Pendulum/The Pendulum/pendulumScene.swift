@@ -36,6 +36,11 @@ class PendulumScene: SKScene {
     // Perturbation manager
     var perturbationManager: PerturbationManager?
     
+    // Sound manager
+    var soundManager: PendulumSoundManager {
+        return PendulumSoundManager.shared
+    }
+    
     // Background types
     enum BackgroundType {
         case plain

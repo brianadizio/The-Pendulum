@@ -1969,22 +1969,25 @@ func explode() -> SKEmitterNode {
     }
     
     
-    let mazeBg = SKShapeNode()
-    mazeBg.path = UIBezierPath(roundedRect: CGRect(x: -128, y: -128, width: 330, height: 314), cornerRadius: 6).cgPath
-    mazeBg.position = CGPoint(x: frame.midX-37, y: frame.midY+114)
-    mazeBg.fillColor = UIColor.systemGray5
-    mazeBg.alpha=0.60
-    mazeBg.strokeColor = UIColor.darkGray
-    mazeBg.lineWidth = 3
-    addChild(mazeBg)
-    let connBg = SKShapeNode()
-    connBg.path = UIBezierPath(roundedRect: CGRect(x: -128, y: -128, width: 240, height: 240), cornerRadius: 10).cgPath
-    connBg.position = CGPoint(x: frame.midX+11, y: frame.midY-270)
-    connBg.fillColor = UIColor.systemGray5
-    connBg.alpha=0.40
-    connBg.strokeColor = UIColor.gray
-    connBg.lineWidth = 3
-    addChild(connBg)
+    // Only add background overlays for Simple swiping method to maintain original appearance
+    if swipingMethod == 1 {
+      let mazeBg = SKShapeNode()
+      mazeBg.path = UIBezierPath(roundedRect: CGRect(x: -128, y: -128, width: 330, height: 314), cornerRadius: 6).cgPath
+      mazeBg.position = CGPoint(x: frame.midX-37, y: frame.midY+114)
+      mazeBg.fillColor = UIColor.systemGray5
+      mazeBg.alpha=0.60
+      mazeBg.strokeColor = UIColor.darkGray
+      mazeBg.lineWidth = 3
+      addChild(mazeBg)
+      let connBg = SKShapeNode()
+      connBg.path = UIBezierPath(roundedRect: CGRect(x: -128, y: -128, width: 240, height: 240), cornerRadius: 10).cgPath
+      connBg.position = CGPoint(x: frame.midX+11, y: frame.midY-270)
+      connBg.fillColor = UIColor.systemGray5
+      connBg.alpha=0.40
+      connBg.strokeColor = UIColor.gray
+      connBg.lineWidth = 3
+      addChild(connBg)
+    }
  
     return (mazeSprites,ballPosition,ball)
   }
