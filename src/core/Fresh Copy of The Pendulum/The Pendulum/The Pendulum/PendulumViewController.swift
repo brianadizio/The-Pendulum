@@ -197,6 +197,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Initialize settings
         initializeSettings()
         
+        // Listen for auth state changes to refresh settings
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(authStateChanged),
+            name: .authStateDidChange,
+            object: nil
+        )
+        
         // Set particle delegate
         viewModel.particleDelegate = self
         
@@ -2371,15 +2379,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Add account options based on authentication status
         var accountOptions: [(String, String, Bool)] = []
-        if AuthenticationManager.shared.isAuthenticated {
+        let isAuthenticated = AuthenticationManager.shared.isAuthenticated
+        print("DEBUG: Setting up account options. isAuthenticated: \(isAuthenticated)")
+        
+        if isAuthenticated {
             accountOptions = [
                 ("person.crop.circle", "Profile", false),
                 ("rectangle.portrait.and.arrow.right", "Sign Out", false)
             ]
+            print("DEBUG: Added Profile and Sign Out options")
         } else {
             accountOptions = [
                 ("person.crop.circle.badge.plus", "Sign In", false)
             ]
+            print("DEBUG: Added Sign In option")
         }
         
         previousView = nil
