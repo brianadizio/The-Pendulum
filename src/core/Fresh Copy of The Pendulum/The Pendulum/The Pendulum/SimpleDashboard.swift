@@ -1,4 +1,5 @@
 import UIKit
+import FirebaseAuth
 
 // MARK: - Metric Description Helper
 
@@ -119,6 +120,14 @@ class SimpleDashboard: UITableViewController {
         super.viewDidLoad()
         setupUI()
         startMetricUpdates()
+        
+        // Listen for auth state changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(authStateChanged),
+            name: .authStateDidChange,
+            object: nil
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -129,6 +138,14 @@ class SimpleDashboard: UITableViewController {
     
     deinit {
         updateTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func authStateChanged() {
+        // Reload only the user status section
+        DispatchQueue.main.async {
+            self.tableView.reloadSections(IndexSet(integer: 1), with: .none)
+        }
     }
     
     // Public method to capture current session time
@@ -151,6 +168,7 @@ class SimpleDashboard: UITableViewController {
         
         // Register cell types
         tableView.register(HeaderCell.self, forCellReuseIdentifier: "Header")
+        tableView.register(UserStatusCell.self, forCellReuseIdentifier: "UserStatus")
         tableView.register(ControlsCell.self, forCellReuseIdentifier: "Controls")
         tableView.register(MetricCell.self, forCellReuseIdentifier: "MetricCell")
         tableView.register(ChartCell.self, forCellReuseIdentifier: "ChartCell")
@@ -200,11 +218,11 @@ class SimpleDashboard: UITableViewController {
         for cell in tableView.visibleCells {
             if let metricCell = cell as? MetricCell,
                let indexPath = tableView.indexPath(for: cell),
-               indexPath.section == 2 && indexPath.row < metrics.count {
+               indexPath.section == 3 && indexPath.row < metrics.count {
                 metricCell.updateValue(metrics[indexPath.row])
             } else if let chartCell = cell as? ChartCell,
                       let indexPath = tableView.indexPath(for: cell),
-                      indexPath.section == 2 && indexPath.row < metrics.count {
+                      indexPath.section == 3 && indexPath.row < metrics.count {
                 chartCell.updateChart(metrics[indexPath.row])
             }
         }
@@ -213,14 +231,15 @@ class SimpleDashboard: UITableViewController {
     // MARK: - Table View Data Source
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 3 // Header, Controls, Metrics
+        return 4 // Header, User Status, Controls, Metrics
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0: return 1 // Header
-        case 1: return 1 // Controls
-        case 2: return metrics.count // Metrics
+        case 1: return 1 // User Status
+        case 2: return 1 // Controls
+        case 3: return metrics.count // Metrics
         default: return 0
         }
     }
@@ -233,6 +252,11 @@ class SimpleDashboard: UITableViewController {
             return cell
             
         case 1:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "UserStatus", for: indexPath) as! UserStatusCell
+            cell.configure()
+            return cell
+            
+        case 2:
             let cell = tableView.dequeueReusableCell(withIdentifier: "Controls", for: indexPath) as! ControlsCell
             cell.configure(
                 currentGroup: currentMetricGroup,
@@ -260,7 +284,7 @@ class SimpleDashboard: UITableViewController {
             )
             return cell
             
-        case 2:
+        case 3:
             let metric = metrics[indexPath.row]
             
             if metric.type.isDistribution || metric.type.isTimeSeries {
@@ -281,8 +305,9 @@ class SimpleDashboard: UITableViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         switch indexPath.section {
         case 0: return 60  // Header
-        case 1: return 100 // Controls
-        case 2:
+        case 1: return 80  // User Status
+        case 2: return 100 // Controls
+        case 3:
             let metric = metrics[indexPath.row]
             return (metric.type.isDistribution || metric.type.isTimeSeries) ? 300 : 120 // Increased from 110 to 120 for value below description
         default: return 44
@@ -853,4 +878,127 @@ class ChartCell: UITableViewCell {
         }
     }
     
+}
+
+// MARK: - User Status Cell
+
+class UserStatusCell: UITableViewCell {
+    
+    private let cardView = UIView()
+    private let iconImageView = UIImageView()
+    private let statusLabel = UILabel()
+    private let detailLabel = UILabel()
+    private let actionButton = UIButton(type: .system)
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupUI()
+    }
+    
+    private func setupUI() {
+        backgroundColor = .clear
+        
+        // Card container
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.backgroundColor = .systemGray6
+        cardView.layer.cornerRadius = 12
+        contentView.addSubview(cardView)
+        
+        // Icon
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .systemBlue
+        cardView.addSubview(iconImageView)
+        
+        // Status label
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        statusLabel.textColor = .label
+        cardView.addSubview(statusLabel)
+        
+        // Detail label
+        detailLabel.translatesAutoresizingMaskIntoConstraints = false
+        detailLabel.font = .systemFont(ofSize: 13)
+        detailLabel.textColor = .secondaryLabel
+        cardView.addSubview(detailLabel)
+        
+        // Action button
+        actionButton.translatesAutoresizingMaskIntoConstraints = false
+        actionButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        cardView.addSubview(actionButton)
+        
+        NSLayoutConstraint.activate([
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            
+            iconImageView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
+            iconImageView.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 24),
+            iconImageView.heightAnchor.constraint(equalToConstant: 24),
+            
+            statusLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12),
+            statusLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 16),
+            
+            detailLabel.leadingAnchor.constraint(equalTo: statusLabel.leadingAnchor),
+            detailLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 2),
+            detailLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16),
+            
+            actionButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+            actionButton.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            actionButton.leadingAnchor.constraint(greaterThanOrEqualTo: statusLabel.trailingAnchor, constant: 8)
+        ])
+    }
+    
+    func configure() {
+        if let user = AuthenticationManager.shared.currentUser {
+            // User is signed in
+            iconImageView.image = UIImage(systemName: "person.crop.circle.fill")
+            statusLabel.text = "Signed In"
+            detailLabel.text = user.displayName ?? user.email ?? "Player"
+            actionButton.setTitle("View Profile", for: .normal)
+            actionButton.removeTarget(nil, action: nil, for: .allEvents)
+            actionButton.addTarget(self, action: #selector(viewProfileTapped), for: .touchUpInside)
+        } else {
+            // User is not signed in
+            iconImageView.image = UIImage(systemName: "person.crop.circle.badge.plus")
+            statusLabel.text = "Not Signed In"
+            detailLabel.text = "Sign in to save your progress"
+            actionButton.setTitle("Sign In", for: .normal)
+            actionButton.removeTarget(nil, action: nil, for: .allEvents)
+            actionButton.addTarget(self, action: #selector(signInTapped), for: .touchUpInside)
+        }
+    }
+    
+    @objc private func viewProfileTapped() {
+        // Find the parent view controller
+        if let viewController = self.window?.rootViewController?.presentedViewController ?? self.window?.rootViewController {
+            let alert = UIAlertController(
+                title: "Profile",
+                message: """
+                \(AuthenticationManager.shared.currentUser?.displayName ?? "Player")
+                \(AuthenticationManager.shared.currentUser?.email ?? "")
+                """,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            viewController.present(alert, animated: true)
+        }
+    }
+    
+    @objc private func signInTapped() {
+        // Find the parent view controller
+        if let viewController = self.window?.rootViewController?.presentedViewController ?? self.window?.rootViewController {
+            let signInVC = SignInViewController()
+            let nav = UINavigationController(rootViewController: signInVC)
+            nav.modalPresentationStyle = .fullScreen
+            viewController.present(nav, animated: true)
+        }
+    }
 }
