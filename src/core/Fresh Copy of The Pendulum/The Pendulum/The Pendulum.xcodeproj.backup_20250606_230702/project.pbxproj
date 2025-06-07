@@ -1,0 +1,795 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A0000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000002 /* AppDelegate.swift */; };
+		1A0000003 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000004 /* SceneDelegate.swift */; };
+		1A0000005 /* The_PendulumApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000006 /* The_PendulumApp.swift */; };
+		1A0000007 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000008 /* ContentView.swift */; };
+		1A0000009 /* ContentViewModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000A /* ContentViewModes.swift */; };
+		1A000000B /* PendulumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000C /* PendulumViewController.swift */; };
+		1A000000D /* PendulumViewController+Dashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000E /* PendulumViewController+Dashboard.swift */; };
+		1A000000F /* PendulumViewController+EnhancedAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010 /* PendulumViewController+EnhancedAnalytics.swift */; };
+		1A0000011 /* pendulumModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000012 /* pendulumModel.swift */; };
+		1A0000013 /* pendulumViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000014 /* pendulumViewModel.swift */; };
+		1A0000015 /* pendulumScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000016 /* pendulumScene.swift */; };
+		1A0000017 /* pendulumSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000018 /* pendulumSimulation.swift */; };
+		1A0000019 /* pendulumButtonControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001A /* pendulumButtonControls.swift */; };
+		1A000001B /* NumericalODESolvers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001C /* NumericalODESolvers.swift */; };
+		1A000001D /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001E /* AnalyticsManager.swift */; };
+		1A000001F /* AnalyticsManagerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000020 /* AnalyticsManagerExtensions.swift */; };
+		1A0000021 /* AnalyticsModelAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000022 /* AnalyticsModelAdditions.swift */; };
+		1A0000023 /* AnalyticsDashboardViewNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000024 /* AnalyticsDashboardViewNative.swift */; };
+		1A0000025 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000026 /* DashboardViewController.swift */; };
+		1A0000027 /* DashboardDescriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000028 /* DashboardDescriptions.swift */; };
+		1A0000029 /* DashboardInfoButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000002A /* DashboardInfoButton.swift */; };
+		1A000002B /* SimpleDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000002C /* SimpleDashboard.swift */; };
+		1A000002D /* SimpleCharts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000002E /* SimpleCharts.swift */; };
+		1A000002F /* MetricsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000030 /* MetricsCalculator.swift */; };
+		1A0000031 /* MetricsTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000032 /* MetricsTypes.swift */; };
+		1A0000033 /* TopologyMetricsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000034 /* TopologyMetricsCalculator.swift */; };
+		1A0000035 /* PhaseSpaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000036 /* PhaseSpaceView.swift */; };
+		1A0000037 /* PhaseSpaceChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000038 /* PhaseSpaceChartView.swift */; };
+		1A0000039 /* InvertedPendulumPhysicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000003A /* InvertedPendulumPhysicsView.swift */; };
+		1A000003B /* InvertedPendulumPhysicsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000003C /* InvertedPendulumPhysicsViewController.swift */; };
+		1A000003D /* PerturbationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000003E /* PerturbationManager.swift */; };
+		1A000003F /* PerturbationEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000040 /* PerturbationEffects.swift */; };
+		1A0000041 /* LevelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000042 /* LevelManager.swift */; };
+		1A0000043 /* AchievementSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000044 /* AchievementSystem.swift */; };
+		1A0000045 /* AchievementDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000046 /* AchievementDisplayView.swift */; };
+		1A0000047 /* PendulumAIPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000048 /* PendulumAIPlayer.swift */; };
+		1A0000049 /* AITestingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000004A /* AITestingSystem.swift */; };
+		1A000004B /* AITestingSystemExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000004C /* AITestingSystemExtensions.swift */; };
+		1A000004D /* GoldenTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000004E /* GoldenTheme.swift */; };
+		1A000004F /* FocusCalendarTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000050 /* FocusCalendarTheme.swift */; };
+		1A0000051 /* BackgroundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000052 /* BackgroundManager.swift */; };
+		1A0000053 /* PendulumSoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000054 /* PendulumSoundManager.swift */; };
+		1A0000055 /* BalanceEffectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000056 /* BalanceEffectManager.swift */; };
+		1A0000057 /* DynamicParticleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000058 /* DynamicParticleManager.swift */; };
+		1A0000059 /* GoldenAchievementParticleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000005A /* GoldenAchievementParticleGenerator.swift */; };
+		1A000005B /* ViewControllerParticleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000005C /* ViewControllerParticleSystem.swift */; };
+		1A000005D /* AnimatedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000005E /* AnimatedImageView.swift */; };
+		1A000005F /* TabTransitionAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000060 /* TabTransitionAnimator.swift */; };
+		1A0000061 /* UIImageExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000062 /* UIImageExtensions.swift */; };
+		1A0000063 /* HeaderViewCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000064 /* HeaderViewCreator.swift */; };
+		1A0000065 /* LaunchScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000066 /* LaunchScreenViewController.swift */; };
+		1A0000067 /* BackgroundsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000068 /* BackgroundsViewController.swift */; };
+		1A0000069 /* SoundsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000006A /* SoundsViewController.swift */; };
+		1A000006B /* MetricsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000006C /* MetricsViewController.swift */; };
+		1A000006D /* GraphicsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000006E /* GraphicsViewController.swift */; };
+		1A000006F /* DeveloperToolsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000070 /* DeveloperToolsViewController.swift */; };
+		1A0000071 /* PrivacyPolicyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000072 /* PrivacyPolicyViewController.swift */; };
+		1A0000073 /* ContactSupportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000074 /* ContactSupportViewController.swift */; };
+		1A0000075 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000076 /* SettingsManager.swift */; };
+		1A0000077 /* SessionTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000078 /* SessionTimeManager.swift */; };
+		1A0000079 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000007A /* CoreDataManager.swift */; };
+		1A000007B /* DashboardTestingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000007C /* DashboardTestingViewController.swift */; };
+		1A000007D /* DashboardTestingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000007E /* DashboardTestingSystem.swift */; };
+		1A000007F /* DebugDashboardSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000080 /* DebugDashboardSystem.swift */; };
+		1A0000081 /* TestAISystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000082 /* TestAISystem.swift */; };
+		1A0000083 /* QuickAITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000084 /* QuickAITest.swift */; };
+		1A0000085 /* ParticleTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000086 /* ParticleTestView.swift */; };
+		1A0000087 /* SimpleParticleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000088 /* SimpleParticleTest.swift */; };
+		1A0000089 /* ComprehensiveTestingSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000008A /* ComprehensiveTestingSuite.swift */; };
+		1A000008B /* FINAL_VERIFICATION.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000008C /* FINAL_VERIFICATION.swift */; };
+		1A000008D /* DashboardTimeFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000008E /* DashboardTimeFix.swift */; };
+		1A000008F /* MetricsFixManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000090 /* MetricsFixManager.swift */; };
+		1A0000091 /* RealDataMetricsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000092 /* RealDataMetricsManager.swift */; };
+		1A0000093 /* MetricTestingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000094 /* MetricTestingSystem.swift */; };
+		1A0000095 /* QuickMetricsFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000096 /* QuickMetricsFix.swift */; };
+		1A0000097 /* DirectMetricsFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000098 /* DirectMetricsFix.swift */; };
+		1A0000099 /* ScientificMetricsDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000009A /* ScientificMetricsDataFlow.swift */; };
+		1A000009B /* ScientificMetricsKeyFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000009C /* ScientificMetricsKeyFix.swift */; };
+		1A000009D /* ScientificMetricsFinalFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000009E /* ScientificMetricsFinalFix.swift */; };
+		1A000009F /* ScientificMetricsDiagnostic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A0 /* ScientificMetricsDiagnostic.swift */; };
+		1A00000A1 /* ScientificMetricsValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A2 /* ScientificMetricsValidation.swift */; };
+		1A00000A3 /* AIVisualizationFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A4 /* AIVisualizationFix.swift */; };
+		1A00000A5 /* AIPendulumMovementTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A6 /* AIPendulumMovementTest.swift */; };
+		1A00000A7 /* AIMovementFinalFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A8 /* AIMovementFinalFix.swift */; };
+		1A00000A9 /* AIVisualizationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000AA /* AIVisualizationTest.swift */; };
+		1A00000AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000AC /* Assets.xcassets */; };
+		1A00000AD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000AE /* LaunchScreen.storyboard */; };
+		1A00000AF /* BalanceParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000B0 /* BalanceParticle.sks */; };
+		1A00000B1 /* GoldenAchievementParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000B2 /* GoldenAchievementParticle.sks */; };
+		1A00000B3 /* ImpulseParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000B4 /* ImpulseParticle.sks */; };
+		1A00000B5 /* LevelCompletionParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000B6 /* LevelCompletionParticle.sks */; };
+		1A00000B7 /* NewLevelParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000B8 /* NewLevelParticle.sks */; };
+		1A00000B9 /* WindParticle.sks in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000BA /* WindParticle.sks */; };
+		1A00000BB /* PendulumScoreData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000BC /* PendulumScoreData.xcdatamodeld */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1A0000001 /* The Pendulum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1A0000004 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		1A0000006 /* The_PendulumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = The_PendulumApp.swift; sourceTree = "<group>"; };
+		1A0000008 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1A000000A /* ContentViewModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModes.swift; sourceTree = "<group>"; };
+		1A000000C /* PendulumViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendulumViewController.swift; sourceTree = "<group>"; };
+		1A000000E /* PendulumViewController+Dashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PendulumViewController+Dashboard.swift"; sourceTree = "<group>"; };
+		1A0000010 /* PendulumViewController+EnhancedAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PendulumViewController+EnhancedAnalytics.swift"; sourceTree = "<group>"; };
+		1A0000012 /* pendulumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pendulumModel.swift; sourceTree = "<group>"; };
+		1A0000014 /* pendulumViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pendulumViewModel.swift; sourceTree = "<group>"; };
+		1A0000016 /* pendulumScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pendulumScene.swift; sourceTree = "<group>"; };
+		1A0000018 /* pendulumSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pendulumSimulation.swift; sourceTree = "<group>"; };
+		1A000001A /* pendulumButtonControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pendulumButtonControls.swift; sourceTree = "<group>"; };
+		1A000001C /* NumericalODESolvers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericalODESolvers.swift; sourceTree = "<group>"; };
+		1A000001E /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
+		1A0000020 /* AnalyticsManagerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManagerExtensions.swift; sourceTree = "<group>"; };
+		1A0000022 /* AnalyticsModelAdditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsModelAdditions.swift; sourceTree = "<group>"; };
+		1A0000024 /* AnalyticsDashboardViewNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsDashboardViewNative.swift; sourceTree = "<group>"; };
+		1A0000026 /* DashboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewController.swift; sourceTree = "<group>"; };
+		1A0000028 /* DashboardDescriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardDescriptions.swift; sourceTree = "<group>"; };
+		1A000002A /* DashboardInfoButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardInfoButton.swift; sourceTree = "<group>"; };
+		1A000002C /* SimpleDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleDashboard.swift; sourceTree = "<group>"; };
+		1A000002E /* SimpleCharts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleCharts.swift; sourceTree = "<group>"; };
+		1A0000030 /* MetricsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsCalculator.swift; sourceTree = "<group>"; };
+		1A0000032 /* MetricsTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsTypes.swift; sourceTree = "<group>"; };
+		1A0000034 /* TopologyMetricsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopologyMetricsCalculator.swift; sourceTree = "<group>"; };
+		1A0000036 /* PhaseSpaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhaseSpaceView.swift; sourceTree = "<group>"; };
+		1A0000038 /* PhaseSpaceChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhaseSpaceChartView.swift; sourceTree = "<group>"; };
+		1A000003A /* InvertedPendulumPhysicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvertedPendulumPhysicsView.swift; sourceTree = "<group>"; };
+		1A000003C /* InvertedPendulumPhysicsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvertedPendulumPhysicsViewController.swift; sourceTree = "<group>"; };
+		1A000003E /* PerturbationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerturbationManager.swift; sourceTree = "<group>"; };
+		1A0000040 /* PerturbationEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerturbationEffects.swift; sourceTree = "<group>"; };
+		1A0000042 /* LevelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelManager.swift; sourceTree = "<group>"; };
+		1A0000044 /* AchievementSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementSystem.swift; sourceTree = "<group>"; };
+		1A0000046 /* AchievementDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementDisplayView.swift; sourceTree = "<group>"; };
+		1A0000048 /* PendulumAIPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendulumAIPlayer.swift; sourceTree = "<group>"; };
+		1A000004A /* AITestingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITestingSystem.swift; sourceTree = "<group>"; };
+		1A000004C /* AITestingSystemExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITestingSystemExtensions.swift; sourceTree = "<group>"; };
+		1A000004E /* GoldenTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldenTheme.swift; sourceTree = "<group>"; };
+		1A0000050 /* FocusCalendarTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalendarTheme.swift; sourceTree = "<group>"; };
+		1A0000052 /* BackgroundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundManager.swift; sourceTree = "<group>"; };
+		1A0000054 /* PendulumSoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendulumSoundManager.swift; sourceTree = "<group>"; };
+		1A0000056 /* BalanceEffectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceEffectManager.swift; sourceTree = "<group>"; };
+		1A0000058 /* DynamicParticleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicParticleManager.swift; sourceTree = "<group>"; };
+		1A000005A /* GoldenAchievementParticleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldenAchievementParticleGenerator.swift; sourceTree = "<group>"; };
+		1A000005C /* ViewControllerParticleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerParticleSystem.swift; sourceTree = "<group>"; };
+		1A000005E /* AnimatedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedImageView.swift; sourceTree = "<group>"; };
+		1A0000060 /* TabTransitionAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabTransitionAnimator.swift; sourceTree = "<group>"; };
+		1A0000062 /* UIImageExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageExtensions.swift; sourceTree = "<group>"; };
+		1A0000064 /* HeaderViewCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderViewCreator.swift; sourceTree = "<group>"; };
+		1A0000066 /* LaunchScreenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenViewController.swift; sourceTree = "<group>"; };
+		1A0000068 /* BackgroundsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundsViewController.swift; sourceTree = "<group>"; };
+		1A000006A /* SoundsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundsViewController.swift; sourceTree = "<group>"; };
+		1A000006C /* MetricsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsViewController.swift; sourceTree = "<group>"; };
+		1A000006E /* GraphicsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphicsViewController.swift; sourceTree = "<group>"; };
+		1A0000070 /* DeveloperToolsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperToolsViewController.swift; sourceTree = "<group>"; };
+		1A0000072 /* PrivacyPolicyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyViewController.swift; sourceTree = "<group>"; };
+		1A0000074 /* ContactSupportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSupportViewController.swift; sourceTree = "<group>"; };
+		1A0000076 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
+		1A0000078 /* SessionTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimeManager.swift; sourceTree = "<group>"; };
+		1A000007A /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		1A000007C /* DashboardTestingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardTestingViewController.swift; sourceTree = "<group>"; };
+		1A000007E /* DashboardTestingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardTestingSystem.swift; sourceTree = "<group>"; };
+		1A0000080 /* DebugDashboardSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDashboardSystem.swift; sourceTree = "<group>"; };
+		1A0000082 /* TestAISystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAISystem.swift; sourceTree = "<group>"; };
+		1A0000084 /* QuickAITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAITest.swift; sourceTree = "<group>"; };
+		1A0000086 /* ParticleTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticleTestView.swift; sourceTree = "<group>"; };
+		1A0000088 /* SimpleParticleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleParticleTest.swift; sourceTree = "<group>"; };
+		1A000008A /* ComprehensiveTestingSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComprehensiveTestingSuite.swift; sourceTree = "<group>"; };
+		1A000008C /* FINAL_VERIFICATION.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FINAL_VERIFICATION.swift; sourceTree = "<group>"; };
+		1A000008E /* DashboardTimeFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardTimeFix.swift; sourceTree = "<group>"; };
+		1A0000090 /* MetricsFixManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsFixManager.swift; sourceTree = "<group>"; };
+		1A0000092 /* RealDataMetricsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealDataMetricsManager.swift; sourceTree = "<group>"; };
+		1A0000094 /* MetricTestingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricTestingSystem.swift; sourceTree = "<group>"; };
+		1A0000096 /* QuickMetricsFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickMetricsFix.swift; sourceTree = "<group>"; };
+		1A0000098 /* DirectMetricsFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMetricsFix.swift; sourceTree = "<group>"; };
+		1A000009A /* ScientificMetricsDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScientificMetricsDataFlow.swift; sourceTree = "<group>"; };
+		1A000009C /* ScientificMetricsKeyFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScientificMetricsKeyFix.swift; sourceTree = "<group>"; };
+		1A000009E /* ScientificMetricsFinalFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScientificMetricsFinalFix.swift; sourceTree = "<group>"; };
+		1A00000A0 /* ScientificMetricsDiagnostic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScientificMetricsDiagnostic.swift; sourceTree = "<group>"; };
+		1A00000A2 /* ScientificMetricsValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScientificMetricsValidation.swift; sourceTree = "<group>"; };
+		1A00000A4 /* AIVisualizationFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVisualizationFix.swift; sourceTree = "<group>"; };
+		1A00000A6 /* AIPendulumMovementTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPendulumMovementTest.swift; sourceTree = "<group>"; };
+		1A00000A8 /* AIMovementFinalFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIMovementFinalFix.swift; sourceTree = "<group>"; };
+		1A00000AA /* AIVisualizationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVisualizationTest.swift; sourceTree = "<group>"; };
+		1A00000AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1A00000AE /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = SOURCE_ROOT; };
+		1A00000B0 /* BalanceParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = BalanceParticle.sks; sourceTree = "<group>"; };
+		1A00000B2 /* GoldenAchievementParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GoldenAchievementParticle.sks; sourceTree = "<group>"; };
+		1A00000B4 /* ImpulseParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = ImpulseParticle.sks; sourceTree = "<group>"; };
+		1A00000B6 /* LevelCompletionParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = LevelCompletionParticle.sks; sourceTree = "<group>"; };
+		1A00000B8 /* NewLevelParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = NewLevelParticle.sks; sourceTree = "<group>"; };
+		1A00000BA /* WindParticle.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = WindParticle.sks; sourceTree = "<group>"; };
+		1A00000BD /* PendulumScoreData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PendulumScoreData.xcdatamodel; sourceTree = "<group>"; };
+		1A00000BE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1A00000BF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A00000C0 = {
+			isa = PBXGroup;
+			children = (
+				1A00000C1 /* The Pendulum */,
+				1A00000C2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1A00000C2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000001 /* The Pendulum.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1A00000C1 /* The Pendulum */ = {
+			isa = PBXGroup;
+			children = (
+				1A00000BE /* Info.plist */,
+				1A00000C3 /* App Lifecycle */,
+				1A00000C4 /* Main Views */,
+				1A00000C5 /* Pendulum Core */,
+				1A00000C6 /* Analytics */,
+				1A00000C7 /* Game Systems */,
+				1A00000C8 /* UI Components */,
+				1A00000C9 /* Settings Views */,
+				1A00000CA /* Managers */,
+				1A00000CB /* Testing & Debug */,
+				1A00000CC /* Resources */,
+			);
+			path = "The Pendulum";
+			sourceTree = "<group>";
+		};
+		1A00000C3 /* App Lifecycle */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000002 /* AppDelegate.swift */,
+				1A0000004 /* SceneDelegate.swift */,
+				1A0000006 /* The_PendulumApp.swift */,
+				1A0000066 /* LaunchScreenViewController.swift */,
+			);
+			name = "App Lifecycle";
+			sourceTree = "<group>";
+		};
+		1A00000C4 /* Main Views */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000008 /* ContentView.swift */,
+				1A000000A /* ContentViewModes.swift */,
+				1A000000C /* PendulumViewController.swift */,
+				1A000000E /* PendulumViewController+Dashboard.swift */,
+				1A0000010 /* PendulumViewController+EnhancedAnalytics.swift */,
+			);
+			name = "Main Views";
+			sourceTree = "<group>";
+		};
+		1A00000C5 /* Pendulum Core */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000012 /* pendulumModel.swift */,
+				1A0000014 /* pendulumViewModel.swift */,
+				1A0000016 /* pendulumScene.swift */,
+				1A0000018 /* pendulumSimulation.swift */,
+				1A000001A /* pendulumButtonControls.swift */,
+				1A000001C /* NumericalODESolvers.swift */,
+				1A000003E /* PerturbationManager.swift */,
+				1A0000040 /* PerturbationEffects.swift */,
+			);
+			name = "Pendulum Core";
+			sourceTree = "<group>";
+		};
+		1A00000C6 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				1A000001E /* AnalyticsManager.swift */,
+				1A0000020 /* AnalyticsManagerExtensions.swift */,
+				1A0000022 /* AnalyticsModelAdditions.swift */,
+				1A0000024 /* AnalyticsDashboardViewNative.swift */,
+				1A0000026 /* DashboardViewController.swift */,
+				1A0000028 /* DashboardDescriptions.swift */,
+				1A000002A /* DashboardInfoButton.swift */,
+				1A000002C /* SimpleDashboard.swift */,
+				1A000002E /* SimpleCharts.swift */,
+				1A0000030 /* MetricsCalculator.swift */,
+				1A0000032 /* MetricsTypes.swift */,
+				1A0000034 /* TopologyMetricsCalculator.swift */,
+				1A0000036 /* PhaseSpaceView.swift */,
+				1A0000038 /* PhaseSpaceChartView.swift */,
+				1A000003A /* InvertedPendulumPhysicsView.swift */,
+				1A000003C /* InvertedPendulumPhysicsViewController.swift */,
+			);
+			name = Analytics;
+			sourceTree = "<group>";
+		};
+		1A00000C7 /* Game Systems */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000042 /* LevelManager.swift */,
+				1A0000044 /* AchievementSystem.swift */,
+				1A0000046 /* AchievementDisplayView.swift */,
+				1A0000048 /* PendulumAIPlayer.swift */,
+				1A000004A /* AITestingSystem.swift */,
+				1A000004C /* AITestingSystemExtensions.swift */,
+			);
+			name = "Game Systems";
+			sourceTree = "<group>";
+		};
+		1A00000C8 /* UI Components */ = {
+			isa = PBXGroup;
+			children = (
+				1A000004E /* GoldenTheme.swift */,
+				1A0000050 /* FocusCalendarTheme.swift */,
+				1A0000056 /* BalanceEffectManager.swift */,
+				1A0000058 /* DynamicParticleManager.swift */,
+				1A000005A /* GoldenAchievementParticleGenerator.swift */,
+				1A000005C /* ViewControllerParticleSystem.swift */,
+				1A000005E /* AnimatedImageView.swift */,
+				1A0000060 /* TabTransitionAnimator.swift */,
+				1A0000062 /* UIImageExtensions.swift */,
+				1A0000064 /* HeaderViewCreator.swift */,
+			);
+			name = "UI Components";
+			sourceTree = "<group>";
+		};
+		1A00000C9 /* Settings Views */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000068 /* BackgroundsViewController.swift */,
+				1A000006A /* SoundsViewController.swift */,
+				1A000006C /* MetricsViewController.swift */,
+				1A000006E /* GraphicsViewController.swift */,
+				1A0000070 /* DeveloperToolsViewController.swift */,
+				1A0000072 /* PrivacyPolicyViewController.swift */,
+				1A0000074 /* ContactSupportViewController.swift */,
+			);
+			name = "Settings Views";
+			sourceTree = "<group>";
+		};
+		1A00000CA /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000052 /* BackgroundManager.swift */,
+				1A0000054 /* PendulumSoundManager.swift */,
+				1A0000076 /* SettingsManager.swift */,
+				1A0000078 /* SessionTimeManager.swift */,
+				1A000007A /* CoreDataManager.swift */,
+			);
+			name = Managers;
+			sourceTree = "<group>";
+		};
+		1A00000CB /* Testing & Debug */ = {
+			isa = PBXGroup;
+			children = (
+				1A000007C /* DashboardTestingViewController.swift */,
+				1A000007E /* DashboardTestingSystem.swift */,
+				1A0000080 /* DebugDashboardSystem.swift */,
+				1A0000082 /* TestAISystem.swift */,
+				1A0000084 /* QuickAITest.swift */,
+				1A0000086 /* ParticleTestView.swift */,
+				1A0000088 /* SimpleParticleTest.swift */,
+				1A000008A /* ComprehensiveTestingSuite.swift */,
+				1A000008C /* FINAL_VERIFICATION.swift */,
+				1A000008E /* DashboardTimeFix.swift */,
+				1A0000090 /* MetricsFixManager.swift */,
+				1A0000092 /* RealDataMetricsManager.swift */,
+				1A0000094 /* MetricTestingSystem.swift */,
+				1A0000096 /* QuickMetricsFix.swift */,
+				1A0000098 /* DirectMetricsFix.swift */,
+				1A000009A /* ScientificMetricsDataFlow.swift */,
+				1A000009C /* ScientificMetricsKeyFix.swift */,
+				1A000009E /* ScientificMetricsFinalFix.swift */,
+				1A00000A0 /* ScientificMetricsDiagnostic.swift */,
+				1A00000A2 /* ScientificMetricsValidation.swift */,
+				1A00000A4 /* AIVisualizationFix.swift */,
+				1A00000A6 /* AIPendulumMovementTest.swift */,
+				1A00000A8 /* AIMovementFinalFix.swift */,
+				1A00000AA /* AIVisualizationTest.swift */,
+			);
+			name = "Testing & Debug";
+			sourceTree = "<group>";
+		};
+		1A00000CC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				1A00000AC /* Assets.xcassets */,
+				1A00000AE /* LaunchScreen.storyboard */,
+				1A00000B0 /* BalanceParticle.sks */,
+				1A00000B2 /* GoldenAchievementParticle.sks */,
+				1A00000B4 /* ImpulseParticle.sks */,
+				1A00000B6 /* LevelCompletionParticle.sks */,
+				1A00000B8 /* NewLevelParticle.sks */,
+				1A00000BA /* WindParticle.sks */,
+				1A00000BC /* PendulumScoreData.xcdatamodeld */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A00000CD /* The Pendulum */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A00000CE /* Build configuration list for PBXNativeTarget "The Pendulum" */;
+			buildPhases = (
+				1A00000CF /* Sources */,
+				1A00000BF /* Frameworks */,
+				1A00000D0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "The Pendulum";
+			productName = "The Pendulum";
+			productReference = 1A0000001 /* The Pendulum.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1A00000D1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1A00000CD = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 1A00000D2 /* Build configuration list for PBXProject "The Pendulum" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1A00000C0;
+			productRefGroup = 1A00000C2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1A00000CD /* The Pendulum */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A00000D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000AB /* Assets.xcassets in Resources */,
+				1A00000AD /* LaunchScreen.storyboard in Resources */,
+				1A00000AF /* BalanceParticle.sks in Resources */,
+				1A00000B1 /* GoldenAchievementParticle.sks in Resources */,
+				1A00000B3 /* ImpulseParticle.sks in Resources */,
+				1A00000B5 /* LevelCompletionParticle.sks in Resources */,
+				1A00000B7 /* NewLevelParticle.sks in Resources */,
+				1A00000B9 /* WindParticle.sks in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A00000CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0000001 /* AppDelegate.swift in Sources */,
+				1A0000003 /* SceneDelegate.swift in Sources */,
+				1A0000005 /* The_PendulumApp.swift in Sources */,
+				1A0000007 /* ContentView.swift in Sources */,
+				1A0000009 /* ContentViewModes.swift in Sources */,
+				1A000000B /* PendulumViewController.swift in Sources */,
+				1A000000D /* PendulumViewController+Dashboard.swift in Sources */,
+				1A000000F /* PendulumViewController+EnhancedAnalytics.swift in Sources */,
+				1A0000011 /* pendulumModel.swift in Sources */,
+				1A0000013 /* pendulumViewModel.swift in Sources */,
+				1A0000015 /* pendulumScene.swift in Sources */,
+				1A0000017 /* pendulumSimulation.swift in Sources */,
+				1A0000019 /* pendulumButtonControls.swift in Sources */,
+				1A000001B /* NumericalODESolvers.swift in Sources */,
+				1A000001D /* AnalyticsManager.swift in Sources */,
+				1A000001F /* AnalyticsManagerExtensions.swift in Sources */,
+				1A0000021 /* AnalyticsModelAdditions.swift in Sources */,
+				1A0000023 /* AnalyticsDashboardViewNative.swift in Sources */,
+				1A0000025 /* DashboardViewController.swift in Sources */,
+				1A0000027 /* DashboardDescriptions.swift in Sources */,
+				1A0000029 /* DashboardInfoButton.swift in Sources */,
+				1A000002B /* SimpleDashboard.swift in Sources */,
+				1A000002D /* SimpleCharts.swift in Sources */,
+				1A000002F /* MetricsCalculator.swift in Sources */,
+				1A0000031 /* MetricsTypes.swift in Sources */,
+				1A0000033 /* TopologyMetricsCalculator.swift in Sources */,
+				1A0000035 /* PhaseSpaceView.swift in Sources */,
+				1A0000037 /* PhaseSpaceChartView.swift in Sources */,
+				1A0000039 /* InvertedPendulumPhysicsView.swift in Sources */,
+				1A000003B /* InvertedPendulumPhysicsViewController.swift in Sources */,
+				1A000003D /* PerturbationManager.swift in Sources */,
+				1A000003F /* PerturbationEffects.swift in Sources */,
+				1A0000041 /* LevelManager.swift in Sources */,
+				1A0000043 /* AchievementSystem.swift in Sources */,
+				1A0000045 /* AchievementDisplayView.swift in Sources */,
+				1A0000047 /* PendulumAIPlayer.swift in Sources */,
+				1A0000049 /* AITestingSystem.swift in Sources */,
+				1A000004B /* AITestingSystemExtensions.swift in Sources */,
+				1A000004D /* GoldenTheme.swift in Sources */,
+				1A000004F /* FocusCalendarTheme.swift in Sources */,
+				1A0000051 /* BackgroundManager.swift in Sources */,
+				1A0000053 /* PendulumSoundManager.swift in Sources */,
+				1A0000055 /* BalanceEffectManager.swift in Sources */,
+				1A0000057 /* DynamicParticleManager.swift in Sources */,
+				1A0000059 /* GoldenAchievementParticleGenerator.swift in Sources */,
+				1A000005B /* ViewControllerParticleSystem.swift in Sources */,
+				1A000005D /* AnimatedImageView.swift in Sources */,
+				1A000005F /* TabTransitionAnimator.swift in Sources */,
+				1A0000061 /* UIImageExtensions.swift in Sources */,
+				1A0000063 /* HeaderViewCreator.swift in Sources */,
+				1A0000065 /* LaunchScreenViewController.swift in Sources */,
+				1A0000067 /* BackgroundsViewController.swift in Sources */,
+				1A0000069 /* SoundsViewController.swift in Sources */,
+				1A000006B /* MetricsViewController.swift in Sources */,
+				1A000006D /* GraphicsViewController.swift in Sources */,
+				1A000006F /* DeveloperToolsViewController.swift in Sources */,
+				1A0000071 /* PrivacyPolicyViewController.swift in Sources */,
+				1A0000073 /* ContactSupportViewController.swift in Sources */,
+				1A0000075 /* SettingsManager.swift in Sources */,
+				1A0000077 /* SessionTimeManager.swift in Sources */,
+				1A0000079 /* CoreDataManager.swift in Sources */,
+				1A000007B /* DashboardTestingViewController.swift in Sources */,
+				1A000007D /* DashboardTestingSystem.swift in Sources */,
+				1A000007F /* DebugDashboardSystem.swift in Sources */,
+				1A0000081 /* TestAISystem.swift in Sources */,
+				1A0000083 /* QuickAITest.swift in Sources */,
+				1A0000085 /* ParticleTestView.swift in Sources */,
+				1A0000087 /* SimpleParticleTest.swift in Sources */,
+				1A0000089 /* ComprehensiveTestingSuite.swift in Sources */,
+				1A000008B /* FINAL_VERIFICATION.swift in Sources */,
+				1A000008D /* DashboardTimeFix.swift in Sources */,
+				1A000008F /* MetricsFixManager.swift in Sources */,
+				1A0000091 /* RealDataMetricsManager.swift in Sources */,
+				1A0000093 /* MetricTestingSystem.swift in Sources */,
+				1A0000095 /* QuickMetricsFix.swift in Sources */,
+				1A0000097 /* DirectMetricsFix.swift in Sources */,
+				1A0000099 /* ScientificMetricsDataFlow.swift in Sources */,
+				1A000009B /* ScientificMetricsKeyFix.swift in Sources */,
+				1A000009D /* ScientificMetricsFinalFix.swift in Sources */,
+				1A000009F /* ScientificMetricsDiagnostic.swift in Sources */,
+				1A00000A1 /* ScientificMetricsValidation.swift in Sources */,
+				1A00000A3 /* AIVisualizationFix.swift in Sources */,
+				1A00000A5 /* AIPendulumMovementTest.swift in Sources */,
+				1A00000A7 /* AIMovementFinalFix.swift in Sources */,
+				1A00000A9 /* AIVisualizationTest.swift in Sources */,
+				1A00000BB /* PendulumScoreData.xcdatamodeld in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1A00000D3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1A00000D4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1A00000D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1A00000D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A00000D2 /* Build configuration list for PBXProject "The Pendulum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A00000D3 /* Debug */,
+				1A00000D4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A00000CE /* Build configuration list for PBXNativeTarget "The Pendulum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A00000D5 /* Debug */,
+				1A00000D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		1A00000BC /* PendulumScoreData.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				1A00000BD /* PendulumScoreData.xcdatamodel */,
+			);
+			currentVersion = 1A00000BD /* PendulumScoreData.xcdatamodel */;
+			path = PendulumScoreData.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = 1A00000D1 /* Project object */;
+}

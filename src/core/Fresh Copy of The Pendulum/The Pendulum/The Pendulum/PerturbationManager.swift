@@ -277,6 +277,9 @@ class PerturbationManager {
     // Track if manager is active
     private var isActive: Bool = true
     
+    // Perturbation visualizer
+    private var visualizer: PerturbationVisualizer?
+    
     // Initialize with optional profile
     init(profile: PerturbationProfile? = nil) {
         if let profile = profile {
@@ -320,6 +323,9 @@ class PerturbationManager {
         warningIndicator?.removeFromParent()
         warningIndicator = nil
         
+        // Deactivate visualizer
+        visualizer?.deactivate()
+        
         print("PerturbationManager stopped")
     }
     
@@ -353,6 +359,20 @@ class PerturbationManager {
         // Create warning indicator if needed
         if profile.showWarnings {
             setupWarningIndicator()
+        }
+        
+        // Setup visualizer if scene is available
+        if let scene = scene {
+            visualizer = PerturbationVisualizer(scene: scene)
+            
+            // Activate visualizer for specific modes
+            if profile.name == "Sine Wave" {
+                visualizer?.activateForMode("sine")
+            } else if profile.name == "Data-Driven" {
+                visualizer?.activateForMode("data")
+            } else if profile.name == "Compound" {
+                visualizer?.activateForMode("compound")
+            }
         }
     }
     
@@ -505,6 +525,12 @@ class PerturbationManager {
             // Apply force through the view model
             viewModel.applyForce(totalPerturbation)
             
+            // Update visualizer
+            visualizer?.updateVisualization(magnitude: totalPerturbation, elapsedTime: elapsedTime)
+            
+            // Play correlated sound
+            visualizer?.playSoundForPerturbation(totalPerturbation)
+            
             // Generate visual effect if significant perturbation
             if abs(totalPerturbation) > 0.1 {
                 generateVisualEffect(magnitude: totalPerturbation)
@@ -570,6 +596,9 @@ class PerturbationManager {
         
         // Get current data point
         let value = perturbationData[dataIndex]
+        
+        // Visualize the data point
+        visualizer?.visualizeDataPoint(value, index: dataIndex)
         
         // Move to next data point (loop if at end)
         dataIndex = (dataIndex + 1) % perturbationData.count

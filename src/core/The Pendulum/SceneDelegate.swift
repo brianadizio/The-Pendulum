@@ -25,9 +25,6 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-import Singular
-import AppTrackingTransparency
-import AdSupport
 import Foundation
 import UIKit
 import SpriteKit
@@ -52,19 +49,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       }*/
   
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-      
-      if let config = self.getConfig() {
-        config.userActivity = userActivity
-        Singular.start(config)
-      }
-      
-      NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActiveNotification), name: UIApplication.didBecomeActiveNotification, object: nil)
-      
-      var IDFA = String()
-      if ASIdentifierManager.shared().isAdvertisingTrackingEnabled {
-        IDFA = ASIdentifierManager.shared().advertisingIdentifier.uuidString
-      }
-      print(IDFA)
       /// 1. Capture the scene
       guard let windowScene = (scene as? UIWindowScene) else { return }
       
@@ -81,53 +65,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       /// 5. Set the window and call makeKeyAndVisible()
       self.window = window
       window.makeKeyAndVisible()
-      
-//        if let userActivity = connectionOptions.userActivities.first, let config = self.getConfig() {
-//            // Starts a new session when the user opens the app using a Singular Link while it was in the background
-//            config.userActivity = userActivity
-//          Singular.start(config)
-//        }
-
-    }
-  
-  
-  @objc func didBecomeActiveNotification() {
-      // Request user consent to use the Advertising Identifier (idfa)
-      if #available(iOS 14, *) {
-          ATTrackingManager.requestTrackingAuthorization { status in
-          }
-      }
-  }
-  
-    
-  func getConfig() -> SingularConfig? {
-      // Create the config object with the SDK Key and SDK Secret
-      guard let config = SingularConfig(apiKey:"goldenenterprises_2c52889f", andSecret:"df4df5c7bc8cbefe57a359f39950915a") else {
-          return nil
-      }
-      
-      // Set a 300 sec delay before initialization to wait for the user's ATT response
-      config.waitForTrackingAuthorizationWithTimeoutInterval = 300;
-
-      // Enable SKAdNetwork in Managed Mode
-      config.skAdNetworkEnabled = true
-
-      // Get the current conversion value tracked by the Singular SDK.
-      config.conversionValuesUpdatedCallback = { conversionValue, coarse, lock in
-          // Here you have access to the latest conversion value
-      };
-      
-      Singular.setCustomUserId("custom_user_id")
-      
-      return config
-  }
-  
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        // Starts a new session when the user opens the app using a Singular Link while it was in the background
-        if let config = getConfig() {
-            config.userActivity = userActivity
-            Singular.start(config)
-        }
     }
     
 }

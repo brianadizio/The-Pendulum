@@ -27,6 +27,14 @@ class PendulumSoundManager {
     private var failurePlayer: AVAudioPlayer?
     private var ambientPlayer: AVAudioPlayer?
     
+    // Sound types enum
+    enum SoundType {
+        case windGentle
+        case windStrong
+        case impulseWeak
+        case impulseStrong
+    }
+    
     // Haptic feedback generator
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
     private let selectionFeedback = UISelectionFeedbackGenerator()
@@ -179,6 +187,39 @@ class PendulumSoundManager {
             
         case .minimal, .none:
             break
+        }
+    }
+    
+    // Play perturbation sounds
+    func playSound(_ soundType: SoundType) {
+        guard currentMode != .none else { return }
+        
+        switch soundType {
+        case .windGentle:
+            // Gentle wind sound - use a soft whoosh
+            playSystemSound(1050) // Whoosh sound
+            if currentMode == .enhanced || currentMode == .realistic {
+                impactFeedback.impactOccurred(intensity: 0.3)
+            }
+            
+        case .windStrong:
+            // Strong wind sound - use a more intense sound
+            playSystemSound(1051) // Stronger whoosh
+            if currentMode == .enhanced || currentMode == .realistic {
+                impactFeedback.impactOccurred(intensity: 0.6)
+            }
+            
+        case .impulseWeak:
+            // Weak impulse - light hit
+            playSystemSound(1105) // Tick sound
+            if currentMode != .minimal {
+                impactFeedback.impactOccurred(intensity: 0.4)
+            }
+            
+        case .impulseStrong:
+            // Strong impulse - heavy hit
+            playSystemSound(1108) // Pop sound
+            impactFeedback.impactOccurred(intensity: 0.8)
         }
     }
     
