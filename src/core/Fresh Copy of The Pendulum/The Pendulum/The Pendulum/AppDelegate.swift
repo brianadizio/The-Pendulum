@@ -36,6 +36,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         return true
     }
+    
+    // MARK: - App Tracking Transparency
+    
+    private func requestTrackingPermissionIfNeeded() {
+        print("📱 Requesting App Tracking Transparency permission...")
+        
+        AppTrackingManager.shared.requestTrackingPermissionAndInitializeSingular { granted in
+            print("📊 ATT Permission result: \(granted ? "Granted" : "Denied")")
+            
+            if granted {
+                print("✅ Full analytics tracking enabled")
+                // Track successful permission grant
+                SingularTracker.trackInstall()
+            } else {
+                print("🔒 Limited analytics tracking enabled")
+                // Still track install event, but in limited mode
+                SingularTracker.trackInstall()
+            }
+            
+            // Print current status for debugging
+            AppTrackingManager.shared.printTrackingStatus()
+        }
+    }
 
     // MARK: UISceneSession Lifecycle
     @available(iOS 13.0, *)
