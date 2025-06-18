@@ -211,6 +211,518 @@ class PerturbationEffects {
         #endif
     }
     
+    // MARK: - Mode-Specific Curved Particle Effects
+    
+    // Create curved particle effect for specific perturbation modes using existing particle systems
+    func createCurvedPerturbationEffect(
+        mode: PerturbationType,
+        at position: CGPoint,
+        direction: CGFloat,
+        magnitude: Double,
+        scene: SKNode
+    ) -> SKNode {
+        let effectNode = SKNode()
+        effectNode.position = position
+        
+        switch mode {
+        case .impulse:
+            let impulseEffect = createCurvedImpulseEffect(direction: direction, magnitude: magnitude)
+            effectNode.addChild(impulseEffect)
+            
+        case .sine:
+            let sineEffect = createCurvedSineEffect(direction: direction, magnitude: magnitude)
+            effectNode.addChild(sineEffect)
+            
+        case .dataSet:
+            let dataEffect = createCurvedDataSetEffect(direction: direction, magnitude: magnitude)
+            effectNode.addChild(dataEffect)
+            
+        case .random:
+            let randomEffect = createCurvedRandomEffect(direction: direction, magnitude: magnitude)
+            effectNode.addChild(randomEffect)
+            
+        case .compound:
+            let compoundEffect = createCurvedCompoundEffect(direction: direction, magnitude: magnitude)
+            effectNode.addChild(compoundEffect)
+        }
+        
+        return effectNode
+    }
+    
+    // Create curved impulse effect - explosive radial burst with directional bias using existing particles
+    private func createCurvedImpulseEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        let particleCount = Int(15 + magnitude * 25)
+        
+        // Use existing coast textures and colors from DynamicParticleManager
+        let colors = DynamicParticleManager.orangeRedPalette // Intense colors for impulse
+        
+        // Create curved burst pattern
+        for i in 0..<particleCount {
+            // Use coast texture if available, fallback to colored particle
+            let particle: SKNode
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 8...16), height: CGFloat.random(in: 8...16))
+                textureParticle.color = colors[i % colors.count]
+                textureParticle.colorBlendFactor = 0.7
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 3...6))
+                shapeParticle.fillColor = colors[i % colors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.3)
+                shapeParticle.glowWidth = 2.0
+                particle = shapeParticle
+            }
+            
+            // Calculate curved trajectory with strong directional bias
+            let baseAngle = direction > 0 ? 0 : CGFloat.pi
+            let angleSpread = CGFloat.pi / 2.5 // Wide spread for explosive effect
+            let particleAngle = baseAngle + CGFloat.random(in: -angleSpread/2...angleSpread/2)
+            
+            // Create curved path with more dramatic curves
+            let distance = CGFloat(60 + magnitude * 120)
+            let curvature = CGFloat.random(in: 0.4...1.0) * (direction > 0 ? 1 : -1)
+            
+            let startPoint = CGPoint.zero
+            let controlPoint = CGPoint(
+                x: cos(particleAngle) * distance * 0.6 + curvature * 40,
+                y: sin(particleAngle) * distance * 0.6 + CGFloat.random(in: -25...25)
+            )
+            let endPoint = CGPoint(
+                x: cos(particleAngle) * distance,
+                y: sin(particleAngle) * distance + curvature * 50
+            )
+            
+            particle.position = startPoint
+            particle.zPosition = CGFloat(i)
+            
+            // Create curved path animation with explosive dynamics
+            let path = CGMutablePath()
+            path.move(to: startPoint)
+            path.addQuadCurve(to: endPoint, control: controlPoint)
+            
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 0.7)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+            let scale = SKAction.sequence([
+                SKAction.scale(to: 1.8, duration: 0.15),
+                SKAction.scale(to: 0.1, duration: 0.55)
+            ])
+            let rotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*2...CGFloat.pi*2), duration: 0.7)
+            
+            particle.run(SKAction.group([followPath, fadeOut, scale, rotation]))
+            container.addChild(particle)
+        }
+        
+        // Remove container after animation
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.0),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
+    // Create curved sine effect - flowing wave pattern using existing particles
+    private func createCurvedSineEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        let particleCount = Int(12 + magnitude * 20)
+        
+        // Use blue-teal palette for smooth sine waves
+        let colors = DynamicParticleManager.blueTealPalette
+        
+        // Create flowing sine wave pattern
+        for i in 0..<particleCount {
+            // Use star textures for flowing effect
+            let particle: SKNode
+            if let starTexture = DynamicParticleManager.getCoastTexture(index: i % 9) {
+                let textureParticle = SKSpriteNode(texture: starTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 6...12), height: CGFloat.random(in: 6...12))
+                textureParticle.color = colors[i % colors.count]
+                textureParticle.colorBlendFactor = 0.6
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
+                shapeParticle.fillColor = colors[i % colors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.2)
+                shapeParticle.alpha = 0.8
+                particle = shapeParticle
+            }
+            
+            // Calculate wave parameters with directional flow
+            let waveLength: CGFloat = 150
+            let amplitude: CGFloat = CGFloat(25 + magnitude * 40)
+            let phase = CGFloat(i) / CGFloat(particleCount) * CGFloat.pi * 2
+            
+            // Create smooth sine wave path
+            let path = CGMutablePath()
+            let steps = 60
+            
+            for step in 0...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                let x = t * waveLength * (direction > 0 ? 1 : -1)
+                let y = sin(t * CGFloat.pi * 3 + phase) * amplitude * sin(t * CGFloat.pi) // Envelope
+                
+                if step == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(i)
+            
+            // Create smooth flowing animation with staggered timing
+            let delay = Double(i) * 0.08
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 1.8)
+            let fadeIn = SKAction.fadeIn(withDuration: 0.3)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.6)
+            let gentlePulse = SKAction.sequence([
+                SKAction.scale(to: 1.2, duration: 0.4),
+                SKAction.scale(to: 0.9, duration: 0.4)
+            ])
+            let gentleRotation = SKAction.rotate(byAngle: CGFloat.pi, duration: 1.8)
+            
+            let sequence = SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([followPath, fadeIn, gentleRotation]),
+                SKAction.repeat(gentlePulse, count: 2),
+                fadeOut
+            ])
+            
+            particle.run(sequence)
+            container.addChild(particle)
+        }
+        
+        // Remove container after animation
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 3.0),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
+    // Create curved data set effect - structured geometric patterns using existing particles
+    private func createCurvedDataSetEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        let particleCount = Int(10 + magnitude * 18)
+        
+        // Use rainbow colors for data visualization
+        let fullRainbow = DynamicParticleManager.createFullRainbowPalette()
+        
+        // Create geometric spiral pattern
+        for i in 0..<particleCount {
+            // Alternate between different shapes for data variety
+            let particle: SKNode
+            if i % 3 == 0 {
+                // Use coast texture
+                if let coastTexture = DynamicParticleManager.getCoastTexture(index: i % 9) {
+                    let textureParticle = SKSpriteNode(texture: coastTexture)
+                    textureParticle.size = CGSize(width: 8, height: 8)
+                    textureParticle.color = fullRainbow[i % fullRainbow.count]
+                    textureParticle.colorBlendFactor = 0.8
+                    particle = textureParticle
+                } else {
+                    let shapeParticle = SKShapeNode(rectOf: CGSize(width: 6, height: 6))
+                    shapeParticle.fillColor = fullRainbow[i % fullRainbow.count]
+                    shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.4)
+                    particle = shapeParticle
+                }
+            } else if i % 3 == 1 {
+                // Hexagon for data points
+                let hexagon = SKShapeNode()
+                let path = CGMutablePath()
+                for j in 0..<6 {
+                    let angle = CGFloat(j) * CGFloat.pi / 3
+                    let point = CGPoint(x: cos(angle) * 4, y: sin(angle) * 4)
+                    if j == 0 {
+                        path.move(to: point)
+                    } else {
+                        path.addLine(to: point)
+                    }
+                }
+                path.closeSubpath()
+                hexagon.path = path
+                hexagon.fillColor = fullRainbow[i % fullRainbow.count]
+                hexagon.strokeColor = hexagon.fillColor.withAlphaComponent(0.3)
+                hexagon.glowWidth = 1.5
+                particle = hexagon
+            } else {
+                // Triangle for data points
+                let triangle = SKShapeNode()
+                let trianglePath = CGMutablePath()
+                trianglePath.move(to: CGPoint(x: 0, y: 5))
+                trianglePath.addLine(to: CGPoint(x: -4, y: -3))
+                trianglePath.addLine(to: CGPoint(x: 4, y: -3))
+                trianglePath.closeSubpath()
+                triangle.path = trianglePath
+                triangle.fillColor = fullRainbow[i % fullRainbow.count]
+                triangle.strokeColor = triangle.fillColor.withAlphaComponent(0.3)
+                particle = triangle
+            }
+            
+            // Calculate data-driven spiral parameters
+            let spiralTurns: CGFloat = 3.0
+            let maxRadius: CGFloat = CGFloat(50 + magnitude * 80)
+            let angleStep = (spiralTurns * CGFloat.pi * 2) / CGFloat(particleCount)
+            let currentAngle = CGFloat(i) * angleStep
+            let radius = (CGFloat(i) / CGFloat(particleCount)) * maxRadius
+            
+            // Apply directional bias to spiral
+            let biasAngle = direction > 0 ? 0 : CGFloat.pi
+            let finalAngle = currentAngle + biasAngle
+            
+            // Create precise data spiral path
+            let path = CGMutablePath()
+            let steps = 40
+            
+            for step in 0...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                let stepAngle = finalAngle * t
+                let stepRadius = radius * t
+                let x = cos(stepAngle) * stepRadius
+                let y = sin(stepAngle) * stepRadius
+                
+                if step == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(i)
+            
+            // Create precise data animation
+            let delay = Double(i) * 0.1
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: true, duration: 1.4)
+            let preciseRotation = SKAction.rotate(byAngle: CGFloat.pi * 6, duration: 1.4)
+            let dataFadeOut = SKAction.fadeOut(withDuration: 0.5)
+            
+            let sequence = SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([followPath, preciseRotation]),
+                dataFadeOut
+            ])
+            
+            particle.run(sequence)
+            container.addChild(particle)
+        }
+        
+        // Remove container after animation
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 2.5),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
+    // Create curved random effect - chaotic swirling patterns using existing particles
+    private func createCurvedRandomEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        let particleCount = Int(6 + magnitude * 12)
+        
+        // Use mixed spectrum palette for chaotic random effects
+        let mixedColors = DynamicParticleManager.mixedSpectrumPalette
+        
+        // Create chaotic swirl patterns
+        for i in 0..<particleCount {
+            // Random particle types for chaos
+            let particle: SKNode
+            let randomType = Int.random(in: 0...2)
+            
+            if randomType == 0 && Int.random(in: 0...1) == 0 {
+                // Use star texture for sparkle chaos
+                if let starTexture = DynamicParticleManager.getCoastTexture(index: Int.random(in: 0...8)) {
+                    let textureParticle = SKSpriteNode(texture: starTexture)
+                    textureParticle.size = CGSize(width: CGFloat.random(in: 4...10), height: CGFloat.random(in: 4...10))
+                    textureParticle.color = mixedColors[i % mixedColors.count]
+                    textureParticle.colorBlendFactor = CGFloat.random(in: 0.4...0.9)
+                    particle = textureParticle
+                } else {
+                    let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3))
+                    shapeParticle.fillColor = mixedColors[i % mixedColors.count]
+                    shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.4)
+                    particle = shapeParticle
+                }
+            } else {
+                // Create random geometric shapes
+                let shapes = ["circle", "square", "diamond"]
+                let shapeType = shapes.randomElement()!
+                
+                switch shapeType {
+                case "circle":
+                    let circle = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
+                    circle.fillColor = mixedColors[i % mixedColors.count]
+                    circle.strokeColor = circle.fillColor.withAlphaComponent(0.3)
+                    particle = circle
+                case "square":
+                    let size = CGFloat.random(in: 4...8)
+                    let square = SKShapeNode(rectOf: CGSize(width: size, height: size))
+                    square.fillColor = mixedColors[i % mixedColors.count]
+                    square.strokeColor = square.fillColor.withAlphaComponent(0.3)
+                    particle = square
+                default: // diamond
+                    let diamond = SKShapeNode()
+                    let diamondPath = CGMutablePath()
+                    let size: CGFloat = CGFloat.random(in: 3...6)
+                    diamondPath.move(to: CGPoint(x: 0, y: size))
+                    diamondPath.addLine(to: CGPoint(x: size, y: 0))
+                    diamondPath.addLine(to: CGPoint(x: 0, y: -size))
+                    diamondPath.addLine(to: CGPoint(x: -size, y: 0))
+                    diamondPath.closeSubpath()
+                    diamond.path = diamondPath
+                    diamond.fillColor = mixedColors[i % mixedColors.count]
+                    diamond.strokeColor = diamond.fillColor.withAlphaComponent(0.3)
+                    particle = diamond
+                }
+            }
+            
+            // Create truly random curved path with strong directional bias
+            let path = CGMutablePath()
+            let steps = Int.random(in: 25...45)
+            var currentPoint = CGPoint.zero
+            
+            path.move(to: currentPoint)
+            
+            for step in 1...steps {
+                let randomAngle = CGFloat.random(in: -CGFloat.pi...CGFloat.pi)
+                let directionBias = direction > 0 ? CGFloat.random(in: 0.2...0.6) : CGFloat.random(in: -0.6...(-0.2))
+                let biasedAngle = randomAngle + directionBias
+                
+                let stepDistance = CGFloat.random(in: 4...12)
+                let nextPoint = CGPoint(
+                    x: currentPoint.x + cos(biasedAngle) * stepDistance,
+                    y: currentPoint.y + sin(biasedAngle) * stepDistance
+                )
+                
+                // Add chaotic curvature
+                let controlPoint = CGPoint(
+                    x: (currentPoint.x + nextPoint.x) / 2 + CGFloat.random(in: -15...15),
+                    y: (currentPoint.y + nextPoint.y) / 2 + CGFloat.random(in: -15...15)
+                )
+                
+                path.addQuadCurve(to: nextPoint, control: controlPoint)
+                currentPoint = nextPoint
+            }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(i)
+            
+            // Create truly chaotic animation
+            let delay = Double.random(in: 0...0.8)
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: Double.random(in: 1.0...2.0))
+            let chaoticRotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*4...CGFloat.pi*4), duration: Double.random(in: 0.8...1.5))
+            let fadeOut = SKAction.fadeOut(withDuration: Double.random(in: 0.4...0.8))
+            let chaoticScale = SKAction.sequence([
+                SKAction.scale(to: CGFloat.random(in: 0.3...2.5), duration: Double.random(in: 0.2...0.5)),
+                SKAction.scale(to: 0.05, duration: Double.random(in: 0.5...1.0))
+            ])
+            
+            let sequence = SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([followPath, chaoticRotation, chaoticScale]),
+                fadeOut
+            ])
+            
+            particle.run(sequence)
+            container.addChild(particle)
+        }
+        
+        // Remove container after animation
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 2.5),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
+    // Create curved compound effect - combination of multiple patterns using existing particles
+    private func createCurvedCompoundEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        
+        // Create multiple effect layers with reduced intensity to avoid overwhelming
+        let impulseLayer = createCurvedImpulseEffect(direction: direction, magnitude: magnitude * 0.5)
+        let sineLayer = createCurvedSineEffect(direction: direction, magnitude: magnitude * 0.4)
+        let dataLayer = createCurvedDataSetEffect(direction: direction, magnitude: magnitude * 0.3)
+        let randomLayer = createCurvedRandomEffect(direction: direction, magnitude: magnitude * 0.2)
+        
+        // Add slight offsets for visual depth and complexity
+        impulseLayer.position = CGPoint(x: 0, y: 0)
+        sineLayer.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: -8...8))
+        dataLayer.position = CGPoint(x: CGFloat.random(in: -12...12), y: CGFloat.random(in: -12...12))
+        randomLayer.position = CGPoint(x: CGFloat.random(in: -6...6), y: CGFloat.random(in: -6...6))
+        
+        // Set different z-positions for layering
+        impulseLayer.zPosition = 10
+        sineLayer.zPosition = 8
+        dataLayer.zPosition = 6
+        randomLayer.zPosition = 4
+        
+        // Add with cascading delays for complex compound effect
+        container.addChild(impulseLayer)
+        
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.15),
+            SKAction.run { container.addChild(sineLayer) }
+        ]))
+        
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.3),
+            SKAction.run { container.addChild(dataLayer) }
+        ]))
+        
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.45),
+            SKAction.run { container.addChild(randomLayer) }
+        ]))
+        
+        // Add compound-specific envelope effect
+        let envelopeParticleCount = Int(8 + magnitude * 12)
+        for i in 0..<envelopeParticleCount {
+            let delay = Double(i) * 0.1 + 0.6
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                if let glowTexture = DynamicParticleManager.getRandomCoastTexture() {
+                    let envelope = SKSpriteNode(texture: glowTexture)
+                    envelope.size = CGSize(width: CGFloat.random(in: 12...20), height: CGFloat.random(in: 12...20))
+                    envelope.color = DynamicParticleManager.yellowGoldPalette[i % DynamicParticleManager.yellowGoldPalette.count]
+                    envelope.colorBlendFactor = 0.5
+                    envelope.alpha = 0.6
+                    envelope.position = CGPoint(
+                        x: CGFloat.random(in: -40...40),
+                        y: CGFloat.random(in: -40...40)
+                    )
+                    envelope.zPosition = 2
+                    
+                    container.addChild(envelope)
+                    
+                    // Envelope animation
+                    let envelopeAction = SKAction.sequence([
+                        SKAction.group([
+                            SKAction.scale(to: 2.0, duration: 0.8),
+                            SKAction.fadeOut(withDuration: 0.8),
+                            SKAction.rotate(byAngle: CGFloat.pi, duration: 0.8)
+                        ])
+                    ])
+                    
+                    envelope.run(envelopeAction)
+                }
+            }
+        }
+        
+        // Remove container after all animations complete
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 4.0),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
     // MARK: - Theme-based Color Variants
     
     private func getImpulseColorVariants(for theme: BackgroundManager.ThemeColors, positive: Bool) -> [SKColor] {

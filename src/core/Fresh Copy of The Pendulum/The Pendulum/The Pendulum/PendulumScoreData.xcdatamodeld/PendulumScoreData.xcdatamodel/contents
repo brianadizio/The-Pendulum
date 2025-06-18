@@ -59,7 +59,6 @@
         <attribute name="maxAngle" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="score" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <relationship name="achievements" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Achievement"/>
         <relationship name="interactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="InteractionEvent" inverseName="playSession" inverseEntity="InteractionEvent"/>
         <relationship name="metrics" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="playSession" inverseEntity="PerformanceMetrics"/>
     </entity>
