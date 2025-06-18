@@ -23,10 +23,36 @@ class SingularTestConfiguration {
         // Optional: Enable SKAdNetwork support
         config.skAdNetworkEnabled = true
         
+        // Full tracking mode - IDFA available
+        config.limitDataSharing = false
+        
         // Initialize Singular
         Singular.start(config)
         
-        print("✅ Singular SDK initialized successfully")
+        print("✅ Singular SDK initialized successfully with full tracking")
+        #else
+        print("⚠️ Singular SDK not available - please add it via Swift Package Manager first")
+        #endif
+    }
+    
+    static func initializeSingularLimitedTracking() {
+        #if SINGULAR_SDK_AVAILABLE
+        // Initialize Singular with your API Key and Secret in limited tracking mode
+        let config = SingularConfig(apiKey: "goldenenterprises_2c52889f", andSecret: "df4df5c7bc8cbefe57a359f39950915a")
+        
+        // Enable debug logging
+        config.logLevel = SingularLogLevelDebug
+        
+        // Enable SKAdNetwork support (this works without IDFA)
+        config.skAdNetworkEnabled = true
+        
+        // Limited tracking mode - no IDFA
+        config.limitDataSharing = true
+        
+        // Initialize Singular
+        Singular.start(config)
+        
+        print("✅ Singular SDK initialized successfully with limited tracking")
         #else
         print("⚠️ Singular SDK not available - please add it via Swift Package Manager first")
         #endif
@@ -152,6 +178,7 @@ class SingularConfig {
     var logLevel: Int = 0
     var skAdNetworkEnabled: Bool = false
     var customUserId: String?
+    var limitDataSharing: Bool = false
     
     init(apiKey: String, andSecret secret: String) {
         print("⚠️ Using placeholder SingularConfig - add real SDK")

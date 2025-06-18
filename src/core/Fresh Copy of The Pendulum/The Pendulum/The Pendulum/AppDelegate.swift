@@ -1,6 +1,7 @@
 import UIKit
 import CoreData
 import FirebaseCore
+import AppTrackingTransparency
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -12,6 +13,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Apply Focus Calendar theme
         FocusCalendarTheme.applyTheme()
+        
+        // Request App Tracking Transparency permission and initialize Singular
+        // This should be called after the app is fully launched
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.requestTrackingPermissionIfNeeded()
+        }
         
         // In iOS 13 and later, scene delegate will handle window creation
         if #available(iOS 13.0, *) {
@@ -26,6 +33,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         return true
+    }
+    
+    // MARK: - App Tracking Transparency
+    
+    private func requestTrackingPermissionIfNeeded() {
+        print("📱 Requesting App Tracking Transparency permission...")
+        
+        AppTrackingManager.shared.requestTrackingPermissionAndInitializeSingular { granted in
+            print("📊 ATT Permission result: \(granted ? "Granted" : "Denied")")
+            
+            if granted {
+                print("✅ Full analytics tracking enabled")
+                // Track successful permission grant
+                SingularTracker.trackInstall()
+            } else {
+                print("🔒 Limited analytics tracking enabled")
+                // Still track install event, but in limited mode
+                SingularTracker.trackInstall()
+            }
+            
+            // Print current status for debugging
+            AppTrackingManager.shared.printTrackingStatus()
+        }
     }
 
     // MARK: UISceneSession Lifecycle
