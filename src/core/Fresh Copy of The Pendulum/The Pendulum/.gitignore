@@ -72,4 +72,7 @@ fastlane/test_output
 .DS_Store
 
 # Code Coverage
-*.xcresult
+*.xcresult*.ipa
+*.xcuserstate
+.DS_Store
+The Pendulum 2025-06-07 12-47-38/
