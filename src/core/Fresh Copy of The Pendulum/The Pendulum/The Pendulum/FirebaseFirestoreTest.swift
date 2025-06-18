@@ -43,37 +43,4 @@ extension FirebaseTestConfiguration {
             }
         }
     }
-    
-    // Initialize Firebase with Firestore
-    static func initializeFirebaseWithFirestore() {
-        print("🔥 Initializing Firebase with Firestore...")
-        
-        // Check if GoogleService-Info.plist exists
-        guard let plistPath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") else {
-            print("❌ GoogleService-Info.plist not found! Please add it to your project.")
-            print("📝 Download it from Firebase Console and add it to your Xcode project")
-            return
-        }
-        
-        print("✅ GoogleService-Info.plist found at: \(plistPath)")
-        
-        // Configure Firebase
-        FirebaseApp.configure()
-        print("✅ Firebase configured successfully")
-        
-        // Configure Firestore settings if needed
-        let settings = FirestoreSettings()
-        settings.isPersistenceEnabled = true // Enable offline persistence
-        Firestore.firestore().settings = settings
-        print("✅ Firestore configured with offline persistence")
-        
-        // Test Auth availability
-        if Auth.auth().currentUser == nil {
-            print("ℹ️ No user currently signed in")
-        } else {
-            print("✅ User already signed in: \(Auth.auth().currentUser?.uid ?? "unknown")")
-        }
-        
-        print("🎉 Firebase with Firestore initialization completed!")
-    }
 }

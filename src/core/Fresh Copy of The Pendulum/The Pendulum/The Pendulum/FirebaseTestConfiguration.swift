@@ -4,6 +4,7 @@ import FirebaseAnalytics
 import FirebaseAuth
 import FirebaseCrashlytics
 import FirebaseDatabase
+import FirebaseFirestore
 
 // Firebase Test Configuration
 class FirebaseTestConfiguration {
@@ -59,6 +60,30 @@ class FirebaseTestConfiguration {
         print("✅ Crashlytics test log sent")
         
         print("🎉 Firebase initialization test completed!")
+    }
+    
+    // Initialize Firebase with Firestore (called from AppDelegate)
+    static func initializeFirebaseWithFirestore() {
+        print("🔥 Initializing Firebase with Firestore...")
+        
+        // Check if GoogleService-Info.plist exists
+        guard let plistPath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") else {
+            print("❌ GoogleService-Info.plist not found! Please add it to your project.")
+            print("📝 Download it from Firebase Console and add it to your Xcode project")
+            return
+        }
+        
+        print("✅ GoogleService-Info.plist found at: \(plistPath)")
+        
+        // Configure Firebase
+        FirebaseApp.configure()
+        print("✅ Firebase configured successfully")
+        
+        // Initialize Firestore settings
+        let db = Firestore.firestore()
+        print("✅ Firestore initialized: \(db)")
+        
+        print("🎉 Firebase with Firestore initialization completed!")
     }
     
     // Test Firebase functionality

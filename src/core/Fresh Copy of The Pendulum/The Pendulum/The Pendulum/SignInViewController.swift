@@ -2,10 +2,23 @@ import UIKit
 import AuthenticationServices
 import FirebaseAuth
 
+// Custom scroll view for debugging touch events
+class DebugScrollView: UIScrollView {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("🔍 ScrollView touchesBegan")
+        super.touchesBegan(touches, with: event)
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("🔍 ScrollView touchesEnded")
+        super.touchesEnded(touches, with: event)
+    }
+}
+
 class SignInViewController: UIViewController {
     
     // MARK: - UI Elements
-    private let scrollView = UIScrollView()
+    private let scrollView = DebugScrollView()
     private let contentView = UIView()
     
     private let logoImageView = UIImageView()
@@ -49,9 +62,13 @@ class SignInViewController: UIViewController {
         
         // Scroll View
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.isUserInteractionEnabled = true
+        scrollView.delaysContentTouches = false
+        scrollView.canCancelContentTouches = false
         view.addSubview(scrollView)
         
         contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.isUserInteractionEnabled = true
         scrollView.addSubview(contentView)
         
         // Logo
@@ -126,7 +143,11 @@ class SignInViewController: UIViewController {
         
         // Apple Sign In Button
         appleSignInButton.addTarget(self, action: #selector(appleSignInTapped), for: .touchUpInside)
+        appleSignInButton.addTarget(self, action: #selector(appleSignInTouchDown), for: .touchDown)
         appleSignInButton.translatesAutoresizingMaskIntoConstraints = false
+        appleSignInButton.isUserInteractionEnabled = true
+        appleSignInButton.backgroundColor = UIColor.red.withAlphaComponent(0.1) // Temporary visual debugging
+        print("🍎 Apple Sign In button configured with target-action")
         contentView.addSubview(appleSignInButton)
         
         // Google Sign In Button
@@ -278,16 +299,28 @@ class SignInViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    @objc private func appleSignInTouchDown() {
+        print("🍎 Apple Sign In button TOUCH DOWN detected!")
+    }
+    
     @objc private func appleSignInTapped() {
+        print("🍎 Apple Sign In button tapped!")
+        
+        // First test with a simple alert to make sure the tap is being detected
+        showAlert(title: "Debug", message: "Apple Sign In button tap detected!")
+        
         let nonce = authManager.startSignInWithAppleFlow()
+        print("🍎 Generated nonce: \(nonce)")
         
         let request = ASAuthorizationAppleIDProvider().createRequest()
         request.requestedScopes = [.fullName, .email]
         request.nonce = nonce
+        print("🍎 Created authorization request")
         
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
+        print("🍎 About to perform authorization requests")
         controller.performRequests()
     }
     
@@ -356,6 +389,7 @@ class SignInViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false  // Don't cancel button touches
         view.addGestureRecognizer(tapGesture)
     }
     
