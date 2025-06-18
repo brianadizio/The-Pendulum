@@ -244,19 +244,4 @@ struct GameStats {
     let perfectBalances: Int
 }
 
-// MARK: - Placeholder Implementations
-
-#if !SINGULAR_SDK_AVAILABLE
-
-// These placeholders allow the code to compile before Singular SDK is added
-extension Singular {
-    static func event(withArgs name: String, withAttributes attributes: [String: String]) {
-        print("⚠️ Placeholder: Would track event '\(name)' with attributes: \(attributes)")
-    }
-    
-    static func customRevenue(_ name: String, currency: String, amount: Double) {
-        print("⚠️ Placeholder: Would track revenue '\(name)': \(amount) \(currency)")
-    }
-}
-
-#endif
+// Note: Placeholder implementations are provided by SingularTestConfiguration.swift
