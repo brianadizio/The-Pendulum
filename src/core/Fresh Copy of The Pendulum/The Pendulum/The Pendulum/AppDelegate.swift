@@ -1,6 +1,9 @@
 import UIKit
 import CoreData
 import FirebaseCore
+#if canImport(AppTrackingTransparency)
+import AppTrackingTransparency
+#endif
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -12,6 +15,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Apply Focus Calendar theme
         FocusCalendarTheme.applyTheme()
+        
+        // Request App Tracking Transparency permission and initialize Singular
+        // This should be called after the app is fully launched
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.requestTrackingPermissionIfNeeded()
+        }
         
         // In iOS 13 and later, scene delegate will handle window creation
         if #available(iOS 13.0, *) {
@@ -66,5 +75,64 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 print("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         }
+    }
+    
+    // MARK: - App Tracking Transparency
+    
+    private func requestTrackingPermissionIfNeeded() {
+        #if canImport(AppTrackingTransparency)
+        if #available(iOS 14, *) {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                DispatchQueue.main.async {
+                    switch status {
+                    case .authorized:
+                        print("✅ ATT: Tracking authorized")
+                        self.initializeSingularSDK(withTracking: true)
+                    case .denied:
+                        print("❌ ATT: Tracking denied")
+                        self.initializeSingularSDK(withTracking: false)
+                    case .restricted:
+                        print("⚠️ ATT: Tracking restricted")
+                        self.initializeSingularSDK(withTracking: false)
+                    case .notDetermined:
+                        print("⏳ ATT: Tracking not determined")
+                        self.initializeSingularSDK(withTracking: false)
+                    @unknown default:
+                        print("❓ ATT: Unknown status")
+                        self.initializeSingularSDK(withTracking: false)
+                    }
+                }
+            }
+        } else {
+            // iOS 13 and earlier - tracking is allowed by default
+            print("📱 ATT: iOS < 14, initializing with tracking")
+            initializeSingularSDK(withTracking: true)
+        }
+        #else
+        // AppTrackingTransparency not available, skip ATT but still initialize SDK
+        print("⚠️ ATT: Framework not available, initializing without permission")
+        initializeSingularSDK(withTracking: false)
+        #endif
+    }
+    
+    private func initializeSingularSDK(withTracking: Bool) {
+        #if SINGULAR_SDK_AVAILABLE
+        // Initialize Singular SDK with appropriate configuration
+        if withTracking {
+            print("🎯 Initializing Singular SDK with full tracking")
+            // Singular will have access to IDFA and full tracking capabilities
+        } else {
+            print("🔒 Initializing Singular SDK with limited tracking")
+            // Singular will use limited tracking without IDFA
+        }
+        
+        // Track the install event
+        SingularTracker.trackInstall()
+        
+        // Track the session start
+        SingularTracker.trackSessionStart()
+        #else
+        print("⚠️ Singular SDK not available")
+        #endif
     }
 }

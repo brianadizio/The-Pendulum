@@ -67,5 +67,8 @@
     
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    
+    <key>NSUserTrackingUsageDescription</key>
+    <string>This app would like to track your activity across other apps and websites to provide personalized experiences and improve our services. Your data helps us understand how you interact with the app and deliver better content.</string>
 </dict>
 </plist>
