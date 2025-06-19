@@ -10,11 +10,10 @@ class PendulumSoundManager {
     // Sound settings from the Settings menu
     enum SoundMode: String {
         case standard = "Standard"
-        case enhanced = "Enhanced"
+        case music = "Music"
+        case immersive = "Immersive"
         case minimal = "Minimal"
-        case realistic = "Realistic"
-        case none = "None"
-        case educational = "Educational"
+        case silent = "Silent"
     }
     
     // Current sound mode
@@ -26,6 +25,11 @@ class PendulumSoundManager {
     private var achievementPlayer: AVAudioPlayer?
     private var failurePlayer: AVAudioPlayer?
     private var ambientPlayer: AVAudioPlayer?
+    private var buttonPlayer: AVAudioPlayer?
+    private var levelStartPlayer: AVAudioPlayer?
+    
+    // Cached system sound data for volume control
+    private var systemSoundPlayers: [SystemSoundID: AVAudioPlayer] = [:]
     
     // Sound types enum
     enum SoundType {
@@ -50,7 +54,7 @@ class PendulumSoundManager {
     
     private func setupAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Failed to setup audio session: \(error)")
@@ -61,111 +65,93 @@ class PendulumSoundManager {
     
     // Play pendulum swing sound (varies by position/speed)
     func playSwingSound(angle: CGFloat, velocity: CGFloat) {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch currentMode {
         case .standard:
             // Placeholder: Play a simple swing sound
             playSystemSound(1104) // Tock sound
             
-        case .enhanced:
-            // Placeholder: Play a more complex sound with pitch variation
+        case .music:
+            // Play musical tones based on pendulum motion
             let pitch = mapValueToRange(abs(velocity), inputMin: 0, inputMax: 10, outputMin: 0.8, outputMax: 1.2)
             playSystemSound(1105) // Tick sound
             // In a real implementation, you'd adjust pitch here
             
-        case .minimal:
-            // Placeholder: Play only on significant swings
-            if abs(velocity) > 2.0 {
-                playSystemSound(1103) // Tink sound
-            }
-            
-        case .realistic:
-            // Placeholder: Physics-based sound calculation
+        case .immersive:
+            // Enhanced sound with environmental effects
             let intensity = min(abs(velocity) / 5.0, 1.0)
-            if intensity > 0.3 {
+            if intensity > 0.2 {
                 playSystemSound(1107) // Tock sound
                 impactFeedback.impactOccurred(intensity: CGFloat(intensity))
             }
             
-        case .educational:
-            // Placeholder: Play sounds that indicate physics concepts
-            if angle > 0 {
-                playSystemSound(1104) // Right side
-            } else {
-                playSystemSound(1105) // Left side
+            
+        case .minimal:
+            // Play only on significant swings
+            if abs(velocity) > 2.0 {
+                playSystemSound(1103) // Tink sound
             }
             
-        case .none:
+        case .silent:
             break
         }
     }
     
     // Play collision/boundary hit sound
     func playCollisionSound() {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch currentMode {
-        case .standard, .enhanced, .realistic:
+        case .standard, .music, .immersive:
             playSystemSound(1108) // Pop sound
             impactFeedback.impactOccurred()
             
         case .minimal:
             impactFeedback.impactOccurred(intensity: 0.5)
             
-        case .educational:
-            playSystemSound(1109) // Different pop sound
-            
-        case .none:
+        case .silent:
             break
         }
     }
     
     // Play achievement/level complete sound
     func playAchievementSound() {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch currentMode {
         case .standard, .minimal:
             playSystemSound(1025) // Success sound
             
-        case .enhanced, .realistic:
+        case .music, .immersive:
             playSystemSound(1025) // Success sound
             selectionFeedback.selectionChanged()
             
-        case .educational:
-            playSystemSound(1025) // Success sound
-            // Could add voice saying "Level Complete" in real implementation
-            
-        case .none:
+        case .silent:
             break
         }
     }
     
     // Play failure/game over sound
     func playFailureSound() {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch currentMode {
         case .standard, .minimal:
             playSystemSound(1053) // Failure sound
             
-        case .enhanced, .realistic:
+        case .music, .immersive:
             playSystemSound(1053) // Failure sound
             impactFeedback.impactOccurred(intensity: 0.8)
             
-        case .educational:
-            playSystemSound(1053) // Failure sound
-            // Could add voice explaining the physics in real implementation
-            
-        case .none:
+        case .silent:
             break
         }
     }
     
     // Play button tap sound
     func playButtonTapSound() {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         if currentMode != .minimal {
             playSystemSound(1104) // Click sound
@@ -175,37 +161,33 @@ class PendulumSoundManager {
     
     // Play level start sound
     func playLevelStartSound() {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch currentMode {
-        case .standard, .enhanced, .realistic:
+        case .standard, .music, .immersive:
             playSystemSound(1113) // Begin recording sound
             
-        case .educational:
-            playSystemSound(1113)
-            // Could add voice saying "Level X" in real implementation
-            
-        case .minimal, .none:
+        case .minimal, .silent:
             break
         }
     }
     
     // Play perturbation sounds
     func playSound(_ soundType: SoundType) {
-        guard currentMode != .none else { return }
+        guard currentMode != .silent else { return }
         
         switch soundType {
         case .windGentle:
             // Gentle wind sound - use a soft whoosh
             playSystemSound(1050) // Whoosh sound
-            if currentMode == .enhanced || currentMode == .realistic {
+            if currentMode == .music || currentMode == .immersive {
                 impactFeedback.impactOccurred(intensity: 0.3)
             }
             
         case .windStrong:
             // Strong wind sound - use a more intense sound
             playSystemSound(1051) // Stronger whoosh
-            if currentMode == .enhanced || currentMode == .realistic {
+            if currentMode == .music || currentMode == .immersive {
                 impactFeedback.impactOccurred(intensity: 0.6)
             }
             
@@ -226,7 +208,28 @@ class PendulumSoundManager {
     // MARK: - Helper Methods
     
     private func playSystemSound(_ soundID: SystemSoundID) {
+        // For now, still use system sounds but with volume-aware session
+        // In future, could replace with custom AVAudioPlayer sounds
         AudioServicesPlaySystemSound(soundID)
+    }
+    
+    // Play a sound file through AVAudioPlayer (respects volume)
+    private func playSoundFile(named fileName: String, withExtension ext: String = "wav") {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+            // Fallback to system sound if custom file not found
+            playSystemSound(1104)
+            return
+        }
+        
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = 1.0 // Will respect system volume
+            player.play()
+        } catch {
+            print("Error playing sound file: \(error)")
+            // Fallback to system sound
+            playSystemSound(1104)
+        }
     }
     
     private func mapValueToRange(_ value: CGFloat, inputMin: CGFloat, inputMax: CGFloat, outputMin: CGFloat, outputMax: CGFloat) -> CGFloat {
