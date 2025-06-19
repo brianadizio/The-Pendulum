@@ -1,6 +1,7 @@
 import UIKit
 import AuthenticationServices
 import FirebaseAuth
+import GoogleSignIn
 
 // Custom scroll view for debugging touch events
 class DebugScrollView: UIScrollView {
@@ -143,11 +144,8 @@ class SignInViewController: UIViewController {
         
         // Apple Sign In Button
         appleSignInButton.addTarget(self, action: #selector(appleSignInTapped), for: .touchUpInside)
-        appleSignInButton.addTarget(self, action: #selector(appleSignInTouchDown), for: .touchDown)
         appleSignInButton.translatesAutoresizingMaskIntoConstraints = false
         appleSignInButton.isUserInteractionEnabled = true
-        appleSignInButton.backgroundColor = UIColor.red.withAlphaComponent(0.1) // Temporary visual debugging
-        print("🍎 Apple Sign In button configured with target-action")
         contentView.addSubview(appleSignInButton)
         
         // Google Sign In Button
@@ -299,15 +297,19 @@ class SignInViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    @objc private func appleSignInTouchDown() {
-        print("🍎 Apple Sign In button TOUCH DOWN detected!")
-    }
-    
     @objc private func appleSignInTapped() {
-        print("🍎 Apple Sign In button tapped!")
+        print("🍎 Apple Sign-In button tapped")
+        print("🍎 Bundle ID: \(Bundle.main.bundleIdentifier ?? "nil")")
+        showLoadingIndicator()
         
-        // First test with a simple alert to make sure the tap is being detected
-        showAlert(title: "Debug", message: "Apple Sign In button tap detected!")
+        // Add a timeout to handle cases where the delegate never gets called
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30.0) { [weak self] in
+            guard let self = self else { return }
+            if self.loadingIndicator != nil {
+                print("⚠️ Apple Sign-In timeout - hiding loading indicator")
+                self.hideLoadingIndicator()
+            }
+        }
         
         let nonce = authManager.startSignInWithAppleFlow()
         print("🍎 Generated nonce: \(nonce)")
@@ -315,19 +317,33 @@ class SignInViewController: UIViewController {
         let request = ASAuthorizationAppleIDProvider().createRequest()
         request.requestedScopes = [.fullName, .email]
         request.nonce = nonce
-        print("🍎 Created authorization request")
         
+        print("🍎 Creating authorization controller")
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
-        print("🍎 About to perform authorization requests")
+        
+        print("🍎 Performing authorization request")
         controller.performRequests()
     }
     
     @objc private func googleSignInTapped() {
-        showAlert(title: "Coming Soon", message: "Google Sign In will be implemented with Google Sign-In SDK")
-        // Note: Google Sign In requires additional setup with Google Sign-In SDK
-        // Instructions will be provided in the setup guide
+        showLoadingIndicator()
+        
+        authManager.signInWithGoogle(presentingViewController: self) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.hideLoadingIndicator()
+                
+                switch result {
+                case .success(let user):
+                    print("✅ Google Sign-In successful: \(user.displayName ?? user.email ?? "Unknown User")")
+                    self?.dismiss(animated: true)
+                case .failure(let error):
+                    print("❌ Google Sign-In failed: \(error.localizedDescription)")
+                    self?.showAlert(title: "Sign-In Failed", message: error.localizedDescription)
+                }
+            }
+        }
     }
     
     @objc private func anonymousSignInTapped() {
@@ -412,24 +428,61 @@ class SignInViewController: UIViewController {
 // MARK: - Apple Sign In Delegate
 extension SignInViewController: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        print("🍎 Authorization completed successfully")
         authManager.handleAppleSignIn(authorization: authorization) { [weak self] result in
-            switch result {
-            case .success:
-                self?.dismiss(animated: true)
-            case .failure(let error):
-                self?.showAlert(title: "Sign In Failed", message: error.localizedDescription)
+            print("🍎 Apple Sign-In handler completed")
+            DispatchQueue.main.async {
+                self?.hideLoadingIndicator()
+                switch result {
+                case .success(let user):
+                    print("✅ Apple Sign-In successful for user: \(user.uid)")
+                    self?.dismiss(animated: true)
+                case .failure(let error):
+                    print("❌ Apple Sign-In failed with error: \(error.localizedDescription)")
+                    self?.showAlert(title: "Sign In Failed", message: error.localizedDescription)
+                }
             }
         }
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        showAlert(title: "Sign In Failed", message: error.localizedDescription)
+        print("❌ Authorization failed with error: \(error)")
+        hideLoadingIndicator()
+        
+        // Handle specific Apple Sign-In errors
+        if let authError = error as? ASAuthorizationError {
+            print("❌ Apple Authorization error code: \(authError.code.rawValue)")
+            switch authError.code {
+            case .canceled:
+                print("🍎 User canceled Apple Sign-In")
+                // User canceled, don't show error
+                return
+            case .unknown:
+                showAlert(title: "Sign In Failed", message: "Apple Sign-In is not available. This may be due to device restrictions or running in simulator.")
+            case .invalidResponse:
+                showAlert(title: "Sign In Failed", message: "Invalid response from Apple Sign-In service.")
+            case .notHandled:
+                showAlert(title: "Sign In Failed", message: "Apple Sign-In request was not handled.")
+            case .failed:
+                showAlert(title: "Sign In Failed", message: "Apple Sign-In failed. Please try again.")
+            @unknown default:
+                showAlert(title: "Sign In Failed", message: "An unknown error occurred with Apple Sign-In.")
+            }
+        } else {
+            showAlert(title: "Sign In Failed", message: error.localizedDescription)
+        }
     }
 }
 
 // MARK: - Apple Sign In Presentation
 extension SignInViewController: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return view.window!
+        print("🍎 presentationAnchor called")
+        guard let window = view.window else {
+            print("❌ No window available for presentation anchor")
+            return UIWindow()
+        }
+        print("✅ Returning window for presentation anchor")
+        return window
     }
 }

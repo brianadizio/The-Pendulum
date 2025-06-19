@@ -692,7 +692,10 @@ class ChartCell: UITableViewCell {
         descriptionLabel.font = .systemFont(ofSize: 13, weight: .medium)
         descriptionLabel.textColor = .secondaryLabel
         descriptionLabel.numberOfLines = 0
-        descriptionLabel.backgroundColor = .systemGray6
+        descriptionLabel.backgroundColor = UIColor { traitCollection in
+            // Adapt background color based on appearance mode
+            return traitCollection.userInterfaceStyle == .dark ? .systemGray5 : .systemGray6
+        }
         descriptionLabel.layer.cornerRadius = 6
         descriptionLabel.layer.masksToBounds = true
         descriptionLabel.textAlignment = .left
@@ -730,9 +733,9 @@ class ChartCell: UITableViewCell {
             titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             
             descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            descriptionLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
-            descriptionLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
-            descriptionLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
+            descriptionLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 20), // Add left padding
+            descriptionLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -20), // Add right padding  
+            descriptionLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 35), // Increase height for padding
             
             parameterSelector.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
             parameterSelector.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
@@ -749,7 +752,22 @@ class ChartCell: UITableViewCell {
     func configure(with metric: MetricValue) {
         currentMetric = metric
         titleLabel.text = metric.type.rawValue
-        descriptionLabel.text = metric.type.metricDescription
+        // Add padding to description text by using attributed string with paragraph style
+        let description = metric.type.metricDescription
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.firstLineHeadIndent = 8
+        paragraphStyle.headIndent = 8
+        paragraphStyle.tailIndent = -8
+        
+        let attributedText = NSAttributedString(
+            string: description,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 13, weight: .medium),
+                .foregroundColor: UIColor.secondaryLabel,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+        descriptionLabel.attributedText = attributedText
         
         // Show parameter selector only for pendulum parameters chart
         if metric.type == .pendulumParametersOverTime {

@@ -11,9 +11,43 @@ class SessionTimeManager {
     private var completedSessionDuration: TimeInterval = 0
     private var isActiveSession: Bool = false
     
-    private init() {}
+    // New properties for steady time display
+    private var displaySessionTime: TimeInterval = 0
+    private var lastUpdateTime: Date?
+    private var isOnSimulationTab: Bool = true // Default to true for simulation
+    private var updateTimer: Timer?
+    
+    private init() {
+        startDisplayTimer()
+    }
     
     // MARK: - Session Management
+    
+    // MARK: - Display Timer
+    
+    private func startDisplayTimer() {
+        updateTimer?.invalidate()
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.updateDisplayTime()
+        }
+    }
+    
+    private func updateDisplayTime() {
+        // Only increment display time when on simulation tab and session is active
+        if isOnSimulationTab && isActiveSession {
+            displaySessionTime += 0.5
+        }
+    }
+    
+    /// Set whether we're currently on the simulation tab
+    func setOnSimulationTab(_ onSimulationTab: Bool) {
+        isOnSimulationTab = onSimulationTab
+    }
+    
+    /// Get the display session time (increments by 0.5s only when on simulation tab)
+    func getDisplaySessionTime() -> TimeInterval {
+        return displaySessionTime
+    }
     
     /// Start a new gaming session
     func startSession() {
@@ -21,6 +55,7 @@ class SessionTimeManager {
         sessionEndTime = nil
         isActiveSession = true
         completedSessionDuration = 0
+        displaySessionTime = 0 // Reset display time
     }
     
     /// End the current gaming session and record the duration
@@ -85,6 +120,11 @@ class SessionTimeManager {
         sessionEndTime = nil
         completedSessionDuration = 0
         isActiveSession = false
+        displaySessionTime = 0
+    }
+    
+    deinit {
+        updateTimer?.invalidate()
     }
 }
 

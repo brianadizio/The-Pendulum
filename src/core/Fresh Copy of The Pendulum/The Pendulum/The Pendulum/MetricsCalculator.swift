@@ -122,7 +122,8 @@ class MetricsCalculator {
     }
     
     func calculateSessionTime() -> Double {
-        return Date().timeIntervalSince(sessionStartTime)
+        // Get static session time that only updates every 0.5 seconds when on simulation tab
+        return SessionTimeManager.shared.getDisplaySessionTime()
     }
     
     // MARK: - Advanced Metrics

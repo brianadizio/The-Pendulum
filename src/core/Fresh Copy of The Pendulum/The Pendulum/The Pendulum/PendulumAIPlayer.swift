@@ -429,13 +429,13 @@ class PendulumAIPlayer {
 class PendulumAIManager {
     static let shared = PendulumAIManager()
     
-    private var aiPlayer: PendulumAIPlayer?
-    private var updateTimer: Timer?
+    internal var aiPlayer: PendulumAIPlayer?
+    internal var updateTimer: Timer?
     weak var viewModel: PendulumViewModel? // Made public for AI testing
-    private var currentMode: AIMode = .demo
+    internal var currentMode: AIMode = .demo
     private var isAssisting: Bool = false
     private var competitionScore: Int = 0
-    private var tutorialStep: Int = 0
+    internal var tutorialStep: Int = 0
     
     // AI Modes
     enum AIMode {
@@ -472,10 +472,9 @@ class PendulumAIManager {
             competitionScore = 0
             
         case .tutorial:
-            // AI plays perfectly with guidance
-            aiPlayer = PendulumAIPlayer(skillLevel: .perfect)
-            aiPlayer?.humanErrorEnabled = false
-            tutorialStep = 0
+            // Use enhanced tutorial mode
+            startEnhancedTutorial(viewModel: viewModel)
+            return
         }
         
         // Set up callbacks based on mode
@@ -497,12 +496,14 @@ class PendulumAIManager {
         case .demo, .compete:
             // AI controls directly
             aiPlayer?.onPushLeft = { [weak self] in
-                self?.viewModel?.applyForce(-2.0)
+                print("🔵 AI PUSHING LEFT (force: -3.0)")
+                self?.viewModel?.applyForce(-3.0)  // Increased force for better control
                 self?.showAIActionIndicator(direction: PushDirection.left)
             }
             
             aiPlayer?.onPushRight = { [weak self] in
-                self?.viewModel?.applyForce(2.0)
+                print("🔴 AI PUSHING RIGHT (force: 3.0)")
+                self?.viewModel?.applyForce(3.0)  // Increased force for better control
                 self?.showAIActionIndicator(direction: PushDirection.right)
             }
             
@@ -510,14 +511,16 @@ class PendulumAIManager {
             // AI only assists when needed
             aiPlayer?.onPushLeft = { [weak self] in
                 if self?.isAssisting == true {
-                    self?.viewModel?.applyForce(-2.0)
+                    print("🔵 AI ASSIST LEFT (force: -3.0)")
+                    self?.viewModel?.applyForce(-3.0)  // Increased force for better assistance
                     self?.showAIAssistIndicator(direction: PushDirection.left)
                 }
             }
             
             aiPlayer?.onPushRight = { [weak self] in
                 if self?.isAssisting == true {
-                    self?.viewModel?.applyForce(2.0)
+                    print("🔴 AI ASSIST RIGHT (force: 3.0)")
+                    self?.viewModel?.applyForce(3.0)  // Increased force for better assistance
                     self?.showAIAssistIndicator(direction: PushDirection.right)
                 }
             }
