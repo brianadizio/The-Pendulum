@@ -31,9 +31,19 @@ extension AnalyticsManager {
     // MARK: - Utility Methods
     
     private func getTimeframeForRange() -> TimeInterval {
-        // Default to session timeframe if not properly set
-        // This should be enhanced to use actual selected timeframe from UI
-        return -3600 // 1 hour default, should be updated based on UI selection
+        // Return timeframe based on current time range selection
+        switch currentTimeRange {
+        case .session:
+            return -3600 // 1 hour
+        case .daily:
+            return -86400 // 24 hours
+        case .weekly:
+            return -604800 // 7 days
+        case .monthly:
+            return -2629746 // ~30 days
+        case .yearly:
+            return -31556952 // ~365 days
+        }
     }
     
     // MARK: - Enhanced Tracking Methods
@@ -81,6 +91,15 @@ extension AnalyticsManager {
         for metricType in metricTypes {
             if let value = calculateMetric(type: metricType) {
                 metricValues.append(value)
+            } else {
+                // Create a placeholder metric indicating insufficient data
+                let placeholder = MetricValue(
+                    type: metricType,
+                    value: "Not enough data",
+                    timestamp: Date(),
+                    confidence: 0.0
+                )
+                metricValues.append(placeholder)
             }
         }
         
@@ -227,13 +246,13 @@ extension AnalyticsManager {
             return createMetricValue(reactionTimeSeries)
             
         case .levelCompletionsOverTime:
-            // Get level completions by time period
-            let completions = getLevelCompletionsByTimePeriod()
+            // Get level completions by time period with current time scale
+            let completions = getLevelCompletionsByTimePeriod(timeScale: currentTimeRange)
             return createMetricValue(completions)
             
         case .pendulumParametersOverTime:
-            // Return parameter changes over time
-            let parameterData = getParameterHistoryTimeSeries()
+            // Return parameter changes over time for the selected parameter
+            let parameterData = getParameterHistoryTimeSeries(parameter: currentSelectedParameter, timeScale: currentTimeRange)
             return createMetricValue(parameterData)
             
         case .fullDirectionalBias:
@@ -241,8 +260,20 @@ extension AnalyticsManager {
             let leftCount = Double(directionalPushes["left"] ?? 0)
             let rightCount = Double(directionalPushes["right"] ?? 0)
             
-            // Debug logging
-            // Removed debug print - full directional bias calculations
+            // Debug: Check if analytics is tracking and session is active
+            print("📊 Full Directional Bias Debug:")
+            print("   - Analytics isTracking: \(isTracking)")
+            print("   - Current session ID: \(currentSessionId?.uuidString ?? "none")")
+            print("   - Directional pushes dictionary: \(directionalPushes)")
+            print("   - Left count: \(leftCount), Right count: \(rightCount)")
+            print("   - Analytics tracking active: \(isTracking ? "YES" : "NO")")
+            
+            // Check if we have any data at all
+            if leftCount == 0 && rightCount == 0 {
+                // Return nil to indicate insufficient data
+                print("   - No directional data available")
+                return nil
+            }
             
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
@@ -257,28 +288,59 @@ extension AnalyticsManager {
             
         // Scientific Metrics
         case .phaseSpaceCoverage:
+            // Check if we have sufficient phase space data
+            guard phaseSpacePoints.count > 50 else {
+                print("📊 Phase Space Coverage: Insufficient data (\(phaseSpacePoints.count) points, need >50)")
+                return nil
+            }
             print("📊 Calculating Phase Space Coverage - Calculator: \(Unmanaged.passUnretained(metricsCalculator).toOpaque())")
             let coverage = metricsCalculator.calculatePhaseSpaceCoverage()
             print("📊 Phase Space Coverage Result: \(coverage)")
             return createMetricValue(coverage)
             
         case .energyManagement:
+            // Check if we have sufficient interaction data
+            guard !angleBuffer.isEmpty && !velocityBuffer.isEmpty && angleBuffer.count > 100 else {
+                print("📊 Energy Management: Insufficient data (angles: \(angleBuffer.count), velocities: \(velocityBuffer.count), need >100)")
+                return nil
+            }
             let efficiency = metricsCalculator.calculateEnergyManagementEfficiency()
             return createMetricValue(efficiency, confidence: 0.9)
             
         case .lyapunovExponent:
+            // Check if we have sufficient time series data for chaos analysis
+            guard angleBuffer.count > 200 && phaseSpacePoints.count > 100 else {
+                print("📊 Lyapunov Exponent: Insufficient data (angles: \(angleBuffer.count), phase points: \(phaseSpacePoints.count), need >200 & >100)")
+                return nil
+            }
             let exponent = metricsCalculator.calculateLyapunovExponent()
             return createMetricValue(exponent, confidence: 0.7)
             
         case .controlStrategy:
+            // Check if we have sufficient interaction data to identify strategy
+            guard forceHistory.count > 20 && !reactionTimes.isEmpty else {
+                print("📊 Control Strategy: Insufficient data (forces: \(forceHistory.count), reactions: \(reactionTimes.count), need >20 & >0)")
+                return nil
+            }
             let strategy = metricsCalculator.identifyControlStrategy()
             return createMetricValue(strategy)
             
         case .stateTransitionFreq:
+            // Check if we have sufficient phase space data for state transitions
+            guard phaseSpacePoints.count > 30 else {
+                print("📊 State Transition Frequency: Insufficient data (\(phaseSpacePoints.count) points, need >30)")
+                return nil
+            }
             let freq = metricsCalculator.calculateStateTransitionFrequency()
             return createMetricValue(freq)
             
         case .angularDeviation:
+            // Check if we have sufficient angle data
+            guard !angleBuffer.isEmpty && angleBuffer.count > 10 else {
+                print("📊 Angular Deviation: Insufficient data (\(angleBuffer.count) angles, need >10)")
+                return nil
+            }
+            
             // Return time series data for angular deviation with proper timeframe
             let timeframe = getTimeframeForRange() // Use proper time range instead of hard-coded 5 minutes  
             let timeSeriesData = getInteractionTimeSeries(timeframe: timeframe)
@@ -287,7 +349,13 @@ extension AnalyticsManager {
                 let angle = data["angle"] as? Double ?? 0
                 return (timestamp, angle)
             }
-            // Removed debug print - angular deviation points
+            
+            // Check if we have meaningful time series data
+            guard angleTimeSeries.count > 5 else {
+                print("📊 Angular Deviation: Insufficient time series data (\(angleTimeSeries.count) points, need >5)")
+                return nil
+            }
+            
             // Check for NaN in time series
             for (index, point) in angleTimeSeries.enumerated() {
                 if point.1.isNaN || point.1.isInfinite {
@@ -300,9 +368,6 @@ extension AnalyticsManager {
             // Get average phase space data across all levels
             let averagePhaseData = getAveragePhaseSpaceData()
             
-            // Debug: Log phase space data
-            // Removed debug print - phase trajectory levels
-            
             // Combine all level data into a single trajectory
             var combinedTrajectory: [(theta: Double, omega: Double)] = []
             
@@ -312,7 +377,6 @@ extension AnalyticsManager {
                 for level in averagePhaseData.keys.sorted() {
                     if let levelData = averagePhaseData[level] {
                         combinedTrajectory.append(contentsOf: levelData)
-                        // Removed debug print - added points from level
                     }
                 }
             }
@@ -321,7 +385,12 @@ extension AnalyticsManager {
             if combinedTrajectory.isEmpty {
                 // Use current phase space points if available
                 combinedTrajectory = Array(phaseSpacePoints.suffix(200))
-                // Removed debug print - using current session data
+            }
+            
+            // Check if we have sufficient data for meaningful phase trajectory
+            guard combinedTrajectory.count > 20 else {
+                print("📊 Phase Trajectory: Insufficient data (\(combinedTrajectory.count) points, need >20)")
+                return nil
             }
             
             // Limit to reasonable number of points for display
@@ -334,7 +403,6 @@ extension AnalyticsManager {
                     combinedTrajectory
             }
             
-            // Removed debug print - returning total points
             return createMetricValue(combinedTrajectory)
             
         // Educational Metrics
@@ -365,6 +433,12 @@ extension AnalyticsManager {
                 learningData = [(Date(), currentStability)]
             }
             
+            // Check if we have sufficient learning data
+            guard learningData.count > 0 else {
+                print("📊 Learning Curve: Insufficient data (no learning data points)")
+                return nil
+            }
+            
             return createMetricValue(learningData, confidence: 0.85)
             
         case .adaptationRate:
@@ -376,6 +450,11 @@ extension AnalyticsManager {
             return createMetricValue(retention, confidence: 0.75)
             
         case .failureModeAnalysis:
+            // Check if we have sufficient interaction data for failure analysis
+            guard !reactionTimes.isEmpty && forceHistory.count > 10 else {
+                print("📊 Failure Mode Analysis: Insufficient data (reactions: \(reactionTimes.count), forces: \(forceHistory.count), need >0 & >10)")
+                return nil
+            }
             let modes = metricsCalculator.analyzeFailureModes()
             return createMetricValue(modes)
             

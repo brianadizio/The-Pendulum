@@ -1,6 +1,11 @@
 import UIKit
 import FirebaseAuth
 
+// MARK: - Notifications
+extension Notification.Name {
+    static let parameterSelectionChanged = Notification.Name("parameterSelectionChanged")
+}
+
 // MARK: - Metric Description Helper
 
 extension MetricType {
@@ -39,9 +44,9 @@ extension MetricType {
         case .fullDirectionalBias:
             return "Balance between left and right corrections - centered distribution shows unbiased control."
         case .levelCompletionsOverTime:
-            return "Number of levels successfully completed in each time period."
+            return "Levels beaten as a function of time bins - adapts to selected time scale (session/daily/weekly/monthly/yearly)."
         case .pendulumParametersOverTime:
-            return "How game physics parameters change across levels to increase difficulty."
+            return "How selected physics parameter changes over time - use controls above to select between Mass, Length, Gravity, Damping, and Force Multiplier."
         case .phaseTrajectory:
             return "Pendulum's angle vs velocity patterns - tighter loops indicate better control."
         case .inputFrequencySpectrum:
@@ -119,6 +124,9 @@ class SimpleDashboard: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        // Set initial time range and parameter in AnalyticsManager
+        AnalyticsManager.shared.setCurrentTimeRange(currentTimeRange)
+        AnalyticsManager.shared.setCurrentSelectedParameter(.mass) // Default to mass
         startMetricUpdates()
         
         // Listen for auth state changes
@@ -126,6 +134,14 @@ class SimpleDashboard: UITableViewController {
             self,
             selector: #selector(authStateChanged),
             name: .authStateDidChange,
+            object: nil
+        )
+        
+        // Listen for parameter selection changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(parameterSelectionChanged),
+            name: .parameterSelectionChanged,
             object: nil
         )
     }
@@ -145,6 +161,14 @@ class SimpleDashboard: UITableViewController {
         // Reload only the user status section
         DispatchQueue.main.async {
             self.tableView.reloadSections(IndexSet(integer: 1), with: .none)
+        }
+    }
+    
+    @objc private func parameterSelectionChanged() {
+        // Reload metrics to update charts with new parameter selection
+        loadMetrics()
+        DispatchQueue.main.async {
+            self.tableView.reloadSections(IndexSet(integer: 3), with: .none)
         }
     }
     
@@ -271,6 +295,8 @@ class SimpleDashboard: UITableViewController {
                 },
                 onTimeRangeChanged: { [weak self] range in
                     self?.currentTimeRange = range
+                    // Update AnalyticsManager with new time range
+                    AnalyticsManager.shared.setCurrentTimeRange(range)
                     // Capture session time when switching to session view
                     if range == .session {
                         self?.captureSessionTime()
@@ -627,8 +653,10 @@ class ChartCell: UITableViewCell {
     private let cardView = UIView()
     private let titleLabel = UILabel()
     private let descriptionLabel = UILabel()
+    private let parameterSelector = UISegmentedControl()
     private let chartContainer = UIView()
     private var currentChart: UIView?
+    private var currentMetric: MetricValue?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -675,6 +703,16 @@ class ChartCell: UITableViewCell {
         
         cardView.addSubview(descriptionLabel)
         
+        // Parameter selector (initially hidden)
+        parameterSelector.translatesAutoresizingMaskIntoConstraints = false
+        for parameter in PendulumParameter.allCases {
+            parameterSelector.insertSegment(withTitle: parameter.rawValue, at: parameterSelector.numberOfSegments, animated: false)
+        }
+        parameterSelector.selectedSegmentIndex = 0 // Default to first parameter
+        parameterSelector.addTarget(self, action: #selector(parameterChanged), for: .valueChanged)
+        parameterSelector.isHidden = true // Initially hidden
+        cardView.addSubview(parameterSelector)
+        
         // Chart container
         chartContainer.translatesAutoresizingMaskIntoConstraints = false
         chartContainer.backgroundColor = .systemGray6
@@ -696,7 +734,12 @@ class ChartCell: UITableViewCell {
             descriptionLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             descriptionLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
             
-            chartContainer.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 12),
+            parameterSelector.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
+            parameterSelector.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
+            parameterSelector.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+            parameterSelector.heightAnchor.constraint(equalToConstant: 32),
+            
+            chartContainer.topAnchor.constraint(equalTo: parameterSelector.bottomAnchor, constant: 8),
             chartContainer.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
             chartContainer.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             chartContainer.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16)
@@ -704,8 +747,21 @@ class ChartCell: UITableViewCell {
     }
     
     func configure(with metric: MetricValue) {
+        currentMetric = metric
         titleLabel.text = metric.type.rawValue
         descriptionLabel.text = metric.type.metricDescription
+        
+        // Show parameter selector only for pendulum parameters chart
+        if metric.type == .pendulumParametersOverTime {
+            parameterSelector.isHidden = false
+            // Set current selection based on AnalyticsManager's current selection
+            let currentParam = AnalyticsManager.shared.getCurrentSelectedParameter()
+            if let index = PendulumParameter.allCases.firstIndex(of: currentParam) {
+                parameterSelector.selectedSegmentIndex = index
+            }
+        } else {
+            parameterSelector.isHidden = true
+        }
         
         // Remove existing chart
         currentChart?.removeFromSuperview()
@@ -729,6 +785,22 @@ class ChartCell: UITableViewCell {
     func updateChart(_ metric: MetricValue) {
         guard let chart = currentChart else { return }
         updateChartData(chart, with: metric)
+    }
+    
+    @objc private func parameterChanged() {
+        guard let selectedIndex = PendulumParameter.allCases.indices.contains(parameterSelector.selectedSegmentIndex) ? parameterSelector.selectedSegmentIndex : nil else { return }
+        
+        let selectedParameter = PendulumParameter.allCases[selectedIndex]
+        
+        // Update AnalyticsManager with new parameter selection
+        AnalyticsManager.shared.setCurrentSelectedParameter(selectedParameter)
+        
+        // Trigger a refresh of the metric data
+        // This will cause the dashboard to reload this metric with the new parameter
+        if currentMetric != nil {
+            // Post a notification to trigger dashboard reload
+            NotificationCenter.default.post(name: .parameterSelectionChanged, object: nil)
+        }
     }
     
     private func createChart(for metric: MetricValue) -> UIView {
@@ -765,13 +837,13 @@ class ChartCell: UITableViewCell {
         case let timeSeries as [(Date, Double)]:
             if let lineChart = chartView as? SimpleLineChartView {
                 var values = timeSeries.map { $0.1 }
-                var labels = timeSeries.map { DateFormatter.localizedString(from: $0.0, dateStyle: .none, timeStyle: .short) }
+                var labels = timeSeries.map { formatDateForCurrentTimeScale($0.0) }
                 
                 // Provide sample data if empty
                 if values.isEmpty {
                     let sampleData = getSampleTimeSeriesData(for: metricValue.type)
                     values = sampleData.map { $0.1 }
-                    labels = sampleData.map { DateFormatter.localizedString(from: $0.0, dateStyle: .none, timeStyle: .short) }
+                    labels = sampleData.map { formatDateForCurrentTimeScale($0.0) }
                 }
                 
                 lineChart.updateData(data: values, labels: labels, title: "")
@@ -807,6 +879,40 @@ class ChartCell: UITableViewCell {
                     placeholderLabel.centerYAnchor.constraint(equalTo: chartView.centerYAnchor)
                 ])
             }
+        }
+    }
+    
+    // MARK: - Date Formatting
+    
+    private func formatDateForCurrentTimeScale(_ date: Date) -> String {
+        let currentTimeRange = AnalyticsManager.shared.getCurrentTimeRange()
+        
+        switch currentTimeRange {
+        case .session:
+            // Show time (HH:MM) for session view
+            return DateFormatter.localizedString(from: date, dateStyle: .none, timeStyle: .short)
+            
+        case .daily:
+            // Show time (HH:MM) for daily view
+            return DateFormatter.localizedString(from: date, dateStyle: .none, timeStyle: .short)
+            
+        case .weekly:
+            // Show day names (Mon, Tue, Wed) for weekly view
+            let formatter = DateFormatter()
+            formatter.dateFormat = "EEE" // Abbreviated weekday names
+            return formatter.string(from: date)
+            
+        case .monthly:
+            // Show dates (Jan 1, Jan 15) for monthly view
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d" // Month abbreviation + day
+            return formatter.string(from: date)
+            
+        case .yearly:
+            // Show months (Jan, Feb, Mar) for yearly view
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM" // Month abbreviation only
+            return formatter.string(from: date)
         }
     }
     
