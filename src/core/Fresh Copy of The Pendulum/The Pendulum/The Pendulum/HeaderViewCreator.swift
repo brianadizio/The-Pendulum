@@ -70,21 +70,25 @@ class HeaderViewCreator {
         titleLabel.textAlignment = .left
         containerView.addSubview(titleLabel)
         
-        // AI Test button with brain icon
-        let aiButton = UIButton(type: .system)
+        // AI Test button with AI icon - use custom type for image
+        let aiButton = UIButton(type: .custom)
         aiButton.translatesAutoresizingMaskIntoConstraints = false
         
-        // Configure brain icon
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        let brainImage = UIImage(systemName: "brain.head.profile", withConfiguration: config)
-        aiButton.setImage(brainImage, for: .normal)
-        aiButton.tintColor = .systemBlue
+        // Configure AI icon
+        if let aiIconImage = UIImage(named: "AIicon") {
+            aiButton.setImage(aiIconImage, for: .normal)
+            aiButton.imageView?.contentMode = .scaleAspectFit
+        } else {
+            // Fallback to text if icon not found
+            aiButton.setTitle("AI", for: .normal)
+            aiButton.setTitleColor(FocusCalendarTheme.primaryTextColor, for: .normal)
+        }
         
-        // Style the button
-        aiButton.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        // Style the button (golden theme for AI)
+        aiButton.backgroundColor = FocusCalendarTheme.accentGold.withAlphaComponent(0.1)
         aiButton.layer.cornerRadius = 16
         aiButton.layer.borderWidth = 1
-        aiButton.layer.borderColor = UIColor.systemBlue.cgColor
+        aiButton.layer.borderColor = FocusCalendarTheme.accentGold.cgColor
         
         // Add action
         aiButton.addAction(UIAction { _ in aiAction() }, for: .touchUpInside)
@@ -107,8 +111,8 @@ class HeaderViewCreator {
             // AI button constraints
             aiButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             aiButton.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            aiButton.widthAnchor.constraint(equalToConstant: 32),
-            aiButton.heightAnchor.constraint(equalToConstant: 32),
+            aiButton.widthAnchor.constraint(equalToConstant: 36),
+            aiButton.heightAnchor.constraint(equalToConstant: 36),
             
             // Container height
             containerView.heightAnchor.constraint(equalToConstant: 40)

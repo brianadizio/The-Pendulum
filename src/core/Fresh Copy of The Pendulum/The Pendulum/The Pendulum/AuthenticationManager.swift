@@ -3,6 +3,8 @@ import FirebaseAuth
 import FirebaseFirestore
 import AuthenticationServices
 import CryptoKit
+import GoogleSignIn
+import UIKit
 
 // MARK: - Authentication Manager
 class AuthenticationManager: NSObject, ObservableObject {
@@ -74,80 +76,146 @@ class AuthenticationManager: NSObject, ObservableObject {
     
     // MARK: - Apple Sign In
     func handleAppleSignIn(authorization: ASAuthorization, completion: @escaping (Result<User, Error>) -> Void) {
+        print("🍎 Starting Apple Sign-In handling")
+        
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            print("❌ Failed to get Apple ID credential")
             completion(.failure(AuthError.invalidCredential))
             return
         }
         
+        print("🍎 Got Apple ID credential for user: \(appleIDCredential.user)")
+        
         guard let nonce = currentNonce else {
+            print("❌ Missing nonce")
             completion(.failure(AuthError.missingNonce))
             return
         }
         
+        print("🍎 Using nonce: \(nonce)")
+        
         guard let appleIDToken = appleIDCredential.identityToken else {
+            print("❌ Missing identity token")
             completion(.failure(AuthError.missingToken))
             return
         }
         
         guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+            print("❌ Failed to convert token to string")
             completion(.failure(AuthError.invalidToken))
             return
         }
+        
+        print("🍎 Successfully got ID token string")
         
         // Create Firebase credential
         let credential = OAuthProvider.credential(withProviderID: "apple.com",
                                                   idToken: idTokenString,
                                                   rawNonce: nonce)
         
+        print("🍎 Created Firebase credential, attempting sign in...")
+        
         // Sign in with Firebase
         Auth.auth().signIn(with: credential) { [weak self] result, error in
             if let error = error {
+                print("❌ Firebase sign in failed: \(error.localizedDescription)")
                 self?.authError = error.localizedDescription
-                completion(.failure(error))
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
             } else if let user = result?.user {
+                print("✅ Firebase sign in successful for user: \(user.uid)")
+                
                 // Get display name from Apple if available
                 let displayName = appleIDCredential.fullName?.givenName ?? "Player"
+                print("🍎 Display name: \(displayName)")
                 
                 // Update user profile if needed
                 if user.displayName == nil {
                     let changeRequest = user.createProfileChangeRequest()
                     changeRequest.displayName = displayName
-                    changeRequest.commitChanges { _ in }
+                    changeRequest.commitChanges { error in
+                        if let error = error {
+                            print("⚠️ Failed to update display name: \(error)")
+                        } else {
+                            print("✅ Display name updated successfully")
+                        }
+                    }
                 }
                 
                 self?.createUserProfile(user: user, displayName: displayName)
-                completion(.success(user))
+                DispatchQueue.main.async {
+                    completion(.success(user))
+                }
+            } else {
+                print("❌ Unknown error: no user and no error")
+                DispatchQueue.main.async {
+                    completion(.failure(AuthError.invalidCredential))
+                }
             }
         }
     }
     
     // MARK: - Google Sign In
-    func signInWithGoogle(idToken: String, accessToken: String, completion: @escaping (Result<User, Error>) -> Void) {
-        // Note: Google Sign In requires the Google Sign-In SDK to be installed
-        // For now, we'll create a placeholder that shows this is not yet implemented
-        let error = NSError(domain: "AuthenticationManager", code: 501, userInfo: [
-            NSLocalizedDescriptionKey: "Google Sign In requires additional SDK setup"
-        ])
-        completion(.failure(error))
+    func signInWithGoogle(presentingViewController: UIViewController, completion: @escaping (Result<User, Error>) -> Void) {
+        // Configure Google Sign-In
+        guard let clientID = Auth.auth().app?.options.clientID else {
+            completion(.failure(AuthError.missingClientID))
+            return
+        }
         
-        // When Google Sign-In SDK is added, uncomment this:
-        // let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
-        // 
-        // Auth.auth().signIn(with: credential) { [weak self] result, error in
-        //     if let error = error {
-        //         self?.authError = error.localizedDescription
-        //         completion(.failure(error))
-        //     } else if let user = result?.user {
-        //         self?.createUserProfile(user: user, displayName: user.displayName ?? "Player")
-        //         completion(.success(user))
-        //     }
-        // }
+        // Create Google Sign In configuration object
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Start the sign in flow
+        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error in
+            if let error = error {
+                self?.authError = error.localizedDescription
+                completion(.failure(error))
+                return
+            }
+            
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString else {
+                completion(.failure(AuthError.invalidCredential))
+                return
+            }
+            
+            let accessToken = user.accessToken.tokenString
+            
+            // Create Firebase credential
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+            
+            // Sign in with Firebase
+            Auth.auth().signIn(with: credential) { [weak self] authResult, error in
+                if let error = error {
+                    self?.authError = error.localizedDescription
+                    completion(.failure(error))
+                } else if let firebaseUser = authResult?.user {
+                    // Get display name from Google
+                    let displayName = firebaseUser.displayName ?? user.profile?.name ?? "Player"
+                    
+                    // Update user profile if needed
+                    if firebaseUser.displayName == nil {
+                        let changeRequest = firebaseUser.createProfileChangeRequest()
+                        changeRequest.displayName = displayName
+                        changeRequest.commitChanges { _ in }
+                    }
+                    
+                    self?.createUserProfile(user: firebaseUser, displayName: displayName)
+                    completion(.success(firebaseUser))
+                }
+            }
+        }
     }
     
     // MARK: - Sign Out
     func signOut() {
         do {
             try Auth.auth().signOut()
+            // Also sign out from Google
+            GIDSignIn.sharedInstance.signOut()
             currentUser = nil
             isAuthenticated = false
         } catch {
@@ -254,6 +322,7 @@ enum AuthError: LocalizedError {
     case missingNonce
     case missingToken
     case invalidToken
+    case missingClientID
     
     var errorDescription: String? {
         switch self {
@@ -265,6 +334,8 @@ enum AuthError: LocalizedError {
             return "Missing authentication token"
         case .invalidToken:
             return "Invalid authentication token"
+        case .missingClientID:
+            return "Missing Google Sign-In client ID"
         }
     }
 }

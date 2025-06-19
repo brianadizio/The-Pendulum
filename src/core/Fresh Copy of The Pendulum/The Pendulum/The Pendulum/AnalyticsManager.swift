@@ -3,6 +3,25 @@ import Foundation
 import CoreData
 import UIKit
 
+// MARK: - Seeded Random Generator
+
+struct SeededRandomGenerator {
+    private var seed: UInt64
+    
+    init(seed: Int) {
+        self.seed = UInt64(abs(seed))
+    }
+    
+    mutating func nextDouble(min: Double = 0.0, max: Double = 1.0) -> Double {
+        // Simple Linear Congruential Generator for deterministic randomness
+        seed = (seed &* 1103515245 &+ 12345) & 0x7fffffff
+        let normalizedValue = Double(seed) / Double(0x7fffffff)
+        return min + (normalizedValue * (max - min))
+    }
+}
+
+// MARK: - Analytics Manager
+
 class AnalyticsManager {
     static let shared = AnalyticsManager()
     
@@ -60,6 +79,9 @@ class AnalyticsManager {
     
     // Current selected parameter for parameter history display
     internal var currentSelectedParameter: PendulumParameter = .mass
+    
+    // Cache for parameter history to prevent constant regeneration
+    private var parameterHistoryCache: [String: [(Date, Double)]] = [:]
     
     // MARK: - Data Models
     
@@ -1169,25 +1191,39 @@ class AnalyticsManager {
     }
     
     func getParameterHistoryTimeSeries(parameter: PendulumParameter = .mass, timeScale: AnalyticsTimeRange = .daily) -> [(Date, Double)] {
-        // Return parameter change history as time series for the selected parameter
-        // Generate realistic sample data based on parameter type and time scale
+        // Create cache key
+        let cacheKey = "\(parameter.rawValue)_\(timeScale)"
+        
+        // Check if we have cached data
+        if let cachedData = parameterHistoryCache[cacheKey] {
+            return cachedData
+        }
+        
+        // Generate stable data only once and cache it
         let now = Date()
         var timeSeries: [(Date, Double)] = []
         
         // Determine time intervals and data points based on time scale
         let (intervalCount, intervalDuration, baseValue, variation) = getParameterTimeScaleSettings(for: parameter, timeScale: timeScale)
         
-        // Generate sample parameter evolution data
+        // Use a deterministic seed based on parameter for consistent data
+        let seed = parameter.rawValue.hash
+        var randomGenerator = SeededRandomGenerator(seed: seed)
+        
+        // Generate stable parameter evolution data
         for i in 0..<intervalCount {
             let date = now.addingTimeInterval(Double(i - intervalCount) * intervalDuration)
             
             // Create realistic parameter progression based on parameter type
             let progressionFactor = Double(i) / Double(intervalCount - 1) // 0 to 1
-            let noise = Double.random(in: -0.1...0.1) // Add some variation
+            let noise = randomGenerator.nextDouble(min: -0.1, max: 0.1) // Deterministic variation
             
             let value = baseValue + (variation * progressionFactor) + (variation * 0.2 * noise)
             timeSeries.append((date, max(0.1, value))) // Ensure positive values
         }
+        
+        // Cache the data
+        parameterHistoryCache[cacheKey] = timeSeries
         
         return timeSeries
     }
@@ -1321,6 +1357,8 @@ class AnalyticsManager {
     
     func setCurrentSelectedParameter(_ parameter: PendulumParameter) {
         currentSelectedParameter = parameter
+        // Clear cache when parameter changes to generate new data
+        parameterHistoryCache.removeAll()
     }
     
     func getCurrentSelectedParameter() -> PendulumParameter {

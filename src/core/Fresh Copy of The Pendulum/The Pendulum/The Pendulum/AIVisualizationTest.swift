@@ -115,10 +115,7 @@ extension PendulumViewController {
     func startAIWithGuaranteedMovement(mode: PendulumAIManager.AIMode = .demo) {
         print("\n🚀 Starting AI with guaranteed movement...")
         
-        // 1. Ensure all components are ready
-        // viewModel is non-optional, so we can proceed
-        
-        // CRITICAL: Ensure simulation is running
+        // 1. CRITICAL: Ensure simulation is running FIRST
         if !viewModel.isSimulating {
             viewModel.startSimulation()
             print("✓ Started simulation (was stopped)")
@@ -127,49 +124,52 @@ extension PendulumViewController {
         // 2. Stop any existing AI
         if PendulumAIManager.shared.isAIPlaying() {
             PendulumAIManager.shared.stopAIPlayer()
+            print("✓ Stopped existing AI")
         }
         
-        // 3. Reset pendulum to a slightly off-vertical position
+        // 3. Reset pendulum to a slightly off-vertical position to give AI something to work with
         viewModel.reset()
         viewModel.currentState.theta = Double.pi - 0.3 // 0.3 radians from vertical
+        print("✓ Reset pendulum to angle: \(Double.pi - 0.3)")
         
         // 4. Ensure visualization is set up
         ensureAIVisualizationSetup()
         
-        // 5. Start AI with the shared view model
+        // 5. Show AI mode indicator BEFORE starting AI
+        showAIModeIndicator(mode: mode)
+        print("✓ Showing AI mode indicator: \(mode)")
+        
+        // 6. Start AI with explicit debugging
+        print("🔧 Starting AI Manager...")
         PendulumAIManager.shared.viewModel = viewModel
         PendulumAIManager.shared.startAIPlayer(
-            skillLevel: .intermediate,
+            skillLevel: .expert, // Use expert level for demo
             viewModel: viewModel,
             mode: mode
         )
         
-        // 6. Show mode indicator
-        print("📱 Showing animated AI mode: \(mode)")
-        
-        // 7. Update message
-        let message: String
-        switch mode {
-        case .demo:
-            message = "🤖 AI Demo - Watch the pendulum balance!"
-        case .assist:
-            message = "🤝 AI will help when you struggle"
-        case .compete:
-            message = "🏆 Compete with the AI!"
-        case .tutorial:
-            message = "📚 AI Tutorial - Follow the hints"
+        // 7. Verify AI started
+        if PendulumAIManager.shared.isAIPlaying() {
+            print("✅ AI is now playing!")
+        } else {
+            print("❌ AI failed to start!")
         }
-        print("📢 \(message)")
         
-        // 8. Verify AI is working after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        // 7. Add visual confirmation after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             if PendulumAIManager.shared.isAIPlaying() {
-                print("✅ AI is running and should be moving the pendulum")
+                self.updateGameMessageLabel("🤖 AI is controlling the pendulum")
+                print("🎯 AI Status Check: Still playing after 2 seconds")
             } else {
-                print("❌ AI failed to start properly")
-                print("❌ AI ERROR: Failed to start AI player")
+                self.updateGameMessageLabel("❌ AI failed to start")
+                print("⚠️ AI Status Check: Not playing after 2 seconds")
             }
         }
+        
+        // 8. Show mode indicator
+        print("📱 Showing animated AI mode: \(mode)")
     }
+    
+    // updateGameMessageLabel is now defined in PendulumViewController as internal
 }
 

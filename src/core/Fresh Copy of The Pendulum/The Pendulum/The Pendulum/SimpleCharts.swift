@@ -267,6 +267,26 @@ class SimpleChartView: UIView {
         }
     }
     
+    // Helper to draw X-axis title
+    func drawXAxisTitle(_ axisTitle: String, in chartArea: CGRect, rect: CGRect) {
+        guard !axisTitle.isEmpty else { return }
+        
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: UIColor.darkGray
+        ]
+        
+        let titleSize = axisTitle.size(withAttributes: titleAttributes)
+        let titleRect = CGRect(
+            x: (rect.width - titleSize.width) / 2,
+            y: rect.height - 20, // Position at bottom
+            width: titleSize.width,
+            height: titleSize.height
+        )
+        
+        axisTitle.draw(in: titleRect, withAttributes: titleAttributes)
+    }
+    
     // Helper to draw Y-axis labels with tick marks
     func drawYAxisLabels(in context: CGContext, chartArea: CGRect, minValue: Double, maxValue: Double, unit: String = "") {
         // Validate inputs
@@ -476,6 +496,11 @@ class SimpleBarChartView: SimpleChartView {
         
         // Draw X-axis labels
         drawXAxisLabels(in: chartArea)
+        
+        // Draw X-axis title for specific charts
+        if title.lowercased().contains("magnitude") || title.lowercased().contains("force") {
+            drawXAxisTitle("Force Magnitude", in: chartArea, rect: rect)
+        }
         
         // Draw Y-axis labels with tick marks
         drawYAxisLabels(in: context, chartArea: chartArea, minValue: minValue, maxValue: maxValue, unit: getUnitFromTitle())

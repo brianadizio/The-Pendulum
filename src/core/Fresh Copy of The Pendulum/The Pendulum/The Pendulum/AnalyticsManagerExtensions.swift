@@ -270,9 +270,9 @@ extension AnalyticsManager {
             
             // Check if we have any data at all
             if leftCount == 0 && rightCount == 0 {
-                // Return nil to indicate insufficient data
+                // Return a "no data" indicator
                 print("   - No directional data available")
-                return nil
+                return createMetricValue("No Data Available" as Any)
             }
             
             let distribution = [leftCount, rightCount]
