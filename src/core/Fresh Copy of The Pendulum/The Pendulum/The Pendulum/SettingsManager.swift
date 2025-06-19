@@ -12,6 +12,7 @@ class SettingsManager {
         static let metrics = "setting_Metrics"
         static let sounds = "setting_Sounds"
         static let backgrounds = "setting_Backgrounds"
+        static let gameControls = "setting_GameControls"
     }
     
     // Default values
@@ -20,6 +21,7 @@ class SettingsManager {
         static let metrics = "Basic"
         static let sounds = "Standard"
         static let backgrounds = "Default"
+        static let gameControls = "Push"
     }
     
     // MARK: - Settings Accessors
@@ -46,6 +48,12 @@ class SettingsManager {
     var backgrounds: String {
         get { UserDefaults.standard.string(forKey: Keys.backgrounds) ?? Defaults.backgrounds }
         set { UserDefaults.standard.set(newValue, forKey: Keys.backgrounds) }
+    }
+    
+    /// Current game controls setting
+    var gameControls: String {
+        get { UserDefaults.standard.string(forKey: Keys.gameControls) ?? Defaults.gameControls }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.gameControls) }
     }
     
     // MARK: - Settings Effects
@@ -227,6 +235,9 @@ class SettingsManager {
         }
         if UserDefaults.standard.string(forKey: Keys.backgrounds) == nil {
             backgrounds = Defaults.backgrounds
+        }
+        if UserDefaults.standard.string(forKey: Keys.gameControls) == nil {
+            gameControls = Defaults.gameControls
         }
     }
 }
