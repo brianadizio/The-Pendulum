@@ -1960,40 +1960,43 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         guard let view = sender.view else { return }
         let tag = view.tag
         
+        // Play button tap sound
+        PendulumSoundManager.shared.playButtonTapSound()
+        
         // Handle different integration options based on tag
         switch tag {
         case 301: // View Leaderboards
-            print("View Leaderboards tapped")
+            showComingSoonAlert(for: "Leaderboards")
         case 302: // Instagram
-            print("Instagram integration tapped")
+            openInstagram()
         case 303: // Facebook
-            print("Facebook integration tapped")
+            openFacebook()
         case 304: // View Data
-            print("View Data tapped")
+            showComingSoonAlert(for: "Data Views")
         case 305: // View Manifolds
-            print("View Manifolds tapped")
+            showComingSoonAlert(for: "Manifolds")
         case 306: // View Surjective Submersions
-            print("View Surjective Submersions tapped")
+            showComingSoonAlert(for: "Surjective Submersions")
         case 307: // View Sheaf
-            print("View Sheaf tapped")
+            showComingSoonAlert(for: "Sheaf Theory")
         case 308: // View Morphisms
-            print("View Morphisms tapped")
+            showComingSoonAlert(for: "Morphisms")
         case 309: // View Category
-            print("View Category tapped")
+            showComingSoonAlert(for: "Category Theory")
         case 310: // View Functor
-            print("View Functor tapped")
+            showComingSoonAlert(for: "Functor Analysis")
         case 401: // iCloud Sync
-            print("iCloud Sync tapped")
+            showComingSoonAlert(for: "iCloud Sync")
         case 402: // Health App
-            print("Health App integration tapped")
+            showComingSoonAlert(for: "Health App Integration")
         case 403: // The Focus Calendar
-            print("The Focus Calendar integration tapped")
+            showComingSoonAlert(for: "The Focus Calendar")
         case 404: // The Maze
-            print("The Maze integration tapped")
+            showComingSoonAlert(for: "The Maze")
         case 405: // The Hypergraph
-            print("The Hypergraph integration tapped")
+            showComingSoonAlert(for: "The Hypergraph")
         case 406: // The Immersive Topology
-            print("The Immersive Topology integration tapped")
+            showComingSoonAlert(for: "The Immersive Topology")
         default:
             print("Unknown integration option: \(tag)")
         }
@@ -2228,8 +2231,53 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             }
         }
         
-        // For now just print the selection
-        print("Selected integration: \(buttonTitle) (tag: \(sender.tag))")
+        // Handle different integration buttons based on tag
+        switch sender.tag {
+        case 302: // Instagram
+            openInstagram()
+        case 303: // Facebook
+            openFacebook()
+        default:
+            // Show coming soon for all other integrations
+            showComingSoonAlert(for: buttonTitle)
+        }
+    }
+    
+    // MARK: - Integration Actions
+    
+    private func showComingSoonAlert(for feature: String) {
+        let alert = UIAlertController(
+            title: "Coming Soon",
+            message: "\(feature) integration is coming soon! Stay tuned for updates.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        
+        present(alert, animated: true)
+    }
+    
+    private func openInstagram() {
+        let username = "goldenenterprisesolutions"
+        
+        // Try to open Instagram app first
+        if let instagramURL = URL(string: "instagram://user?username=\(username)"),
+           UIApplication.shared.canOpenURL(instagramURL) {
+            UIApplication.shared.open(instagramURL)
+        } else {
+            // Fallback to web browser
+            if let webURL = URL(string: "https://www.instagram.com/\(username)") {
+                UIApplication.shared.open(webURL)
+            }
+        }
+    }
+    
+    private func openFacebook() {
+        let facebookURL = "https://www.facebook.com/share/16dES57vwH/?mibextid=wwXIfr"
+        
+        if let url = URL(string: facebookURL) {
+            UIApplication.shared.open(url)
+        }
     }
     
     private func setupSettingsView() {
