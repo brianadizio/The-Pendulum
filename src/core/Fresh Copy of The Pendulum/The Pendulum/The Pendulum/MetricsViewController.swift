@@ -2,25 +2,30 @@ import UIKit
 
 class MetricsViewController: UIViewController {
     
-    private let tableView = UITableView()
-    private let metricsOptions = ["Basic", "Advanced", "Scientific", "Educational", "Topology", "Performance"]
+    // MARK: - Properties
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private var metricsOptions: [(title: String, subtitle: String, isAvailable: Bool)] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        loadMetricsOptions()
     }
     
     private func setupUI() {
         title = "Metrics"
-        view.backgroundColor = .goldenBackground
+        view.backgroundColor = .systemGroupedBackground
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(doneTapped)
+        )
         
         // Configure table view
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = .clear
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor.goldenPrimary.withAlphaComponent(0.3)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "MetricsCell")
         
         view.addSubview(tableView)
@@ -32,11 +37,50 @@ class MetricsViewController: UIViewController {
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
+    
+    private func loadMetricsOptions() {
+        // All metrics are coming soon
+        metricsOptions = [
+            (title: "Energy Tracking", 
+             subtitle: "Monitor kinetic and potential energy",
+             isAvailable: false),
+            
+            (title: "Phase Space Analysis", 
+             subtitle: "Track position and velocity relationships",
+             isAvailable: false),
+            
+            (title: "Chaos Detection", 
+             subtitle: "Calculate Lyapunov exponents",
+             isAvailable: false),
+            
+            (title: "Statistical Analysis", 
+             subtitle: "Mean, variance, and distribution",
+             isAvailable: false),
+            
+            (title: "Frequency Spectrum", 
+             subtitle: "FFT analysis of pendulum motion",
+             isAvailable: false),
+            
+            (title: "Real-time Graphs", 
+             subtitle: "Display live metric visualizations",
+             isAvailable: false)
+        ]
+        
+        tableView.reloadData()
+    }
+    
+    @objc private func doneTapped() {
+        dismiss(animated: true)
+    }
 }
 
 // MARK: - UITableViewDataSource
 
 extension MetricsViewController: UITableViewDataSource {
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return metricsOptions.count
@@ -46,26 +90,51 @@ extension MetricsViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MetricsCell", for: indexPath)
         let option = metricsOptions[indexPath.row]
         
-        cell.textLabel?.text = option
-        cell.backgroundColor = .clear
-        cell.textLabel?.textColor = .label
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        var config = UIListContentConfiguration.subtitleCell()
+        config.text = option.title
+        config.secondaryText = option.subtitle
+        config.textProperties.font = .systemFont(ofSize: 17)
+        config.secondaryTextProperties.font = .systemFont(ofSize: 13)
         
-        // Add checkmark if this is the current selection
-        let currentMetrics = SettingsManager.shared.metrics
-        if option == currentMetrics {
-            cell.accessoryType = .checkmark
-            cell.tintColor = .goldenPrimary
-        } else {
-            cell.accessoryType = .none
-        }
+        // Style for coming soon
+        config.textProperties.color = .tertiaryLabel
+        config.secondaryTextProperties.color = .tertiaryLabel
+        cell.selectionStyle = .none
         
-        // Add disclosure indicator
-        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = .secondaryLabel
-        cell.accessoryView = cell.accessoryType == .checkmark ? nil : chevron
+        // Add "Coming Soon" badge
+        let badge = UILabel()
+        badge.text = "SOON"
+        badge.font = .systemFont(ofSize: 11, weight: .semibold)
+        badge.textColor = .systemOrange
+        badge.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.15)
+        badge.layer.cornerRadius = 4
+        badge.layer.masksToBounds = true
+        badge.textAlignment = .center
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        
+        let containerView = UIView()
+        containerView.addSubview(badge)
+        
+        NSLayoutConstraint.activate([
+            badge.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            badge.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            badge.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            badge.widthAnchor.constraint(equalToConstant: 45),
+            badge.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        
+        cell.contentConfiguration = config
+        cell.accessoryView = containerView
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Analytics Options"
+    }
+    
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        return "Advanced metrics and analytics features will be available in a future update."
     }
 }
 
@@ -76,23 +145,14 @@ extension MetricsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let selectedOption = metricsOptions[indexPath.row]
-        
-        // Update settings
-        SettingsManager.shared.metrics = selectedOption
-        
-        // Refresh table to show new selection
-        tableView.reloadData()
-        
-        // Show feedback
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
-        
-        // Post notification to update analytics dashboard if needed
-        NotificationCenter.default.post(name: Notification.Name("MetricsSettingChanged"), object: selectedOption)
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 50
+        // Show coming soon alert
+        let option = metricsOptions[indexPath.row]
+        let alert = UIAlertController(
+            title: "Coming Soon",
+            message: "\(option.title) will be available in a future update.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
