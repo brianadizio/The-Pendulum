@@ -4,7 +4,7 @@ class GameControlsViewController: UIViewController {
   
   // MARK: - Properties
   private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-  private var controlOptions: [(title: String, subtitle: String, isSelected: Bool)] = []
+  private var controlOptions: [(title: String, subtitle: String, isSelected: Bool, isAvailable: Bool)] = []
   private var sensitivityValue: Float = 0.5
   
   // MARK: - Lifecycle
@@ -46,30 +46,37 @@ class GameControlsViewController: UIViewController {
     
     let currentControl = SettingsManager.shared.gameControls
     
+    // All control options are coming soon except Push
     controlOptions = [
       (title: "Push", 
        subtitle: "Push the pendulum with touch",
-       isSelected: currentControl == "Push"),
+       isSelected: currentControl == "Push",
+       isAvailable: true),
       
       (title: "Gyroscope", 
        subtitle: "Tilt device to control pendulum",
-       isSelected: currentControl == "Gyroscope"),
+       isSelected: false,
+       isAvailable: false),
       
       (title: "Slide", 
        subtitle: "Slide finger to apply force",
-       isSelected: currentControl == "Slide"),
+       isSelected: false,
+       isAvailable: false),
       
       (title: "Tap", 
        subtitle: "Tap to apply impulse",
-       isSelected: currentControl == "Tap"),
+       isSelected: false,
+       isAvailable: false),
       
       (title: "Swipe", 
        subtitle: "Swipe gestures for control",
-       isSelected: currentControl == "Swipe"),
+       isSelected: false,
+       isAvailable: false),
       
       (title: "Tilt", 
        subtitle: "Tilt device to change gravity",
-       isSelected: currentControl == "Tilt")
+       isSelected: false,
+       isAvailable: false)
     ]
     
     tableView.reloadData()
@@ -114,11 +121,45 @@ extension GameControlsViewController: UITableViewDataSource {
       config.secondaryText = option.subtitle
       config.textProperties.font = .systemFont(ofSize: 17)
       config.secondaryTextProperties.font = .systemFont(ofSize: 13)
-      config.secondaryTextProperties.color = .secondaryLabel
+      
+      if option.isAvailable {
+        config.textProperties.color = .label
+        config.secondaryTextProperties.color = .secondaryLabel
+        cell.selectionStyle = .default
+        cell.accessoryType = option.isSelected ? .checkmark : .none
+        cell.tintColor = .systemBlue
+      } else {
+        config.textProperties.color = .tertiaryLabel
+        config.secondaryTextProperties.color = .tertiaryLabel
+        cell.selectionStyle = .none
+        cell.accessoryType = .none
+        
+        // Add "Coming Soon" badge
+        let badge = UILabel()
+        badge.text = "SOON"
+        badge.font = .systemFont(ofSize: 11, weight: .semibold)
+        badge.textColor = .systemOrange
+        badge.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.15)
+        badge.layer.cornerRadius = 4
+        badge.layer.masksToBounds = true
+        badge.textAlignment = .center
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        
+        let containerView = UIView()
+        containerView.addSubview(badge)
+        
+        NSLayoutConstraint.activate([
+          badge.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+          badge.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+          badge.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+          badge.widthAnchor.constraint(equalToConstant: 45),
+          badge.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        
+        cell.accessoryView = containerView
+      }
       
       cell.contentConfiguration = config
-      cell.accessoryType = option.isSelected ? .checkmark : .none
-      cell.tintColor = .systemBlue
       
     case 1:
       // Sensitivity slider
@@ -180,7 +221,7 @@ extension GameControlsViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
     switch section {
     case 0:
-      return "Choose how you want to interact with the pendulum."
+      return "Choose how you want to interact with the pendulum. More control methods will be available in future updates."
     case 1:
       return "Adjust how responsive the pendulum is to your input."
     default:
@@ -199,7 +240,6 @@ extension GameControlsViewController: UITableViewDataSource {
       userInfo: ["sensitivity": sender.value]
     )
   }
-  
 }
 
 // MARK: - UITableViewDelegate
@@ -210,25 +250,38 @@ extension GameControlsViewController: UITableViewDelegate {
     
     switch indexPath.section {
     case 0:
-      // Control method selection
-      for i in 0..<controlOptions.count {
-        controlOptions[i].isSelected = (i == indexPath.row)
+      let option = controlOptions[indexPath.row]
+      
+      if option.isAvailable {
+        // Control method selection
+        for i in 0..<controlOptions.count {
+          controlOptions[i].isSelected = (i == indexPath.row)
+        }
+        
+        let selectedOption = controlOptions[indexPath.row].title
+        
+        // Update settings
+        SettingsManager.shared.gameControls = selectedOption
+        
+        // Refresh table to show new selection
+        tableView.reloadData()
+        
+        // Show feedback
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        
+        // Post notification
+        NotificationCenter.default.post(name: Notification.Name("GameControlsChanged"), object: nil)
+      } else {
+        // Show coming soon alert
+        let alert = UIAlertController(
+          title: "Coming Soon",
+          message: "\(option.title) control method will be available in a future update.",
+          preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
       }
-      
-      let selectedOption = controlOptions[indexPath.row].title
-      
-      // Update settings
-      SettingsManager.shared.gameControls = selectedOption
-      
-      // Refresh table to show new selection
-      tableView.reloadData()
-      
-      // Show feedback
-      let impact = UIImpactFeedbackGenerator(style: .light)
-      impact.impactOccurred()
-      
-      // Post notification
-      NotificationCenter.default.post(name: Notification.Name("GameControlsChanged"), object: nil)
       
     case 2:
       // Reset controls

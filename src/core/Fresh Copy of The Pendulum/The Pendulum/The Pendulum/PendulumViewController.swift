@@ -2071,7 +2071,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     private func createSocialButton(title: String, iconName: String, tag: Int) -> UIButton {
         let button = UIButton(type: .system)
         button.tag = tag
-        button.backgroundColor = .white
+        button.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         button.layer.cornerRadius = 15
         button.layer.borderWidth = 1
         button.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
@@ -2545,7 +2545,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     private func createSettingsCard() -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = FocusCalendarTheme.cardBackgroundColor
+        card.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         card.layer.cornerRadius = 12
         card.layer.masksToBounds = true
         return card
@@ -2872,7 +2872,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Options container (shows current selection with dropdown indicator)
         let optionsContainer = UIView()
-        optionsContainer.backgroundColor = FocusCalendarTheme.cardBackgroundColor
+        optionsContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         optionsContainer.layer.cornerRadius = 12
         optionsContainer.layer.borderWidth = 1
         optionsContainer.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
@@ -3007,8 +3007,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
         button.titleLabel?.font = FocusCalendarTheme.bodyFont
-        button.setTitleColor(isSelected ? FocusCalendarTheme.cardBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
-        button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.cardBackgroundColor
+        button.setTitleColor(isSelected ? FocusCalendarTheme.secondaryBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
+        button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.secondaryBackgroundColor
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 1
         button.layer.borderColor = FocusCalendarTheme.borderColor.cgColor
@@ -3165,8 +3165,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
                    let title = button.title(for: .normal) {
                     // Update button state based on selection
                     let isSelected = title == selectedOption
-                    button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.cardBackgroundColor
-                    button.setTitleColor(isSelected ? FocusCalendarTheme.cardBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
+                    button.backgroundColor = isSelected ? FocusCalendarTheme.primaryTextColor : FocusCalendarTheme.secondaryBackgroundColor
+                    button.setTitleColor(isSelected ? FocusCalendarTheme.secondaryBackgroundColor : FocusCalendarTheme.primaryTextColor, for: .normal)
                 }
             }
         }

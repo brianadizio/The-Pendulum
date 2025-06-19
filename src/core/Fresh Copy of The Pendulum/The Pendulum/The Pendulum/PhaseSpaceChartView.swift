@@ -22,7 +22,7 @@ class PhaseSpaceChartView: UIView {
     private func setupUI() {
         // Ensure this view doesn't conflict with Auto Layout
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = UIColor(white: 0.98, alpha: 1.0)
+        backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         layer.cornerRadius = 12
         layer.borderWidth = 1
         layer.borderColor = FocusCalendarTheme.lightBorderColor.cgColor

@@ -345,6 +345,7 @@ class SimpleDashboard: UITableViewController {
 
 class HeaderCell: UITableViewCell {
     
+    private let cardView = UIView()
     private let titleLabel = UILabel()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -360,15 +361,30 @@ class HeaderCell: UITableViewCell {
     private func setupUI() {
         backgroundColor = .clear
         
+        // Card container
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
+        cardView.layer.cornerRadius = 12
+        cardView.layer.shadowColor = UIColor.black.cgColor
+        cardView.layer.shadowOpacity = 0.05
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        cardView.layer.shadowRadius = 4
+        contentView.addSubview(cardView)
+        
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.font = UIFont(name: "Georgia-Bold", size: 28)
         titleLabel.textColor = .label
         titleLabel.textAlignment = .center
-        contentView.addSubview(titleLabel)
+        cardView.addSubview(titleLabel)
         
         NSLayoutConstraint.activate([
-            titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor)
         ])
     }
     
@@ -381,6 +397,7 @@ class HeaderCell: UITableViewCell {
 
 class ControlsCell: UITableViewCell {
     
+    private let cardView = UIView()
     private let groupControl = UISegmentedControl()
     private let timeControl = UISegmentedControl()
     private var onGroupChanged: ((MetricGroupType) -> Void)?
@@ -399,6 +416,16 @@ class ControlsCell: UITableViewCell {
     private func setupUI() {
         backgroundColor = .clear
         
+        // Card container
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
+        cardView.layer.cornerRadius = 12
+        cardView.layer.shadowColor = UIColor.black.cgColor
+        cardView.layer.shadowOpacity = 0.05
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        cardView.layer.shadowRadius = 4
+        contentView.addSubview(cardView)
+        
         // Group control
         let groupItems = MetricGroupType.allCases.map { $0.displayName }
         groupControl.removeAllSegments()
@@ -408,7 +435,7 @@ class ControlsCell: UITableViewCell {
         groupControl.selectedSegmentIndex = 0
         groupControl.translatesAutoresizingMaskIntoConstraints = false
         groupControl.addTarget(self, action: #selector(groupChanged), for: .valueChanged)
-        contentView.addSubview(groupControl)
+        cardView.addSubview(groupControl)
         
         // Time range control  
         let timeItems = ["Session", "Daily", "Weekly", "Monthly", "Yearly"]
@@ -419,18 +446,24 @@ class ControlsCell: UITableViewCell {
         timeControl.selectedSegmentIndex = 1 // Daily
         timeControl.translatesAutoresizingMaskIntoConstraints = false
         timeControl.addTarget(self, action: #selector(timeRangeChanged), for: .valueChanged)
-        contentView.addSubview(timeControl)
+        cardView.addSubview(timeControl)
         
         NSLayoutConstraint.activate([
-            groupControl.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            groupControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            groupControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
+            
+            groupControl.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            groupControl.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
+            groupControl.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
             groupControl.heightAnchor.constraint(equalToConstant: 36),
             
             timeControl.topAnchor.constraint(equalTo: groupControl.bottomAnchor, constant: 8),
-            timeControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            timeControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            timeControl.heightAnchor.constraint(equalToConstant: 36)
+            timeControl.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
+            timeControl.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+            timeControl.heightAnchor.constraint(equalToConstant: 36),
+            timeControl.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12)
         ])
     }
     
@@ -491,7 +524,7 @@ class MetricCell: UITableViewCell {
         
         // Card container
         cardView.translatesAutoresizingMaskIntoConstraints = false
-        cardView.backgroundColor = .white
+        cardView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         cardView.layer.cornerRadius = 12
         cardView.layer.shadowColor = UIColor.black.cgColor
         cardView.layer.shadowOpacity = 0.05
@@ -673,7 +706,7 @@ class ChartCell: UITableViewCell {
         
         // Card container
         cardView.translatesAutoresizingMaskIntoConstraints = false
-        cardView.backgroundColor = .white
+        cardView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         cardView.layer.cornerRadius = 12
         cardView.layer.shadowColor = UIColor.black.cgColor
         cardView.layer.shadowOpacity = 0.05
@@ -692,10 +725,7 @@ class ChartCell: UITableViewCell {
         descriptionLabel.font = .systemFont(ofSize: 13, weight: .medium)
         descriptionLabel.textColor = .secondaryLabel
         descriptionLabel.numberOfLines = 0
-        descriptionLabel.backgroundColor = UIColor { traitCollection in
-            // Adapt background color based on appearance mode
-            return traitCollection.userInterfaceStyle == .dark ? .systemGray5 : .systemGray6
-        }
+        descriptionLabel.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         descriptionLabel.layer.cornerRadius = 6
         descriptionLabel.layer.masksToBounds = true
         descriptionLabel.textAlignment = .left
@@ -718,7 +748,7 @@ class ChartCell: UITableViewCell {
         
         // Chart container
         chartContainer.translatesAutoresizingMaskIntoConstraints = false
-        chartContainer.backgroundColor = .systemGray6
+        chartContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         chartContainer.layer.cornerRadius = 8
         cardView.addSubview(chartContainer)
         
@@ -1029,7 +1059,7 @@ class UserStatusCell: UITableViewCell {
         
         // Card container
         cardView.translatesAutoresizingMaskIntoConstraints = false
-        cardView.backgroundColor = .systemGray6
+        cardView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         cardView.layer.cornerRadius = 12
         contentView.addSubview(cardView)
         

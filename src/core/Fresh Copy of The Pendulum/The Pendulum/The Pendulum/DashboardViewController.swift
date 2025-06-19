@@ -357,7 +357,7 @@ class DashboardViewController: UIViewController {
         // Create chart view placeholder
         chartView = UIView()
         chartView.translatesAutoresizingMaskIntoConstraints = false
-        chartView.backgroundColor = UIColor.white
+        chartView.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         chartView.layer.cornerRadius = 8
         chartView.layer.borderWidth = 1
         chartView.layer.borderColor = (UIColor.goldenPrimary as UIColor).withAlphaComponent(0.2).cgColor

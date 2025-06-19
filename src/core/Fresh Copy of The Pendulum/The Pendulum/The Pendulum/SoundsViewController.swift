@@ -42,7 +42,7 @@ class SoundsViewController: UIViewController {
     private func loadSoundOptions() {
         let currentSound = SettingsManager.shared.sounds
         hapticFeedbackEnabled = UserDefaults.standard.bool(forKey: "hapticFeedbackEnabled")
-        if !UserDefaults.standard.object(forKey: "hapticFeedbackEnabled") {
+        if UserDefaults.standard.object(forKey: "hapticFeedbackEnabled") == nil {
             // Default to true if not set
             hapticFeedbackEnabled = true
             UserDefaults.standard.set(true, forKey: "hapticFeedbackEnabled")

@@ -201,7 +201,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Create container for summary cards
         let summaryContainer = UIView()
         summaryContainer.translatesAutoresizingMaskIntoConstraints = false
-        summaryContainer.backgroundColor = .clear
+        summaryContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         contentView.addSubview(summaryContainer)
         
         // Layout constraints
@@ -290,7 +290,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Create charts container
         let chartsContainer = UIView()
         chartsContainer.translatesAutoresizingMaskIntoConstraints = false
-        chartsContainer.backgroundColor = .clear
+        chartsContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         contentView.addSubview(chartsContainer)
         
         // Get reference to summary container
@@ -507,7 +507,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Create a container for additional metrics cards
         let additionalMetricsContainer = UIView()
         additionalMetricsContainer.translatesAutoresizingMaskIntoConstraints = false
-        additionalMetricsContainer.backgroundColor = .clear
+        additionalMetricsContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         chartsContainer.addSubview(additionalMetricsContainer)
 
         // Create cards for the additional metrics
@@ -610,7 +610,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         parameterSegmentControl = UISegmentedControl(items: PendulumParameter.allCases.map { $0.rawValue })
         parameterSegmentControl.selectedSegmentIndex = 0
         parameterSegmentControl.translatesAutoresizingMaskIntoConstraints = false
-        parameterSegmentControl.backgroundColor = .systemGray6
+        parameterSegmentControl.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         parameterSegmentControl.selectedSegmentTintColor = .goldenPrimary
         parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.label], for: .normal)
         parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
@@ -703,7 +703,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         // Find the metric cards
         let metricContainers = contentView.subviews.compactMap { $0.subviews }
             .flatMap { $0 }
-            .filter { $0.backgroundColor == .clear }
+            .filter { $0.backgroundColor == FocusCalendarTheme.secondaryBackgroundColor }
 
         let metricCards = metricContainers.flatMap { $0.subviews }
             .filter { $0.layer.cornerRadius == 12 }
@@ -853,7 +853,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     private func createSummaryCard(title: String, iconName: String, color: UIColor) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = UIColor.white
+        card.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         card.layer.cornerRadius = 12
         card.layer.shadowColor = UIColor.black.cgColor
         card.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -911,7 +911,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
     private func createChartSection(title: String, description: String) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = UIColor.white
+        container.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         container.layer.cornerRadius = 12
         container.layer.shadowColor = UIColor.black.cgColor
         container.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -933,7 +933,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         descriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium) // Larger font for better visibility
         descriptionLabel.textColor = UIColor.label // Use system label color for better contrast
         descriptionLabel.numberOfLines = 0 // Allow unlimited lines
-        descriptionLabel.backgroundColor = UIColor.systemGray6 // Light background for visibility testing
+        descriptionLabel.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         descriptionLabel.layer.cornerRadius = 6
         descriptionLabel.layer.masksToBounds = true
         
