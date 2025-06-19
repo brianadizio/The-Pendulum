@@ -32,7 +32,7 @@ class SimpleChartView: UIView {
     private func setupView() {
         // Ensure this view doesn't conflict with Auto Layout
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = .white
+        backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         layer.cornerRadius = 10
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -165,7 +165,7 @@ class SimpleChartView: UIView {
         guard insetRect.width > 0 && insetRect.height > 0 else { return }
         
         let bgPath = UIBezierPath(roundedRect: insetRect, cornerRadius: 8)
-        UIColor.systemGray6.setFill()
+        FocusCalendarTheme.secondaryBackgroundColor.setFill()
         bgPath.fill()
         
         // Draw message text
@@ -653,7 +653,7 @@ class SimplePieChartView: SimpleChartView {
         if holeRect.origin.x.isNaN || holeRect.origin.y.isNaN || holeRect.width.isNaN || holeRect.height.isNaN {
             print("ERROR: NaN in pie chart hole rect: \(holeRect)")
         } else {
-            context.setFillColor(UIColor.white.cgColor)
+            context.setFillColor(FocusCalendarTheme.secondaryBackgroundColor.cgColor)
             context.fillEllipse(in: holeRect)
         }
     }

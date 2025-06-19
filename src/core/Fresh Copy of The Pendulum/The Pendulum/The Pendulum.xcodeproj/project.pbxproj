@@ -18,6 +18,16 @@
 		D6F1AA5F2E0374D600F50751 /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6F1AA5E2E0374D600F50751 /* AppTrackingTransparency.framework */; };
 		D6F1AB8C2E0472C900F50751 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D6F1AB8B2E0472C900F50751 /* GoogleSignIn */; };
 		D6F1AB8E2E0472C900F50751 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D6F1AB8D2E0472C900F50751 /* GoogleSignInSwift */; };
+		D6F223942E04B68100D332BD /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223932E04B68100D332BD /* FirebaseAI */; };
+		D6F223962E04B68100D332BD /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223952E04B68100D332BD /* FirebaseAnalytics */; };
+		D6F223982E04B68100D332BD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223972E04B68100D332BD /* FirebaseAnalyticsCore */; };
+		D6F2239A2E04B68100D332BD /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223992E04B68100D332BD /* FirebaseAuth */; };
+		D6F2239C2E04B68100D332BD /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6F2239B2E04B68100D332BD /* FirebaseCore */; };
+		D6F2239E2E04B68100D332BD /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = D6F2239D2E04B68100D332BD /* FirebaseCrashlytics */; };
+		D6F223A02E04B68100D332BD /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = D6F2239F2E04B68100D332BD /* FirebaseDatabase */; };
+		D6F223A22E04B68100D332BD /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223A12E04B68100D332BD /* FirebaseFirestore */; };
+		D6F223B72E04B70500D332BD /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223B62E04B70500D332BD /* DGCharts */; };
+		D6F223BA2E04B75400D332BD /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = D6F223B92E04B75400D332BD /* Singular */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,13 +78,23 @@
 			buildActionMask = 2147483647;
 			files = (
 				D6F1AA5F2E0374D600F50751 /* AppTrackingTransparency.framework in Frameworks */,
+				D6F2239A2E04B68100D332BD /* FirebaseAuth in Frameworks */,
 				D632FDBF2DF4826800A8B4FC /* FirebaseAnalytics in Frameworks */,
 				D632FDC52DF4826800A8B4FC /* FirebaseCore in Frameworks */,
+				D6F223A22E04B68100D332BD /* FirebaseFirestore in Frameworks */,
 				D632FDC12DF4826800A8B4FC /* FirebaseAnalyticsCore in Frameworks */,
+				D6F223962E04B68100D332BD /* FirebaseAnalytics in Frameworks */,
+				D6F223A02E04B68100D332BD /* FirebaseDatabase in Frameworks */,
+				D6F2239C2E04B68100D332BD /* FirebaseCore in Frameworks */,
+				D6F223982E04B68100D332BD /* FirebaseAnalyticsCore in Frameworks */,
 				D632FDC72DF4826800A8B4FC /* FirebaseCrashlytics in Frameworks */,
+				D6F223942E04B68100D332BD /* FirebaseAI in Frameworks */,
+				D6F223B72E04B70500D332BD /* DGCharts in Frameworks */,
 				D6F1AB8C2E0472C900F50751 /* GoogleSignIn in Frameworks */,
 				D632FDBD2DF4826800A8B4FC /* FirebaseAI in Frameworks */,
+				D6F223BA2E04B75400D332BD /* Singular in Frameworks */,
 				D60471DB2DF4894E000E8FA3 /* FirebaseFirestore in Frameworks */,
+				D6F2239E2E04B68100D332BD /* FirebaseCrashlytics in Frameworks */,
 				D632FDC92DF4826800A8B4FC /* FirebaseDatabase in Frameworks */,
 				D632FDC32DF4826800A8B4FC /* FirebaseAuth in Frameworks */,
 				D6F1AB8E2E0472C900F50751 /* GoogleSignInSwift in Frameworks */,
@@ -235,6 +255,8 @@
 			packageReferences = (
 				D632FDBB2DF4826800A8B4FC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				D6F1AB8A2E0472C900F50751 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				D6F223B52E04B70500D332BD /* XCRemoteSwiftPackageReference "Charts" */,
+				D6F223B82E04B75400D332BD /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D67B2C8E2DBF2EDE00FC0011 /* Products */;
@@ -619,6 +641,22 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		D6F223B52E04B70500D332BD /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
+		D6F223B82E04B75400D332BD /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/singular-labs/Singular-iOS-SDK.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -671,6 +709,48 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D6F1AB8A2E0472C900F50751 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		D6F223932E04B68100D332BD /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseAI;
+		};
+		D6F223952E04B68100D332BD /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseAnalytics;
+		};
+		D6F223972E04B68100D332BD /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseAnalyticsCore;
+		};
+		D6F223992E04B68100D332BD /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseAuth;
+		};
+		D6F2239B2E04B68100D332BD /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseCore;
+		};
+		D6F2239D2E04B68100D332BD /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseCrashlytics;
+		};
+		D6F2239F2E04B68100D332BD /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseDatabase;
+		};
+		D6F223A12E04B68100D332BD /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseFirestore;
+		};
+		D6F223B62E04B70500D332BD /* DGCharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6F223B52E04B70500D332BD /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGCharts;
+		};
+		D6F223B92E04B75400D332BD /* Singular */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6F223B82E04B75400D332BD /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */;
+			productName = Singular;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -39,7 +39,7 @@ class PhaseSpaceView: UIView {
     }
     
     private func commonInit() {
-        backgroundColor = UIColor(white: 0.98, alpha: 1.0) // Lighter background for aesthetics
+        backgroundColor = FocusCalendarTheme.secondaryBackgroundColor // Lighter background for aesthetics
         layer.cornerRadius = 12
         layer.borderWidth = 1
         layer.borderColor = goldPrimary.withAlphaComponent(0.3).cgColor

@@ -93,7 +93,7 @@ struct ContentViewModes: View {
                     // Single button centered
                     HStack {
                         Spacer()
-                        RoundedSquareModeButton(title: "Physics", iconName: "doc.text", isAssetImage: false, action: {
+                        RoundedSquareModeButton(title: "Physics", iconName: "GoldenEnterprisesLogoNoBG", isAssetImage: true, action: {
                             NotificationCenter.default.post(name: Notification.Name("ShowPendulumPhysics"), object: nil)
                         })
                         .frame(width: 160)
@@ -149,7 +149,7 @@ struct RoundedSquareModeButton: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 120)
-            .background(Color(UIColor.secondarySystemBackground))
+            .background(Color(FocusCalendarTheme.secondaryBackgroundColor))
             .cornerRadius(20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
@@ -206,7 +206,7 @@ struct RoundedSquareComingSoonButton: View {
                     .cornerRadius(4)
                     .offset(x: 25, y: -45)
             }
-            .background(Color(UIColor.secondarySystemBackground).opacity(0.6))
+            .background(Color(FocusCalendarTheme.secondaryBackgroundColor).opacity(0.6))
             .cornerRadius(20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)

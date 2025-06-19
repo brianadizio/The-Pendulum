@@ -51,7 +51,7 @@ class ContactSupportViewController: UIViewController {
         let logoImageView = UIImageView()
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
         logoImageView.contentMode = .scaleAspectFit
-        logoImageView.image = UIImage(named: "PendulumLogo") ?? UIImage(named: "AppIcon")
+        logoImageView.image = UIImage(named: "GoldenEnterprisesLogoNoBG") ?? UIImage(named: "PendulumLogo") ?? UIImage(named: "AppIcon")
         if logoImageView.image == nil {
             logoImageView.backgroundColor = FocusCalendarTheme.accentGold
             logoImageView.layer.cornerRadius = 20
@@ -89,7 +89,7 @@ class ContactSupportViewController: UIViewController {
         // Email support button
         let emailButton = createContactButton(
             title: "Email Support",
-            subtitle: "support@goldenenterprises.com",
+            subtitle: "contact@golden-enterprises.com",
             icon: "envelope.fill",
             action: #selector(emailSupportTapped)
         )
@@ -97,7 +97,7 @@ class ContactSupportViewController: UIViewController {
         // Website button
         let websiteButton = createContactButton(
             title: "Visit Our Website",
-            subtitle: "www.goldenenterprises.com",
+            subtitle: "www.golden-enterprises.net",
             icon: "globe",
             action: #selector(websiteTapped)
         )
@@ -267,7 +267,7 @@ class ContactSupportViewController: UIViewController {
     }
     
     @objc private func emailSupportTapped() {
-        let email = "support@goldenenterprises.com"
+        let email = "contact@golden-enterprises.com"
         let subject = "The Pendulum - Support Request"
         let body = """
         
@@ -284,13 +284,13 @@ class ContactSupportViewController: UIViewController {
     }
     
     @objc private func websiteTapped() {
-        if let url = URL(string: "https://www.goldenenterprises.com") {
+        if let url = URL(string: "https://www.golden-enterprises.net") {
             UIApplication.shared.open(url)
         }
     }
     
     @objc private func reportBugTapped() {
-        let email = "support@goldenenterprises.com"
+        let email = "contact@golden-enterprises.com"
         let subject = "The Pendulum - Bug Report"
         let body = """
         Please describe the bug you encountered:
@@ -316,7 +316,7 @@ class ContactSupportViewController: UIViewController {
     }
     
     @objc private func requestFeatureTapped() {
-        let email = "support@goldenenterprises.com"
+        let email = "contact@golden-enterprises.com"
         let subject = "The Pendulum - Feature Request"
         let body = """
         I would like to suggest the following feature:
