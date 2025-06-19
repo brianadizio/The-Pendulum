@@ -75,4 +75,12 @@ fastlane/test_output
 *.xcresult*.ipa
 *.xcuserstate
 .DS_Store
-The Pendulum 2025-06-07 12-47-38/
+
+# Backup directories and large files
+The Pendulum 2025-*/
+**/The Pendulum 2025-*/
+*.ipa
+*.log
+**/DistributionSummary*.plist
+**/ExportOptions*.plist
+**/Packaging*.log

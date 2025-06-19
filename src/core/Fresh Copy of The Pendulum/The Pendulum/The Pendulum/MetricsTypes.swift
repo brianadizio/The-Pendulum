@@ -166,7 +166,7 @@ enum MetricType: String, CaseIterable {
     
     var isDistribution: Bool {
         switch self {
-        case .forceDistribution, .inputFrequencySpectrum, .failureModeAnalysis, .bettinumbers, .persistentHomology, .pushMagnitudeDistribution, .fullDirectionalBias, .levelCompletionsOverTime:
+        case .forceDistribution, .inputFrequencySpectrum, .failureModeAnalysis, .bettinumbers, .persistentHomology, .pushMagnitudeDistribution, .fullDirectionalBias:
             return true
         default:
             return false
@@ -175,7 +175,7 @@ enum MetricType: String, CaseIterable {
     
     var isTimeSeries: Bool {
         switch self {
-        case .cpuUsage, .frameRate, .responseLatency, .realtimeStability, .phaseTrajectory, .learningCurve, .windingNumber, .separatrixCrossings, .angularDeviation, .reactionTimeAnalysis, .pendulumParametersOverTime:
+        case .cpuUsage, .frameRate, .responseLatency, .realtimeStability, .phaseTrajectory, .learningCurve, .windingNumber, .separatrixCrossings, .angularDeviation, .reactionTimeAnalysis, .pendulumParametersOverTime, .levelCompletionsOverTime:
             return true
         default:
             return false
