@@ -1526,7 +1526,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Coming Soon badge
         let badgeLabel = UILabel()
-        badgeLabel.text = "COMING SOON"
+        badgeLabel.text = "SOON"
         badgeLabel.font = UIFont.systemFont(ofSize: 10, weight: .bold)
         badgeLabel.textColor = .white
         badgeLabel.backgroundColor = UIColor.orange
@@ -2253,17 +2253,6 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     
     // MARK: - Integration Actions
     
-    private func showComingSoonAlert(for feature: String) {
-        let alert = UIAlertController(
-            title: "Coming Soon",
-            message: "\(feature) integration is coming soon! Stay tuned for updates.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        
-        present(alert, animated: true)
-    }
     
     private func openInstagram() {
         let username = "goldenenterprisesolutions"
@@ -2502,7 +2491,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             ("general18", "About The Pendulum", true),
             ("general19", "Privacy Policy", true),
             ("general20", "Contact Support", true),
-            ("wrench.and.screwdriver", "Developer Tools", false)  // System icon
+            ("wrench.and.screwdriver", "Developer Tools 🔒", false)  // System icon with lock
         ]
         
         previousView = nil
@@ -2715,10 +2704,48 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     private func showDeveloperTools() {
-        let vc = DeveloperToolsViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .formSheet
-        present(nav, animated: true)
+        // Create password alert
+        let alert = UIAlertController(
+            title: "Developer Mode",
+            message: "Enter password to access Developer Tools",
+            preferredStyle: .alert
+        )
+        
+        // Add password text field
+        alert.addTextField { textField in
+            textField.placeholder = "Password"
+            textField.isSecureTextEntry = true
+            textField.autocapitalizationType = .none
+            textField.autocorrectionType = .no
+        }
+        
+        // Add cancel action
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        // Add unlock action
+        alert.addAction(UIAlertAction(title: "Unlock", style: .default) { [weak self] _ in
+            guard let password = alert.textFields?.first?.text else { return }
+            
+            // Check password
+            if password == "DizZid5736" {
+                // Password correct - show developer tools
+                let vc = DeveloperToolsViewController()
+                let nav = UINavigationController(rootViewController: vc)
+                nav.modalPresentationStyle = .formSheet
+                self?.present(nav, animated: true)
+            } else {
+                // Password incorrect
+                let errorAlert = UIAlertController(
+                    title: "Access Denied",
+                    message: "Incorrect password",
+                    preferredStyle: .alert
+                )
+                errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(errorAlert, animated: true)
+            }
+        })
+        
+        present(alert, animated: true)
     }
     
     // MARK: - Authentication Methods
@@ -3780,6 +3807,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             
             // Temporarily disable perturbations
             perturbationManager.activateProfile(tempEmptyProfile)
+            
+            // Hide any perturbation visualizations
+            perturbationManager.clearVisualizer()
         }
         
         // Show message that game is paused
@@ -4423,7 +4453,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     @objc private func handleComingSoonAlert() {
         let alert = UIAlertController(
             title: "Coming Soon",
-            message: "This feature is currently under development and will be available in a future update.",
+            message: "This mode will be available in a future update.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -4521,8 +4551,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         // Setup constraints
         NSLayoutConstraint.activate([
-            // AI Mode Indicator - top right corner
-            aiModeIndicator.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 80),
+            // AI Mode Indicator - moved down to be on top right of pendulum scene
+            aiModeIndicator.topAnchor.constraint(equalTo: skViewContainer?.topAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 20),
             aiModeIndicator.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
             aiModeIndicator.widthAnchor.constraint(equalToConstant: 100),
             aiModeIndicator.heightAnchor.constraint(equalToConstant: 30),

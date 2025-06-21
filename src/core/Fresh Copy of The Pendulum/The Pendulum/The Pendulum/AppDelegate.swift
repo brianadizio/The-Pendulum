@@ -1,7 +1,6 @@
 import UIKit
 import CoreData
 import FirebaseCore
-import GoogleSignIn
 #if canImport(AppTrackingTransparency)
 import AppTrackingTransparency
 #endif
@@ -14,12 +13,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Initialize Firebase with Firestore
         FirebaseTestConfiguration.initializeFirebaseWithFirestore()
         
-        // Configure Google Sign-In
-        guard let clientID = FirebaseApp.app()?.options.clientID else {
-            print("❌ Error: Missing Firebase client ID for Google Sign-In")
-            return false
-        }
-        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
         
         // Apply Focus Calendar theme
         FocusCalendarTheme.applyTheme()
@@ -85,11 +78,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - URL Handling
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // Handle Google Sign-In URL callback
-        if GIDSignIn.sharedInstance.handle(url) {
-            return true
-        }
-        
         // Handle other URL schemes if needed
         return false
     }

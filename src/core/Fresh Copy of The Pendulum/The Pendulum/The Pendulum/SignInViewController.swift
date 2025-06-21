@@ -1,7 +1,6 @@
 import UIKit
 import AuthenticationServices
 import FirebaseAuth
-import GoogleSignIn
 
 // Custom scroll view for debugging touch events
 class DebugScrollView: UIScrollView {
@@ -34,7 +33,6 @@ class SignInViewController: UIViewController {
     
     private let orLabel = UILabel()
     private let appleSignInButton = ASAuthorizationAppleIDButton()
-    private let googleSignInButton = UIButton(type: .system)
     
     private let anonymousButton = UIButton(type: .system)
     
@@ -148,19 +146,6 @@ class SignInViewController: UIViewController {
         appleSignInButton.isUserInteractionEnabled = true
         contentView.addSubview(appleSignInButton)
         
-        // Google Sign In Button
-        googleSignInButton.setTitle("Sign in with Google", for: .normal)
-        googleSignInButton.setImage(UIImage(systemName: "globe"), for: .normal)
-        googleSignInButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-        googleSignInButton.backgroundColor = .systemBackground
-        googleSignInButton.setTitleColor(.label, for: .normal)
-        googleSignInButton.layer.cornerRadius = 8
-        googleSignInButton.layer.borderWidth = 1
-        googleSignInButton.layer.borderColor = UIColor.separator.cgColor
-        googleSignInButton.addTarget(self, action: #selector(googleSignInTapped), for: .touchUpInside)
-        googleSignInButton.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(googleSignInButton)
-        
         // Anonymous Button
         anonymousButton.setTitle("Continue as Guest", for: .normal)
         anonymousButton.titleLabel?.font = .systemFont(ofSize: 16)
@@ -238,14 +223,8 @@ class SignInViewController: UIViewController {
             appleSignInButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
             appleSignInButton.heightAnchor.constraint(equalToConstant: 50),
             
-            // Google Sign In Button
-            googleSignInButton.topAnchor.constraint(equalTo: appleSignInButton.bottomAnchor, constant: 12),
-            googleSignInButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
-            googleSignInButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
-            googleSignInButton.heightAnchor.constraint(equalToConstant: 50),
-            
             // Anonymous Button
-            anonymousButton.topAnchor.constraint(equalTo: googleSignInButton.bottomAnchor, constant: 24),
+            anonymousButton.topAnchor.constraint(equalTo: appleSignInButton.bottomAnchor, constant: 24),
             anonymousButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             anonymousButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
         ])
@@ -325,25 +304,6 @@ class SignInViewController: UIViewController {
         
         print("🍎 Performing authorization request")
         controller.performRequests()
-    }
-    
-    @objc private func googleSignInTapped() {
-        showLoadingIndicator()
-        
-        authManager.signInWithGoogle(presentingViewController: self) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.hideLoadingIndicator()
-                
-                switch result {
-                case .success(let user):
-                    print("✅ Google Sign-In successful: \(user.displayName ?? user.email ?? "Unknown User")")
-                    self?.dismiss(animated: true)
-                case .failure(let error):
-                    print("❌ Google Sign-In failed: \(error.localizedDescription)")
-                    self?.showAlert(title: "Sign-In Failed", message: error.localizedDescription)
-                }
-            }
-        }
     }
     
     @objc private func anonymousSignInTapped() {

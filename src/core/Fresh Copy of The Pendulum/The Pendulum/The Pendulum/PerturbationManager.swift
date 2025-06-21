@@ -585,7 +585,14 @@ class PerturbationManager {
         
         // Apply profile strength as amplitude modifier
         // Note: Multiplier reduced from 0.3 to 0.225 (25% reduction) as requested
-        return sinValue * profile.strength * 0.225
+        let result = sinValue * profile.strength * 0.225
+        
+        // Generate visual effect for significant sine perturbations
+        if abs(result) > 0.05 {
+            generateSineVisualization(magnitude: result)
+        }
+        
+        return result
     }
     
     // Process data-driven perturbation (from file)
@@ -689,7 +696,14 @@ class PerturbationManager {
         let noise = Double.random(in: -1.0...1.0)
         
         // Scale by profile strength but make it smaller than other perturbations
-        return noise * profile.strength * 0.1
+        let result = noise * profile.strength * 0.1
+        
+        // Generate visual effect for significant random perturbations (less frequent)
+        if abs(result) > 0.08 && Double.random(in: 0...1) > 0.7 {
+            generateRandomVisualization(magnitude: result)
+        }
+        
+        return result
     }
     
     // Process compound perturbation (combination)
@@ -720,7 +734,14 @@ class PerturbationManager {
         }
         
         // Apply an additional 25% reduction to the total effect for compound perturbations
-        return totalEffect * 0.75
+        let result = totalEffect * 0.75
+        
+        // Generate visual effect for significant compound perturbations
+        if abs(result) > 0.05 {
+            generateCompoundVisualization(magnitude: result)
+        }
+        
+        return result
     }
     
     // Generate visual effects for perturbations
@@ -947,5 +968,91 @@ class PerturbationManager {
         UIGraphicsEndImageContext()
         
         return SKTexture(image: image)
+    }
+    
+    // Create sine wave visualization
+    private func generateSineVisualization(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Create the sine wave effect using the curved effects from PerturbationEffects
+        let direction: CGFloat = magnitude < 0 ? -1.0 : 1.0
+        let sineEffect = PerturbationEffects.shared.createCurvedPerturbationEffect(
+            mode: .sine,
+            at: CGPoint(x: scene.size.width / 2, y: scene.size.height * 0.15),
+            direction: direction,
+            magnitude: abs(magnitude),
+            scene: scene
+        )
+        
+        // Set z-position to ensure visibility
+        sineEffect.zPosition = 100
+        
+        scene.addChild(sineEffect)
+        
+        // Add subtle screen pulse for sine waves
+        if abs(magnitude) > 0.15 {
+            let pulseAmount = CGFloat(min(abs(magnitude) * 2, 3))
+            let pulse = SKAction.sequence([
+                SKAction.scale(to: 1.0 + pulseAmount * 0.01, duration: 0.1),
+                SKAction.scale(to: 1.0, duration: 0.2)
+            ])
+            
+            if let camera = scene.camera {
+                camera.run(pulse)
+            }
+        }
+    }
+    
+    // Create compound perturbation visualization
+    private func generateCompoundVisualization(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Create the compound effect using the curved effects from PerturbationEffects
+        let direction: CGFloat = magnitude < 0 ? -1.0 : 1.0
+        let compoundEffect = PerturbationEffects.shared.createCurvedPerturbationEffect(
+            mode: .compound,
+            at: CGPoint(x: scene.size.width / 2, y: scene.size.height * 0.15),
+            direction: direction,
+            magnitude: abs(magnitude),
+            scene: scene
+        )
+        
+        // Set z-position to ensure visibility
+        compoundEffect.zPosition = 100
+        
+        scene.addChild(compoundEffect)
+        
+        // Add more dramatic screen effects for compound perturbations
+        if abs(magnitude) > 0.2 {
+            addScreenShake(magnitude: magnitude * 0.7)
+            
+            // Add haptic feedback
+            PerturbationEffects.shared.generateHapticFeedback(for: magnitude)
+        }
+    }
+    
+    // Create random perturbation visualization
+    private func generateRandomVisualization(magnitude: Double) {
+        guard let scene = scene else { return }
+        
+        // Create the random effect using the curved effects from PerturbationEffects
+        let direction: CGFloat = magnitude < 0 ? -1.0 : 1.0
+        let randomEffect = PerturbationEffects.shared.createCurvedPerturbationEffect(
+            mode: .random,
+            at: CGPoint(x: scene.size.width / 2, y: scene.size.height * 0.15),
+            direction: direction,
+            magnitude: abs(magnitude),
+            scene: scene
+        )
+        
+        // Set z-position to ensure visibility
+        randomEffect.zPosition = 100
+        
+        scene.addChild(randomEffect)
+    }
+    
+    // Clear any visual indicators
+    func clearVisualizer() {
+        visualizer?.deactivate()
     }
 }

@@ -183,13 +183,7 @@ extension GraphicsViewController: UITableViewDelegate {
             NotificationCenter.default.post(name: Notification.Name("GraphicsSettingChanged"), object: option.title)
         } else {
             // Show coming soon alert
-            let alert = UIAlertController(
-                title: "Coming Soon",
-                message: "\(option.title) theme will be available in a future update.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
+            showComingSoonAlert(for: "\(option.title) theme")
         }
     }
 }

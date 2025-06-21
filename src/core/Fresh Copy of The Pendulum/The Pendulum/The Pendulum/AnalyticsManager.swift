@@ -32,6 +32,9 @@ class AnalyticsManager {
         return coreDataManager.context
     }
     
+    // Thread safety for parameter changes
+    static let parameterChangeQueue = DispatchQueue(label: "com.pendulum.parameterChangeQueue", attributes: .concurrent)
+    
     // Tracking state
     internal var isTracking: Bool = false
     

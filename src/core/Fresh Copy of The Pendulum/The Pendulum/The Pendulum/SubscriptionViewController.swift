@@ -3,6 +3,11 @@ import StoreKit
 
 class SubscriptionViewController: UIViewController {
     
+    // MARK: - StoreKit Properties
+    private let productID = "com.golden_enterprises.thependulum.yearly.2024"
+    private var product: Product?
+    private var purchaseTask: Task<Void, Never>?
+    
     // MARK: - UI Elements
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -23,6 +28,12 @@ class SubscriptionViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
+        loadProduct()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        purchaseTask?.cancel()
     }
     
     // MARK: - UI Setup
@@ -85,7 +96,7 @@ class SubscriptionViewController: UIViewController {
         }
         
         // Price Label
-        priceLabel.text = "$4.99/year"
+        priceLabel.text = "Loading..."
         priceLabel.font = .systemFont(ofSize: 32, weight: .bold)
         priceLabel.textColor = .systemBlue
         priceLabel.textAlignment = .center
@@ -107,6 +118,7 @@ class SubscriptionViewController: UIViewController {
         subscribeButton.setTitleColor(.white, for: .normal)
         subscribeButton.layer.cornerRadius = 12
         subscribeButton.addTarget(self, action: #selector(subscribeTapped), for: .touchUpInside)
+        subscribeButton.isEnabled = false // Disabled until product loads
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(subscribeButton)
         
@@ -215,27 +227,169 @@ class SubscriptionViewController: UIViewController {
         ])
     }
     
+    // MARK: - StoreKit Methods
+    private func loadProduct() {
+        Task {
+            do {
+                let products = try await Product.products(for: [productID])
+                if let product = products.first {
+                    await MainActor.run {
+                        self.product = product
+                        self.updatePriceDisplay()
+                        self.subscribeButton.isEnabled = true
+                    }
+                } else {
+                    await MainActor.run {
+                        self.priceLabel.text = "Product not available"
+                        self.subscribeButton.isEnabled = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.priceLabel.text = "Error loading price"
+                    self.subscribeButton.isEnabled = false
+                }
+            }
+        }
+    }
+    
+    private func updatePriceDisplay() {
+        guard let product = product else { return }
+        priceLabel.text = "\(product.displayPrice)/year"
+        
+        // Update trial label if product has introductory offer
+        if let introOffer = product.subscription?.introductoryOffer {
+            if introOffer.period.unit == .day && introOffer.period.value == 3 {
+                trialLabel.text = "3-day free trial • Cancel anytime"
+            } else {
+                trialLabel.text = "Free trial • Cancel anytime"
+            }
+        }
+    }
+    
+    private func checkSubscriptionStatus() async {
+        guard let product = product else { return }
+        
+        for await result in Transaction.currentEntitlements {
+            do {
+                let transaction = try result.payloadValue
+                if transaction.productID == product.id {
+                    await MainActor.run {
+                        self.handleSuccessfulPurchase()
+                    }
+                    return
+                }
+            } catch {
+                // Handle verification failure
+                print("Transaction verification failed: \(error)")
+            }
+        }
+    }
+    
+    private func handleSuccessfulPurchase() {
+        // Notify SubscriptionManager to refresh status
+        Task {
+            await SubscriptionManager.shared.checkSubscriptionStatus()
+        }
+        
+        let alert = UIAlertController(
+            title: "Welcome to Premium!",
+            message: "Your 3-day free trial has started. You now have access to all premium features.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+            self.dismiss(animated: true)
+        })
+        present(alert, animated: true)
+    }
+    
     // MARK: - Actions
     @objc private func closeTapped() {
         dismiss(animated: true)
     }
     
     @objc private func subscribeTapped() {
-        // TODO: Implement subscription purchase
-        let alert = UIAlertController(
-            title: "Coming Soon",
-            message: "Subscription functionality will be available in a future update.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        guard let product = product else { return }
+        
+        subscribeButton.isEnabled = false
+        subscribeButton.setTitle("Processing...", for: .normal)
+        
+        purchaseTask = Task {
+            do {
+                let result = try await product.purchase()
+                
+                switch result {
+                case .success(let verification):
+                    switch verification {
+                    case .verified(let transaction):
+                        // Transaction is verified
+                        await transaction.finish()
+                        await MainActor.run {
+                            self.handleSuccessfulPurchase()
+                        }
+                    case .unverified(_, let error):
+                        // Transaction failed verification
+                        await MainActor.run {
+                            self.showError("Purchase verification failed: \(error)")
+                        }
+                    }
+                case .userCancelled:
+                    await MainActor.run {
+                        self.resetSubscribeButton()
+                    }
+                case .pending:
+                    await MainActor.run {
+                        self.showError("Purchase is pending approval")
+                        self.resetSubscribeButton()
+                    }
+                @unknown default:
+                    await MainActor.run {
+                        self.showError("Unknown purchase result")
+                        self.resetSubscribeButton()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.showError("Purchase failed: \(error.localizedDescription)")
+                    self.resetSubscribeButton()
+                }
+            }
+        }
     }
     
     @objc private func restoreTapped() {
-        // TODO: Implement restore purchases
+        Task {
+            do {
+                try await AppStore.sync()
+                await checkSubscriptionStatus()
+                
+                // If no active subscription found, show message
+                await MainActor.run {
+                    let alert = UIAlertController(
+                        title: "Restore Complete",
+                        message: "If you had previous purchases, they have been restored.",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    self.showError("Failed to restore purchases: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func resetSubscribeButton() {
+        subscribeButton.isEnabled = true
+        subscribeButton.setTitle("Start Free Trial", for: .normal)
+    }
+    
+    private func showError(_ message: String) {
         let alert = UIAlertController(
-            title: "Restore Purchases",
-            message: "No previous purchases found.",
+            title: "Error",
+            message: message,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -243,14 +397,10 @@ class SubscriptionViewController: UIViewController {
     }
     
     @objc private func termsTapped() {
-        // TODO: Show terms of service
-        let alert = UIAlertController(
-            title: "Terms of Service",
-            message: "Terms of Service will be available soon.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        // Open Apple's standard Terms of Use
+        if let url = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") {
+            UIApplication.shared.open(url)
+        }
     }
     
     @objc private func privacyTapped() {

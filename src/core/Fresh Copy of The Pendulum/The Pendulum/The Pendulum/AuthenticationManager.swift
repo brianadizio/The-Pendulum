@@ -3,7 +3,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import AuthenticationServices
 import CryptoKit
-import GoogleSignIn
 import UIKit
 
 // MARK: - Authentication Manager
@@ -156,66 +155,11 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Google Sign In
-    func signInWithGoogle(presentingViewController: UIViewController, completion: @escaping (Result<User, Error>) -> Void) {
-        // Configure Google Sign-In
-        guard let clientID = Auth.auth().app?.options.clientID else {
-            completion(.failure(AuthError.missingClientID))
-            return
-        }
-        
-        // Create Google Sign In configuration object
-        let config = GIDConfiguration(clientID: clientID)
-        GIDSignIn.sharedInstance.configuration = config
-        
-        // Start the sign in flow
-        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error in
-            if let error = error {
-                self?.authError = error.localizedDescription
-                completion(.failure(error))
-                return
-            }
-            
-            guard let user = result?.user,
-                  let idToken = user.idToken?.tokenString else {
-                completion(.failure(AuthError.invalidCredential))
-                return
-            }
-            
-            let accessToken = user.accessToken.tokenString
-            
-            // Create Firebase credential
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
-            
-            // Sign in with Firebase
-            Auth.auth().signIn(with: credential) { [weak self] authResult, error in
-                if let error = error {
-                    self?.authError = error.localizedDescription
-                    completion(.failure(error))
-                } else if let firebaseUser = authResult?.user {
-                    // Get display name from Google
-                    let displayName = firebaseUser.displayName ?? user.profile?.name ?? "Player"
-                    
-                    // Update user profile if needed
-                    if firebaseUser.displayName == nil {
-                        let changeRequest = firebaseUser.createProfileChangeRequest()
-                        changeRequest.displayName = displayName
-                        changeRequest.commitChanges { _ in }
-                    }
-                    
-                    self?.createUserProfile(user: firebaseUser, displayName: displayName)
-                    completion(.success(firebaseUser))
-                }
-            }
-        }
-    }
     
     // MARK: - Sign Out
     func signOut() {
         do {
             try Auth.auth().signOut()
-            // Also sign out from Google
-            GIDSignIn.sharedInstance.signOut()
             currentUser = nil
             isAuthenticated = false
         } catch {
@@ -322,7 +266,6 @@ enum AuthError: LocalizedError {
     case missingNonce
     case missingToken
     case invalidToken
-    case missingClientID
     
     var errorDescription: String? {
         switch self {
@@ -334,8 +277,6 @@ enum AuthError: LocalizedError {
             return "Missing authentication token"
         case .invalidToken:
             return "Invalid authentication token"
-        case .missingClientID:
-            return "Missing Google Sign-In client ID"
         }
     }
 }

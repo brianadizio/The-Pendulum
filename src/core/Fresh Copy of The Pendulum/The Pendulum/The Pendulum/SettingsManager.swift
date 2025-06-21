@@ -13,6 +13,7 @@ class SettingsManager {
         static let sounds = "setting_Sounds"
         static let backgrounds = "setting_Backgrounds"
         static let gameControls = "setting_GameControls"
+        static let subscriptionStatus = "setting_SubscriptionStatus"
     }
     
     // Default values
@@ -54,6 +55,17 @@ class SettingsManager {
     var gameControls: String {
         get { UserDefaults.standard.string(forKey: Keys.gameControls) ?? Defaults.gameControls }
         set { UserDefaults.standard.set(newValue, forKey: Keys.gameControls) }
+    }
+    
+    /// Check if user has premium subscription
+    var hasPremiumSubscription: Bool {
+        return SubscriptionManager.shared.hasPremiumAccess()
+    }
+    
+    /// Get subscription status text (must be called from main actor)
+    @MainActor
+    var subscriptionStatusText: String {
+        return SubscriptionManager.shared.getStatusText()
     }
     
     // MARK: - Settings Effects
