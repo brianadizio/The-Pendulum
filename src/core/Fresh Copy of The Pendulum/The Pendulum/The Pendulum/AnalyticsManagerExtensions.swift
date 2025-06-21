@@ -110,16 +110,8 @@ extension AnalyticsManager {
         for metricType in metricTypes {
             if let value = calculateMetric(type: metricType) {
                 metricValues.append(value)
-            } else {
-                // Create a placeholder metric indicating insufficient data
-                let placeholder = MetricValue(
-                    type: metricType,
-                    value: "Not enough data",
-                    timestamp: Date(),
-                    confidence: 0.0
-                )
-                metricValues.append(placeholder)
             }
+            // Skip metrics with no data instead of showing "Not enough data"
         }
         
         return metricValues
@@ -287,13 +279,7 @@ extension AnalyticsManager {
             print("   - Left count: \(leftCount), Right count: \(rightCount)")
             print("   - Analytics tracking active: \(isTracking ? "YES" : "NO")")
             
-            // Check if we have any data at all
-            if leftCount == 0 && rightCount == 0 {
-                // Return a "no data" indicator
-                print("   - No directional data available")
-                return createMetricValue("No Data Available" as Any)
-            }
-            
+            // Even if no data, return [0, 0] to avoid "Not enough data" message
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
             
