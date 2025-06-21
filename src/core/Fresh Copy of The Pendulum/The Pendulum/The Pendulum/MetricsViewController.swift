@@ -147,12 +147,6 @@ extension MetricsViewController: UITableViewDelegate {
         
         // Show coming soon alert
         let option = metricsOptions[indexPath.row]
-        let alert = UIAlertController(
-            title: "Coming Soon",
-            message: "\(option.title) will be available in a future update.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        showComingSoonAlert(for: option.title)
     }
 }

@@ -249,119 +249,53 @@ class PerturbationEffects {
         return effectNode
     }
     
-    // Create curved impulse effect - explosive radial burst with directional bias using existing particles
+    // Create curved impulse effect - explosive AI-like particles with directional bias
     private func createCurvedImpulseEffect(direction: CGFloat, magnitude: Double) -> SKNode {
         let container = SKNode()
-        let particleCount = Int(15 + magnitude * 25)
+        let particleCount = Int(25 + magnitude * 35)
         
         // Use existing coast textures and colors from DynamicParticleManager
         let colors = DynamicParticleManager.orangeRedPalette // Intense colors for impulse
         
-        // Create curved burst pattern
+        // Create explosive AI-like burst pattern
         for i in 0..<particleCount {
-            // Use coast texture if available, fallback to colored particle
+            // Create glowing particles similar to AI effects
             let particle: SKNode
             if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
                 let textureParticle = SKSpriteNode(texture: coastTexture)
-                textureParticle.size = CGSize(width: CGFloat.random(in: 8...16), height: CGFloat.random(in: 8...16))
+                textureParticle.size = CGSize(width: CGFloat.random(in: 15...25), height: CGFloat.random(in: 15...25))
                 textureParticle.color = colors[i % colors.count]
-                textureParticle.colorBlendFactor = 0.7
+                textureParticle.colorBlendFactor = 0.8
+                textureParticle.blendMode = .add
                 particle = textureParticle
             } else {
-                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 3...6))
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 6...10))
                 shapeParticle.fillColor = colors[i % colors.count]
-                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.3)
-                shapeParticle.glowWidth = 2.0
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.5)
+                shapeParticle.glowWidth = 4.0
+                shapeParticle.blendMode = .add
                 particle = shapeParticle
             }
             
-            // Calculate curved trajectory with strong directional bias
+            // Calculate explosive trajectory with strong directional bias
             let baseAngle = direction > 0 ? 0 : CGFloat.pi
-            let angleSpread = CGFloat.pi / 2.5 // Wide spread for explosive effect
+            let angleSpread = CGFloat.pi / 2.2 // Wide spread for explosive effect
             let particleAngle = baseAngle + CGFloat.random(in: -angleSpread/2...angleSpread/2)
             
             // Create curved path with more dramatic curves
-            let distance = CGFloat(60 + magnitude * 120)
-            let curvature = CGFloat.random(in: 0.4...1.0) * (direction > 0 ? 1 : -1)
+            let distance = CGFloat(80 + magnitude * 140)
+            let curvature = CGFloat.random(in: 0.3...0.8) * (direction > 0 ? 1 : -1)
             
-            let startPoint = CGPoint.zero
-            let controlPoint = CGPoint(
-                x: cos(particleAngle) * distance * 0.6 + curvature * 40,
-                y: sin(particleAngle) * distance * 0.6 + CGFloat.random(in: -25...25)
-            )
-            let endPoint = CGPoint(
-                x: cos(particleAngle) * distance,
-                y: sin(particleAngle) * distance + curvature * 50
-            )
-            
-            particle.position = startPoint
-            particle.zPosition = CGFloat(i)
-            
-            // Create curved path animation with explosive dynamics
             let path = CGMutablePath()
-            path.move(to: startPoint)
-            path.addQuadCurve(to: endPoint, control: controlPoint)
-            
-            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 0.7)
-            let fadeOut = SKAction.fadeOut(withDuration: 0.5)
-            let scale = SKAction.sequence([
-                SKAction.scale(to: 1.8, duration: 0.15),
-                SKAction.scale(to: 0.1, duration: 0.55)
-            ])
-            let rotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*2...CGFloat.pi*2), duration: 0.7)
-            
-            particle.run(SKAction.group([followPath, fadeOut, scale, rotation]))
-            container.addChild(particle)
-        }
-        
-        // Remove container after animation
-        container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 1.0),
-            SKAction.removeFromParent()
-        ]))
-        
-        return container
-    }
-    
-    // Create curved sine effect - flowing wave pattern using existing particles
-    private func createCurvedSineEffect(direction: CGFloat, magnitude: Double) -> SKNode {
-        let container = SKNode()
-        let particleCount = Int(12 + magnitude * 20)
-        
-        // Use blue-teal palette for smooth sine waves
-        let colors = DynamicParticleManager.blueTealPalette
-        
-        // Create flowing sine wave pattern
-        for i in 0..<particleCount {
-            // Use star textures for flowing effect
-            let particle: SKNode
-            if let starTexture = DynamicParticleManager.getCoastTexture(index: i % 9) {
-                let textureParticle = SKSpriteNode(texture: starTexture)
-                textureParticle.size = CGSize(width: CGFloat.random(in: 6...12), height: CGFloat.random(in: 6...12))
-                textureParticle.color = colors[i % colors.count]
-                textureParticle.colorBlendFactor = 0.6
-                particle = textureParticle
-            } else {
-                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
-                shapeParticle.fillColor = colors[i % colors.count]
-                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.2)
-                shapeParticle.alpha = 0.8
-                particle = shapeParticle
-            }
-            
-            // Calculate wave parameters with directional flow
-            let waveLength: CGFloat = 150
-            let amplitude: CGFloat = CGFloat(25 + magnitude * 40)
-            let phase = CGFloat(i) / CGFloat(particleCount) * CGFloat.pi * 2
-            
-            // Create smooth sine wave path
-            let path = CGMutablePath()
-            let steps = 60
+            let steps = 25
             
             for step in 0...steps {
                 let t = CGFloat(step) / CGFloat(steps)
-                let x = t * waveLength * (direction > 0 ? 1 : -1)
-                let y = sin(t * CGFloat.pi * 3 + phase) * amplitude * sin(t * CGFloat.pi) // Envelope
+                
+                // Explosive outward motion with curvature
+                let explosionFactor = pow(t, 0.7) // Faster initial expansion
+                let x = cos(particleAngle) * distance * explosionFactor + sin(t * CGFloat.pi) * curvature * 40
+                let y = sin(particleAngle) * distance * explosionFactor + cos(t * CGFloat.pi * 0.5) * curvature * 30
                 
                 if step == 0 {
                     path.move(to: CGPoint(x: x, y: y))
@@ -371,23 +305,23 @@ class PerturbationEffects {
             }
             
             particle.position = CGPoint.zero
-            particle.zPosition = CGFloat(i)
+            particle.zPosition = CGFloat(particleCount - i)
+            particle.alpha = 0
             
-            // Create smooth flowing animation with staggered timing
-            let delay = Double(i) * 0.08
-            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 1.8)
-            let fadeIn = SKAction.fadeIn(withDuration: 0.3)
-            let fadeOut = SKAction.fadeOut(withDuration: 0.6)
-            let gentlePulse = SKAction.sequence([
-                SKAction.scale(to: 1.2, duration: 0.4),
-                SKAction.scale(to: 0.9, duration: 0.4)
+            // Create explosive animation
+            let delay = Double(i) * 0.015 // Rapid emission
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 0.8)
+            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.4)
+            let scale = SKAction.sequence([
+                SKAction.scale(to: 2.0, duration: 0.15),
+                SKAction.scale(to: 0.05, duration: 0.65)
             ])
-            let gentleRotation = SKAction.rotate(byAngle: CGFloat.pi, duration: 1.8)
+            let rotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*3...CGFloat.pi*3), duration: 0.8)
             
             let sequence = SKAction.sequence([
                 SKAction.wait(forDuration: delay),
-                SKAction.group([followPath, fadeIn, gentleRotation]),
-                SKAction.repeat(gentlePulse, count: 2),
+                SKAction.group([fadeIn, followPath, scale, rotation]),
                 fadeOut
             ])
             
@@ -395,9 +329,137 @@ class PerturbationEffects {
             container.addChild(particle)
         }
         
+        // Add explosion glow effect
+        let explosionGlow = SKShapeNode(circleOfRadius: 60)
+        explosionGlow.fillColor = colors[0].withAlphaComponent(0.4)
+        explosionGlow.strokeColor = .clear
+        explosionGlow.blendMode = .add
+        explosionGlow.zPosition = -1
+        explosionGlow.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 2.5, duration: 0.4),
+                SKAction.fadeOut(withDuration: 0.4)
+            ])
+        ]))
+        container.addChild(explosionGlow)
+        
         // Remove container after animation
         container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 3.0),
+            SKAction.wait(forDuration: 1.5),
+            SKAction.removeFromParent()
+        ]))
+        
+        return container
+    }
+    
+    // Create curved sine effect - AI-like particles following sine wave trajectories
+    private func createCurvedSineEffect(direction: CGFloat, magnitude: Double) -> SKNode {
+        let container = SKNode()
+        let particleCount = Int(20 + magnitude * 30)
+        
+        // Use blue-teal palette for sine waves
+        let colors = DynamicParticleManager.blueTealPalette
+        
+        // Create AI-like particles that move in sine wave patterns
+        for i in 0..<particleCount {
+            // Create glowing particle similar to AI effects
+            let particle: SKNode
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 12...20), height: CGFloat.random(in: 12...20))
+                textureParticle.color = colors[i % colors.count]
+                textureParticle.colorBlendFactor = 0.8
+                textureParticle.blendMode = .add
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 5...8))
+                shapeParticle.fillColor = colors[i % colors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.5)
+                shapeParticle.glowWidth = 3.0
+                shapeParticle.blendMode = .add
+                particle = shapeParticle
+            }
+            
+            // Calculate sine wave trajectory
+            let distance = CGFloat(80 + magnitude * 100)
+            let amplitude = CGFloat(30 + magnitude * 50)
+            let frequency = CGFloat.random(in: 2...4)
+            let phase = CGFloat(i) / CGFloat(particleCount) * CGFloat.pi * 2
+            let speed = CGFloat.random(in: 0.8...1.2)
+            
+            // Create AI-like curved path with sine wave modulation
+            let path = CGMutablePath()
+            let steps = 30
+            let baseAngle = direction > 0 ? 0 : CGFloat.pi
+            
+            for step in 0...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                
+                // Base movement in direction with spreading
+                let spread = CGFloat.random(in: -0.3...0.3)
+                let x = cos(baseAngle + spread) * distance * t
+                
+                // Sine wave modulation for y-position
+                let sineOffset = sin(t * frequency * CGFloat.pi + phase) * amplitude * (1.0 - t * 0.5)
+                let y = sin(baseAngle + spread) * distance * t + sineOffset
+                
+                if step == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(particleCount - i) // Higher particles render on top
+            particle.alpha = 0
+            
+            // Create dynamic animation similar to AI particles
+            let delay = Double(i) * 0.04 // Staggered emission
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 1.2 * Double(speed))
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.2)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.4)
+            let scale = SKAction.sequence([
+                SKAction.scale(to: 1.5, duration: 0.3),
+                SKAction.scale(to: 0.1, duration: 0.9)
+            ])
+            let rotation = SKAction.rotate(byAngle: CGFloat.pi * frequency, duration: 1.2 * Double(speed))
+            
+            // Add pulsing effect
+            let pulse = SKAction.sequence([
+                SKAction.scale(by: 1.2, duration: 0.1),
+                SKAction.scale(by: 0.833, duration: 0.1)
+            ])
+            
+            let sequence = SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([
+                    fadeIn,
+                    SKAction.group([followPath, scale, rotation]),
+                    SKAction.repeat(pulse, count: Int(frequency))
+                ]),
+                fadeOut
+            ])
+            
+            particle.run(sequence)
+            container.addChild(particle)
+        }
+        
+        // Add additional glow effect for sine wave
+        let glowNode = SKShapeNode(circleOfRadius: 40)
+        glowNode.fillColor = colors[0].withAlphaComponent(0.2)
+        glowNode.strokeColor = .clear
+        glowNode.blendMode = .add
+        glowNode.zPosition = -1
+        glowNode.run(SKAction.sequence([
+            SKAction.scale(to: 3.0, duration: 1.5),
+            SKAction.fadeOut(withDuration: 1.5)
+        ]))
+        container.addChild(glowNode)
+        
+        // Remove container after animation
+        container.run(SKAction.sequence([
+            SKAction.wait(forDuration: 2.0),
             SKAction.removeFromParent()
         ]))
         
@@ -520,116 +582,137 @@ class PerturbationEffects {
         return container
     }
     
-    // Create curved random effect - chaotic swirling patterns using existing particles
+    // Create curved random effect - AI-like particles with chaotic movements
     private func createCurvedRandomEffect(direction: CGFloat, magnitude: Double) -> SKNode {
         let container = SKNode()
-        let particleCount = Int(6 + magnitude * 12)
+        let particleCount = Int(15 + magnitude * 25)
         
         // Use mixed spectrum palette for chaotic random effects
         let mixedColors = DynamicParticleManager.mixedSpectrumPalette
         
-        // Create chaotic swirl patterns
+        // Create AI-like particles with chaotic behavior
         for i in 0..<particleCount {
-            // Random particle types for chaos
+            // Create glowing particles similar to AI effects
             let particle: SKNode
-            let randomType = Int.random(in: 0...2)
-            
-            if randomType == 0 && Int.random(in: 0...1) == 0 {
-                // Use star texture for sparkle chaos
-                if let starTexture = DynamicParticleManager.getCoastTexture(index: Int.random(in: 0...8)) {
-                    let textureParticle = SKSpriteNode(texture: starTexture)
-                    textureParticle.size = CGSize(width: CGFloat.random(in: 4...10), height: CGFloat.random(in: 4...10))
-                    textureParticle.color = mixedColors[i % mixedColors.count]
-                    textureParticle.colorBlendFactor = CGFloat.random(in: 0.4...0.9)
-                    particle = textureParticle
-                } else {
-                    let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3))
-                    shapeParticle.fillColor = mixedColors[i % mixedColors.count]
-                    shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.4)
-                    particle = shapeParticle
-                }
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 10...20), height: CGFloat.random(in: 10...20))
+                textureParticle.color = mixedColors[i % mixedColors.count]
+                textureParticle.colorBlendFactor = CGFloat.random(in: 0.6...0.9)
+                textureParticle.blendMode = .add
+                particle = textureParticle
             } else {
-                // Create random geometric shapes
-                let shapes = ["circle", "square", "diamond"]
-                let shapeType = shapes.randomElement()!
-                
-                switch shapeType {
-                case "circle":
-                    let circle = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
-                    circle.fillColor = mixedColors[i % mixedColors.count]
-                    circle.strokeColor = circle.fillColor.withAlphaComponent(0.3)
-                    particle = circle
-                case "square":
-                    let size = CGFloat.random(in: 4...8)
-                    let square = SKShapeNode(rectOf: CGSize(width: size, height: size))
-                    square.fillColor = mixedColors[i % mixedColors.count]
-                    square.strokeColor = square.fillColor.withAlphaComponent(0.3)
-                    particle = square
-                default: // diamond
-                    let diamond = SKShapeNode()
-                    let diamondPath = CGMutablePath()
-                    let size: CGFloat = CGFloat.random(in: 3...6)
-                    diamondPath.move(to: CGPoint(x: 0, y: size))
-                    diamondPath.addLine(to: CGPoint(x: size, y: 0))
-                    diamondPath.addLine(to: CGPoint(x: 0, y: -size))
-                    diamondPath.addLine(to: CGPoint(x: -size, y: 0))
-                    diamondPath.closeSubpath()
-                    diamond.path = diamondPath
-                    diamond.fillColor = mixedColors[i % mixedColors.count]
-                    diamond.strokeColor = diamond.fillColor.withAlphaComponent(0.3)
-                    particle = diamond
-                }
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...8))
+                shapeParticle.fillColor = mixedColors[i % mixedColors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.5)
+                shapeParticle.glowWidth = CGFloat.random(in: 2...4)
+                shapeParticle.blendMode = .add
+                particle = shapeParticle
             }
             
-            // Create truly random curved path with strong directional bias
+            // Create truly random curved path with directional bias
             let path = CGMutablePath()
-            let steps = Int.random(in: 25...45)
-            var currentPoint = CGPoint.zero
+            let steps = 30
+            let baseAngle = direction > 0 ? 0 : CGFloat.pi
             
-            path.move(to: currentPoint)
+            // Random walk with directional tendency
+            var currentX: CGFloat = 0
+            var currentY: CGFloat = 0
+            var velocity = CGVector(dx: cos(baseAngle) * 5, dy: sin(baseAngle) * 5)
+            
+            path.move(to: CGPoint(x: currentX, y: currentY))
             
             for step in 1...steps {
-                let randomAngle = CGFloat.random(in: -CGFloat.pi...CGFloat.pi)
-                let directionBias = direction > 0 ? CGFloat.random(in: 0.2...0.6) : CGFloat.random(in: -0.6...(-0.2))
-                let biasedAngle = randomAngle + directionBias
+                let t = CGFloat(step) / CGFloat(steps)
                 
-                let stepDistance = CGFloat.random(in: 4...12)
-                let nextPoint = CGPoint(
-                    x: currentPoint.x + cos(biasedAngle) * stepDistance,
-                    y: currentPoint.y + sin(biasedAngle) * stepDistance
+                // Apply random acceleration with directional bias
+                let randomAccel = CGVector(
+                    dx: CGFloat.random(in: -3...3) + cos(baseAngle) * 2,
+                    dy: CGFloat.random(in: -3...3) + sin(baseAngle) * 2
                 )
                 
-                // Add chaotic curvature
-                let controlPoint = CGPoint(
-                    x: (currentPoint.x + nextPoint.x) / 2 + CGFloat.random(in: -15...15),
-                    y: (currentPoint.y + nextPoint.y) / 2 + CGFloat.random(in: -15...15)
-                )
+                velocity.dx += randomAccel.dx
+                velocity.dy += randomAccel.dy
                 
-                path.addQuadCurve(to: nextPoint, control: controlPoint)
-                currentPoint = nextPoint
+                // Apply damping
+                velocity.dx *= 0.95
+                velocity.dy *= 0.95
+                
+                // Update position
+                currentX += velocity.dx
+                currentY += velocity.dy
+                
+                // Add chaotic control point
+                let controlX = currentX + CGFloat.random(in: -20...20) * (1 - t)
+                let controlY = currentY + CGFloat.random(in: -20...20) * (1 - t)
+                
+                path.addQuadCurve(
+                    to: CGPoint(x: currentX, y: currentY),
+                    control: CGPoint(x: controlX, y: controlY)
+                )
             }
             
             particle.position = CGPoint.zero
-            particle.zPosition = CGFloat(i)
+            particle.zPosition = CGFloat(particleCount - i)
+            particle.alpha = 0
             
-            // Create truly chaotic animation
-            let delay = Double.random(in: 0...0.8)
-            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: Double.random(in: 1.0...2.0))
-            let chaoticRotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*4...CGFloat.pi*4), duration: Double.random(in: 0.8...1.5))
-            let fadeOut = SKAction.fadeOut(withDuration: Double.random(in: 0.4...0.8))
+            // Create chaotic animation
+            let delay = Double.random(in: 0...0.5)
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: Double.random(in: 1.0...1.8))
+            let fadeIn = SKAction.fadeAlpha(to: CGFloat.random(in: 0.7...1.0), duration: 0.2)
+            let fadeOut = SKAction.fadeOut(withDuration: Double.random(in: 0.3...0.6))
+            let chaoticRotation = SKAction.rotate(byAngle: CGFloat.random(in: -CGFloat.pi*6...CGFloat.pi*6), duration: Double.random(in: 1.0...1.8))
             let chaoticScale = SKAction.sequence([
-                SKAction.scale(to: CGFloat.random(in: 0.3...2.5), duration: Double.random(in: 0.2...0.5)),
-                SKAction.scale(to: 0.05, duration: Double.random(in: 0.5...1.0))
+                SKAction.scale(to: CGFloat.random(in: 1.2...2.0), duration: Double.random(in: 0.2...0.4)),
+                SKAction.scale(to: 0.05, duration: Double.random(in: 0.8...1.4))
             ])
+            
+            // Add random pulsing
+            let pulse = SKAction.sequence([
+                SKAction.scale(by: 1.3, duration: 0.1),
+                SKAction.scale(by: 0.77, duration: 0.1)
+            ])
+            let randomPulseCount = Int.random(in: 0...3)
             
             let sequence = SKAction.sequence([
                 SKAction.wait(forDuration: delay),
-                SKAction.group([followPath, chaoticRotation, chaoticScale]),
+                SKAction.group([
+                    fadeIn,
+                    followPath,
+                    chaoticRotation,
+                    chaoticScale,
+                    SKAction.repeat(pulse, count: randomPulseCount)
+                ]),
                 fadeOut
             ])
             
             particle.run(sequence)
             container.addChild(particle)
+        }
+        
+        // Add chaotic glow bursts
+        for _ in 0..<3 {
+            let glowBurst = SKShapeNode(circleOfRadius: CGFloat.random(in: 20...40))
+            glowBurst.fillColor = mixedColors.randomElement()!.withAlphaComponent(0.3)
+            glowBurst.strokeColor = .clear
+            glowBurst.blendMode = .add
+            glowBurst.position = CGPoint(
+                x: CGFloat.random(in: -30...30),
+                y: CGFloat.random(in: -30...30)
+            )
+            glowBurst.zPosition = -1
+            
+            let glowDelay = Double.random(in: 0...0.8)
+            glowBurst.alpha = 0
+            glowBurst.run(SKAction.sequence([
+                SKAction.wait(forDuration: glowDelay),
+                SKAction.fadeAlpha(to: 0.3, duration: 0.1),
+                SKAction.group([
+                    SKAction.scale(to: CGFloat.random(in: 2...3), duration: 0.6),
+                    SKAction.fadeOut(withDuration: 0.6)
+                ])
+            ]))
+            container.addChild(glowBurst)
         }
         
         // Remove container after animation
@@ -641,82 +724,232 @@ class PerturbationEffects {
         return container
     }
     
-    // Create curved compound effect - combination of multiple patterns using existing particles
+    // Create curved compound effect - AI-like particles with multiple behavior patterns
     private func createCurvedCompoundEffect(direction: CGFloat, magnitude: Double) -> SKNode {
         let container = SKNode()
+        let totalParticleCount = Int(30 + magnitude * 40)
         
-        // Create multiple effect layers with reduced intensity to avoid overwhelming
-        let impulseLayer = createCurvedImpulseEffect(direction: direction, magnitude: magnitude * 0.5)
-        let sineLayer = createCurvedSineEffect(direction: direction, magnitude: magnitude * 0.4)
-        let dataLayer = createCurvedDataSetEffect(direction: direction, magnitude: magnitude * 0.3)
-        let randomLayer = createCurvedRandomEffect(direction: direction, magnitude: magnitude * 0.2)
+        // Use mixed spectrum palette for compound effects
+        let primaryColors = DynamicParticleManager.yellowGoldPalette
+        let secondaryColors = DynamicParticleManager.mixedSpectrumPalette
         
-        // Add slight offsets for visual depth and complexity
-        impulseLayer.position = CGPoint(x: 0, y: 0)
-        sineLayer.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: -8...8))
-        dataLayer.position = CGPoint(x: CGFloat.random(in: -12...12), y: CGFloat.random(in: -12...12))
-        randomLayer.position = CGPoint(x: CGFloat.random(in: -6...6), y: CGFloat.random(in: -6...6))
+        // Create three distinct particle groups that combine behaviors
+        let groupSize = totalParticleCount / 3
         
-        // Set different z-positions for layering
-        impulseLayer.zPosition = 10
-        sineLayer.zPosition = 8
-        dataLayer.zPosition = 6
-        randomLayer.zPosition = 4
-        
-        // Add with cascading delays for complex compound effect
-        container.addChild(impulseLayer)
-        
-        container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 0.15),
-            SKAction.run { container.addChild(sineLayer) }
-        ]))
-        
-        container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 0.3),
-            SKAction.run { container.addChild(dataLayer) }
-        ]))
-        
-        container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 0.45),
-            SKAction.run { container.addChild(randomLayer) }
-        ]))
-        
-        // Add compound-specific envelope effect
-        let envelopeParticleCount = Int(8 + magnitude * 12)
-        for i in 0..<envelopeParticleCount {
-            let delay = Double(i) * 0.1 + 0.6
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                if let glowTexture = DynamicParticleManager.getRandomCoastTexture() {
-                    let envelope = SKSpriteNode(texture: glowTexture)
-                    envelope.size = CGSize(width: CGFloat.random(in: 12...20), height: CGFloat.random(in: 12...20))
-                    envelope.color = DynamicParticleManager.yellowGoldPalette[i % DynamicParticleManager.yellowGoldPalette.count]
-                    envelope.colorBlendFactor = 0.5
-                    envelope.alpha = 0.6
-                    envelope.position = CGPoint(
-                        x: CGFloat.random(in: -40...40),
-                        y: CGFloat.random(in: -40...40)
-                    )
-                    envelope.zPosition = 2
+        // Group 1: Explosive burst with sine wave aftereffect
+        for i in 0..<groupSize {
+            let particle: SKNode
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 14...22), height: CGFloat.random(in: 14...22))
+                textureParticle.color = primaryColors[i % primaryColors.count]
+                textureParticle.colorBlendFactor = 0.7
+                textureParticle.blendMode = .add
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 6...9))
+                shapeParticle.fillColor = primaryColors[i % primaryColors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.6)
+                shapeParticle.glowWidth = 4.0
+                shapeParticle.blendMode = .add
+                particle = shapeParticle
+            }
+            
+            // Explosive burst followed by sine wave
+            let baseAngle = direction > 0 ? 0 : CGFloat.pi
+            let angleSpread = CGFloat.random(in: -CGFloat.pi/3...CGFloat.pi/3)
+            let distance = CGFloat(100 + magnitude * 120)
+            
+            let path = CGMutablePath()
+            let steps = 40
+            
+            for step in 0...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                
+                // Initial burst (first 30% of animation)
+                if t < 0.3 {
+                    let burstT = t / 0.3
+                    let x = cos(baseAngle + angleSpread) * distance * burstT * 0.6
+                    let y = sin(baseAngle + angleSpread) * distance * burstT * 0.6
                     
-                    container.addChild(envelope)
+                    if step == 0 {
+                        path.move(to: CGPoint(x: x, y: y))
+                    } else {
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    }
+                } else {
+                    // Sine wave motion (remaining 70%)
+                    let sineT = (t - 0.3) / 0.7
+                    let baseX = cos(baseAngle + angleSpread) * distance * 0.6
+                    let baseY = sin(baseAngle + angleSpread) * distance * 0.6
                     
-                    // Envelope animation
-                    let envelopeAction = SKAction.sequence([
-                        SKAction.group([
-                            SKAction.scale(to: 2.0, duration: 0.8),
-                            SKAction.fadeOut(withDuration: 0.8),
-                            SKAction.rotate(byAngle: CGFloat.pi, duration: 0.8)
-                        ])
-                    ])
+                    let sineOffset = sin(sineT * CGFloat.pi * 3) * 30 * (1 - sineT)
+                    let x = baseX + cos(baseAngle + angleSpread + CGFloat.pi/2) * sineOffset
+                    let y = baseY + sin(baseAngle + angleSpread + CGFloat.pi/2) * sineOffset
                     
-                    envelope.run(envelopeAction)
+                    path.addLine(to: CGPoint(x: x + cos(baseAngle) * distance * sineT * 0.4, 
+                                           y: y + sin(baseAngle) * distance * sineT * 0.4))
                 }
             }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(totalParticleCount - i)
+            particle.alpha = 0
+            
+            let delay = Double(i) * 0.02
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: false, duration: 1.5)
+            let fadeIn = SKAction.fadeAlpha(to: 0.95, duration: 0.15)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+            let scale = SKAction.sequence([
+                SKAction.scale(to: 1.8, duration: 0.2),
+                SKAction.scale(to: 0.05, duration: 1.3)
+            ])
+            let rotation = SKAction.rotate(byAngle: CGFloat.pi * 4, duration: 1.5)
+            
+            particle.run(SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([fadeIn, followPath, scale, rotation]),
+                fadeOut
+            ]))
+            
+            container.addChild(particle)
         }
+        
+        // Group 2: Spiral pattern with random perturbations
+        for i in 0..<groupSize {
+            let particle: SKNode
+            let colorIndex = i + groupSize
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 10...18), height: CGFloat.random(in: 10...18))
+                textureParticle.color = secondaryColors[colorIndex % secondaryColors.count]
+                textureParticle.colorBlendFactor = 0.8
+                textureParticle.blendMode = .add
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...7))
+                shapeParticle.fillColor = secondaryColors[colorIndex % secondaryColors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.4)
+                shapeParticle.glowWidth = 2.5
+                shapeParticle.blendMode = .add
+                particle = shapeParticle
+            }
+            
+            // Spiral with random perturbations
+            let path = CGMutablePath()
+            let steps = 35
+            let spiralTurns = CGFloat(2.5)
+            let maxRadius = CGFloat(80 + magnitude * 100)
+            
+            for step in 0...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                let angle = t * spiralTurns * CGFloat.pi * 2 + (direction > 0 ? 0 : CGFloat.pi)
+                let radius = t * maxRadius
+                
+                // Add random perturbations
+                let randomX = CGFloat.random(in: -10...10) * t
+                let randomY = CGFloat.random(in: -10...10) * t
+                
+                let x = cos(angle) * radius + randomX
+                let y = sin(angle) * radius + randomY
+                
+                if step == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            particle.position = CGPoint.zero
+            particle.zPosition = CGFloat(totalParticleCount - colorIndex)
+            particle.alpha = 0
+            
+            let delay = Double(i) * 0.03 + 0.1
+            let followPath = SKAction.follow(path, asOffset: true, orientToPath: true, duration: 1.3)
+            let fadeIn = SKAction.fadeAlpha(to: 0.85, duration: 0.2)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.4)
+            let scale = SKAction.sequence([
+                SKAction.scale(to: 1.4, duration: 0.4),
+                SKAction.scale(to: 0.1, duration: 0.9)
+            ])
+            let rotation = SKAction.rotate(byAngle: CGFloat.pi * spiralTurns * 2, duration: 1.3)
+            
+            particle.run(SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([fadeIn, followPath, scale, rotation]),
+                fadeOut
+            ]))
+            
+            container.addChild(particle)
+        }
+        
+        // Group 3: Pulsing wave front
+        for i in 0..<groupSize {
+            let particle: SKNode
+            let colorIndex = i + groupSize * 2
+            if let coastTexture = DynamicParticleManager.getRandomCoastTexture() {
+                let textureParticle = SKSpriteNode(texture: coastTexture)
+                textureParticle.size = CGSize(width: CGFloat.random(in: 16...24), height: CGFloat.random(in: 16...24))
+                textureParticle.color = primaryColors[colorIndex % primaryColors.count]
+                textureParticle.colorBlendFactor = 0.6
+                textureParticle.blendMode = .add
+                particle = textureParticle
+            } else {
+                let shapeParticle = SKShapeNode(circleOfRadius: CGFloat.random(in: 7...10))
+                shapeParticle.fillColor = primaryColors[colorIndex % primaryColors.count]
+                shapeParticle.strokeColor = shapeParticle.fillColor.withAlphaComponent(0.7)
+                shapeParticle.glowWidth = 5.0
+                shapeParticle.blendMode = .add
+                particle = shapeParticle
+            }
+            
+            // Wave front pattern
+            let angle = (CGFloat(i) / CGFloat(groupSize)) * CGFloat.pi * 2
+            let waveRadius = CGFloat(60 + magnitude * 80)
+            let startX = cos(angle) * 20
+            let startY = sin(angle) * 20
+            let endX = cos(angle) * waveRadius * (direction > 0 ? 1 : -1)
+            let endY = sin(angle) * waveRadius
+            
+            particle.position = CGPoint(x: startX, y: startY)
+            particle.zPosition = CGFloat(colorIndex)
+            particle.alpha = 0
+            
+            let delay = 0.3 + Double(i) * 0.01
+            let moveAction = SKAction.move(to: CGPoint(x: endX, y: endY), duration: 0.8)
+            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+            let pulse = SKAction.sequence([
+                SKAction.scale(to: 2.0, duration: 0.2),
+                SKAction.scale(to: 0.5, duration: 0.6)
+            ])
+            
+            particle.run(SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([fadeIn, moveAction, pulse]),
+                fadeOut
+            ]))
+            
+            container.addChild(particle)
+        }
+        
+        // Add central glow effect
+        let centralGlow = SKShapeNode(circleOfRadius: 50)
+        centralGlow.fillColor = primaryColors[0].withAlphaComponent(0.3)
+        centralGlow.strokeColor = .clear
+        centralGlow.blendMode = .add
+        centralGlow.zPosition = -1
+        centralGlow.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 2.5, duration: 1.8),
+                SKAction.fadeOut(withDuration: 1.8)
+            ])
+        ]))
+        container.addChild(centralGlow)
         
         // Remove container after all animations complete
         container.run(SKAction.sequence([
-            SKAction.wait(forDuration: 4.0),
+            SKAction.wait(forDuration: 2.5),
             SKAction.removeFromParent()
         ]))
         

@@ -123,6 +123,8 @@ class PerturbationVisualizer {
     
     func deactivate() {
         perturbationIndicator?.isHidden = true
+        perturbationIndicator?.removeAllChildren()
+        perturbationIndicator?.removeFromParent()
         waveformHistory.removeAll()
         clearDataPoints()
     }

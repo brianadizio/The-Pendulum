@@ -23,14 +23,14 @@ extension AnalyticsManager {
     
     // Session data storage for educational metrics
     private static var sessionHistory: [SessionData] = []
-    private static var parameterChangeHistory: [(time: Double, parameter: String, oldValue: Double, newValue: Double)] = []
+    static var parameterChangeHistory: [(time: Double, parameter: String, oldValue: Double, newValue: Double)] = []
     
     // Performance monitoring
     private static var performanceMonitor = PerformanceMonitor()
     
     // MARK: - Utility Methods
     
-    private func getTimeframeForRange() -> TimeInterval {
+    func getTimeframeForRange() -> TimeInterval {
         // Return timeframe based on current time range selection
         switch currentTimeRange {
         case .session:
@@ -79,7 +79,26 @@ extension AnalyticsManager {
     }
     
     func trackParameterChange(time: Double, parameter: String, oldValue: Double, newValue: Double) {
-        AnalyticsManager.parameterChangeHistory.append((time: time, parameter: parameter, oldValue: oldValue, newValue: newValue))
+        AnalyticsManager.parameterChangeQueue.async(flags: .barrier) {
+            AnalyticsManager.parameterChangeHistory.append((time: time, parameter: parameter, oldValue: oldValue, newValue: newValue))
+        }
+        
+        print("📊 Parameter change tracked: \(parameter) from \(oldValue) to \(newValue) at time \(time)")
+    }
+    
+    func trackInitialParameters(mass: Double, length: Double, gravity: Double, damping: Double, forceMultiplier: Double) {
+        let currentTime = Date().timeIntervalSince1970
+        
+        // Track initial values for all parameters at session start - thread safe
+        AnalyticsManager.parameterChangeQueue.async(flags: .barrier) {
+            AnalyticsManager.parameterChangeHistory.append((time: currentTime, parameter: "mass", oldValue: 0, newValue: mass))
+            AnalyticsManager.parameterChangeHistory.append((time: currentTime, parameter: "length", oldValue: 0, newValue: length))
+            AnalyticsManager.parameterChangeHistory.append((time: currentTime, parameter: "gravity", oldValue: 0, newValue: gravity))
+            AnalyticsManager.parameterChangeHistory.append((time: currentTime, parameter: "damping", oldValue: 0, newValue: damping))
+            AnalyticsManager.parameterChangeHistory.append((time: currentTime, parameter: "forceMultiplier", oldValue: 0, newValue: forceMultiplier))
+        }
+        
+        print("📊 Initial parameters tracked at session start")
     }
     
     // MARK: - Metric Calculation Methods by Group

@@ -23,11 +23,11 @@ enum AISkillLevel: String, CaseIterable {
     
     var reactionTimeRange: ClosedRange<Double> {
         switch self {
-        case .beginner: return 0.4...0.8
-        case .intermediate: return 0.3...0.5
-        case .advanced: return 0.2...0.4
-        case .expert: return 0.1...0.3
-        case .perfect: return 0.05...0.1
+        case .beginner: return 0.2...0.4      // Faster reactions (was 0.4...0.8)
+        case .intermediate: return 0.15...0.25 // Faster reactions (was 0.3...0.5)
+        case .advanced: return 0.1...0.2       // Faster reactions (was 0.2...0.4)
+        case .expert: return 0.05...0.15       // Faster reactions (was 0.1...0.3)
+        case .perfect: return 0.02...0.05      // Near instant (was 0.05...0.1)
         }
     }
     
@@ -43,20 +43,20 @@ enum AISkillLevel: String, CaseIterable {
     
     var forceAccuracy: Double {
         switch self {
-        case .beginner: return 0.6       // 60% accurate force
-        case .intermediate: return 0.75   // 75% accurate force
-        case .advanced: return 0.85      // 85% accurate force
-        case .expert: return 0.95        // 95% accurate force
+        case .beginner: return 0.8       // 80% accurate force (was 0.6)
+        case .intermediate: return 0.85   // 85% accurate force (was 0.75)
+        case .advanced: return 0.92      // 92% accurate force (was 0.85)
+        case .expert: return 0.98        // 98% accurate force (was 0.95)
         case .perfect: return 1.0        // Perfect force calculation
         }
     }
     
     var anticipationFactor: Double {
         switch self {
-        case .beginner: return 0.2       // Poor anticipation
-        case .intermediate: return 0.4    // Some anticipation
-        case .advanced: return 0.6       // Good anticipation
-        case .expert: return 0.8         // Excellent anticipation
+        case .beginner: return 0.4       // Better anticipation (was 0.2)
+        case .intermediate: return 0.6    // Good anticipation (was 0.4)
+        case .advanced: return 0.8       // Great anticipation (was 0.6)
+        case .expert: return 0.9         // Excellent anticipation (was 0.8)
         case .perfect: return 1.0        // Perfect anticipation
         }
     }
@@ -169,7 +169,7 @@ class PendulumAIPlayer {
         
         // Predict future state based on current velocity
         let anticipation = skillLevel.anticipationFactor
-        let predictedAngle = angleFromVertical + angleVelocity * anticipation * 0.1
+        let predictedAngle = angleFromVertical + angleVelocity * anticipation * 0.2  // More lookahead (was 0.1)
         
         // Determine control strategy
         let strategy = adaptiveStrategy ? selectStrategy(angle: angleFromVertical, velocity: angleVelocity) : currentStrategy
@@ -213,16 +213,16 @@ class PendulumAIPlayer {
         let direction: PushDirection
         let magnitude: Double
         
-        if abs(controlForce) < 0.1 {
+        if abs(controlForce) < 0.02 {  // Much lower threshold (was 0.1)
             // No action needed
             direction = .none
             magnitude = 0.0
         } else if controlForce > 0 {
             direction = .right
-            magnitude = min(abs(controlForce), 3.0) // Cap at max force
+            magnitude = min(abs(controlForce) * 1.5, 4.0) // Stronger forces (was 3.0)
         } else {
             direction = .left
-            magnitude = min(abs(controlForce), 3.0) // Cap at max force
+            magnitude = min(abs(controlForce) * 1.5, 4.0) // Stronger forces (was 3.0)
         }
         
         // Apply skill-based force accuracy
@@ -234,20 +234,20 @@ class PendulumAIPlayer {
     private func getControlGains(strategy: ControlStrategy, omega0: Double) -> (kp: Double, kd: Double) {
         switch strategy {
         case .reactive:
-            // Standard PD gains
-            return (kp: 2.0 * omega0 * omega0, kd: 2.0 * omega0)
+            // More responsive gains
+            return (kp: 3.0 * omega0 * omega0, kd: 2.5 * omega0)
             
         case .predictive:
             // Higher derivative gain for anticipation
-            return (kp: 1.5 * omega0 * omega0, kd: 3.0 * omega0)
+            return (kp: 2.5 * omega0 * omega0, kd: 3.5 * omega0)
             
         case .aggressive:
-            // Higher gains for stronger control
-            return (kp: 3.0 * omega0 * omega0, kd: 2.5 * omega0)
+            // Much stronger control
+            return (kp: 4.0 * omega0 * omega0, kd: 3.0 * omega0)
             
         case .gentle:
-            // Lower gains for minimal intervention
-            return (kp: 1.0 * omega0 * omega0, kd: 1.5 * omega0)
+            // Still responsive but smoother
+            return (kp: 1.5 * omega0 * omega0, kd: 2.0 * omega0)
         }
     }
     
@@ -256,17 +256,17 @@ class PendulumAIPlayer {
         let absAngle = abs(angle)
         let absVelocity = abs(velocity)
         
-        if absAngle > 0.5 {
+        if absAngle > 0.3 {  // Lower threshold (was 0.5)
             // Large angle - need aggressive control
             return .aggressive
-        } else if absAngle < 0.1 && absVelocity < 0.5 {
+        } else if absAngle < 0.05 && absVelocity < 0.3 {  // Tighter equilibrium
             // Near equilibrium - gentle touches
             return .gentle
-        } else if absVelocity > 1.0 {
+        } else if absVelocity > 0.7 {  // Lower velocity threshold (was 1.0)
             // High velocity - need predictive control
             return .predictive
         } else {
-            // Default reactive control
+            // Default reactive control - but more active
             return .reactive
         }
     }
@@ -359,7 +359,7 @@ class PendulumAIPlayer {
         // Check if we're pushing too frequently
         if let lastTime = lastActionTime {
             let timeSinceLastAction = Date().timeIntervalSince(lastTime)
-            if timeSinceLastAction < 0.1 { // Minimum 100ms between actions
+            if timeSinceLastAction < 0.05 { // Faster actions (was 0.1)
                 return
             }
         }
@@ -485,8 +485,8 @@ class PendulumAIManager {
             aiPlayer?.startPlaying()
         }
         
-        // Start update loop
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+        // Start update loop with faster updates
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] _ in
             self?.updateAI()
         }
     }
@@ -496,14 +496,14 @@ class PendulumAIManager {
         case .demo, .compete:
             // AI controls directly
             aiPlayer?.onPushLeft = { [weak self] in
-                print("🔵 AI PUSHING LEFT (force: -3.0)")
-                self?.viewModel?.applyForce(-3.0)  // Increased force for better control
+                print("🔵 AI PUSHING LEFT (force: -4.0)")
+                self?.viewModel?.applyForce(-4.0)  // Stronger force (was -3.0)
                 self?.showAIActionIndicator(direction: PushDirection.left)
             }
             
             aiPlayer?.onPushRight = { [weak self] in
-                print("🔴 AI PUSHING RIGHT (force: 3.0)")
-                self?.viewModel?.applyForce(3.0)  // Increased force for better control
+                print("🔴 AI PUSHING RIGHT (force: 4.0)")
+                self?.viewModel?.applyForce(4.0)  // Stronger force (was 3.0)
                 self?.showAIActionIndicator(direction: PushDirection.right)
             }
             
@@ -511,16 +511,16 @@ class PendulumAIManager {
             // AI only assists when needed
             aiPlayer?.onPushLeft = { [weak self] in
                 if self?.isAssisting == true {
-                    print("🔵 AI ASSIST LEFT (force: -3.0)")
-                    self?.viewModel?.applyForce(-3.0)  // Increased force for better assistance
+                    print("🔵 AI ASSIST LEFT (force: -4.0)")
+                    self?.viewModel?.applyForce(-4.0)  // Stronger assistance (was -3.0)
                     self?.showAIAssistIndicator(direction: PushDirection.left)
                 }
             }
             
             aiPlayer?.onPushRight = { [weak self] in
                 if self?.isAssisting == true {
-                    print("🔴 AI ASSIST RIGHT (force: 3.0)")
-                    self?.viewModel?.applyForce(3.0)  // Increased force for better assistance
+                    print("🔴 AI ASSIST RIGHT (force: 4.0)")
+                    self?.viewModel?.applyForce(4.0)  // Stronger assistance (was 3.0)
                     self?.showAIAssistIndicator(direction: PushDirection.right)
                 }
             }
@@ -569,12 +569,12 @@ class PendulumAIManager {
         case .assist:
             // Check if player needs assistance
             let angleFromVertical = abs(atan2(sin(state.theta), cos(state.theta)) - Double.pi)
-            if angleFromVertical > 0.5 && !isAssisting {
+            if angleFromVertical > 0.35 && !isAssisting {  // Earlier assistance (was 0.5)
                 // Player is struggling, start assisting
                 isAssisting = true
                 aiPlayer.startPlaying()
                 showAssistanceStarted()
-            } else if angleFromVertical < 0.2 && isAssisting {
+            } else if angleFromVertical < 0.15 && isAssisting {  // Tighter recovery (was 0.2)
                 // Player has recovered, stop assisting
                 isAssisting = false
                 aiPlayer.stopPlaying()

@@ -125,6 +125,7 @@ class EnhancedAIAssistanceView: UIView {
         layer.cornerRadius = 20
         layer.borderWidth = 2
         layer.borderColor = FocusCalendarTheme.accentGold.cgColor
+        layer.zPosition = 200  // Bring entire view forward
         
         // Add shadow for depth
         layer.shadowColor = FocusCalendarTheme.accentGold.cgColor
@@ -132,13 +133,15 @@ class EnhancedAIAssistanceView: UIView {
         layer.shadowRadius = 10
         layer.shadowOffset = CGSize(width: 0, height: 2)
         
-        // Add AI particle view (behind everything)
+        // Add AI particle view (in front with higher z-position)
         aiParticleView.translatesAutoresizingMaskIntoConstraints = false
-        aiParticleView.alpha = 0.6
+        aiParticleView.alpha = 0.8
+        aiParticleView.layer.zPosition = 100
         addSubview(aiParticleView)
         
-        // Add sparkle view
+        // Add sparkle view with higher z-position
         sparkleView.translatesAutoresizingMaskIntoConstraints = false
+        sparkleView.layer.zPosition = 101
         addSubview(sparkleView)
         
         // Add AI icon
@@ -311,6 +314,7 @@ class SparklingPushIndicator: UIView {
         layer.cornerRadius = 30
         layer.borderWidth = 3
         layer.borderColor = FocusCalendarTheme.accentGold.cgColor
+        layer.zPosition = 200  // Bring forward
         
         // Add glow
         layer.shadowColor = FocusCalendarTheme.accentGold.cgColor
@@ -318,13 +322,15 @@ class SparklingPushIndicator: UIView {
         layer.shadowRadius = 15
         layer.shadowOffset = .zero
         
-        // Add AI particles
+        // Add AI particles with higher z-position
         aiParticleView.translatesAutoresizingMaskIntoConstraints = false
-        aiParticleView.alpha = 0.8
+        aiParticleView.alpha = 0.9
+        aiParticleView.layer.zPosition = 100
         addSubview(aiParticleView)
         
-        // Add sparkles
+        // Add sparkles with higher z-position
         sparkleView.translatesAutoresizingMaskIntoConstraints = false
+        sparkleView.layer.zPosition = 101
         addSubview(sparkleView)
         
         // Add small AI icon

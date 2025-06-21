@@ -276,7 +276,7 @@ extension GameControlsViewController: UITableViewDelegate {
         // Show coming soon alert
         let alert = UIAlertController(
           title: "Coming Soon",
-          message: "\(option.title) control method will be available in a future update.",
+          message: "\(option.title) will be available in a future update.",
           preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))

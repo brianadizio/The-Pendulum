@@ -9,6 +9,7 @@ class AIParticleSystem {
         let emitter = CAEmitterLayer()
         emitter.emitterShape = .circle
         emitter.renderMode = .additive
+        emitter.zPosition = 100  // Ensure particles render on top
         
         // Create multiple particle types for a rich effect
         let cells = [
