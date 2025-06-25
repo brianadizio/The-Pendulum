@@ -190,15 +190,27 @@ class LaunchScreenViewController: UIViewController {
     }
     
     private func transitionToMainApp() {
-        // Transition to the main app
+        // Check subscription status before transitioning
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = windowScene.windows.first {
             
-            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
-                // The scene delegate will handle showing the main view controller
-                let mainViewController = PendulumViewController()
-                window.rootViewController = mainViewController
-            }, completion: nil)
+            // Check if user needs to see paywall
+            if SubscriptionManager.shared.needsPaywall() {
+                // Show subscription view controller with paywall
+                UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                    let subscriptionVC = SubscriptionViewController()
+                    subscriptionVC.isPaywall = true // We'll add this property
+                    let navController = UINavigationController(rootViewController: subscriptionVC)
+                    navController.modalPresentationStyle = .fullScreen
+                    window.rootViewController = navController
+                }, completion: nil)
+            } else {
+                // User has access, show main app
+                UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                    let mainViewController = PendulumViewController()
+                    window.rootViewController = mainViewController
+                }, completion: nil)
+            }
         }
     }
 }

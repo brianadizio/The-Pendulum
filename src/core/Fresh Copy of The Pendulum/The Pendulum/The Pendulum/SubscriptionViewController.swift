@@ -3,6 +3,9 @@ import StoreKit
 
 class SubscriptionViewController: UIViewController {
     
+    // MARK: - Properties
+    var isPaywall: Bool = false
+    
     // MARK: - StoreKit Properties
     private let productID = "com.golden_enterprises.thependulum.yearly.2024"
     private var product: Product?
@@ -41,12 +44,16 @@ class SubscriptionViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         // Navigation
-        navigationItem.title = "Premium Features"
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
-            target: self,
-            action: #selector(closeTapped)
-        )
+        navigationItem.title = isPaywall ? "Trial Expired" : "Premium Features"
+        
+        // Only show close button if not paywall
+        if !isPaywall {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .close,
+                target: self,
+                action: #selector(closeTapped)
+            )
+        }
         
         // Scroll View
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -56,15 +63,29 @@ class SubscriptionViewController: UIViewController {
         scrollView.addSubview(contentView)
         
         // Title
-        titleLabel.text = "Unlock Advanced Features"
-        titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
+        if isPaywall {
+            titleLabel.text = "Your 3-Day Free Trial Has Ended"
+            titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        } else {
+            titleLabel.text = "Unlock Advanced Features"
+            titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
+        }
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 0
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(titleLabel)
         
         // Subtitle
-        subtitleLabel.text = "Get the most out of The Pendulum with premium analytics and advanced physics modeling"
+        if isPaywall {
+            let remainingDays = SubscriptionManager.shared.getRemainingTrialDays()
+            if remainingDays > 0 {
+                subtitleLabel.text = "You have \(remainingDays) day\(remainingDays == 1 ? "" : "s") left in your free trial. Continue exploring The Pendulum's features!"
+            } else {
+                subtitleLabel.text = "Subscribe now to continue using The Pendulum and unlock all premium features"
+            }
+        } else {
+            subtitleLabel.text = "Get the most out of The Pendulum with premium analytics and advanced physics modeling"
+        }
         subtitleLabel.font = .systemFont(ofSize: 16, weight: .medium)
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.textAlignment = .center
@@ -104,10 +125,11 @@ class SubscriptionViewController: UIViewController {
         contentView.addSubview(priceLabel)
         
         // Trial Label
-        trialLabel.text = "3-day free trial • Cancel anytime"
+        trialLabel.text = "Start with 3-day free trial, then $4.99/year\nCancel anytime in Settings"
         trialLabel.font = .systemFont(ofSize: 14, weight: .medium)
         trialLabel.textColor = .secondaryLabel
         trialLabel.textAlignment = .center
+        trialLabel.numberOfLines = 0
         trialLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(trialLabel)
         
@@ -257,13 +279,17 @@ class SubscriptionViewController: UIViewController {
         guard let product = product else { return }
         priceLabel.text = "\(product.displayPrice)/year"
         
-        // Update trial label if product has introductory offer
+        // Update trial label to clearly show pricing after trial
         if let introOffer = product.subscription?.introductoryOffer {
-            if introOffer.period.unit == .day && introOffer.period.value == 3 {
-                trialLabel.text = "3-day free trial • Cancel anytime"
+            let trialDays = introOffer.period.unit == .day ? introOffer.period.value : 0
+            if trialDays > 0 {
+                trialLabel.text = "Start with \(trialDays)-day free trial, then \(product.displayPrice)/year\nCancel anytime in Settings • Billed yearly after trial"
             } else {
-                trialLabel.text = "Free trial • Cancel anytime"
+                trialLabel.text = "\(product.displayPrice)/year • Cancel anytime in Settings"
             }
+        } else {
+            // No trial offer
+            trialLabel.text = "\(product.displayPrice)/year • Cancel anytime in Settings"
         }
     }
     
@@ -292,15 +318,36 @@ class SubscriptionViewController: UIViewController {
             await SubscriptionManager.shared.checkSubscriptionStatus()
         }
         
-        let alert = UIAlertController(
-            title: "Welcome to Premium!",
-            message: "Your 3-day free trial has started. You now have access to all premium features.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
-            self.dismiss(animated: true)
-        })
-        present(alert, animated: true)
+        if isPaywall {
+            // If coming from paywall, transition to main app
+            let alert = UIAlertController(
+                title: "Welcome to Premium!",
+                message: "You now have access to all premium features. Enjoy The Pendulum!",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+                // Transition to main app
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first {
+                    UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                        let mainViewController = PendulumViewController()
+                        window.rootViewController = mainViewController
+                    }, completion: nil)
+                }
+            })
+            present(alert, animated: true)
+        } else {
+            // Normal subscription flow
+            let alert = UIAlertController(
+                title: "Welcome to Premium!",
+                message: "Your subscription has started. You now have access to all premium features.\n\nYou will be charged $4.99/year unless you cancel in Settings.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+                self.dismiss(animated: true)
+            })
+            present(alert, animated: true)
+        }
     }
     
     // MARK: - Actions
@@ -363,15 +410,47 @@ class SubscriptionViewController: UIViewController {
                 try await AppStore.sync()
                 await checkSubscriptionStatus()
                 
-                // If no active subscription found, show message
+                // Check if subscription was restored
                 await MainActor.run {
-                    let alert = UIAlertController(
-                        title: "Restore Complete",
-                        message: "If you had previous purchases, they have been restored.",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self.present(alert, animated: true)
+                    if SubscriptionManager.shared.hasPremiumAccess() {
+                        // Subscription restored successfully
+                        if self.isPaywall {
+                            // Transition to main app from paywall
+                            let alert = UIAlertController(
+                                title: "Subscription Restored!",
+                                message: "Your premium subscription has been restored. Enjoy The Pendulum!",
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+                                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                   let window = windowScene.windows.first {
+                                    UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                                        let mainViewController = PendulumViewController()
+                                        window.rootViewController = mainViewController
+                                    }, completion: nil)
+                                }
+                            })
+                            self.present(alert, animated: true)
+                        } else {
+                            // Normal restore flow
+                            let alert = UIAlertController(
+                                title: "Restore Complete",
+                                message: "Your subscription has been restored.",
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(alert, animated: true)
+                        }
+                    } else {
+                        // No subscription found
+                        let alert = UIAlertController(
+                            title: "No Subscription Found",
+                            message: "No previous purchases were found to restore.",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(alert, animated: true)
+                    }
                 }
             } catch {
                 await MainActor.run {

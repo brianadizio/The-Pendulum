@@ -111,6 +111,9 @@ class DebugDashboardSystem {
         // 5. Generate level completion data
         generateLevelCompletionData(levels: 10)
         
+        // 5a. Generate detailed level completion records
+        generateDetailedLevelCompletions()
+        
         // 6. Generate failure data
         generateFailureData(failures: 5)
         
@@ -222,6 +225,79 @@ class DebugDashboardSystem {
     }
     
     /// Generate historical session data
+    private func generateDetailedLevelCompletions() {
+        let coreDataManager = CoreDataManager.shared
+        let levelManager = LevelManager()
+        
+        // Generate level completions for the past 30 days
+        let calendar = Calendar.current
+        let now = Date()
+        
+        for dayOffset in 0..<30 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now)!
+            let sessionsPerDay = Int.random(in: 1...3)
+            
+            for sessionNum in 0..<sessionsPerDay {
+                let sessionId = UUID()
+                
+                // Generate completions for random levels
+                let levelsCompleted = Int.random(in: 1...5)
+                var currentScore = 0
+                
+                for levelOffset in 0..<levelsCompleted {
+                    let level = levelOffset + 1
+                    let levelConfig = levelManager.getConfigForLevel(level)
+                    
+                    // Generate realistic performance metrics
+                    let timeToComplete = Double.random(in: 15...120) // 15 seconds to 2 minutes
+                    let totalCorrections = Int.random(in: 5...50)
+                    let maxAngle = Double.random(in: 0.3...1.2) // In radians
+                    let avgReactionTime = Double.random(in: 0.2...0.8)
+                    
+                    // Calculate score based on performance
+                    let baseScore = level * 100
+                    let timeBonus = max(0, Int(100 - timeToComplete))
+                    let efficiencyBonus = max(0, Int(100 - Double(totalCorrections) * 2))
+                    currentScore += baseScore + timeBonus + efficiencyBonus
+                    
+                    // Generate performance metrics with realistic variations
+                    let stability = 85.0 - Double(level) * 2 + Double.random(in: -10...10)
+                    let efficiency = 80.0 - Double(totalCorrections) / 2 + Double.random(in: -5...5)
+                    let phaseSpace = 70.0 + Double.random(in: -15...15)
+                    let energy = 75.0 + Double.random(in: -10...10)
+                    
+                    // Save the level completion
+                    coreDataManager.saveLevelCompletion(
+                        levelNumber: level,
+                        sessionId: sessionId,
+                        timeToComplete: timeToComplete,
+                        finalScore: currentScore,
+                        maxAngleReached: maxAngle,
+                        totalCorrections: totalCorrections,
+                        averageReactionTime: avgReactionTime,
+                        levelConfig: levelConfig,
+                        performanceMetrics: (
+                            stability: max(0, min(100, stability)),
+                            efficiency: max(0, min(100, efficiency)),
+                            phaseSpace: max(0, min(100, phaseSpace)),
+                            energy: max(0, min(100, energy))
+                        )
+                    )
+                    
+                    // Manually set the completion date to the past
+                    if let completion = coreDataManager.getLevelCompletions(limit: 1).first {
+                        completion.completionDate = calendar.date(
+                            byAdding: .hour,
+                            value: sessionNum * 2,
+                            to: date
+                        )
+                        coreDataManager.saveContext()
+                    }
+                }
+            }
+        }
+    }
+    
     private func generateHistoricalSessions() {
         // Generate 5 historical sessions
         for i in 1...5 {
