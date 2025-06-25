@@ -228,6 +228,111 @@ class CoreDataManager {
         }
     }
     
+    // MARK: - Level Completion Methods
+    
+    func saveLevelCompletion(levelNumber: Int,
+                           sessionId: UUID,
+                           timeToComplete: Double,
+                           finalScore: Int,
+                           maxAngleReached: Double,
+                           totalCorrections: Int,
+                           averageReactionTime: Double,
+                           levelConfig: LevelConfig,
+                           performanceMetrics: (stability: Double, efficiency: Double, phaseSpace: Double, energy: Double)) {
+        let completion = LevelCompletion(context: context)
+        
+        // Basic completion data
+        completion.levelNumber = Int32(levelNumber)
+        completion.completionDate = Date()
+        completion.timeToComplete = timeToComplete
+        completion.finalScore = Int32(finalScore)
+        completion.maxAngleReached = maxAngleReached
+        completion.totalCorrections = Int32(totalCorrections)
+        completion.averageReactionTime = averageReactionTime
+        
+        // Level configuration parameters
+        completion.balanceThreshold = levelConfig.balanceThreshold
+        completion.balanceRequiredTime = levelConfig.balanceRequiredTime
+        completion.initialPerturbation = levelConfig.initialPerturbation
+        completion.massMultiplier = levelConfig.massMultiplier
+        completion.lengthMultiplier = levelConfig.lengthMultiplier
+        completion.dampingValue = levelConfig.dampingValue
+        completion.gravityMultiplier = levelConfig.gravityMultiplier
+        completion.springConstantValue = levelConfig.springConstantValue
+        
+        // Performance metrics
+        completion.stabilityScore = performanceMetrics.stability
+        completion.efficiencyRating = performanceMetrics.efficiency
+        completion.phaseSpaceCoverage = performanceMetrics.phaseSpace
+        completion.energyManagement = performanceMetrics.energy
+        
+        // Link to play session
+        if let playSession = getPlaySession(with: sessionId) {
+            completion.playSession = playSession
+        }
+        
+        saveContext()
+    }
+    
+    func getLevelCompletions(limit: Int = 0) -> [LevelCompletion] {
+        let fetchRequest: NSFetchRequest<LevelCompletion> = LevelCompletion.fetchRequest()
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "completionDate", ascending: false)]
+        
+        if limit > 0 {
+            fetchRequest.fetchLimit = limit
+        }
+        
+        do {
+            return try context.fetch(fetchRequest)
+        } catch {
+            print("Error fetching level completions: \(error)")
+            return []
+        }
+    }
+    
+    func getLevelCompletions(for levelNumber: Int) -> [LevelCompletion] {
+        let fetchRequest: NSFetchRequest<LevelCompletion> = LevelCompletion.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "levelNumber == %d", levelNumber)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "completionDate", ascending: false)]
+        
+        do {
+            return try context.fetch(fetchRequest)
+        } catch {
+            print("Error fetching completions for level \(levelNumber): \(error)")
+            return []
+        }
+    }
+    
+    func getBestLevelCompletion(for levelNumber: Int) -> LevelCompletion? {
+        let fetchRequest: NSFetchRequest<LevelCompletion> = LevelCompletion.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "levelNumber == %d", levelNumber)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "finalScore", ascending: false)]
+        fetchRequest.fetchLimit = 1
+        
+        do {
+            return try context.fetch(fetchRequest).first
+        } catch {
+            print("Error fetching best completion for level \(levelNumber): \(error)")
+            return nil
+        }
+    }
+    
+    func getRecentLevelCompletions(days: Int = 7) -> [LevelCompletion] {
+        let calendar = Calendar.current
+        let startDate = calendar.date(byAdding: .day, value: -days, to: Date())!
+        
+        let fetchRequest: NSFetchRequest<LevelCompletion> = LevelCompletion.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "completionDate >= %@", startDate as NSDate)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "completionDate", ascending: false)]
+        
+        do {
+            return try context.fetch(fetchRequest)
+        } catch {
+            print("Error fetching recent level completions: \(error)")
+            return []
+        }
+    }
+    
     // MARK: - Analytics Methods
     
     // Store an interaction event

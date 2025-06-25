@@ -12,10 +12,10 @@
     <string>The Pendulum</string>
     
     <key>CFBundleVersion</key>
-    <string>4</string>
+    <string>6</string>
     
     <key>CFBundleShortVersionString</key>
-    <string>1.1</string>
+    <string>1.2</string>
     
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>

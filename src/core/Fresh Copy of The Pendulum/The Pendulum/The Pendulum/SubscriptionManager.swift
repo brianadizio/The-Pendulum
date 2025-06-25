@@ -25,6 +25,11 @@ class SubscriptionManager: ObservableObject {
     
     // MARK: - Initialization
     private init() {
+        // Set first launch date if not already set
+        if UserDefaults.standard.firstLaunchDate == nil {
+            UserDefaults.standard.firstLaunchDate = Date()
+        }
+        
         // Start listening for transaction updates
         updateListenerTask = listenForTransactions()
         
@@ -40,9 +45,59 @@ class SubscriptionManager: ObservableObject {
     
     // MARK: - Public Methods
     
-    /// Check if user has access to premium features
+    /// Check if the 3-day trial period has expired
+    func isTrialExpired() -> Bool {
+        guard let firstLaunchDate = UserDefaults.standard.firstLaunchDate else {
+            return false
+        }
+        
+        let trialDuration: TimeInterval = 3 * 24 * 60 * 60 // 3 days in seconds
+        let trialEndDate = firstLaunchDate.addingTimeInterval(trialDuration)
+        
+        return Date() > trialEndDate
+    }
+    
+    /// Get remaining trial days
+    func getRemainingTrialDays() -> Int {
+        guard let firstLaunchDate = UserDefaults.standard.firstLaunchDate else {
+            return 3
+        }
+        
+        let trialDuration: TimeInterval = 3 * 24 * 60 * 60 // 3 days in seconds
+        let trialEndDate = firstLaunchDate.addingTimeInterval(trialDuration)
+        let remainingTime = trialEndDate.timeIntervalSince(Date())
+        
+        if remainingTime <= 0 {
+            return 0
+        }
+        
+        return Int(ceil(remainingTime / (24 * 60 * 60)))
+    }
+    
+    /// Check if user has access to premium features (including trial period)
     func hasPremiumAccess() -> Bool {
-        return isPremium || isInFreeTrial
+        // If user has active subscription, grant access
+        if isPremium || isInFreeTrial {
+            return true
+        }
+        
+        // If within 3-day trial period, grant access
+        if !isTrialExpired() {
+            return true
+        }
+        
+        return false
+    }
+    
+    /// Check if user needs to see paywall
+    func needsPaywall() -> Bool {
+        // If has active subscription, no paywall needed
+        if isPremium || isInFreeTrial {
+            return false
+        }
+        
+        // If trial has expired, show paywall
+        return isTrialExpired()
     }
     
     /// Check if specific feature is available
@@ -162,10 +217,22 @@ extension UserDefaults {
     private enum Keys {
         static let subscriptionStatus = "subscription_status"
         static let lastSubscriptionCheck = "last_subscription_check"
+        static let firstLaunchDate = "first_launch_date"
+        static let hasSeenPaywall = "has_seen_paywall"
     }
     
     var lastSubscriptionCheck: Date? {
         get { object(forKey: Keys.lastSubscriptionCheck) as? Date }
         set { set(newValue, forKey: Keys.lastSubscriptionCheck) }
+    }
+    
+    var firstLaunchDate: Date? {
+        get { object(forKey: Keys.firstLaunchDate) as? Date }
+        set { set(newValue, forKey: Keys.firstLaunchDate) }
+    }
+    
+    var hasSeenPaywall: Bool {
+        get { bool(forKey: Keys.hasSeenPaywall) }
+        set { set(newValue, forKey: Keys.hasSeenPaywall) }
     }
 }

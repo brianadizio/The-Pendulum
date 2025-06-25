@@ -21,9 +21,6 @@
         <relationship name="metrics" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="aggregatedAnalytics" inverseEntity="PerformanceMetrics"/>
     </entity>
     <entity name="HighScore" representedClassName="HighScore" syncable="YES" codeGenerationType="class">
-        <attribute name="attribute" optional="YES"/>
-        <attribute name="attribute1" optional="YES"/>
-        <attribute name="attribute2" optional="YES"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="level" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="playerName" optional="YES" attributeType="String"/>
@@ -61,7 +58,6 @@
         <attribute name="stabilityScore" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="timeToComplete" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="totalCorrections" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="playerProfile" optional="YES" maxCount="1" deletionRule="Nullify"/>
         <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession"/>
     </entity>
     <entity name="PerformanceMetrics" representedClassName="PerformanceMetrics" syncable="YES" codeGenerationType="class">

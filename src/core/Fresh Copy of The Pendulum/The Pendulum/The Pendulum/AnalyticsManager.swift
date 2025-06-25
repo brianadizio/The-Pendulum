@@ -1135,99 +1135,260 @@ class AnalyticsManager {
     // MARK: - Missing Chart Data Methods
     
     func getLevelCompletionsByTimePeriod(timeScale: AnalyticsTimeRange = .daily) -> [(Date, Double)] {
-        // Return level completions as time-binned data that adapts to the selected time scale
-        // Shows levels beaten as a function of time bins (session/daily/weekly/monthly/yearly)
+        // Get actual level completions from Core Data
+        let coreDataManager = CoreDataManager.shared
+        let calendar = Calendar.current
+        let now = Date()
+        var timeBins: [(Date, Double)] = []
+        
+        // Determine the date range based on time scale
+        let (startDate, endDate, binComponent) = getDateRangeForTimeScale(timeScale, from: now)
+        
+        // Fetch level completions within the date range
+        let allCompletions = coreDataManager.getLevelCompletions()
+        let relevantCompletions = allCompletions.filter { completion in
+            guard let completionDate = completion.completionDate else { return false }
+            return completionDate >= startDate && completionDate <= endDate
+        }
+        
+        // Group completions by time bins
+        switch timeScale {
+        case .session:
+            // For session view, show last 2 hours in 10-minute intervals
+            let sessionStart = now.addingTimeInterval(-2 * 3600) // 2 hours ago
+            for i in 0..<12 {
+                let binStart = sessionStart.addingTimeInterval(Double(i) * 600) // 10-minute intervals
+                let binEnd = binStart.addingTimeInterval(600)
+                
+                let count = relevantCompletions.filter { completion in
+                    guard let date = completion.completionDate else { return false }
+                    return date >= binStart && date < binEnd
+                }.count
+                
+                timeBins.append((binStart, Double(count)))
+            }
+            
+        case .daily:
+            // Show levels completed by hour of the day
+            let startOfDay = calendar.startOfDay(for: now)
+            for hour in 0..<24 {
+                let binStart = calendar.date(byAdding: .hour, value: hour, to: startOfDay)!
+                let binEnd = calendar.date(byAdding: .hour, value: 1, to: binStart)!
+                
+                let count = relevantCompletions.filter { completion in
+                    guard let date = completion.completionDate else { return false }
+                    return date >= binStart && date < binEnd
+                }.count
+                
+                timeBins.append((binStart, Double(count)))
+            }
+            
+        case .weekly:
+            // Show levels completed by day of the week
+            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+            for day in 0..<7 {
+                let binStart = calendar.date(byAdding: .day, value: day, to: startOfWeek)!
+                let binEnd = calendar.date(byAdding: .day, value: 1, to: binStart)!
+                
+                let count = relevantCompletions.filter { completion in
+                    guard let date = completion.completionDate else { return false }
+                    return date >= binStart && date < binEnd
+                }.count
+                
+                timeBins.append((binStart, Double(count)))
+            }
+            
+        case .monthly:
+            // Show levels completed by day for the last 30 days
+            for day in 0..<30 {
+                let binStart = calendar.date(byAdding: .day, value: -29 + day, to: now)!
+                let binEnd = calendar.date(byAdding: .day, value: 1, to: binStart)!
+                
+                let count = relevantCompletions.filter { completion in
+                    guard let date = completion.completionDate else { return false }
+                    return date >= binStart && date < binEnd
+                }.count
+                
+                timeBins.append((binStart, Double(count)))
+            }
+            
+        case .yearly:
+            // Show levels completed by month of the year
+            let startOfYear = calendar.dateInterval(of: .year, for: now)?.start ?? now
+            for month in 0..<12 {
+                let binStart = calendar.date(byAdding: .month, value: month, to: startOfYear)!
+                let binEnd = calendar.date(byAdding: .month, value: 1, to: binStart)!
+                
+                let count = relevantCompletions.filter { completion in
+                    guard let date = completion.completionDate else { return false }
+                    return date >= binStart && date < binEnd
+                }.count
+                
+                timeBins.append((binStart, Double(count)))
+            }
+        }
+        
+        // If no data found, return sample data for visualization
+        if timeBins.allSatisfy({ $0.1 == 0 }) {
+            return getLevelCompletionsSampleData(timeScale: timeScale)
+        }
+        
+        return timeBins
+    }
+    
+    private func getDateRangeForTimeScale(_ timeScale: AnalyticsTimeRange, from date: Date) -> (startDate: Date, endDate: Date, binComponent: Calendar.Component) {
+        let calendar = Calendar.current
+        
+        switch timeScale {
+        case .session:
+            return (date.addingTimeInterval(-2 * 3600), date, .minute)
+        case .daily:
+            return (calendar.startOfDay(for: date), date, .hour)
+        case .weekly:
+            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+            return (startOfWeek, date, .day)
+        case .monthly:
+            return (date.addingTimeInterval(-30 * 24 * 3600), date, .day)
+        case .yearly:
+            let startOfYear = calendar.dateInterval(of: .year, for: date)?.start ?? date
+            return (startOfYear, date, .month)
+        }
+    }
+    
+    private func getLevelCompletionsSampleData(timeScale: AnalyticsTimeRange) -> [(Date, Double)] {
+        // Return sample data when no real data is available
         let now = Date()
         var timeBins: [(Date, Double)] = []
         
         switch timeScale {
         case .session:
-            // Show levels completed during current session by minute
-            for i in 0..<min(10, max(1, currentLevel)) {
-                let date = now.addingTimeInterval(Double(i - 10) * 60) // 1 minute intervals
-                let completions = i < currentLevel ? Double(i % 3 + 1) : 0 // Vary between 1-3 completions
-                timeBins.append((date, completions))
+            for i in 0..<12 {
+                let date = now.addingTimeInterval(Double(i - 12) * 600)
+                timeBins.append((date, Double.random(in: 0...3)))
             }
-            
         case .daily:
-            // Show levels completed by hour of the day
             let calendar = Calendar.current
             let startOfDay = calendar.startOfDay(for: now)
             for hour in 0..<24 {
                 let date = calendar.date(byAdding: .hour, value: hour, to: startOfDay)!
-                let completions = hour >= 8 && hour <= 22 ? Double((hour % 4) + 1) : 0 // Peak hours 8AM-10PM
+                let completions = hour >= 8 && hour <= 22 ? Double.random(in: 1...4) : 0
                 timeBins.append((date, completions))
             }
-            
-        case .weekly:
-            // Show levels completed by day of the week
-            let calendar = Calendar.current
-            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-            for day in 0..<7 {
-                let date = calendar.date(byAdding: .day, value: day, to: startOfWeek)!
-                let completions = day >= 1 && day <= 5 ? Double((day % 3) + 2) : Double(day % 2 + 1) // Weekdays vs weekends
-                timeBins.append((date, completions))
-            }
-            
-        case .monthly:
-            // Show levels completed by week of the month
-            let calendar = Calendar.current
-            let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
-            for week in 0..<4 {
-                let date = calendar.date(byAdding: .weekOfYear, value: week, to: startOfMonth)!
-                let completions = Double((week + 1) * 2 + (currentLevel % 3)) // Progressive increase
-                timeBins.append((date, completions))
-            }
-            
-        case .yearly:
-            // Show levels completed by month of the year
-            let calendar = Calendar.current
-            let startOfYear = calendar.dateInterval(of: .year, for: now)?.start ?? now
-            for month in 0..<12 {
-                let date = calendar.date(byAdding: .month, value: month, to: startOfYear)!
-                let completions = Double((month % 4) + currentLevel % 5 + 1) // Seasonal variation
-                timeBins.append((date, completions))
-            }
+        default:
+            return []
         }
         
         return timeBins
     }
     
     func getParameterHistoryTimeSeries(parameter: PendulumParameter = .mass, timeScale: AnalyticsTimeRange = .daily) -> [(Date, Double)] {
-        // Create cache key
-        let cacheKey = "\(parameter.rawValue)_\(timeScale)"
+        // Try to get actual parameter data from level completions
+        let coreDataManager = CoreDataManager.shared
+        let calendar = Calendar.current
+        let now = Date()
+        var timeSeries: [(Date, Double)] = []
         
-        // Check if we have cached data
+        // Get level completions
+        let completions = coreDataManager.getLevelCompletions()
+        
+        // Extract parameter values based on selected parameter
+        let parameterData: [(Date, Double)] = completions.compactMap { completion in
+            guard let date = completion.completionDate else { return nil }
+            
+            let value: Double
+            switch parameter {
+            case .mass:
+                value = completion.massMultiplier
+            case .length:
+                value = completion.lengthMultiplier
+            case .gravity:
+                value = completion.gravityMultiplier * 9.81 // Convert multiplier to actual value
+            case .damping:
+                value = completion.dampingValue
+            case .forceMultiplier:
+                value = completion.springConstantValue // Spring constant as force multiplier proxy
+            }
+            
+            return (date, value)
+        }
+        
+        // If we have real data, bin it according to time scale
+        if !parameterData.isEmpty {
+            let (startDate, endDate, _) = getDateRangeForTimeScale(timeScale, from: now)
+            let relevantData = parameterData.filter { $0.0 >= startDate && $0.0 <= endDate }
+            
+            if !relevantData.isEmpty {
+                // Bin the data according to time scale
+                switch timeScale {
+                case .session:
+                    // Show last 2 hours in 10-minute intervals
+                    let sessionStart = now.addingTimeInterval(-2 * 3600)
+                    for i in 0..<12 {
+                        let binStart = sessionStart.addingTimeInterval(Double(i) * 600)
+                        let binEnd = binStart.addingTimeInterval(600)
+                        
+                        let binData = relevantData.filter { $0.0 >= binStart && $0.0 < binEnd }
+                        if !binData.isEmpty {
+                            let avgValue = binData.map { $0.1 }.reduce(0, +) / Double(binData.count)
+                            timeSeries.append((binStart, avgValue))
+                        }
+                    }
+                    
+                case .daily:
+                    // Show by hour
+                    let startOfDay = calendar.startOfDay(for: now)
+                    for hour in 0..<24 {
+                        let binStart = calendar.date(byAdding: .hour, value: hour, to: startOfDay)!
+                        let binEnd = calendar.date(byAdding: .hour, value: 1, to: binStart)!
+                        
+                        let binData = relevantData.filter { $0.0 >= binStart && $0.0 < binEnd }
+                        if !binData.isEmpty {
+                            let avgValue = binData.map { $0.1 }.reduce(0, +) / Double(binData.count)
+                            timeSeries.append((binStart, avgValue))
+                        }
+                    }
+                    
+                case .weekly, .monthly, .yearly:
+                    // For longer time scales, use daily averages
+                    let dayCount = timeScale == .weekly ? 7 : (timeScale == .monthly ? 30 : 365)
+                    for day in 0..<dayCount {
+                        let binStart = calendar.date(byAdding: .day, value: -dayCount + day + 1, to: now)!
+                        let binEnd = calendar.date(byAdding: .day, value: 1, to: binStart)!
+                        
+                        let binData = relevantData.filter { $0.0 >= binStart && $0.0 < binEnd }
+                        if !binData.isEmpty {
+                            let avgValue = binData.map { $0.1 }.reduce(0, +) / Double(binData.count)
+                            timeSeries.append((binStart, avgValue))
+                        }
+                    }
+                }
+                
+                if !timeSeries.isEmpty {
+                    return timeSeries
+                }
+            }
+        }
+        
+        // Fall back to cached sample data if no real data available
+        let cacheKey = "\(parameter.rawValue)_\(timeScale)"
         if let cachedData = parameterHistoryCache[cacheKey] {
             return cachedData
         }
         
-        // Generate stable data only once and cache it
-        let now = Date()
-        var timeSeries: [(Date, Double)] = []
-        
-        // Determine time intervals and data points based on time scale
+        // Generate sample data
         let (intervalCount, intervalDuration, baseValue, variation) = getParameterTimeScaleSettings(for: parameter, timeScale: timeScale)
-        
-        // Use a deterministic seed based on parameter for consistent data
         let seed = parameter.rawValue.hash
         var randomGenerator = SeededRandomGenerator(seed: seed)
         
-        // Generate stable parameter evolution data
         for i in 0..<intervalCount {
             let date = now.addingTimeInterval(Double(i - intervalCount) * intervalDuration)
-            
-            // Create realistic parameter progression based on parameter type
-            let progressionFactor = Double(i) / Double(intervalCount - 1) // 0 to 1
-            let noise = randomGenerator.nextDouble(min: -0.1, max: 0.1) // Deterministic variation
-            
+            let progressionFactor = Double(i) / Double(intervalCount - 1)
+            let noise = randomGenerator.nextDouble(min: -0.1, max: 0.1)
             let value = baseValue + (variation * progressionFactor) + (variation * 0.2 * noise)
-            timeSeries.append((date, max(0.1, value))) // Ensure positive values
+            timeSeries.append((date, max(0.1, value)))
         }
         
-        // Cache the data
         parameterHistoryCache[cacheKey] = timeSeries
-        
         return timeSeries
     }
     

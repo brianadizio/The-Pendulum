@@ -212,6 +212,14 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             object: nil
         )
         
+        // Listen for app becoming active to check subscription
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(checkSubscriptionStatus),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        
         // Set particle delegate
         viewModel.particleDelegate = self
         
@@ -248,6 +256,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
                 self.scene?.updateSceneBackground()
             }
         }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     
@@ -2812,6 +2824,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         NotificationCenter.default.removeObserver(self, name: .authStateDidChange, object: nil)
     }
     
+    @objc private func checkSubscriptionStatus() {
+        // Check if trial has expired and user needs to subscribe
+        if SubscriptionManager.shared.needsPaywall() {
+            // Present subscription paywall
+            let subscriptionVC = SubscriptionViewController()
+            subscriptionVC.isPaywall = true
+            let navController = UINavigationController(rootViewController: subscriptionVC)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true)
+        }
+    }
+    
     private func refreshSettingsView() {
         // Remove old settings view
         settingsView.subviews.forEach { $0.removeFromSuperview() }
@@ -3223,6 +3247,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     @objc private func showPrivacyPolicy() {
+        // Option 1: Open in Safari (uncomment if you prefer external browser)
+        /*
+        if let url = URL(string: AppConstants.URLs.privacyPolicy), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        } else {
+            showAlert(title: "Error", message: "Unable to open Privacy Policy")
+        }
+        */
+        
+        // Option 2: Open in-app with WKWebView (current implementation)
         let privacyVC = PrivacyPolicyViewController()
         let navController = UINavigationController(rootViewController: privacyVC)
         navController.modalPresentationStyle = .fullScreen
