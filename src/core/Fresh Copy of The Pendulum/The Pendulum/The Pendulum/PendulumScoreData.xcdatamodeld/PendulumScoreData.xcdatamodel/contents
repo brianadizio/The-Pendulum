@@ -20,6 +20,48 @@
         <attribute name="totalPlayTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="metrics" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="aggregatedAnalytics" inverseEntity="PerformanceMetrics"/>
     </entity>
+    <entity name="ControlInput" representedClassName="ControlInput" syncable="YES" codeGenerationType="class">
+        <attribute name="controlType" optional="YES" attributeType="String"/>
+        <attribute name="direction" optional="YES" attributeType="String"/>
+        <attribute name="effectivenessScore" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="forceApplied" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="inputData" optional="YES" attributeType="String"/>
+        <attribute name="inputId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="pendulumAngle" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="pendulumVelocity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="responseTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="controlSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ControlSession" inverseName="controlInputs" inverseEntity="ControlSession"/>
+    </entity>
+    <entity name="ControlPreferences" representedClassName="ControlPreferences" syncable="YES" codeGenerationType="class">
+        <attribute name="controlType" optional="YES" attributeType="String"/>
+        <attribute name="createdDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="customSettings" optional="YES" attributeType="String"/>
+        <attribute name="deviceId" optional="YES" attributeType="String"/>
+        <attribute name="isEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lastUsed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="proficiencyLevel" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sensitivity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="totalUsageTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="updatedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="userId" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ControlSession" representedClassName="ControlSession" syncable="YES" codeGenerationType="class">
+        <attribute name="averageForceStrength" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="controlType" optional="YES" attributeType="String"/>
+        <attribute name="deviceOrientation" optional="YES" attributeType="String"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="gameLevel" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gameMode" optional="YES" attributeType="String"/>
+        <attribute name="maxForceStrength" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sensitivity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="totalForceApplications" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="controlInputs" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ControlInput" inverseName="controlSession" inverseEntity="ControlInput"/>
+        <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession"/>
+    </entity>
     <entity name="HighScore" representedClassName="HighScore" syncable="YES" codeGenerationType="class">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="level" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -60,6 +102,19 @@
         <attribute name="totalCorrections" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="playSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlaySession"/>
     </entity>
+    <entity name="MotionCalibration" representedClassName="MotionCalibration" syncable="YES" codeGenerationType="class">
+        <attribute name="baselineX" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="baselineY" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="baselineZ" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="calibrationDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="calibrationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="controlType" optional="YES" attributeType="String"/>
+        <attribute name="deadZone" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="deviceId" optional="YES" attributeType="String"/>
+        <attribute name="isActive" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="maxRange" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sensitivityMultiplier" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
     <entity name="PerformanceMetrics" representedClassName="PerformanceMetrics" syncable="YES" codeGenerationType="class">
         <attribute name="averageCorrectionTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="averagePhaseSpaceData" optional="YES" attributeType="Binary"/>
@@ -81,6 +136,7 @@
         <attribute name="maxAngle" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="score" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="controlSessions" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ControlSession"/>
         <relationship name="interactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="InteractionEvent" inverseName="playSession" inverseEntity="InteractionEvent"/>
         <relationship name="metrics" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PerformanceMetrics" inverseName="playSession" inverseEntity="PerformanceMetrics"/>
     </entity>

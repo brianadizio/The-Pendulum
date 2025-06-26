@@ -7,6 +7,9 @@ class GameControlsViewController: UIViewController {
   private var controlOptions: [(title: String, subtitle: String, isSelected: Bool, isAvailable: Bool)] = []
   private var sensitivityValue: Float = 0.5
   
+  // Reference to control manager for updates
+  weak var controlManager: PendulumControlManager?
+  
   // MARK: - Lifecycle
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -44,40 +47,25 @@ class GameControlsViewController: UIViewController {
     sensitivityValue = defaults.float(forKey: "controlSensitivity")
     if sensitivityValue == 0 { sensitivityValue = 0.5 } // Default value
     
-    let currentControl = SettingsManager.shared.gameControls
+    let currentControl = defaults.string(forKey: "selectedControlType") ?? "Push"
+    let availableControls = PendulumControlManager.getAvailableControlTypes()
     
-    // All control options are coming soon except Push
-    controlOptions = [
-      (title: "Push", 
-       subtitle: "Push the pendulum with touch",
-       isSelected: currentControl == "Push",
-       isAvailable: true),
+    // Build control options based on available controls
+    controlOptions = []
+    
+    for controlType in PendulumControlManager.ControlType.allCases {
+      let isAvailable = availableControls.contains(controlType)
+      let isSelected = controlType.rawValue == currentControl
       
-      (title: "Gyroscope", 
-       subtitle: "Tilt device to control pendulum",
-       isSelected: false,
-       isAvailable: false),
+      print("Control: \(controlType.rawValue), Current: \(currentControl), Selected: \(isSelected)")
       
-      (title: "Slide", 
-       subtitle: "Slide finger to apply force",
-       isSelected: false,
-       isAvailable: false),
-      
-      (title: "Tap", 
-       subtitle: "Tap to apply impulse",
-       isSelected: false,
-       isAvailable: false),
-      
-      (title: "Swipe", 
-       subtitle: "Swipe gestures for control",
-       isSelected: false,
-       isAvailable: false),
-      
-      (title: "Tilt", 
-       subtitle: "Tilt device to change gravity",
-       isSelected: false,
-       isAvailable: false)
-    ]
+      controlOptions.append((
+        title: controlType.displayName,
+        subtitle: controlType.description,
+        isSelected: isSelected,
+        isAvailable: isAvailable
+      ))
+    }
     
     tableView.reloadData()
   }
@@ -127,7 +115,8 @@ extension GameControlsViewController: UITableViewDataSource {
         config.secondaryTextProperties.color = .secondaryLabel
         cell.selectionStyle = .default
         cell.accessoryType = option.isSelected ? .checkmark : .none
-        cell.tintColor = .systemBlue
+        cell.tintColor = .goldenPrimary
+        cell.accessoryView = nil // Clear any previous accessory view
       } else {
         config.textProperties.color = .tertiaryLabel
         config.secondaryTextProperties.color = .tertiaryLabel
@@ -165,23 +154,33 @@ extension GameControlsViewController: UITableViewDataSource {
       // Sensitivity slider
       var config = UIListContentConfiguration.cell()
       config.text = "Touch Sensitivity"
+      config.secondaryText = String(format: "%.0f%%", sensitivityValue * 100)
       config.textProperties.font = .systemFont(ofSize: 17)
+      config.secondaryTextProperties.font = .systemFont(ofSize: 15)
+      config.secondaryTextProperties.color = .goldenTextLight
       
       let slider = UISlider()
       slider.minimumValue = 0.1
       slider.maximumValue = 1.0
       slider.value = sensitivityValue
       slider.addTarget(self, action: #selector(sensitivityChanged(_:)), for: .valueChanged)
+      
+      // Golden Theme styling
+      slider.minimumTrackTintColor = .goldenPrimary
+      slider.maximumTrackTintColor = .goldenSecondary
+      slider.thumbTintColor = .goldenAccent
       slider.translatesAutoresizingMaskIntoConstraints = false
       
       let containerView = UIView()
       containerView.addSubview(slider)
       
       NSLayoutConstraint.activate([
-        slider.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-        slider.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        slider.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+        slider.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
         slider.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-        slider.widthAnchor.constraint(equalToConstant: 200)
+        slider.heightAnchor.constraint(equalToConstant: 30),
+        containerView.widthAnchor.constraint(equalToConstant: 160),
+        containerView.heightAnchor.constraint(equalToConstant: 44)
       ])
       
       cell.contentConfiguration = config
@@ -233,12 +232,33 @@ extension GameControlsViewController: UITableViewDataSource {
     sensitivityValue = sender.value
     UserDefaults.standard.set(sender.value, forKey: "controlSensitivity")
     
+    // Update control manager sensitivity
+    controlManager?.updateSensitivity(Double(sender.value))
+    
+    // Update the sensitivity display in real-time
+    if let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 1)) {
+      var config = cell.contentConfiguration as? UIListContentConfiguration
+      config?.secondaryText = String(format: "%.0f%%", sender.value * 100)
+      cell.contentConfiguration = config
+    }
+    
     // Post notification for sensitivity change
     NotificationCenter.default.post(
       name: Notification.Name("ControlSensitivityChanged"),
       object: nil,
       userInfo: ["sensitivity": sender.value]
     )
+  }
+  
+  private func showControlSwitchConfirmation(controlType: PendulumControlManager.ControlType) {
+    let alert = UIAlertController(
+      title: "Control Method Changed",
+      message: "Switched to \(controlType.displayName) control. \(controlType.description)",
+      preferredStyle: .alert
+    )
+    
+    alert.addAction(UIAlertAction(title: "OK", style: .default))
+    present(alert, animated: true)
   }
 }
 
@@ -258,10 +278,20 @@ extension GameControlsViewController: UITableViewDelegate {
           controlOptions[i].isSelected = (i == indexPath.row)
         }
         
-        let selectedOption = controlOptions[indexPath.row].title
+        // Get the actual control type, not the title
+        let controlType = PendulumControlManager.ControlType.allCases[indexPath.row]
         
-        // Update settings
-        SettingsManager.shared.gameControls = selectedOption
+        // Update control manager
+        controlManager?.switchToControlType(controlType)
+        
+        // Save preference using rawValue
+        UserDefaults.standard.set(controlType.rawValue, forKey: "selectedControlType")
+          
+        // Show confirmation
+        showControlSwitchConfirmation(controlType: controlType)
+        
+        // Update settings manager
+        SettingsManager.shared.gameControls = controlType.rawValue
         
         // Refresh table to show new selection
         tableView.reloadData()
