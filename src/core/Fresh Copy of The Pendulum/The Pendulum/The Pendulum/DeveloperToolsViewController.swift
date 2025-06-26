@@ -6,6 +6,8 @@ class DeveloperToolsViewController: UIViewController {
     private var progressHUD: UIView?
     
     private enum DeveloperOption: String, CaseIterable {
+        case checkTrialStatus = "Check Trial Status"
+        case simulateTrialExpiry = "Simulate Trial Expiry"
         case quickAITest = "Quick AI Test (5 min)"
         case comprehensiveAITest = "Comprehensive AI Test (10 min)"
         case longTermAITest = "Long-term AI Test (30 min)"
@@ -19,6 +21,10 @@ class DeveloperToolsViewController: UIViewController {
         
         var subtitle: String {
             switch self {
+            case .checkTrialStatus:
+                return "Show current trial status and remaining days"
+            case .simulateTrialExpiry:
+                return "Force trial expiry to test paywall"
             case .quickAITest:
                 return "Run a 5-minute AI simulation"
             case .comprehensiveAITest:
@@ -44,6 +50,10 @@ class DeveloperToolsViewController: UIViewController {
         
         var iconName: String {
             switch self {
+            case .checkTrialStatus:
+                return "clock"
+            case .simulateTrialExpiry:
+                return "hourglass"
             case .quickAITest, .comprehensiveAITest, .longTermAITest:
                 return "brain.head.profile"
             case .generateTestData:
@@ -156,6 +166,10 @@ extension DeveloperToolsViewController: UITableViewDelegate {
     
     private func handleDeveloperOption(_ option: DeveloperOption) {
         switch option {
+        case .checkTrialStatus:
+            checkTrialStatus()
+        case .simulateTrialExpiry:
+            simulateTrialExpiry()
         case .quickAITest:
             runQuickAITest()
         case .comprehensiveAITest:
@@ -185,6 +199,76 @@ extension DeveloperToolsViewController: UITableViewDelegate {
         case .clearAllData:
             confirmClearAllData()
         }
+    }
+    
+    // MARK: - Trial Status Actions
+    
+    private func checkTrialStatus() {
+        let subscriptionManager = SubscriptionManager.shared
+        
+        // Get trial information
+        let isTrialExpired = subscriptionManager.isTrialExpired()
+        let remainingDays = subscriptionManager.getRemainingTrialDays()
+        let needsPaywall = subscriptionManager.needsPaywall()
+        let hasPremiumAccess = subscriptionManager.hasPremiumAccess()
+        
+        // Get first launch date
+        let firstLaunchDate = UserDefaults.standard.firstLaunchDate
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .short
+        
+        var message = ""
+        
+        if let firstLaunch = firstLaunchDate {
+            message += "First Launch: \(dateFormatter.string(from: firstLaunch))\n\n"
+        } else {
+            message += "First Launch: Not recorded\n\n"
+        }
+        
+        message += "Trial Status:\n"
+        message += "• Trial Expired: \(isTrialExpired ? "YES" : "NO")\n"
+        message += "• Days Remaining: \(remainingDays)\n"
+        message += "• Needs Paywall: \(needsPaywall ? "YES" : "NO")\n"
+        message += "• Has Premium Access: \(hasPremiumAccess ? "YES" : "NO")\n\n"
+        
+        message += "Subscription Status:\n"
+        message += "• Is Premium: \(subscriptionManager.isPremium ? "YES" : "NO")\n"
+        message += "• In Free Trial: \(subscriptionManager.isInFreeTrial ? "YES" : "NO")\n"
+        
+        let alert = UIAlertController(
+            title: "Trial Status Debug",
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func simulateTrialExpiry() {
+        let alert = UIAlertController(
+            title: "Simulate Trial Expiry",
+            message: "This will set your first launch date to 4 days ago, forcing the trial to expire. You'll need to restart the app to see the paywall.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Simulate", style: .destructive) { _ in
+            // Set first launch date to 4 days ago
+            let fourDaysAgo = Date().addingTimeInterval(-4 * 24 * 60 * 60)
+            UserDefaults.standard.firstLaunchDate = fourDaysAgo
+            
+            let confirmAlert = UIAlertController(
+                title: "Trial Expired",
+                message: "Trial has been set to expired. Close and restart the app to see the paywall in action.",
+                preferredStyle: .alert
+            )
+            confirmAlert.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(confirmAlert, animated: true)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
     }
     
     // MARK: - AI Test Actions

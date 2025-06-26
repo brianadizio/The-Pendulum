@@ -171,6 +171,9 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     // Core Data manager
     private let coreDataManager = CoreDataManager.shared
     
+    // Firebase Sync manager
+    private let firebaseSync = FirebaseGameplaySync.shared
+    
     init() {
         // Set initial default values before loading from simulation
         // This ensures UI displays non-zero values even before loadInitialParameters completes
@@ -1437,8 +1440,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             return
         }
         
-        // Try to unlock via Core Data
-        if coreDataManager.unlockAchievement(id: id) {
+        // Use Firebase sync to unlock achievement (handles both local and cloud)
+        firebaseSync.unlockAchievement(id: id)
+        
+        // Check if it was actually unlocked locally
+        if coreDataManager.achievementExists(id: id) {
             // Success - add to our local list
             unlockedAchievements.append(id)
             
@@ -1511,7 +1517,8 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     }
     
     func saveHighScore(playerName: String = "Player") {
-        coreDataManager.saveHighScore(
+        // Use Firebase sync which handles both local and cloud saves
+        firebaseSync.saveHighScore(
             score: score,
             level: currentLevel,
             timeBalanced: totalBalanceTime,

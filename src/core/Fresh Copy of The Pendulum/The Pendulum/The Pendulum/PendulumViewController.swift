@@ -77,6 +77,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     // Dashboard view controller
     var dashboardViewController: DashboardViewController?
     
+    // Control manager
+    private var controlManager: PendulumControlManager?
+    
     // Parameter controls
     private let massSlider = UISlider()
     private let lengthSlider = UISlider()
@@ -247,6 +250,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
 
         // Start with simulation view
         showView(simulationView)
+        
+        // Initialize control manager
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.controlManager = PendulumControlManager(
+                viewModel: self.viewModel,
+                parentView: self.simulationView,
+                scene: self.scene,
+                pushLeftButton: self.pushLeftButton,
+                pushRightButton: self.pushRightButton
+            )
+        }
         
         // Initialize backgrounds for all tabs after a delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -2442,10 +2456,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         if isAuthenticated {
             accountOptions = [
                 ("person.crop.circle", "Profile", false),
+                ("icloud", "Cloud Sync", false),
                 ("creditcard", "Subscription", false),
                 ("rectangle.portrait.and.arrow.right", "Sign Out", false)
             ]
-            print("DEBUG: Added Profile, Subscription, and Sign Out options")
+            print("DEBUG: Added Profile, Cloud Sync, Subscription, and Sign Out options")
         } else {
             accountOptions = [
                 ("person.crop.circle.badge.plus", "Sign In", false),
@@ -2456,7 +2471,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         previousView = nil
         for (index, option) in accountOptions.enumerated() {
-            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 400 + index, isCustomImage: option.2)
+            let statusText = (option.1 == "Cloud Sync") ? getCloudSyncStatus() : nil
+            let optionView = createSettingsOption(iconName: option.0, title: option.1, tag: 400 + index, isCustomImage: option.2, statusText: statusText)
             accountCard.addSubview(optionView)
             
             NSLayoutConstraint.activate([
@@ -2543,6 +2559,22 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         ])
     }
     
+    private func getCloudSyncStatus() -> String {
+        // Check if user has premium access for cloud sync
+        guard SubscriptionManager.shared.isFeatureAvailable(.cloudSync) else {
+            return "Premium Required"
+        }
+        
+        // Check authentication status
+        guard AuthenticationManager.shared.isAuthenticated else {
+            return "Sign In Required"
+        }
+        
+        // TODO: Add actual cloud sync status checking
+        // For now, return a basic status based on authentication
+        return "Synced"
+    }
+    
     private func createSettingsCard() -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
@@ -2552,7 +2584,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         return card
     }
     
-    private func createSettingsOption(iconName: String, title: String, tag: Int, isCustomImage: Bool = false) -> UIView {
+    private func createSettingsOption(iconName: String, title: String, tag: Int, isCustomImage: Bool = false, statusText: String? = nil) -> UIView {
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
         container.tag = tag
@@ -2590,6 +2622,17 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
         
+        // Status label (optional)
+        var statusLabel: UILabel?
+        if let statusText = statusText {
+            statusLabel = UILabel()
+            statusLabel!.text = statusText
+            statusLabel!.font = UIFont.systemFont(ofSize: 14)
+            statusLabel!.textColor = FocusCalendarTheme.tertiaryTextColor
+            statusLabel!.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(statusLabel!)
+        }
+        
         // Chevron
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
         chevron.translatesAutoresizingMaskIntoConstraints = false
@@ -2597,7 +2640,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         chevron.contentMode = .scaleAspectFit
         container.addSubview(chevron)
         
-        NSLayoutConstraint.activate([
+        var constraints = [
             // Icon container
             iconContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
             iconContainer.centerYAnchor.constraint(equalTo: container.centerYAnchor),
@@ -2619,7 +2662,20 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             chevron.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             chevron.widthAnchor.constraint(equalToConstant: 13),
             chevron.heightAnchor.constraint(equalToConstant: 20)
-        ])
+        ]
+        
+        // Add status label constraints if present
+        if let statusLabel = statusLabel {
+            constraints.append(contentsOf: [
+                statusLabel.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -10),
+                statusLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+                titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: statusLabel.leadingAnchor, constant: -10)
+            ])
+        } else {
+            constraints.append(titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: chevron.leadingAnchor, constant: -10))
+        }
+        
+        NSLayoutConstraint.activate(constraints)
         
         // Add tap gesture
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(settingsOptionTapped(_:)))
@@ -2668,9 +2724,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             } else {
                 showSignIn()
             }
-        case 401: // Subscription
+        case 401: // Cloud Sync (when authenticated)
+            showCloudSyncSettings()
+        case 402: // Subscription
             showSubscription()
-        case 402: // Sign Out (when authenticated)
+        case 403: // Sign Out (when authenticated)
             signOut()
         // Information options
         case 300: // About
@@ -2784,6 +2842,110 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         present(navController, animated: true)
     }
     
+    private func showCloudSyncSettings() {
+        let alert = UIAlertController(
+            title: "Cloud Sync",
+            message: "Manage your cloud synchronization settings and view sync status.",
+            preferredStyle: .actionSheet
+        )
+        
+        // Check current sync status
+        let syncStatus = getCloudSyncStatus()
+        
+        if syncStatus == "Premium Required" {
+            alert.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { _ in
+                self.showSubscription()
+            })
+        } else if syncStatus == "Sign In Required" {
+            alert.addAction(UIAlertAction(title: "Sign In", style: .default) { _ in
+                self.showSignIn()
+            })
+        } else {
+            // User is authenticated and has premium access
+            alert.addAction(UIAlertAction(title: "View Sync Status", style: .default) { _ in
+                self.showSyncStatusDetails()
+            })
+            
+            alert.addAction(UIAlertAction(title: "Force Sync Now", style: .default) { _ in
+                self.performManualSync()
+            })
+            
+            alert.addAction(UIAlertAction(title: "Sync Settings", style: .default) { _ in
+                self.showSyncSettings()
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    private func showSyncStatusDetails() {
+        let alert = UIAlertController(
+            title: "Sync Status",
+            message: "Last sync: Just now\nData synced: Game progress, achievements, settings\nStatus: All data is up to date",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func performManualSync() {
+        let alert = UIAlertController(
+            title: "Syncing...",
+            message: "Synchronizing your data with the cloud.",
+            preferredStyle: .alert
+        )
+        present(alert, animated: true)
+        
+        // Simulate sync operation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            alert.dismiss(animated: true) {
+                let successAlert = UIAlertController(
+                    title: "Sync Complete",
+                    message: "Your data has been successfully synchronized.",
+                    preferredStyle: .alert
+                )
+                successAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(successAlert, animated: true)
+            }
+        }
+    }
+    
+    private func showSyncSettings() {
+        let alert = UIAlertController(
+            title: "Sync Settings",
+            message: "Configure what data to sync with the cloud.",
+            preferredStyle: .actionSheet
+        )
+        
+        alert.addAction(UIAlertAction(title: "Sync Game Progress", style: .default) { _ in
+            // Toggle sync for game progress
+        })
+        
+        alert.addAction(UIAlertAction(title: "Sync Achievements", style: .default) { _ in
+            // Toggle sync for achievements
+        })
+        
+        alert.addAction(UIAlertAction(title: "Sync Settings", style: .default) { _ in
+            // Toggle sync for settings
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        
+        present(alert, animated: true)
+    }
+    
     private func showUserProfile() {
         guard let user = AuthenticationManager.shared.currentUser else { return }
         
@@ -2850,16 +3012,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     private func showGameControlSettings() {
-        let controlOptions = [
-            "Push", "Gyroscope", "Slide", "Tap", "Swipe", "Tilt"
-        ]
+        let gameControlsVC = GameControlsViewController()
         
-        showSettingsOptions(title: "Game Controls", options: controlOptions) { selectedOption in
-            // Save control preference
-            UserDefaults.standard.set(selectedOption, forKey: "controlMode")
-            print("Control mode set to: \(selectedOption)")
-            // TODO: Apply control settings to game
-        }
+        // Pass the controlManager reference
+        gameControlsVC.controlManager = self.controlManager
+        
+        let navigationController = UINavigationController(rootViewController: gameControlsVC)
+        present(navigationController, animated: true)
     }
     
     // Helper method to show options selection

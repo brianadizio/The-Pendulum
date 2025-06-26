@@ -13,6 +13,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Initialize Firebase with Firestore
         FirebaseTestConfiguration.initializeFirebaseWithFirestore()
         
+        // Initialize Firebase gameplay sync
+        _ = FirebaseGameplaySync.shared
         
         // Apply Focus Calendar theme
         FocusCalendarTheme.applyTheme()
