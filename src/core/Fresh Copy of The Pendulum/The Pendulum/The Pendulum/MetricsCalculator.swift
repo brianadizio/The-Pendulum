@@ -184,7 +184,15 @@ class MetricsCalculator {
         
         // Fill time series
         for force in forceHistory {
-            let index = Int((force.time - (forceHistory.first?.time ?? 0)) * sampleRate)
+            let indexValue = (force.time - (forceHistory.first?.time ?? 0)) * sampleRate
+            
+            // Validate before Int conversion
+            guard !indexValue.isNaN && !indexValue.isInfinite else {
+                print("⚠️ MetricsCalculator: Skipping invalid force entry - time: \(force.time), sampleRate: \(sampleRate)")
+                continue
+            }
+            
+            let index = Int(indexValue)
             if index >= 0 && index < sampleCount {
                 timeSeries[index] = force.force
             }
@@ -230,8 +238,18 @@ class MetricsCalculator {
             guard thetaNorm >= 0 && thetaNorm <= 1 &&
                   omegaNorm >= 0 && omegaNorm <= 1 else { continue }
             
-            let i = Int(thetaNorm * Double(gridSize - 1)).clamped(to: 0...(gridSize-1))
-            let j = Int(omegaNorm * Double(gridSize - 1)).clamped(to: 0...(gridSize-1))
+            let iValue = thetaNorm * Double(gridSize - 1)
+            let jValue = omegaNorm * Double(gridSize - 1)
+            
+            // Validate before Int conversion
+            guard !iValue.isNaN && !iValue.isInfinite &&
+                  !jValue.isNaN && !jValue.isInfinite else {
+                print("⚠️ MetricsCalculator: Skipping invalid grid calculation - thetaNorm: \(thetaNorm), omegaNorm: \(omegaNorm)")
+                continue
+            }
+            
+            let i = Int(iValue).clamped(to: 0...(gridSize-1))
+            let j = Int(jValue).clamped(to: 0...(gridSize-1))
             
             grid[i][j] = true
         }

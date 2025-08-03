@@ -320,8 +320,18 @@ extension MetricsCalculator {
             var coveredBoxes = Set<String>()
             
             for point in points {
-                let boxI = Int(point.theta / boxSize)
-                let boxJ = Int(point.omega / boxSize)
+                // Validate input values before Int conversion
+                let thetaRatio = point.theta / boxSize
+                let omegaRatio = point.omega / boxSize
+                
+                guard !thetaRatio.isNaN && !thetaRatio.isInfinite &&
+                      !omegaRatio.isNaN && !omegaRatio.isInfinite else {
+                    print("⚠️ TopologyMetricsCalculator: Skipping invalid point - theta: \(point.theta), omega: \(point.omega), boxSize: \(boxSize)")
+                    continue // Skip this point to prevent crash
+                }
+                
+                let boxI = Int(thetaRatio)
+                let boxJ = Int(omegaRatio)
                 coveredBoxes.insert("\(boxI),\(boxJ)")
             }
             
@@ -409,10 +419,20 @@ extension MetricsCalculator {
         // Mark visited cells
         for point in phaseSpaceHistory {
             let thetaNormalized = (point.theta + Double.pi) / (2 * Double.pi)
-            let i = Int(thetaNormalized * Double(gridSize))
+            let iValue = thetaNormalized * Double(gridSize)
             
             let omegaNormalized = (point.omega + 10) / 20.0
-            let j = Int(omegaNormalized * Double(gridSize))
+            let jValue = omegaNormalized * Double(gridSize)
+            
+            // Validate values before Int conversion
+            guard !iValue.isNaN && !iValue.isInfinite &&
+                  !jValue.isNaN && !jValue.isInfinite else {
+                print("⚠️ TopologyMetricsCalculator: Skipping invalid grid point - theta: \(point.theta), omega: \(point.omega)")
+                continue // Skip this point to prevent crash
+            }
+            
+            let i = Int(iValue)
+            let j = Int(jValue)
             
             if i >= 0 && i < gridSize && j >= 0 && j < gridSize {
                 grid[i][j] = true

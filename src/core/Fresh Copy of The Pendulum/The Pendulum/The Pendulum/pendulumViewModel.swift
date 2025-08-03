@@ -222,9 +222,12 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     @objc private func handleAchievementPoints(_ notification: Notification) {
         guard let points = notification.userInfo?["points"] as? Int else { return }
         
+        // Validate points value
+        let safePoints = max(0, points) // Ensure non-negative
+        
         // Add achievement points to score
-        score += points
-        print("Added \(points) achievement points to score. New score: \(score)")
+        score += safePoints
+        print("Added \(safePoints) achievement points to score. New score: \(score)")
     }
     
     deinit {
@@ -481,7 +484,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         checkLevelAchievements()
 
         // Add bonus points for completing level
-        let levelBonus = currentLevel * 100
+        let levelBonus = max(0, currentLevel * 100) // Ensure non-negative
         score += levelBonus
 
         // Show bonus points notification
@@ -511,10 +514,15 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 maxAngle: maxAngleRecovered
             )
             
-            // Save level completion data
-            let timeToComplete = Date().timeIntervalSince(levelStartTime ?? Date())
-            let avgReactionTime = AnalyticsManager.shared.reactionTimes.isEmpty ? 0 : 
-                AnalyticsManager.shared.reactionTimes.reduce(0, +) / Double(AnalyticsManager.shared.reactionTimes.count)
+            // Save level completion data with safe calculation
+            let safeStartTime = levelStartTime ?? Date()
+            let timeToComplete = Date().timeIntervalSince(safeStartTime)
+            
+            // Validate completion time
+            let safeCompletionTime = timeToComplete.isNaN || timeToComplete.isInfinite || timeToComplete < 0 ? 0.0 : timeToComplete
+            let reactionTimes = AnalyticsManager.shared.reactionTimes.filter { !$0.isNaN && !$0.isInfinite && $0 >= 0 }
+            let avgReactionTime = reactionTimes.isEmpty ? 0.0 : 
+                reactionTimes.reduce(0, +) / Double(reactionTimes.count)
             let levelConfig = levelManager.getConfigForLevel(currentLevel)
             
             // Get performance metrics directly from AnalyticsManager
@@ -529,7 +537,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             coreDataManager.saveLevelCompletion(
                 levelNumber: currentLevel,
                 sessionId: sessionId,
-                timeToComplete: timeToComplete,
+                timeToComplete: safeCompletionTime,
                 finalScore: score,
                 maxAngleReached: maxAngleRecovered,
                 totalCorrections: levelTotalCorrections,
@@ -760,7 +768,22 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     
     // Helper to normalize angle to [-π, π]
     private func normalizeAngle(_ angle: Double) -> Double {
-        return atan2(sin(angle), cos(angle))
+        // Validate input first
+        guard !angle.isNaN && !angle.isInfinite else {
+            print("⚠️ PendulumViewModel: Cannot normalize invalid angle: \(angle)")
+            return 0.0 // Return safe default
+        }
+        
+        // Normalize angle to [-π, π]
+        let result = atan2(sin(angle), cos(angle))
+        
+        // Validate result
+        guard !result.isNaN && !result.isInfinite else {
+            print("⚠️ PendulumViewModel: normalizeAngle produced invalid result: \(result) from angle: \(angle)")
+            return 0.0 // Return safe default
+        }
+        
+        return result
     }
     
     func startSimulation() {
@@ -853,8 +876,10 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                 endGame(reason: "Pendulum Fell")
                 
                 // Update stats for dashboard
-                let failTime = Date().timeIntervalSince(balanceStartTime ?? Date())
-                levelStats["lastAttemptTime"] = failTime
+                let safeStartTime = balanceStartTime ?? Date()
+                let failTime = Date().timeIntervalSince(safeStartTime)
+                let safeFailTime = failTime.isNaN || failTime.isInfinite || failTime < 0 ? 0.0 : failTime
+                levelStats["lastAttemptTime"] = safeFailTime
                 levelStats["maxAngle"] = Double(angleFromTop)
                 
                 // Reset consecutive balance time
@@ -899,8 +924,23 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     
                     // Update score based on balance quality - how close to perfectly vertical
                     let balanceQuality = 1.0 - (angleFromTop / balanceThreshold)
-                    let basePoints = Int(10 * balanceQuality)
-                    let pointsToAdd = Int(Double(basePoints) * scoreMultiplier)
+                    
+                    // Validate calculations to prevent NaN/Infinite errors
+                    guard !balanceQuality.isNaN && !balanceQuality.isInfinite else {
+                        print("⚠️ Score calculation: Invalid balance quality: \(balanceQuality) from angle: \(angleFromTop), threshold: \(balanceThreshold)")
+                        return
+                    }
+                    
+                    let clampedQuality = max(0.0, min(1.0, balanceQuality))
+                    let basePoints = Int(10 * clampedQuality)
+                    let multipliedPoints = Double(basePoints) * scoreMultiplier
+                    
+                    guard !multipliedPoints.isNaN && !multipliedPoints.isInfinite else {
+                        print("⚠️ Score calculation: Invalid multiplied points: \(multipliedPoints)")
+                        return
+                    }
+                    
+                    let pointsToAdd = max(0, min(10000, Int(multipliedPoints)))
                     score += pointsToAdd
                     
                     // Update balance time
@@ -950,8 +990,11 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
                     }
                     
                     // Check for no push time
-                    if let lastForce = lastForcePressTime, Date().timeIntervalSince(lastForce) >= 10.0 && !unlockedAchievements.contains("no_push_10sec") {
-                        unlockAchievement(id: "no_push_10sec")
+                    if let lastForce = lastForcePressTime {
+                        let timeSinceForce = Date().timeIntervalSince(lastForce)
+                        if !timeSinceForce.isNaN && !timeSinceForce.isInfinite && timeSinceForce >= 10.0 && !unlockedAchievements.contains("no_push_10sec") {
+                            unlockAchievement(id: "no_push_10sec")
+                        }
                     }
                 }
             } else {
@@ -1044,6 +1087,15 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         
         // Track interaction in analytics system
         if let sessionId = currentSessionId {
+            // Validate current state values before tracking
+            guard !currentState.theta.isNaN && !currentState.theta.isInfinite &&
+                  !currentState.thetaDot.isNaN && !currentState.thetaDot.isInfinite &&
+                  !scaledMagnitude.isNaN && !scaledMagnitude.isInfinite else {
+                print("⚠️ PendulumViewModel: Skipping analytics tracking due to invalid state values")
+                print("   theta: \(currentState.theta), thetaDot: \(currentState.thetaDot), scaledMagnitude: \(scaledMagnitude)")
+                return
+            }
+            
             // Determine direction based on the sign of magnitude
             let direction = magnitude > 0 ? "left" : "right"
             

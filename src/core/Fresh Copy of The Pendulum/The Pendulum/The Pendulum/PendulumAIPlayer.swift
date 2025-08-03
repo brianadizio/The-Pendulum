@@ -23,11 +23,11 @@ enum AISkillLevel: String, CaseIterable {
     
     var reactionTimeRange: ClosedRange<Double> {
         switch self {
-        case .beginner: return 0.2...0.4      // Faster reactions (was 0.4...0.8)
-        case .intermediate: return 0.15...0.25 // Faster reactions (was 0.3...0.5)
-        case .advanced: return 0.1...0.2       // Faster reactions (was 0.2...0.4)
-        case .expert: return 0.05...0.15       // Faster reactions (was 0.1...0.3)
-        case .perfect: return 0.02...0.05      // Near instant (was 0.05...0.1)
+        case .beginner: return 0.08...0.15     // Much faster reactions for frequent touches
+        case .intermediate: return 0.06...0.12 // Rapid response time
+        case .advanced: return 0.04...0.08     // Very quick reactions
+        case .expert: return 0.02...0.05       // Near instant response
+        case .perfect: return 0.01...0.03      // Fastest possible reaction
         }
     }
     
@@ -43,10 +43,10 @@ enum AISkillLevel: String, CaseIterable {
     
     var forceAccuracy: Double {
         switch self {
-        case .beginner: return 0.8       // 80% accurate force (was 0.6)
-        case .intermediate: return 0.85   // 85% accurate force (was 0.75)
-        case .advanced: return 0.92      // 92% accurate force (was 0.85)
-        case .expert: return 0.98        // 98% accurate force (was 0.95)
+        case .beginner: return 0.7       // Lighter touches with some variance
+        case .intermediate: return 0.75   // More consistent light touches
+        case .advanced: return 0.85      // Precise lighter forces
+        case .expert: return 0.92        // Very accurate light touches
         case .perfect: return 1.0        // Perfect force calculation
         }
     }
@@ -254,18 +254,18 @@ class PendulumAIPlayer {
         let direction: PushDirection
         let magnitude: Double
         
-        if abs(controlForce) < 0.01 {  // Even lower threshold for more frequent pushes
+        if abs(controlForce) < 0.005 {  // Ultra-low threshold for maximum responsiveness
             // No action needed
             direction = .none
             magnitude = 0.0
         } else if controlForce > 0 {
             direction = .right
-            // Use gentler forces with ramping for human-like control
-            let baseMagnitude = min(abs(controlForce) * 0.6, 1.5)
+            // Much lighter forces - like gentle taps
+            let baseMagnitude = min(abs(controlForce) * 0.3, 0.8)  // Reduced from 0.6 and 1.5
             magnitude = applyForceRamping(baseMagnitude: baseMagnitude, direction: direction)
         } else {
             direction = .left
-            let baseMagnitude = min(abs(controlForce) * 0.6, 1.5)
+            let baseMagnitude = min(abs(controlForce) * 0.3, 0.8)  // Much lighter touches
             magnitude = applyForceRamping(baseMagnitude: baseMagnitude, direction: direction)
         }
         
@@ -276,22 +276,26 @@ class PendulumAIPlayer {
     }
     
     private func applyForceRamping(baseMagnitude: Double, direction: PushDirection) -> Double {
-        // Human-like force ramping - start gentle and increase if needed
+        // Human-like force ramping - very light touches with gradual increase
         var rampedMagnitude = baseMagnitude
         
-        // If we just pushed in the same direction, slightly increase force
+        // Sequential pushes - gradually increase force like humans do
         if !pushSequence.isEmpty && pushSequence.last == direction {
-            let rampFactor = min(1.0 + (Double(currentSequenceCount) * 0.1), 1.4)
+            let rampFactor = min(1.0 + (Double(currentSequenceCount) * 0.05), 1.2)  // Gentler ramping
             rampedMagnitude *= rampFactor
         } else {
-            // New direction - start gentler
-            rampedMagnitude *= 0.8
+            // New direction - start very light
+            rampedMagnitude *= 0.6  // Even lighter start
         }
         
-        // Recovery mode - use stronger forces
+        // Recovery mode - slightly stronger but still gentle
         if isInRecoveryMode {
-            rampedMagnitude *= 1.3
+            rampedMagnitude *= 1.15  // Reduced from 1.3
         }
+        
+        // Apply micro-adjustments for human-like variation
+        let microVariation = Double.random(in: 0.9...1.1)
+        rampedMagnitude *= microVariation
         
         // Store for next comparison
         lastPushMagnitude = rampedMagnitude
@@ -302,32 +306,32 @@ class PendulumAIPlayer {
     private func getControlGains(strategy: ControlStrategy, omega0: Double) -> (kp: Double, kd: Double) {
         switch strategy {
         case .reactive:
-            // More responsive gains
-            return (kp: 3.0 * omega0 * omega0, kd: 2.5 * omega0)
+            // Lighter, more frequent corrections
+            return (kp: 2.0 * omega0 * omega0, kd: 1.8 * omega0)
             
         case .predictive:
-            // Higher derivative gain for anticipation
-            return (kp: 2.5 * omega0 * omega0, kd: 3.5 * omega0)
+            // Anticipatory but gentle
+            return (kp: 1.8 * omega0 * omega0, kd: 2.5 * omega0)
             
         case .aggressive:
-            // Much stronger control
-            return (kp: 4.0 * omega0 * omega0, kd: 3.0 * omega0)
+            // Stronger but still controlled
+            return (kp: 2.5 * omega0 * omega0, kd: 2.0 * omega0)
             
         case .gentle:
-            // Still responsive but smoother
-            return (kp: 1.5 * omega0 * omega0, kd: 2.0 * omega0)
+            // Very light touches
+            return (kp: 1.2 * omega0 * omega0, kd: 1.5 * omega0)
             
         case .rhythmic:
-            // Moderate gains for rhythmic control
-            return (kp: 2.0 * omega0 * omega0, kd: 2.2 * omega0)
+            // Human-like tapping pattern
+            return (kp: 1.5 * omega0 * omega0, kd: 1.8 * omega0)
             
         case .microControl:
-            // High frequency, low amplitude
-            return (kp: 3.5 * omega0 * omega0, kd: 1.5 * omega0)
+            // Many tiny adjustments
+            return (kp: 2.5 * omega0 * omega0, kd: 1.2 * omega0)
             
         case .sequential:
-            // Moderate gains for sequential pushes
-            return (kp: 2.2 * omega0 * omega0, kd: 2.0 * omega0)
+            // Multiple light pushes in sequence
+            return (kp: 1.6 * omega0 * omega0, kd: 1.6 * omega0)
         }
     }
     
@@ -459,7 +463,7 @@ class PendulumAIPlayer {
         // Check if we're pushing too frequently
         if let lastTime = lastActionTime {
             let timeSinceLastAction = Date().timeIntervalSince(lastTime)
-            if timeSinceLastAction < 0.02 { // Allow very rapid taps like humans
+            if timeSinceLastAction < 0.01 { // Allow extremely rapid taps (100Hz)
                 return
             }
         }
@@ -509,8 +513,8 @@ class PendulumAIPlayer {
         guard let lastTime = lastActionTime else { return false }
         let timeSinceLastPush = Date().timeIntervalSince(lastTime)
         
-        // Need enough time between sequences
-        if timeSinceLastPush < 0.3 { return false }
+        // Allow quicker sequence starts for more human-like control
+        if timeSinceLastPush < 0.15 { return false }
         
         // Check if pendulum is moving consistently in one direction
         let movingRight = angle > 0.05 && velocity > 0.1
@@ -524,8 +528,8 @@ class PendulumAIPlayer {
         guard !pushSequence.isEmpty,
               let startTime = sequenceStartTime else { return false }
         
-        // Sequences last maximum 0.5 seconds
-        if Date().timeIntervalSince(startTime) > 0.5 { 
+        // Sequences can last longer for sustained corrections
+        if Date().timeIntervalSince(startTime) > 0.8 { 
             resetSequence()
             return false 
         }
@@ -540,7 +544,7 @@ class PendulumAIPlayer {
             stillNeedsCorrection = angle < -0.03 // Still tilting left
         }
         
-        return stillNeedsCorrection && currentSequenceCount < 4 // Max 4 pushes per sequence
+        return stillNeedsCorrection && currentSequenceCount < 8 // Allow more pushes per sequence
     }
     
     private func updatePushSequence(direction: PushDirection) {
@@ -577,17 +581,17 @@ class PendulumAIPlayer {
         let normalizedAngle = atan2(sin(angle), cos(angle)) - Double.pi
         let absAngle = abs(normalizedAngle)
         
-        // Very small angle but velocity indicates it's about to grow
-        let needsAnticipation = absAngle < 0.05 && abs(angleVelocity) > 0.15 && 
+        // More sensitive anticipation for early corrections
+        let needsAnticipation = absAngle < 0.08 && abs(angleVelocity) > 0.1 && 
                                (normalizedAngle * angleVelocity > 0) // Moving away from vertical
         
         return needsAnticipation
     }
     
     private func createAnticipatoryAction(angle: Double, angleVelocity: Double) -> PendingAction {
-        // Light anticipatory push in opposite direction of motion
+        // Very light anticipatory tap in opposite direction of motion
         let direction: PushDirection = angleVelocity > 0 ? .left : .right
-        let magnitude = 0.4 // Very light touch
+        let magnitude = 0.25 // Extremely light touch
         
         anticipatoryPushCount += 1
         
@@ -699,8 +703,8 @@ class PendulumAIManager {
             aiPlayer?.startPlaying()
         }
         
-        // Start update loop with faster updates
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] _ in
+        // Start update loop with much faster updates for rapid corrections
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
             self?.updateAI()
         }
     }
@@ -710,14 +714,16 @@ class PendulumAIManager {
         case .demo, .compete:
             // AI controls directly
             aiPlayer?.onPushLeft = { [weak self] in
-                print("🔵 AI PUSHING LEFT (force: -4.0)")
-                self?.viewModel?.applyForce(-4.0)  // Stronger force (was -3.0)
+                // Apply lighter force based on AI's calculated magnitude
+                let force = -2.0  // Much lighter base force
+                self?.viewModel?.applyForce(force)
                 self?.showAIActionIndicator(direction: PushDirection.left)
             }
             
             aiPlayer?.onPushRight = { [weak self] in
-                print("🔴 AI PUSHING RIGHT (force: 4.0)")
-                self?.viewModel?.applyForce(4.0)  // Stronger force (was 3.0)
+                // Apply lighter force
+                let force = 2.0  // Much lighter base force
+                self?.viewModel?.applyForce(force)
                 self?.showAIActionIndicator(direction: PushDirection.right)
             }
             
@@ -725,16 +731,14 @@ class PendulumAIManager {
             // AI only assists when needed
             aiPlayer?.onPushLeft = { [weak self] in
                 if self?.isAssisting == true {
-                    print("🔵 AI ASSIST LEFT (force: -4.0)")
-                    self?.viewModel?.applyForce(-4.0)  // Stronger assistance (was -3.0)
+                    self?.viewModel?.applyForce(-2.0)  // Lighter assistance
                     self?.showAIAssistIndicator(direction: PushDirection.left)
                 }
             }
             
             aiPlayer?.onPushRight = { [weak self] in
                 if self?.isAssisting == true {
-                    print("🔴 AI ASSIST RIGHT (force: 4.0)")
-                    self?.viewModel?.applyForce(4.0)  // Stronger assistance (was 3.0)
+                    self?.viewModel?.applyForce(2.0)  // Lighter assistance
                     self?.showAIAssistIndicator(direction: PushDirection.right)
                 }
             }
