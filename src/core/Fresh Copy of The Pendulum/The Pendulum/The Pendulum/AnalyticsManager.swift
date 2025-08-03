@@ -59,9 +59,11 @@ class AnalyticsManager {
     internal var velocityBuffer: [Double] = [] // For velocity tracking
     internal var phaseSpaceHistory: [(theta: Double, omega: Double)] = [] // Historical phase space points
     internal var forceHistory: [(time: Double, force: Double, direction: String)] = [] // Force application history
+    internal var forceHistoryWithTimestamps: [(time: Double, force: Double, direction: String, timestamp: Date)] = [] // Enhanced force history with timestamps
     private var totalForceApplied: Double = 0
     private var correctionEfficiency: [Double] = [] // Force applied vs. stability gained
     internal var reactionTimes: [Double] = [] // Time from instability to correction
+    internal var reactionTimeHistory: [(time: Double, timestamp: Date)] = [] // Reaction times with timestamps
     
     // Phase space tracking
     internal var phaseSpacePoints: [(theta: Double, omega: Double)] = []
@@ -116,9 +118,11 @@ class AnalyticsManager {
         velocityBuffer = []
         phaseSpaceHistory = []
         forceHistory = []
+        forceHistoryWithTimestamps = []
         totalForceApplied = 0
         correctionEfficiency = []
         reactionTimes = []
+        reactionTimeHistory = []
         
         // Suppressed: Analytics tracking started debug output
     }
@@ -196,18 +200,61 @@ class AnalyticsManager {
             return
         }
         
+        // Comprehensive input validation with detailed logging
+        if angle.isNaN {
+            print("⚠️ Analytics: CRASH PREVENTION - angle is NaN")
+            return
+        }
+        if angle.isInfinite {
+            print("⚠️ Analytics: CRASH PREVENTION - angle is Infinite: \(angle)")
+            return
+        }
+        if angleVelocity.isNaN {
+            print("⚠️ Analytics: CRASH PREVENTION - angleVelocity is NaN")
+            return
+        }
+        if angleVelocity.isInfinite {
+            print("⚠️ Analytics: CRASH PREVENTION - angleVelocity is Infinite: \(angleVelocity)")
+            return
+        }
+        if magnitude.isNaN {
+            print("⚠️ Analytics: CRASH PREVENTION - magnitude is NaN")
+            return
+        }
+        if magnitude.isInfinite {
+            print("⚠️ Analytics: CRASH PREVENTION - magnitude is Infinite: \(magnitude)")
+            return
+        }
+        
+        print("📊 Analytics: trackInteraction called - angle: \(angle), velocity: \(angleVelocity), mag: \(magnitude), dir: \(direction)")
+        
         // Calculate reaction time if this is a correction during unstable period
         var reactionTime = 0.0
         if eventType == "push" {
-            let angleFromVertical = abs(normalizeAngle(angle - Double.pi))
+            print("📊 Analytics: Processing push event")
+            
+            let angleMinusPi = angle - Double.pi
+            print("📊 Analytics: angle - pi = \(angleMinusPi)")
+            
+            let normalizedAngle = normalizeAngle(angleMinusPi)
+            print("📊 Analytics: normalized angle = \(normalizedAngle)")
+            
+            guard !normalizedAngle.isNaN && !normalizedAngle.isInfinite else {
+                print("⚠️ Analytics: Invalid normalized angle: \(normalizedAngle) from angle: \(angle)")
+                return
+            }
+            
+            let angleFromVertical = abs(normalizedAngle)
+            print("📊 Analytics: angle from vertical = \(angleFromVertical)")
             
             // If we're currently unstable and have a recorded instability time
             if angleFromVertical > instabilityThreshold, let lastInstability = lastInstabilityTime {
                 reactionTime = Date().timeIntervalSince(lastInstability)
-                // Only record reasonable reaction times (0.1 to 3 seconds)
-                if reactionTime >= 0.1 && reactionTime <= 3.0 {
+                print("📊 Analytics: calculated reaction time = \(reactionTime)")
+                // Only record reasonable reaction times (0.1 to 3 seconds) and valid values
+                if reactionTime >= 0.1 && reactionTime <= 3.0 && !reactionTime.isNaN && !reactionTime.isInfinite {
                     reactionTimes.append(reactionTime)
-                    // Removed debug print - reaction time recorded
+                    print("📊 Analytics: reaction time recorded")
                 }
             }
             
@@ -245,26 +292,62 @@ class AnalyticsManager {
             // Suppressed: Current directional pushes debug output
             
             // Track magnitude for distribution analysis
-            pushMagnitudeBuffer.append(abs(magnitude))
+            print("📊 Analytics: Processing magnitude tracking")
+            let safeMagnitude = abs(magnitude)
+            print("📊 Analytics: safe magnitude = \(safeMagnitude)")
             
-            // Track force history
-            let currentTime = Date().timeIntervalSince(sessionStartTime ?? Date())
-            forceHistory.append((time: currentTime, force: abs(magnitude), direction: direction))
-            
-            // Track total force applied
-            totalForceApplied += abs(magnitude)
+            if !safeMagnitude.isNaN && !safeMagnitude.isInfinite {
+                print("📊 Analytics: Adding to pushMagnitudeBuffer")
+                pushMagnitudeBuffer.append(safeMagnitude)
+                
+                // Track force history
+                let sessionStart = sessionStartTime ?? Date()
+                let currentTime = Date().timeIntervalSince(sessionStart)
+                print("📊 Analytics: calculated currentTime = \(currentTime)")
+                
+                if !currentTime.isNaN && !currentTime.isInfinite {
+                    print("📊 Analytics: Adding to forceHistory")
+                    forceHistory.append((time: currentTime, force: safeMagnitude, direction: direction))
+                    
+                    print("📊 Analytics: Adding to forceHistoryWithTimestamps")
+                    forceHistoryWithTimestamps.append((time: currentTime, force: safeMagnitude, direction: direction, timestamp: Date()))
+                    
+                    print("📊 Analytics: Updating totalForceApplied from \(totalForceApplied) by adding \(safeMagnitude)")
+                    let newTotal = totalForceApplied + safeMagnitude
+                    if newTotal.isNaN || newTotal.isInfinite {
+                        print("⚠️ Analytics: CRASH PREVENTION - totalForceApplied would become NaN/Infinite: \(totalForceApplied) + \(safeMagnitude) = \(newTotal)")
+                        return
+                    }
+                    totalForceApplied = newTotal
+                    print("📊 Analytics: New totalForceApplied = \(totalForceApplied)")
+                } else {
+                    print("⚠️ Analytics: Invalid currentTime calculated: \(currentTime)")
+                }
+            } else {
+                print("⚠️ Analytics: Invalid magnitude value: \(magnitude) -> \(safeMagnitude)")
+            }
         }
         
-        // Create and store the interaction data
+        // Create and store the interaction data with additional validation
+        print("📊 Analytics: Creating InteractionEventData")
+        let safeAngle = angle.isNaN || angle.isInfinite ? 0.0 : angle
+        let safeAngleVelocity = angleVelocity.isNaN || angleVelocity.isInfinite ? 0.0 : angleVelocity
+        let safeMagnitude = magnitude.isNaN || magnitude.isInfinite ? 0.0 : magnitude
+        let safeReactionTime = reactionTime.isNaN || reactionTime.isInfinite ? 0.0 : reactionTime
+        
+        print("📊 Analytics: Safe values - angle: \(safeAngle), velocity: \(safeAngleVelocity), magnitude: \(safeMagnitude), reactionTime: \(safeReactionTime)")
+        
+        print("📊 Analytics: About to create InteractionEventData object")
         let interaction = InteractionEventData(
             timestamp: Date(),
             eventType: eventType,
-            angle: angle,
-            angleVelocity: angleVelocity,
-            magnitude: magnitude,
+            angle: safeAngle,
+            angleVelocity: safeAngleVelocity,
+            magnitude: safeMagnitude,
             direction: direction,
-            reactionTime: reactionTime
+            reactionTime: safeReactionTime
         )
+        print("📊 Analytics: InteractionEventData created successfully")
         
         // Add to pending interactions
         pendingInteractions.append(interaction)
@@ -733,8 +816,22 @@ class AnalyticsManager {
     // MARK: - Helper Methods
     
     private func normalizeAngle(_ angle: Double) -> Double {
+        // Validate input first
+        guard !angle.isNaN && !angle.isInfinite else {
+            print("⚠️ Analytics: Cannot normalize invalid angle: \(angle)")
+            return 0.0 // Return safe default
+        }
+        
         // Normalize angle to [-π, π]
-        return atan2(sin(angle), cos(angle))
+        let result = atan2(sin(angle), cos(angle))
+        
+        // Validate result
+        guard !result.isNaN && !result.isInfinite else {
+            print("⚠️ Analytics: Normalization produced invalid result for angle: \(angle)")
+            return 0.0 // Return safe default
+        }
+        
+        return result
     }
     
     // MARK: - Phase Space Tracking
@@ -1459,12 +1556,22 @@ class AnalyticsManager {
     func trackLevelCompletion(level: Int, completionTime: Double, score: Int, perturbationType: String) {
         guard isTracking, let sessionId = currentSessionId else { return }
         
-        // Create level completion data
+        // Validate input values to prevent NaN/Infinite errors
+        guard !completionTime.isNaN && !completionTime.isInfinite && completionTime >= 0 else {
+            print("⚠️ Analytics: Invalid completion time: \(completionTime), using 0.0")
+            return
+        }
+        
+        // Ensure score is valid (Int should not be NaN, but let's be extra safe)
+        let safeScore = score < 0 ? 0 : score
+        let safeCompletionTime = max(0.0, completionTime)
+        
+        // Create level completion data with safe values
         let completionData: [String: Any] = [
             "sessionId": sessionId.uuidString,
             "level": level,
-            "completionTime": completionTime,
-            "score": score,
+            "completionTime": safeCompletionTime,
+            "score": safeScore,
             "perturbationType": perturbationType,
             "timestamp": Date()
         ]

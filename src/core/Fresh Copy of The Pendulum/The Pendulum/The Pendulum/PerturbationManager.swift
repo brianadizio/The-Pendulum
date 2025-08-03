@@ -365,13 +365,17 @@ class PerturbationManager {
         if let scene = scene {
             visualizer = PerturbationVisualizer(scene: scene)
             
-            // Activate visualizer for specific modes
-            if profile.name == "Sine Wave" {
+            // Activate visualizer for all perturbation types with enhanced visibility
+            if profile.types.contains(.sine) {
                 visualizer?.activateForMode("sine")
-            } else if profile.name == "Data-Driven" {
+            } else if profile.types.contains(.dataSet) {
                 visualizer?.activateForMode("data")
-            } else if profile.name == "Compound" {
+            } else if profile.types.contains(.compound) {
                 visualizer?.activateForMode("compound")
+            } else if profile.types.contains(.random) {
+                visualizer?.activateForMode("random")
+            } else if profile.types.contains(.impulse) {
+                visualizer?.activateForMode("impulse")
             }
         }
     }

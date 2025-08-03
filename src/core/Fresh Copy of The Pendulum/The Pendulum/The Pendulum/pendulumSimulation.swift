@@ -237,10 +237,25 @@ class PendulumSimulation {
                 let theta = state[0]
                 let omega = state[1]
                 
+                // Validate input state values
+                guard !theta.isNaN && !theta.isInfinite &&
+                      !omega.isNaN && !omega.isInfinite else {
+                    print("⚠️ Physics: Invalid state values - theta: \(theta), omega: \(omega)")
+                    return 0.0 // Return safe default acceleration
+                }
+                
                 let inertia = self.mass * self.length * self.length + self.momentOfInertia
                 let ka = (self.mass * self.length * self.gravity) / inertia
                 let ks = self.springConstant / inertia
                 let kb = self.damping / inertia
+                
+                // Validate calculated coefficients
+                guard !ka.isNaN && !ka.isInfinite &&
+                      !ks.isNaN && !ks.isInfinite &&
+                      !kb.isNaN && !kb.isInfinite else {
+                    print("⚠️ Physics: Invalid coefficients - ka: \(ka), ks: \(ks), kb: \(kb)")
+                    return 0.0 // Return safe default acceleration
+                }
                 
                 // CORRECTED Inverted pendulum physics: 
                 // For angle θ, with θ = π being the upright position:
@@ -264,11 +279,30 @@ class PendulumSimulation {
                 // For inverted pendulum, need negative value to produce instability at π
                 // Force = -m*g*L*sin(theta) in physics, but our equation has positive ka
                 // So for correct inverted pendulum physics, we need to negate sin(theta)
-                return -ka * sin(theta) + ks * theta - kb * omega
+                let acceleration = -ka * sin(theta) + ks * theta - kb * omega
+                
+                // Validate the result
+                guard !acceleration.isNaN && !acceleration.isInfinite else {
+                    print("⚠️ Physics: Invalid acceleration: \(acceleration) from theta: \(theta), omega: \(omega)")
+                    return 0.0 // Return safe default acceleration
+                }
+                
+                return acceleration
             }
         ]
         
         let newValues = solver(timeStep, currentTime, currentValues, derivs)
+        
+        // Validate the new values before using them
+        guard !newValues[0].isNaN && !newValues[0].isInfinite &&
+              !newValues[1].isNaN && !newValues[1].isInfinite else {
+            print("⚠️ PendulumSimulation: Invalid values from solver - theta: \(newValues[0]), thetaDot: \(newValues[1])")
+            print("   Previous state - theta: \(currentState.theta), thetaDot: \(currentState.thetaDot)")
+            print("   Command: \(command), timeStep: \(timeStep)")
+            
+            // Return the previous valid state instead of crashing
+            return currentState
+        }
         
         currentTime += timeStep
         currentState = PendulumState(
@@ -326,7 +360,24 @@ class PendulumSimulation {
         
         // y(t+dt) = y(t) + (k1 + 2*k2 + 2*k3 + k4)/6
         for i in 0..<n {
-            yOut[i] = y[i] + (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]) / 6.0
+            let increment = (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]) / 6.0
+            
+            // Check for NaN/Infinite in the increment calculation
+            if increment.isNaN || increment.isInfinite {
+                print("⚠️ RK4 Solver: Invalid increment at index \(i): \(increment)")
+                print("   k1[\(i)]: \(k1[i]), k2[\(i)]: \(k2[i]), k3[\(i)]: \(k3[i]), k4[\(i)]: \(k4[i])")
+                // Return the original values without the invalid increment
+                return y
+            }
+            
+            yOut[i] = y[i] + increment
+            
+            // Check the final result
+            if yOut[i].isNaN || yOut[i].isInfinite {
+                print("⚠️ RK4 Solver: Invalid result at index \(i): \(yOut[i]) from y[\(i)]: \(y[i]) + increment: \(increment)")
+                // Return the original values to prevent NaN propagation
+                return y
+            }
         }
         
         return yOut

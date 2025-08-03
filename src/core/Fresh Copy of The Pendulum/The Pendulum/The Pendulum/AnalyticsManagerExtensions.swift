@@ -59,7 +59,8 @@ extension AnalyticsManager {
         metricsCalculator.recordState(time: time, angle: angle, velocity: angleVelocity)
         
         // Debug: Log every 1000th data point
-        if Int(time * 100) % 1000 == 0 {
+        let timeValue = time * 100
+        if !timeValue.isNaN && !timeValue.isInfinite && Int(timeValue) % 1000 == 0 {
             // Suppressed: Tracked state debug output
         }
     }
@@ -101,6 +102,163 @@ extension AnalyticsManager {
         print("📊 Initial parameters tracked at session start")
     }
     
+    // MARK: - Time-Based Data Filtering
+    
+    /// Structure to hold filtered data based on time range
+    struct FilteredAnalyticsData {
+        let forceHistory: [(time: Double, force: Double, direction: String, timestamp: Date)]
+        let reactionTimeHistory: [(time: Double, timestamp: Date)]
+        let directionalPushes: [String: Int]
+        let timeRange: AnalyticsTimeRange
+    }
+    
+    /// Get data filtered by the current time range
+    private func getFilteredData(for timeRange: AnalyticsTimeRange) -> FilteredAnalyticsData {
+        let now = Date()
+        let timeLimit: TimeInterval
+        
+        switch timeRange {
+        case .session:
+            // Session data - use current session only
+            timeLimit = 24 * 60 * 60 // Last 24 hours as fallback
+        case .daily:
+            timeLimit = 24 * 60 * 60 // 24 hours
+        case .weekly:
+            timeLimit = 7 * 24 * 60 * 60 // 7 days
+        case .monthly:
+            timeLimit = 30 * 24 * 60 * 60 // 30 days
+        case .yearly:
+            timeLimit = 365 * 24 * 60 * 60 // 365 days
+        }
+        
+        let cutoffDate = now.addingTimeInterval(-timeLimit)
+        
+        // Filter force history - use timestamped data when available, otherwise estimate
+        let filteredForceHistory: [(time: Double, force: Double, direction: String, timestamp: Date)]
+        
+        if !forceHistoryWithTimestamps.isEmpty {
+            // Use real timestamped data
+            filteredForceHistory = forceHistoryWithTimestamps.filter { $0.timestamp >= cutoffDate }
+        } else {
+            // Fall back to estimated timestamps for existing data
+            filteredForceHistory = forceHistory.compactMap { forceData -> (time: Double, force: Double, direction: String, timestamp: Date)? in
+                let estimatedTimestamp = now.addingTimeInterval(-TimeInterval.random(in: 0...timeLimit))
+                if estimatedTimestamp >= cutoffDate {
+                    return (forceData.time, forceData.force, forceData.direction, estimatedTimestamp)
+                }
+                return nil
+            }
+        }
+        
+        // Filter reaction time history - use timestamped data when available, otherwise estimate
+        let filteredReactionTimeHistory: [(time: Double, timestamp: Date)]
+        
+        if !reactionTimeHistory.isEmpty {
+            // Use real timestamped data
+            filteredReactionTimeHistory = reactionTimeHistory.filter { $0.timestamp >= cutoffDate }
+        } else {
+            // Fall back to estimated timestamps for existing data
+            filteredReactionTimeHistory = reactionTimes.compactMap { reactionTime -> (time: Double, timestamp: Date)? in
+                let estimatedTimestamp = now.addingTimeInterval(-TimeInterval.random(in: 0...timeLimit))
+                if estimatedTimestamp >= cutoffDate {
+                    return (reactionTime, estimatedTimestamp)
+                }
+                return nil
+            }
+        }
+        
+        // Calculate directional pushes from filtered force history
+        var filteredDirectionalPushes: [String: Int] = ["left": 0, "right": 0]
+        for forceData in filteredForceHistory {
+            filteredDirectionalPushes[forceData.direction, default: 0] += 1
+        }
+        
+        return FilteredAnalyticsData(
+            forceHistory: filteredForceHistory,
+            reactionTimeHistory: filteredReactionTimeHistory,
+            directionalPushes: filteredDirectionalPushes,
+            timeRange: timeRange
+        )
+    }
+    
+    /// Calculate force distribution from filtered force history
+    private func calculateForceDistributionFromFilteredData(_ forceHistory: [(time: Double, force: Double, direction: String, timestamp: Date)]) -> [Double] {
+        guard !forceHistory.isEmpty else { return [] }
+        
+        let forces = forceHistory.map { abs($0.force) }
+        let maxForce = forces.max() ?? 1.0
+        let minForce = forces.min() ?? 0.0
+        
+        // Create 10 bins for distribution
+        let binCount = 10
+        let binSize = (maxForce - minForce) / Double(binCount)
+        var distribution = Array(repeating: 0.0, count: binCount)
+        
+        for force in forces {
+            let binValue = (force - minForce) / binSize
+            
+            // Validate before Int conversion
+            guard !binValue.isNaN && !binValue.isInfinite else {
+                print("⚠️ AnalyticsManagerExtensions: Skipping invalid force bin calculation - force: \(force), minForce: \(minForce), binSize: \(binSize)")
+                continue
+            }
+            
+            let binIndex = min(Int(binValue), binCount - 1)
+            distribution[binIndex] += 1.0
+        }
+        
+        return distribution
+    }
+    
+    /// Calculate push magnitude distribution from filtered force history
+    private func calculatePushMagnitudeDistributionFromFilteredData(_ forceHistory: [(time: Double, force: Double, direction: String, timestamp: Date)]) -> [Double] {
+        guard !forceHistory.isEmpty else { return [] }
+        
+        let magnitudes = forceHistory.map { abs($0.force) }
+        
+        // Create magnitude ranges: 0-0.5, 0.5-1.0, 1.0-2.0, 2.0-3.0, 3.0+
+        let ranges = [(0.0, 0.5), (0.5, 1.0), (1.0, 2.0), (2.0, 3.0), (3.0, Double.infinity)]
+        var distribution = Array(repeating: 0.0, count: ranges.count)
+        
+        for magnitude in magnitudes {
+            for (index, range) in ranges.enumerated() {
+                if magnitude >= range.0 && magnitude < range.1 {
+                    distribution[index] += 1.0
+                    break
+                }
+            }
+        }
+        
+        return distribution
+    }
+    
+    /// Calculate total play time from filtered data
+    private func calculateTotalPlayTimeFromFilteredData(_ filteredData: FilteredAnalyticsData) -> Double {
+        // Calculate based on the time span of the filtered data
+        guard !filteredData.forceHistory.isEmpty else { return 0.0 }
+        
+        let timestamps = filteredData.forceHistory.map { $0.timestamp }
+        guard let earliest = timestamps.min(), let latest = timestamps.max() else { return 0.0 }
+        
+        return latest.timeIntervalSince(earliest)
+    }
+    
+    /// Calculate directional bias from filtered directional pushes
+    private func calculateDirectionalBiasFromFilteredData(_ directionalPushes: [String: Int]) -> Double {
+        let leftCount = Double(directionalPushes["left"] ?? 0)
+        let rightCount = Double(directionalPushes["right"] ?? 0)
+        let totalCount = leftCount + rightCount
+        
+        guard totalCount > 0 else { return 0.0 }
+        
+        // Calculate bias as difference from 50/50 split
+        let leftRatio = leftCount / totalCount
+        let rightRatio = rightCount / totalCount
+        
+        // Return bias as percentage deviation from center (-50 to +50)
+        return (leftRatio - rightRatio) * 50.0
+    }
+    
     // MARK: - Metric Calculation Methods by Group
     
     func calculateMetrics(for group: MetricGroupType) -> [MetricValue] {
@@ -119,6 +277,9 @@ extension AnalyticsManager {
     
     private func calculateMetric(type: MetricType) -> MetricValue? {
         let timestamp = Date()
+        
+        // Get filtered data based on current time range
+        let filteredData = getFilteredData(for: currentTimeRange)
         
         // Removed debug print - calculating metric
         
@@ -176,14 +337,23 @@ extension AnalyticsManager {
             return createMetricValue(duration)
             
         case .pushCount:
-            let count = metricsCalculator.calculatePushCount()
+            // Calculate push count from filtered data
+            let count = filteredData.forceHistory.count
             return createMetricValue(count)
             
         case .currentLevel:
             return createMetricValue(getCurrentLevel())
             
         case .sessionTime:
-            let time = metricsCalculator.calculateSessionTime()
+            // Use different calculation based on time range
+            let time: Double
+            if currentTimeRange == .session {
+                // For session view, use the captured session time or calculate from current session
+                time = metricsCalculator.calculateSessionTime()
+            } else {
+                // For other time ranges, calculate total play time from filtered data
+                time = calculateTotalPlayTimeFromFilteredData(filteredData)
+            }
             return createMetricValue(time)
             
         case .playerStyle:
@@ -206,8 +376,7 @@ extension AnalyticsManager {
             return createMetricValue(rating)
             
         case .directionalBias:
-            let bias = calculateDirectionalBias()
-            // Removed debug print - directional bias calculated
+            let bias = calculateDirectionalBiasFromFilteredData(filteredData.directionalPushes)
             if bias.isNaN || bias.isInfinite {
                 print("ERROR: NaN/Infinite directional bias detected: \(bias)")
                 return createMetricValue(0.0)
@@ -215,8 +384,8 @@ extension AnalyticsManager {
             return createMetricValue(bias)
             
         case .averageCorrectionTime:
-            let avgTime = reactionTimes.isEmpty ? 0 : reactionTimes.reduce(0, +) / Double(reactionTimes.count)
-            // Removed debug print - average correction time calculated
+            let reactionTimesArray = filteredData.reactionTimeHistory.map { $0.time }
+            let avgTime = reactionTimesArray.isEmpty ? 0 : reactionTimesArray.reduce(0, +) / Double(reactionTimesArray.count)
             if avgTime.isNaN || avgTime.isInfinite {
                 print("ERROR: NaN/Infinite average correction time detected: \(avgTime)")
                 return createMetricValue(0.0)
@@ -228,31 +397,33 @@ extension AnalyticsManager {
             return createMetricValue(rate)
             
         case .forceDistribution:
-            let distribution = metricsCalculator.calculateForceDistribution()
-            // Removed debug print - force distribution calculated
-            // Check for NaN in distribution
-            for (index, value) in distribution.enumerated() {
-                if value.isNaN || value.isInfinite {
-                    print("ERROR: NaN/Infinite in force distribution at index \(index): \(value)")
-                }
+            // Calculate force distribution from filtered data
+            let forceDistribution = calculateForceDistributionFromFilteredData(filteredData.forceHistory)
+            guard !forceDistribution.isEmpty else {
+                return nil // Return nil for "No Data Available" message
             }
-            // If distribution contains NaN, return empty array to prevent chart errors
-            let cleanDistribution = distribution.filter { !$0.isNaN && !$0.isInfinite }
-            if cleanDistribution.count != distribution.count {
-                print("WARNING: Filtered out \(distribution.count - cleanDistribution.count) NaN/Infinite values from force distribution")
+            // Check for NaN in distribution
+            let cleanDistribution = forceDistribution.filter { !$0.isNaN && !$0.isInfinite }
+            if cleanDistribution.count != forceDistribution.count {
+                print("WARNING: Filtered out \(forceDistribution.count - cleanDistribution.count) NaN/Infinite values from force distribution")
             }
             return createMetricValue(cleanDistribution)
             
         case .pushMagnitudeDistribution:
-            // Get push magnitude distribution
-            let magnitudeDistribution = getPushMagnitudeDistribution()
-            let values = Array(magnitudeDistribution.values.map { Double($0) })
-            return createMetricValue(values)
+            // Calculate push magnitude distribution from filtered data
+            let magnitudeDistribution = calculatePushMagnitudeDistributionFromFilteredData(filteredData.forceHistory)
+            guard !magnitudeDistribution.isEmpty else {
+                return nil // Return nil for "No Data Available" message
+            }
+            return createMetricValue(magnitudeDistribution)
             
         case .reactionTimeAnalysis:
-            // Return reaction times as time series
-            let reactionTimeSeries = reactionTimes.enumerated().map { index, time in
-                (Date().addingTimeInterval(Double(index) * -10), time) // Spaced 10 seconds apart
+            // Return reaction times with proper timestamps from filtered data
+            let reactionTimeSeries = filteredData.reactionTimeHistory.map { reactionData in
+                (reactionData.timestamp, reactionData.time)
+            }
+            guard !reactionTimeSeries.isEmpty else {
+                return nil // Return nil for "No Data Available" message
             }
             return createMetricValue(reactionTimeSeries)
             
@@ -267,11 +438,14 @@ extension AnalyticsManager {
             return createMetricValue(parameterData)
             
         case .fullDirectionalBias:
-            // Return directional bias as distribution for pie chart
-            let leftCount = Double(directionalPushes["left"] ?? 0)
-            let rightCount = Double(directionalPushes["right"] ?? 0)
+            // Return directional bias from filtered data
+            let leftCount = Double(filteredData.directionalPushes["left"] ?? 0)
+            let rightCount = Double(filteredData.directionalPushes["right"] ?? 0)
             
-            // Even if no data, return [0, 0] to avoid "Not enough data" message
+            // Return nil if no data for "No Data Available" message
+            guard leftCount > 0 || rightCount > 0 else {
+                return nil
+            }
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
             
@@ -781,11 +955,23 @@ extension AnalyticsManager {
     
     /// Track reaction time for corrections
     func trackReactionTime(_ time: Double) {
+        // Validate reaction time before storing
+        guard !time.isNaN && !time.isInfinite && time >= 0 else {
+            print("⚠️ Analytics: Invalid reaction time: \(time)")
+            return
+        }
+        
         reactionTimes.append(time)
+        
+        // Track reaction time with timestamp
+        reactionTimeHistory.append((time: time, timestamp: Date()))
         
         // Keep buffer size manageable
         if reactionTimes.count > 1000 {
             reactionTimes.removeFirst()
+        }
+        if reactionTimeHistory.count > 1000 {
+            reactionTimeHistory.removeFirst()
         }
     }
 }

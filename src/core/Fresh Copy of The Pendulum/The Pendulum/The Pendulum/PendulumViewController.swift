@@ -4655,9 +4655,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             profile = PerturbationProfile(
                 name: "Random Impulses",
                 types: [.impulse],
-                strength: 1.5, // Increased from 1.0 to 1.5 for more pronounced effect
+                strength: 2.0, // Increased for visibility
                 frequency: 0.0,
-                randomInterval: 2.0...4.0,
+                randomInterval: 1.5...3.0, // More frequent
                 dataSource: nil,
                 showWarnings: true
             )
@@ -4665,8 +4665,8 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             profile = PerturbationProfile(
                 name: "Sine Wave",
                 types: [.sine],
-                strength: 0.6, // Reduced from 0.8 to 0.6 (25% reduction)
-                frequency: 0.5,
+                strength: 1.2, // Increased for visibility
+                frequency: 0.3, // Slower for smoother visualization
                 randomInterval: 0...0,
                 dataSource: nil,
                 showWarnings: false
@@ -4675,7 +4675,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             profile = PerturbationProfile(
                 name: "Data-Driven",
                 types: [.dataSet],
-                strength: 1.0,
+                strength: 1.5, // Increased for visibility
                 frequency: 0.0,
                 randomInterval: 0...0,
                 dataSource: "PerturbationData.csv",
@@ -4685,16 +4685,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             profile = PerturbationProfile(
                 name: "Compound",
                 types: [.compound],
-                strength: 0.75, // Reduced from 1.0 to 0.75 (25% reduction)
+                strength: 1.2, // Increased for visibility
                 frequency: 0.4,
-                randomInterval: 2.0...4.0,
+                randomInterval: 1.5...3.0, // More frequent
                 dataSource: "PerturbationData.csv",
                 showWarnings: true,
                 subProfiles: [
                     PerturbationProfile(
                         name: "Base Sine",
                         types: [.sine],
-                        strength: 0.525, // Reduced from 0.7 to 0.525 (25% reduction)
+                        strength: 1.0, // Increased for visibility
                         frequency: 0.3,
                         randomInterval: 0...0,
                         dataSource: nil,
@@ -4703,9 +4703,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
                     PerturbationProfile(
                         name: "Random Impulses",
                         types: [.impulse],
-                        strength: 0.75, // Reduced from 1.0 to 0.75 (25% reduction)
+                        strength: 1.5, // Increased for visibility
                         frequency: 0.0,
-                        randomInterval: 3.0...5.0,
+                        randomInterval: 2.0...4.0,
                         dataSource: nil,
                         showWarnings: true
                     )
