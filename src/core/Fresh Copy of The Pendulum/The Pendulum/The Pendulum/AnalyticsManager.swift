@@ -120,9 +120,7 @@ class AnalyticsManager {
         correctionEfficiency = []
         reactionTimes = []
         
-        print("📊 Analytics tracking started for session \(sessionId)")
-        print("📊 Analytics isTracking: \(isTracking)")
-        print("📊 Initial directional pushes: \(directionalPushes)")
+        // Suppressed: Analytics tracking started debug output
     }
     
     func stopTracking() {
@@ -144,7 +142,7 @@ class AnalyticsManager {
         lastPushTime = nil
         lastInstabilityTime = nil
         
-        print("Analytics tracking stopped")
+        // Suppressed: Analytics tracking stopped debug output
     }
     
     // MARK: - Interaction Tracking
@@ -194,7 +192,7 @@ class AnalyticsManager {
     
     func trackInteraction(eventType: String, angle: Double, angleVelocity: Double, magnitude: Double, direction: String) {
         guard isTracking, let sessionId = currentSessionId else {
-            print("Cannot track interaction: Analytics tracking not active")
+            // Suppressed: Cannot track interaction debug output
             return
         }
         
@@ -230,21 +228,21 @@ class AnalyticsManager {
             
             // Track directional bias - ensure proper categorization
             let normalizedDirection = direction.lowercased().trimmingCharacters(in: .whitespaces)
-            print("📊 Tracking push direction: '\(direction)' -> normalized: '\(normalizedDirection)'")
+            // Suppressed: Tracking push direction debug output
             
             if normalizedDirection.contains("left") || normalizedDirection == "left" {
                 directionalPushes["left", default: 0] += 1
-                print("📊 Left push recorded. Total left: \(directionalPushes["left"] ?? 0)")
+                // Suppressed: Left push recorded debug output
             } else if normalizedDirection.contains("right") || normalizedDirection == "right" {
                 directionalPushes["right", default: 0] += 1
-                print("📊 Right push recorded. Total right: \(directionalPushes["right"] ?? 0)")
+                // Suppressed: Right push recorded debug output
             } else {
                 // Fallback for unclear directions
                 directionalPushes[normalizedDirection, default: 0] += 1
-                print("📊 Unknown direction push recorded: '\(normalizedDirection)'. Total: \(directionalPushes[normalizedDirection] ?? 0)")
+                // Suppressed: Unknown direction push recorded debug output
             }
             
-            print("📊 Current directional pushes: \(directionalPushes)")
+            // Suppressed: Current directional pushes debug output
             
             // Track magnitude for distribution analysis
             pushMagnitudeBuffer.append(abs(magnitude))

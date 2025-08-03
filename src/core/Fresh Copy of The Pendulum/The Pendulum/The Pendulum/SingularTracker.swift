@@ -1,4 +1,5 @@
 import Foundation
+import Singular
 
 // Game-specific tracking wrapper for Singular SDK
 class SingularTracker {
@@ -6,7 +7,6 @@ class SingularTracker {
     // MARK: - Install Tracking
     
     static func trackInstall() {
-        #if SINGULAR_SDK_AVAILABLE
         // Track install event with app-specific attributes
         let attributes = [
             "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown",
@@ -15,17 +15,13 @@ class SingularTracker {
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "app_install", withAttributes: attributes)
+        Singular.event("app_install", withArgs: attributes)
         print("📱 Install tracked with attributes: \(attributes)")
-        #else
-        print("⚠️ SingularTracker: Cannot track install - SDK not available")
-        #endif
     }
     
     // MARK: - Download Tracking
     
     static func trackDownloadCompleted(source: String? = nil) {
-        #if SINGULAR_SDK_AVAILABLE
         var attributes = [
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "device_type": UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
@@ -35,17 +31,13 @@ class SingularTracker {
             attributes["download_source"] = source
         }
         
-        Singular.event(withArgs: "download_completed", withAttributes: attributes)
+        Singular.event("download_completed", withArgs: attributes)
         print("⬇️ Download tracked from source: \(source ?? "organic")")
-        #else
-        print("⚠️ SingularTracker: Cannot track download - SDK not available")
-        #endif
     }
     
     // MARK: - Pendulum Level Tracking
     
     static func trackLevelBalanced(level: Int, balanceTime: Double, score: Int, attempts: Int) {
-        #if SINGULAR_SDK_AVAILABLE
         // Calculate performance metrics
         let efficiency = Double(score) / balanceTime
         let difficulty = calculateDifficulty(level: level)
@@ -61,7 +53,7 @@ class SingularTracker {
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "pendulum_level_balanced", withAttributes: attributes)
+        Singular.event("pendulum_level_balanced", withArgs: attributes)
         print("🎮 Level balanced tracked: Level \(level), Time: \(balanceTime)s, Score: \(score)")
         
         // Track achievement if applicable
@@ -73,30 +65,22 @@ class SingularTracker {
         if level > 5 {
             trackLevelRevenue(level: level, score: score)
         }
-        #else
-        print("⚠️ SingularTracker: Cannot track level balanced - SDK not available")
-        #endif
     }
     
     // MARK: - Session Tracking
     
     static func trackSessionStart() {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "session_id": UUID().uuidString,
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "device_battery": "\(Int(UIDevice.current.batteryLevel * 100))%"
         ]
         
-        Singular.event(withArgs: "session_start", withAttributes: attributes)
+        Singular.event("session_start", withArgs: attributes)
         print("▶️ Session start tracked")
-        #else
-        print("⚠️ SingularTracker: Cannot track session start - SDK not available")
-        #endif
     }
     
     static func trackSessionEnd(duration: TimeInterval, levelsPlayed: Int) {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "duration": String(format: "%.0f", duration),
             "levels_played": "\(levelsPlayed)",
@@ -104,17 +88,13 @@ class SingularTracker {
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "session_end", withAttributes: attributes)
+        Singular.event("session_end", withArgs: attributes)
         print("⏹️ Session end tracked: Duration \(duration)s, Levels: \(levelsPlayed)")
-        #else
-        print("⚠️ SingularTracker: Cannot track session end - SDK not available")
-        #endif
     }
     
     // MARK: - Achievement Tracking
     
     static func trackAchievement(type: String, level: Int? = nil) {
-        #if SINGULAR_SDK_AVAILABLE
         var attributes = [
             "achievement_type": type,
             "timestamp": ISO8601DateFormatter().string(from: Date())
@@ -124,17 +104,13 @@ class SingularTracker {
             attributes["level"] = "\(level)"
         }
         
-        Singular.event(withArgs: "achievement_unlocked", withAttributes: attributes)
+        Singular.event("achievement_unlocked", withArgs: attributes)
         print("🏆 Achievement tracked: \(type)")
-        #else
-        print("⚠️ SingularTracker: Cannot track achievement - SDK not available")
-        #endif
     }
     
     // MARK: - In-App Purchase Tracking
     
     static func trackPurchase(productId: String, price: Double, currency: String = "USD") {
-        #if SINGULAR_SDK_AVAILABLE
         // Track as custom revenue event
         Singular.customRevenue("iap_purchase", currency: currency, amount: price)
         
@@ -146,17 +122,13 @@ class SingularTracker {
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "purchase_completed", withAttributes: attributes)
+        Singular.event("purchase_completed", withArgs: attributes)
         print("💰 Purchase tracked: \(productId) for \(price) \(currency)")
-        #else
-        print("⚠️ SingularTracker: Cannot track purchase - SDK not available")
-        #endif
     }
     
     // MARK: - Tutorial Tracking
     
     static func trackTutorialStep(step: Int, completed: Bool) {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "tutorial_step": "\(step)",
             "completed": completed ? "true" : "false",
@@ -164,28 +136,21 @@ class SingularTracker {
         ]
         
         let eventName = completed ? "tutorial_step_completed" : "tutorial_step_skipped"
-        Singular.event(withArgs: eventName, withAttributes: attributes)
+        Singular.event(eventName, withArgs: attributes)
         print("📚 Tutorial step \(step) tracked: \(completed ? "completed" : "skipped")")
-        #else
-        print("⚠️ SingularTracker: Cannot track tutorial - SDK not available")
-        #endif
     }
     
     // MARK: - Error Tracking
     
     static func trackError(error: String, context: String) {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "error_message": error,
             "error_context": context,
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "app_error", withAttributes: attributes)
+        Singular.event("app_error", withArgs: attributes)
         print("❌ Error tracked: \(error) in \(context)")
-        #else
-        print("⚠️ SingularTracker: Cannot track error - SDK not available")
-        #endif
     }
     
     // MARK: - Helper Methods
@@ -204,19 +169,16 @@ class SingularTracker {
     }
     
     private static func trackLevelRevenue(level: Int, score: Int) {
-        #if SINGULAR_SDK_AVAILABLE
         // Track virtual currency earned
         let coinsEarned = score / 100
         if coinsEarned > 0 {
             Singular.customRevenue("coins_earned", currency: "COINS", amount: Double(coinsEarned))
         }
-        #endif
     }
     
     // MARK: - Batch Event Tracking
     
     static func trackGameStats(stats: GameStats) {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "total_levels_played": "\(stats.totalLevelsPlayed)",
             "highest_level": "\(stats.highestLevel)",
@@ -226,11 +188,8 @@ class SingularTracker {
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "game_stats_update", withAttributes: attributes)
+        Singular.event("game_stats_update", withArgs: attributes)
         print("📊 Game stats tracked")
-        #else
-        print("⚠️ SingularTracker: Cannot track game stats - SDK not available")
-        #endif
     }
 }
 
@@ -244,4 +203,3 @@ struct GameStats {
     let perfectBalances: Int
 }
 
-// Note: Placeholder implementations are provided by SingularTestConfiguration.swift

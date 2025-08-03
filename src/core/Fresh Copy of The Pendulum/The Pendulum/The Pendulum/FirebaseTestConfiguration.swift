@@ -79,6 +79,18 @@ class FirebaseTestConfiguration {
         FirebaseApp.configure()
         print("✅ Firebase configured successfully")
         
+        // Configure Auth persistence - IMPORTANT: This ensures sessions persist across app launches
+        Auth.auth().useAppLanguage()  // Use device language
+        
+        // Check and restore auth state immediately
+        if let currentUser = Auth.auth().currentUser {
+            print("✅ Firebase Auth: Restored existing session for user: \(currentUser.uid)")
+            print("   Email: \(currentUser.email ?? "no email")")
+            print("   Provider: \(currentUser.providerData.first?.providerID ?? "unknown")")
+        } else {
+            print("ℹ️ Firebase Auth: No existing session to restore")
+        }
+        
         // Initialize Firestore settings
         let db = Firestore.firestore()
         print("✅ Firestore initialized: \(db)")

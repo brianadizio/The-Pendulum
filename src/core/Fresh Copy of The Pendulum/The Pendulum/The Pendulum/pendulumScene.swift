@@ -480,6 +480,13 @@ class PendulumScene: SKScene {
             // Track phase space data for analytics
             AnalyticsManager.shared.trackPhaseSpacePoint(theta: viewModel.currentState.theta, omega: viewModel.currentState.thetaDot)
             
+            // Record state for balance signature export
+            NotificationCenter.default.post(
+                name: Notification.Name("RecordBalanceSnapshot"),
+                object: nil,
+                userInfo: ["state": viewModel.currentState]
+            )
+            
             // Update perturbation manager if it exists
             if let perturbationManager = self.perturbationManager {
                 perturbationManager.update(currentTime: currentTime)

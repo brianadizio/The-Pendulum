@@ -8,6 +8,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     private var scene: PendulumScene?
     private var skView: SKView?
     private var skViewContainer: UIView?
+    var dataExporter: BalanceDataExporter?
     
     // Tab bar for navigation
     private let tabBar = UITabBar()
@@ -207,6 +208,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Initialize settings
         initializeSettings()
         
+        // Set up data exporter for balance signature recording
+        setupDataExporter()
+        
         // Listen for auth state changes to refresh settings
         NotificationCenter.default.addObserver(
             self,
@@ -250,6 +254,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
 
         // Start with simulation view
         showView(simulationView)
+        
+        // Start balance data recording since we're on simulation tab
+        dataExporter?.startRecording()
         
         // Initialize control manager
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -2821,6 +2828,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     // MARK: - Authentication Methods
     
     private func showSignIn() {
+        // Check if already authenticated
+        if AuthenticationManager.shared.isAuthenticated {
+            let alert = UIAlertController(title: "Already Signed In", 
+                                        message: "You're already signed in to your account.", 
+                                        preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
         let signInVC = SignInViewController()
         let nav = UINavigationController(rootViewController: signInVC)
         nav.modalPresentationStyle = .fullScreen
@@ -2956,10 +2973,23 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             Email: \(user.email ?? "Not available")
             User ID: \(user.uid)
             """,
-            preferredStyle: .alert
+            preferredStyle: .actionSheet
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        // Add delete account option
+        alert.addAction(UIAlertAction(title: "Delete Account", style: .destructive) { [weak self] _ in
+            self?.showDeleteAccountConfirmation()
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        // For iPad
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = self.view
+            popover.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        
         present(alert, animated: true)
     }
     
@@ -2978,6 +3008,87 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         })
         
         present(alert, animated: true)
+    }
+    
+    private func showDeleteAccountConfirmation() {
+        let alert = UIAlertController(
+            title: "Delete Account",
+            message: "Are you sure you want to permanently delete your account? This action cannot be undone. All your data, scores, and achievements will be permanently deleted.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete Account", style: .destructive) { [weak self] _ in
+            self?.showFinalDeleteAccountConfirmation()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func showFinalDeleteAccountConfirmation() {
+        let alert = UIAlertController(
+            title: "Final Confirmation",
+            message: "This is your last chance. Your account will be permanently deleted. Are you absolutely sure?",
+            preferredStyle: .alert
+        )
+        
+        // Add text field for confirmation
+        alert.addTextField { textField in
+            textField.placeholder = "Type 'DELETE' to confirm"
+            textField.autocapitalizationType = .allCharacters
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete My Account", style: .destructive) { [weak self] _ in
+            guard let textField = alert.textFields?.first,
+                  textField.text == "DELETE" else {
+                let invalidAlert = UIAlertController(
+                    title: "Invalid Confirmation",
+                    message: "Please type 'DELETE' to confirm account deletion.",
+                    preferredStyle: .alert
+                )
+                invalidAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(invalidAlert, animated: true)
+                return
+            }
+            
+            self?.deleteAccount()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func deleteAccount() {
+        // Show loading indicator
+        let loadingAlert = UIAlertController(title: "Deleting Account", message: "Please wait...", preferredStyle: .alert)
+        present(loadingAlert, animated: true)
+        
+        AuthenticationManager.shared.deleteAccount { [weak self] result in
+            DispatchQueue.main.async {
+                loadingAlert.dismiss(animated: true) {
+                    switch result {
+                    case .success:
+                        let successAlert = UIAlertController(
+                            title: "Account Deleted",
+                            message: "Your account has been permanently deleted.",
+                            preferredStyle: .alert
+                        )
+                        successAlert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                            self?.refreshSettingsView()
+                        })
+                        self?.present(successAlert, animated: true)
+                    case .failure(let error):
+                        let errorAlert = UIAlertController(
+                            title: "Error",
+                            message: "Failed to delete account: \(error.localizedDescription)",
+                            preferredStyle: .alert
+                        )
+                        errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self?.present(errorAlert, animated: true)
+                    }
+                }
+            }
+        }
     }
     
     @objc private func authStateChanged() {
@@ -4014,7 +4125,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     
     @objc private func pushLeftButtonTapped() {
         // Apply a leftward force (positive value for inverted pendulum)
-        print("Push left button tapped")
+        // Suppressed: Push left button tapped debug output
         
         // If game is paused, resume it first
         if viewModel.isPaused {
@@ -4038,6 +4149,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Use a fixed baseline for the push direction with increased magnitude
         viewModel.applyForce(2.0) // Positive force pushes left (matches pendulumButtonControls.swift)
         
+        // Record the push action for balance signature
+        recordPushAction(direction: .left, magnitude: 2.0)
+        
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
             self.pushLeftButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
@@ -4050,7 +4164,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     
     @objc private func pushRightButtonTapped() {
         // Apply a rightward force (negative value for inverted pendulum)
-        print("Push right button tapped")
+        // Suppressed: Push right button tapped debug output
         
         // If game is paused, resume it first
         if viewModel.isPaused {
@@ -4074,6 +4188,9 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         // Use a fixed baseline for the push direction with increased magnitude
         viewModel.applyForce(-2.0) // Negative force pushes right (matches pendulumButtonControls.swift)
         
+        // Record the push action for balance signature
+        recordPushAction(direction: .right, magnitude: 2.0)
+        
         // Visual feedback - animate button
         UIView.animate(withDuration: 0.1, animations: {
             self.pushRightButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
@@ -4087,39 +4204,35 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     // This method is no longer used but we're keeping it for now as startButtonTapped
     // has the reset functionality when needed
     @objc private func resetButtonTapped() {
-        // Reset all parameter sliders to default values
-        massSlider.value = 1.0
-        lengthSlider.value = 1.0  
-        dampingSlider.value = 0.1
-        gravitySlider.value = 9.81
-        forceStrengthSlider.value = 0.0
-        springConstantSlider.value = 0.0
-        momentOfInertiaSlider.value = 1.0
-        initialPerturbationSlider.value = 10.0
+        // Reset to level defaults in the view model
+        viewModel.resetToLevelDefaults()
+        
+        // Update sliders to match the reset values from the view model
+        massSlider.value = Float(viewModel.mass)
+        lengthSlider.value = Float(viewModel.length)
+        dampingSlider.value = Float(viewModel.damping)
+        gravitySlider.value = Float(viewModel.gravity)
+        springConstantSlider.value = Float(viewModel.springConstant)
+        momentOfInertiaSlider.value = Float(viewModel.momentOfInertia)
+        forceStrengthSlider.value = Float(viewModel.forceStrength)
+        initialPerturbationSlider.value = Float(viewModel.initialPerturbation)
         
         // Update value labels
         updateSliderValueLabel(massSlider)
         updateSliderValueLabel(lengthSlider)
         updateSliderValueLabel(dampingSlider)
         updateSliderValueLabel(gravitySlider)
-        updateSliderValueLabel(forceStrengthSlider)
         updateSliderValueLabel(springConstantSlider)
         updateSliderValueLabel(momentOfInertiaSlider)
+        updateSliderValueLabel(forceStrengthSlider)
         updateSliderValueLabel(initialPerturbationSlider)
-        
-        // Apply the reset values to the view model
-        massSliderChanged()
-        lengthSliderChanged()
-        dampingSliderChanged()
-        gravitySliderChanged()
-        forceStrengthSliderChanged()
-        springConstantSliderChanged()
-        momentOfInertiaSliderChanged()
-        initialPerturbationSliderChanged()
         
         // Reset phase space and simulation
         phaseSpaceView.clearPoints()
         viewModel.resetAndStart()
+        
+        // Show confirmation message
+        updateGameMessageLabel("Parameters reset to level defaults")
     }
     
     @objc private func runAITest() {
@@ -4142,6 +4255,11 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         
         alert.addAction(UIAlertAction(title: "AI Tutorial Mode", style: .default) { [weak self] _ in
             self?.startAIWithVisualFeedback(mode: .tutorial)
+        })
+        
+        // Add Export Balance Data option
+        alert.addAction(UIAlertAction(title: "Export Balance Signature", style: .default) { [weak self] _ in
+            self?.presentExportViewController()
         })
         
         // Add Stop AI option if AI is playing
@@ -4384,12 +4502,18 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             scene?.updateSceneBackground()
             // Notify SessionTimeManager that we're on simulation tab
             SessionTimeManager.shared.setOnSimulationTab(true)
+            // Start balance data recording
+            print("📊 Simulation tab selected - starting balance data recording")
+            dataExporter?.startRecording()
         case 1: // Dashboard
             selectedView = dashboardView
             updateDashboardStats() // Update stats before showing (this will start the timer)
             showView(dashboardView)
             // Notify SessionTimeManager that we're not on simulation tab
             SessionTimeManager.shared.setOnSimulationTab(false)
+            // Stop balance data recording
+            print("📊 Leaving simulation tab - stopping balance data recording")
+            dataExporter?.stopRecording()
         case 2: // Modes
             print("Modes tab selected") // Debug
             selectedView = modesView
@@ -4662,21 +4786,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     // MARK: - AI Visualization Methods
     
     private func setupAIVisualizationComponents() {
-        // AI Mode Indicator (shows current AI mode)
+        // AI Mode Indicator - REMOVED (using AI button glow instead)
+        // Creating empty view to avoid nil crashes
         aiModeIndicator = UIView()
-        aiModeIndicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.9)
-        aiModeIndicator.layer.cornerRadius = 15
-        aiModeIndicator.translatesAutoresizingMaskIntoConstraints = false
         aiModeIndicator.isHidden = true
-        simulationView.addSubview(aiModeIndicator)
-        
-        // AI mode label inside the indicator
-        let modeLabel = UILabel()
-        modeLabel.textColor = .white
-        modeLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        modeLabel.textAlignment = .center
-        modeLabel.translatesAutoresizingMaskIntoConstraints = false
-        aiModeIndicator.addSubview(modeLabel)
         
         // AI Push Indicators (visual feedback for AI actions)
         aiPushIndicatorLeft = createPushIndicator(isLeft: true)
@@ -4694,23 +4807,32 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         enhancedAIAssistanceView.isHidden = true
         simulationView.addSubview(enhancedAIAssistanceView)
         
-        // Sparkling push indicators
+        // Sparkling push indicators - REMOVED (keeping only circle indicators)
+        // Creating empty views to avoid crashes
         sparklingPushLeft = SparklingPushIndicator(isLeft: true)
         sparklingPushRight = SparklingPushIndicator(isLeft: false)
-        sparklingPushLeft.translatesAutoresizingMaskIntoConstraints = false
-        sparklingPushRight.translatesAutoresizingMaskIntoConstraints = false
-        simulationView.addSubview(sparklingPushLeft)
-        simulationView.addSubview(sparklingPushRight)
+        sparklingPushLeft.isHidden = true
+        sparklingPushRight.isHidden = true
         
-        // AI Competition Score Label
+        // AI Competition Score Label with background
+        let aiScoreContainer = UIView()
+        aiScoreContainer.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor.withAlphaComponent(0.9)
+        aiScoreContainer.layer.cornerRadius = 12
+        aiScoreContainer.layer.borderWidth = 1
+        aiScoreContainer.layer.borderColor = UIColor.systemOrange.cgColor
+        aiScoreContainer.layer.zPosition = 1000 // High z-position to appear on top
+        aiScoreContainer.translatesAutoresizingMaskIntoConstraints = false
+        aiScoreContainer.isHidden = true
+        aiScoreContainer.tag = 888 // Tag for easy identification
+        simulationView.addSubview(aiScoreContainer)
+        
         aiCompetitionScoreLabel = UILabel()
-        aiCompetitionScoreLabel.text = "AI Score: 0"
+        aiCompetitionScoreLabel.text = "AI: 0"
         aiCompetitionScoreLabel.textColor = .systemOrange
-        aiCompetitionScoreLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        aiCompetitionScoreLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         aiCompetitionScoreLabel.textAlignment = .center
         aiCompetitionScoreLabel.translatesAutoresizingMaskIntoConstraints = false
-        aiCompetitionScoreLabel.isHidden = true
-        simulationView.addSubview(aiCompetitionScoreLabel)
+        aiScoreContainer.addSubview(aiCompetitionScoreLabel)
         
         // AI Tutorial Hint Label
         aiTutorialHintLabel = UILabel()
@@ -4736,23 +4858,21 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         simulationView.addSubview(tutorialSuggestionLeft)
         simulationView.addSubview(tutorialSuggestionRight)
         
-        // Tutorial progress view
+        // Tutorial progress view - add last to ensure it's on top
         tutorialProgressView = TutorialProgressView()
         tutorialProgressView.translatesAutoresizingMaskIntoConstraints = false
         tutorialProgressView.isHidden = true
         simulationView.addSubview(tutorialProgressView)
         
+        // Bring tutorial elements to front to ensure visibility over pendulum scene
+        simulationView.bringSubviewToFront(tutorialProgressView)
+        simulationView.bringSubviewToFront(tutorialSuggestionLeft)
+        simulationView.bringSubviewToFront(tutorialSuggestionRight)
+        simulationView.bringSubviewToFront(aiTutorialHintLabel)
+        
         // Setup constraints
         NSLayoutConstraint.activate([
-            // AI Mode Indicator - moved down to be on top right of pendulum scene
-            aiModeIndicator.topAnchor.constraint(equalTo: skViewContainer?.topAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 20),
-            aiModeIndicator.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
-            aiModeIndicator.widthAnchor.constraint(equalToConstant: 100),
-            aiModeIndicator.heightAnchor.constraint(equalToConstant: 30),
-            
-            // Mode label inside indicator
-            modeLabel.centerXAnchor.constraint(equalTo: aiModeIndicator.centerXAnchor),
-            modeLabel.centerYAnchor.constraint(equalTo: aiModeIndicator.centerYAnchor),
+            // AI Mode Indicator constraints removed - using AI button glow instead
             
             // Push indicators - sides of the screen
             aiPushIndicatorLeft.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 20),
@@ -4765,26 +4885,24 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             aiPushIndicatorRight.widthAnchor.constraint(equalToConstant: 60),
             aiPushIndicatorRight.heightAnchor.constraint(equalToConstant: 60),
             
-            // Enhanced AI Assistance View - below mode indicator
-            enhancedAIAssistanceView.topAnchor.constraint(equalTo: aiModeIndicator.bottomAnchor, constant: 10),
-            enhancedAIAssistanceView.centerXAnchor.constraint(equalTo: aiModeIndicator.centerXAnchor),
+            // Enhanced AI Assistance View - top right of pendulum scene
+            enhancedAIAssistanceView.topAnchor.constraint(equalTo: skViewContainer?.topAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 20),
+            enhancedAIAssistanceView.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
             enhancedAIAssistanceView.widthAnchor.constraint(equalToConstant: 200),
             enhancedAIAssistanceView.heightAnchor.constraint(equalToConstant: 40),
             
-            // Sparkling push indicators
-            sparklingPushLeft.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 20),
-            sparklingPushLeft.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
-            sparklingPushLeft.widthAnchor.constraint(equalToConstant: 60),
-            sparklingPushLeft.heightAnchor.constraint(equalToConstant: 60),
+            // Sparkling push indicators constraints removed
             
-            sparklingPushRight.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -20),
-            sparklingPushRight.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
-            sparklingPushRight.widthAnchor.constraint(equalToConstant: 60),
-            sparklingPushRight.heightAnchor.constraint(equalToConstant: 60),
+            // Competition score container - top right of pendulum grid, moved down
+            aiScoreContainer.topAnchor.constraint(equalTo: skViewContainer?.topAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 136),
+            aiScoreContainer.trailingAnchor.constraint(equalTo: skViewContainer?.trailingAnchor ?? simulationView.trailingAnchor, constant: -28),
+            aiScoreContainer.widthAnchor.constraint(greaterThanOrEqualToConstant: 90),
+            aiScoreContainer.heightAnchor.constraint(equalToConstant: 28),
             
-            // Competition score - below HUD
-            aiCompetitionScoreLabel.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 120),
-            aiCompetitionScoreLabel.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
+            // Score label inside container
+            aiCompetitionScoreLabel.leadingAnchor.constraint(equalTo: aiScoreContainer.leadingAnchor, constant: 8),
+            aiCompetitionScoreLabel.trailingAnchor.constraint(equalTo: aiScoreContainer.trailingAnchor, constant: -8),
+            aiCompetitionScoreLabel.centerYAnchor.constraint(equalTo: aiScoreContainer.centerYAnchor),
             
             // Tutorial hint - bottom of screen
             aiTutorialHintLabel.bottomAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.bottomAnchor, constant: -100),
@@ -4792,26 +4910,23 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             aiTutorialHintLabel.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -40),
             aiTutorialHintLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
             
-            // Tutorial suggestion views - positioned near push areas
-            tutorialSuggestionLeft.leadingAnchor.constraint(equalTo: simulationView.leadingAnchor, constant: 80),
-            tutorialSuggestionLeft.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
-            tutorialSuggestionLeft.widthAnchor.constraint(equalToConstant: 100),
-            tutorialSuggestionLeft.heightAnchor.constraint(equalToConstant: 100),
+            // Tutorial suggestion views - positioned within pendulum scene area
+            tutorialSuggestionLeft.leadingAnchor.constraint(equalTo: skViewContainer?.leadingAnchor ?? simulationView.leadingAnchor, constant: 10),
+            tutorialSuggestionLeft.centerYAnchor.constraint(equalTo: skViewContainer?.centerYAnchor ?? simulationView.centerYAnchor),
+            tutorialSuggestionLeft.widthAnchor.constraint(equalToConstant: 120),
+            tutorialSuggestionLeft.heightAnchor.constraint(equalToConstant: 120),
             
-            tutorialSuggestionRight.trailingAnchor.constraint(equalTo: simulationView.trailingAnchor, constant: -80),
-            tutorialSuggestionRight.centerYAnchor.constraint(equalTo: simulationView.centerYAnchor),
-            tutorialSuggestionRight.widthAnchor.constraint(equalToConstant: 100),
-            tutorialSuggestionRight.heightAnchor.constraint(equalToConstant: 100),
+            tutorialSuggestionRight.trailingAnchor.constraint(equalTo: skViewContainer?.trailingAnchor ?? simulationView.trailingAnchor, constant: -10),
+            tutorialSuggestionRight.centerYAnchor.constraint(equalTo: skViewContainer?.centerYAnchor ?? simulationView.centerYAnchor),
+            tutorialSuggestionRight.widthAnchor.constraint(equalToConstant: 120),
+            tutorialSuggestionRight.heightAnchor.constraint(equalToConstant: 120),
             
-            // Tutorial progress view - top center
-            tutorialProgressView.topAnchor.constraint(equalTo: simulationView.safeAreaLayoutGuide.topAnchor, constant: 20),
+            // Tutorial progress view - positioned lower and wider
+            tutorialProgressView.topAnchor.constraint(equalTo: skViewContainer?.topAnchor ?? simulationView.safeAreaLayoutGuide.topAnchor, constant: 40),
             tutorialProgressView.centerXAnchor.constraint(equalTo: simulationView.centerXAnchor),
-            tutorialProgressView.widthAnchor.constraint(equalToConstant: 250),
-            tutorialProgressView.heightAnchor.constraint(equalToConstant: 80)
+            tutorialProgressView.widthAnchor.constraint(equalToConstant: 325),
+            tutorialProgressView.heightAnchor.constraint(equalToConstant: 78)
         ])
-        
-        // Store mode label reference
-        aiModeIndicator.subviews.first?.tag = 999 // Tag for later access
         
         // Add notification observers
         setupAINotificationObservers()
@@ -4819,17 +4934,29 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     
     private func createPushIndicator(isLeft: Bool) -> UIView {
         let indicator = UIView()
-        indicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        indicator.backgroundColor = FocusCalendarTheme.accentGold.withAlphaComponent(0.3)
         indicator.layer.cornerRadius = 30
         indicator.layer.borderWidth = 3
-        indicator.layer.borderColor = UIColor.systemBlue.cgColor
+        indicator.layer.borderColor = FocusCalendarTheme.accentGold.cgColor
         indicator.translatesAutoresizingMaskIntoConstraints = false
         indicator.isHidden = true
+        indicator.clipsToBounds = false  // Allow sparkles to go outside
+        
+        // Simple sparkle effect using sublayers
+        for _ in 0..<8 {
+            let sparkle = UIView()
+            sparkle.backgroundColor = FocusCalendarTheme.accentGold
+            sparkle.frame = CGRect(x: 27, y: 27, width: 6, height: 6)
+            sparkle.layer.cornerRadius = 3
+            sparkle.alpha = 0
+            sparkle.tag = 100 // Tag for sparkles
+            indicator.addSubview(sparkle)
+        }
         
         // Add arrow icon
         let arrow = UIImageView()
         arrow.image = UIImage(systemName: isLeft ? "arrow.right" : "arrow.left")
-        arrow.tintColor = .systemBlue
+        arrow.tintColor = FocusCalendarTheme.primaryTextColor
         arrow.contentMode = .scaleAspectFit
         arrow.translatesAutoresizingMaskIntoConstraints = false
         indicator.addSubview(arrow)
@@ -4906,6 +5033,13 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             name: Notification.Name("AITutorialComplete"),
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTutorialProgressUpdate(_:)),
+            name: Notification.Name("TutorialProgressUpdate"),
+            object: nil
+        )
     }
     
     @objc private func handleAIActionIndicator(_ notification: Notification) {
@@ -4913,17 +5047,42 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
               let direction = userInfo["direction"] as? String else { return }
         
         DispatchQueue.main.async { [weak self] in
-            // Use sparkling indicators for AI actions
-            let sparklingIndicator = direction == "left" ? self?.sparklingPushLeft : self?.sparklingPushRight
-            sparklingIndicator?.showPush()
-            
-            // Also show the regular indicator for compatibility
+            // Show only the circle indicator with sparkles
             let indicator = direction == "left" ? self?.aiPushIndicatorLeft : self?.aiPushIndicatorRight
+            
+            // Trigger simple sparkle animation
+            if let indicator = indicator {
+                // Animate sparkles outward
+                let sparkles = indicator.subviews.filter { $0.tag == 100 }
+                for (index, sparkle) in sparkles.enumerated() {
+                    let angle = CGFloat(index) * (.pi * 2) / CGFloat(sparkles.count)
+                    let distance: CGFloat = 80  // Doubled from 40
+                    
+                    // Reset position and alpha
+                    sparkle.center = CGPoint(x: 30, y: 30)
+                    sparkle.alpha = 1
+                    sparkle.transform = .identity
+                    
+                    // Animate outward
+                    UIView.animate(withDuration: 0.6, delay: 0, options: .curveEaseOut, animations: {
+                        let x = 30 + cos(angle) * distance
+                        let y = 30 + sin(angle) * distance
+                        sparkle.center = CGPoint(x: x, y: y)
+                        sparkle.alpha = 0
+                        sparkle.transform = CGAffineTransform(scaleX: 0.3, y: 0.3)
+                    })
+                }
+            }
             
             // Show and animate the indicator
             indicator?.isHidden = false
             indicator?.alpha = 1.0
             indicator?.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+            
+            // Bring to front to ensure visibility
+            if let indicator = indicator {
+                self?.simulationView.bringSubviewToFront(indicator)
+            }
             
             UIView.animate(withDuration: 0.3, animations: {
                 indicator?.transform = .identity
@@ -4942,11 +5101,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
               let status = userInfo["status"] as? String else { return }
         
         DispatchQueue.main.async { [weak self] in
+            // Disabled - all AI modes now use the same golden circle indicators
+            // The enhancedAIAssistanceView horizontal bar is no longer shown
+            /*
             if status == "started" {
                 self?.enhancedAIAssistanceView.show(animated: true)
             } else {
                 self?.enhancedAIAssistanceView.hide(animated: true)
             }
+            */
         }
     }
     
@@ -4955,7 +5118,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
               let aiScore = userInfo["aiScore"] as? Int else { return }
         
         DispatchQueue.main.async { [weak self] in
-            self?.aiCompetitionScoreLabel.text = "AI Score: \(aiScore)"
+            self?.aiCompetitionScoreLabel.text = "AI: \(aiScore)"
         }
     }
     
@@ -4990,34 +5153,58 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
     }
     
     func showAIModeIndicator(mode: PendulumAIManager.AIMode) {
-        aiModeIndicator.isHidden = false
+        // Hide the mode indicator - we're using the AI button glow instead
+        aiModeIndicator.isHidden = true
         
-        // Update mode label
-        if let modeLabel = aiModeIndicator.viewWithTag(999) as? UILabel {
-            switch mode {
-            case .demo:
-                modeLabel.text = "AI Demo"
-                aiModeIndicator.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.9)
-            case .assist:
-                modeLabel.text = "AI Assist"
-                aiModeIndicator.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.9)
-            case .compete:
-                modeLabel.text = "AI Compete"
-                aiModeIndicator.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.9)
-                aiCompetitionScoreLabel.isHidden = false
-            case .tutorial:
-                modeLabel.text = "AI Tutorial"
-                aiModeIndicator.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.9)
-                tutorialProgressView.isHidden = false
-                tutorialProgressView.updateProgress(step: 0)
+        // First hide all mode-specific UI elements
+        hideAllModeSpecificUI()
+        
+        // Add glow effect to AI button
+        addGlowToAIButton(mode: mode)
+        
+        // Show mode-specific UI elements
+        switch mode {
+        case .demo:
+            break // No additional UI for demo mode
+        case .assist:
+            break // Assistance indicators shown separately
+        case .compete:
+            // Show the score container
+            if let scoreContainer = simulationView.viewWithTag(888) {
+                scoreContainer.isHidden = false
+                // Bring to front to ensure it's above pendulum grid
+                simulationView.bringSubviewToFront(scoreContainer)
             }
+        case .tutorial:
+            tutorialProgressView.isHidden = false
+            tutorialProgressView.updateProgress(step: 0)
+            // Ensure tutorial progress view is visible above other elements
+            simulationView.bringSubviewToFront(tutorialProgressView)
+            simulationView.bringSubviewToFront(tutorialSuggestionLeft)
+            simulationView.bringSubviewToFront(tutorialSuggestionRight)
+            simulationView.bringSubviewToFront(aiTutorialHintLabel)
         }
+    }
+    
+    private func hideAllModeSpecificUI() {
+        // Hide AI score
+        if let scoreContainer = simulationView.viewWithTag(888) {
+            scoreContainer.isHidden = true
+        }
+        // Hide tutorial progress
+        tutorialProgressView.isHidden = true
+        // Hide tutorial suggestions
+        tutorialSuggestionLeft.isHidden = true
+        tutorialSuggestionRight.isHidden = true
+        // Hide tutorial hints
+        aiTutorialHintLabel.isHidden = true
+        // Hide assistance view
+        enhancedAIAssistanceView.hide(animated: false)
     }
     
     private func hideAIModeIndicators() {
         aiModeIndicator.isHidden = true
         aiAssistanceLabel.isHidden = true
-        aiCompetitionScoreLabel.isHidden = true
         aiTutorialHintLabel.isHidden = true
         aiPushIndicatorLeft.isHidden = true
         aiPushIndicatorRight.isHidden = true
@@ -5025,6 +5212,84 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         tutorialSuggestionRight.isHidden = true
         tutorialProgressView.isHidden = true
         enhancedAIAssistanceView.hide(animated: false)
+        
+        // Hide the score container
+        if let scoreContainer = simulationView.viewWithTag(888) {
+            scoreContainer.isHidden = true
+        }
+        
+        // Remove glow from AI button
+        removeGlowFromAIButton()
+    }
+    
+    private func addGlowToAIButton(mode: PendulumAIManager.AIMode) {
+        // Find the AI button in the header by its tag
+        guard let headerView = simulationView.subviews.first(where: { view in
+            return view.subviews.contains(where: { $0.tag == 999 })
+        }),
+        let aiButton = headerView.viewWithTag(999) else { return }
+        
+        // Set color based on mode
+        let glowColor: UIColor
+        switch mode {
+        case .demo:
+            glowColor = .systemBlue
+        case .assist:
+            glowColor = .systemGreen
+        case .compete:
+            glowColor = .systemOrange
+        case .tutorial:
+            glowColor = .systemPurple
+        }
+        
+        // Apply shadow directly to the button for glow effect
+        aiButton.layer.shadowColor = glowColor.cgColor
+        aiButton.layer.shadowRadius = 15
+        aiButton.layer.shadowOpacity = 0.9
+        aiButton.layer.shadowOffset = .zero
+        aiButton.layer.masksToBounds = false
+        
+        // Update border to match
+        aiButton.layer.borderColor = glowColor.cgColor
+        aiButton.layer.borderWidth = 2
+        
+        // Create pulsing animation
+        let pulseAnimation = CABasicAnimation(keyPath: "shadowRadius")
+        pulseAnimation.fromValue = 10
+        pulseAnimation.toValue = 20
+        pulseAnimation.duration = 1.0
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+        aiButton.layer.add(pulseAnimation, forKey: "glowPulse")
+        
+        // Also animate the shadow opacity
+        let opacityAnimation = CABasicAnimation(keyPath: "shadowOpacity")
+        opacityAnimation.fromValue = 0.6
+        opacityAnimation.toValue = 1.0
+        opacityAnimation.duration = 1.0
+        opacityAnimation.autoreverses = true
+        opacityAnimation.repeatCount = .infinity
+        aiButton.layer.add(opacityAnimation, forKey: "glowOpacity")
+    }
+    
+    private func removeGlowFromAIButton() {
+        // Find the AI button and remove glow
+        guard let headerView = simulationView.subviews.first(where: { view in
+            return view.subviews.contains(where: { $0.tag == 999 })
+        }),
+        let aiButton = headerView.viewWithTag(999) else { return }
+        
+        // Remove animations
+        aiButton.layer.removeAnimation(forKey: "glowPulse")
+        aiButton.layer.removeAnimation(forKey: "glowOpacity")
+        
+        // Reset shadow properties
+        aiButton.layer.shadowOpacity = 0
+        aiButton.layer.shadowRadius = 0
+        
+        // Reset border to original golden color
+        aiButton.layer.borderColor = FocusCalendarTheme.accentGold.cgColor
+        aiButton.layer.borderWidth = 1
     }
     
     // MARK: - Enhanced Tutorial Handlers
@@ -5075,6 +5340,15 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                 self?.hideAIModeIndicators()
             }
+        }
+    }
+    
+    @objc private func handleTutorialProgressUpdate(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let step = userInfo["step"] as? Int else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.tutorialProgressView.updateProgress(step: step)
         }
     }
     

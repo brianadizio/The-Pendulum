@@ -153,7 +153,7 @@ class FocusCalendarTheme {
         
         if isPrimary {
             button.backgroundColor = accentGold
-            button.setTitleColor(.white, for: .normal)
+            button.setTitleColor(darkTextColor, for: .normal)
         } else {
             button.backgroundColor = secondaryBackgroundColor
             button.setTitleColor(primaryTextColor, for: .normal)

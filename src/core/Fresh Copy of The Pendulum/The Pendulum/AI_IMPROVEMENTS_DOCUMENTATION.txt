@@ -1,0 +1,98 @@
+# AI Improvements Documentation
+
+## Overview
+This document outlines the AI improvements made to The Pendulum's balancing system, transforming it from a basic PD controller to a sophisticated human-like control system.
+
+## Key Improvements
+
+### 1. Lighter, More Frequent Touches
+- **Previous**: Heavy forces (up to 4.0) with 50ms minimum interval
+- **Current**: Light forces (max 1.5) with 20ms minimum interval
+- **Rationale**: Humans use many small corrections rather than few large ones
+
+### 2. Sequential Push Patterns
+- Recognizes when multiple pushes in same direction are beneficial
+- Maximum 4 pushes per sequence, 0.5 second duration
+- Mimics natural human tendency to "tap-tap-tap" when correcting
+
+### 3. Force Ramping
+- Initial push in new direction: 80% of calculated force
+- Subsequent pushes in same direction: Increase by 10% per push (max 140%)
+- Recovery mode: Additional 30% force multiplier when angle > 0.25 rad
+
+### 4. Anticipatory Control
+- Expert/Perfect AI makes preventive corrections
+- Triggers when angle < 0.05 rad but velocity > 0.15 rad/s
+- Uses very light touches (0.4 magnitude)
+
+### 5. Control Strategies
+```swift
+enum ControlStrategy {
+    case reactive      // React to current state
+    case predictive    // Predict future state
+    case aggressive    // Strong corrections
+    case gentle        // Minimal corrections
+    case rhythmic      // Human-like rhythmic tapping
+    case microControl  // Very small, frequent adjustments
+    case sequential    // Multiple pushes in same direction
+}
+```
+
+## Implementation Details
+
+### Force Calculation
+```swift
+// Base force from PD controller
+let controlForce = -kp * angle - kd * velocity
+
+// Apply human-like modulation
+let baseMagnitude = min(abs(controlForce) * 0.6, 1.5)
+let finalMagnitude = applyForceRamping(baseMagnitude, direction)
+```
+
+### Strategy Selection Logic
+- **angle > 0.3**: Aggressive
+- **angle < 0.03, velocity < 0.2**: MicroControl
+- **angle < 0.1, velocity < 0.4**: Rhythmic or Sequential
+- **velocity > 0.7**: Predictive
+- **angle < 0.2**: Gentle
+- **Default**: Reactive
+
+## Data Recording Requirements for ML
+
+To implement ML-based control, record:
+1. **State Data** (60Hz sampling):
+   - Timestamp
+   - Angle (theta)
+   - Angular velocity (thetaDot)
+   - Angular acceleration
+   
+2. **Action Data**:
+   - Push timestamp
+   - Push direction
+   - Push magnitude
+   - Strategy used
+   - Success/failure outcome
+
+3. **Context Data**:
+   - Level number
+   - Physics parameters
+   - Player skill level
+   - Session duration
+
+## Future ML Integration
+
+### Option 1: Supervised Learning
+- Train on expert human gameplay
+- Input: [angle, velocity, acceleration, last_action_time]
+- Output: [push_direction, push_magnitude, push_timing]
+
+### Option 2: Reinforcement Learning
+- Reward: Time balanced within threshold
+- State space: Pendulum physics state
+- Action space: Push left/right/none with variable magnitude
+
+### Option 3: Imitation Learning
+- Use recorded human data as demonstrations
+- Behavioral cloning or inverse RL
+- Capture human "style" of balancing

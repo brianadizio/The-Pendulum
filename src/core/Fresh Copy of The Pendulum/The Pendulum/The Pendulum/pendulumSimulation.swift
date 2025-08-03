@@ -351,37 +351,37 @@ class PendulumSimulation {
     // Method to update mass parameter
     func setMass(_ newMass: Double) {
         mass = newMass
-        print("Updated mass to \(mass)")
+        // Suppressed: Updated mass debug output
     }
     
     // Method to update length parameter
     func setLength(_ newLength: Double) {
         length = newLength
-        print("Updated length to \(length)")
+        // Suppressed: Updated length debug output
     }
     
     // Method to update gravity parameter
     func setGravity(_ newGravity: Double) {
         gravity = newGravity
-        print("Updated gravity to \(gravity)")
+        // Suppressed: Updated gravity debug output
     }
     
     // Method to update damping parameter
     func setDamping(_ newDamping: Double) {
         damping = newDamping
-        print("Updated damping to \(damping)")
+        // Suppressed: Updated damping debug output
     }
     
     // Method to update spring constant parameter
     func setSpringConstant(_ newSpringConstant: Double) {
         springConstant = newSpringConstant
-        print("Updated spring constant to \(springConstant)")
+        // Suppressed: Updated spring constant debug output
     }
     
     // Method to update moment of inertia parameter
     func setMomentOfInertia(_ newMomentOfInertia: Double) {
         momentOfInertia = newMomentOfInertia
-        print("Updated moment of inertia to \(momentOfInertia)")
+        // Suppressed: Updated moment of inertia debug output
     }
     
     // Method to get all current parameters

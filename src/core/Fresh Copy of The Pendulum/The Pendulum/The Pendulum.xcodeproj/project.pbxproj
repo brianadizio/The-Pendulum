@@ -45,6 +45,7 @@
 		D6A2EA7A2E063BD100DB6A86 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = D6A2EA792E063BD100DB6A86 /* FirebaseDatabase */; };
 		D6A2EA7C2E063BD100DB6A86 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D6A2EA7B2E063BD100DB6A86 /* FirebaseFirestore */; };
 		D6A2EA7E2E063BD100DB6A86 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = D6A2EA7D2E063BD100DB6A86 /* FirebaseFirestoreCombine-Community */; };
+		D6A2FD052E133A8F00DB6A86 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A2FD042E133A8F00DB6A86 /* StoreKit.framework */; };
 		D6F1AA5F2E0374D600F50751 /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6F1AA5E2E0374D600F50751 /* AppTrackingTransparency.framework */; };
 		D6F1AB8C2E0472C900F50751 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D6F1AB8B2E0472C900F50751 /* GoogleSignIn */; };
 		D6F1AB8E2E0472C900F50751 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D6F1AB8D2E0472C900F50751 /* GoogleSignInSwift */; };
@@ -81,6 +82,7 @@
 		D67B2C8D2DBF2EDE00FC0011 /* The Pendulum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D67B2C9A2DBF2EDF00FC0011 /* The PendulumTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "The PendulumTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D67B2CA42DBF2EDF00FC0011 /* The PendulumUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "The PendulumUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6A2FD042E133A8F00DB6A86 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		D6F1AA5E2E0374D600F50751 /* AppTrackingTransparency.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppTrackingTransparency.framework; path = System/Library/Frameworks/AppTrackingTransparency.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -118,6 +120,7 @@
 				D6F223A22E04B68100D332BD /* FirebaseFirestore in Frameworks */,
 				D62944BF2E062F9B00A1F8CB /* FirebaseFirestoreCombine-Community in Frameworks */,
 				D632FDC12DF4826800A8B4FC /* FirebaseAnalyticsCore in Frameworks */,
+				D6A2FD052E133A8F00DB6A86 /* StoreKit.framework in Frameworks */,
 				D6A2EA662E063BA600DB6A86 /* FirebaseCrashlytics in Frameworks */,
 				D6A2EA6A2E063BA600DB6A86 /* FirebaseFirestore in Frameworks */,
 				D62944C32E062FBB00A1F8CB /* GoogleSignIn in Frameworks */,
@@ -210,6 +213,7 @@
 		D6F1AA5D2E0374D600F50751 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D6A2FD042E133A8F00DB6A86 /* StoreKit.framework */,
 				D6F1AA5E2E0374D600F50751 /* AppTrackingTransparency.framework */,
 			);
 			name = Frameworks;
@@ -308,7 +312,6 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 			);
 			mainGroup = D67B2C842DBF2EDE00FC0011;
 			minimizedProjectReferenceProxies = 1;

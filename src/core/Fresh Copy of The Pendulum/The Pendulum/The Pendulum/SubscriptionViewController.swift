@@ -251,22 +251,36 @@ class SubscriptionViewController: UIViewController {
     
     // MARK: - StoreKit Methods
     private func loadProduct() {
+        #if targetEnvironment(simulator)
+        print("📱 Simulator detected - subscription UI shown but purchases disabled")
+        subscribeButton.setTitle("Simulator Mode", for: .normal)
+        subscribeButton.isEnabled = false
+        return
+        #endif
+        
         Task {
             do {
+                print("📱 Loading product with ID: \(productID)")
                 let products = try await Product.products(for: [productID])
+                print("📱 Found \(products.count) products")
+                
                 if let product = products.first {
+                    print("✅ Product loaded: \(product.id) - \(product.displayName)")
                     await MainActor.run {
                         self.product = product
                         self.updatePriceDisplay()
                         self.subscribeButton.isEnabled = true
                     }
                 } else {
+                    print("❌ No products found for ID: \(productID)")
+                    print("❓ Make sure product ID matches App Store Connect configuration")
                     await MainActor.run {
                         self.priceLabel.text = "Product not available"
                         self.subscribeButton.isEnabled = false
                     }
                 }
             } catch {
+                print("❌ Error loading products: \(error.localizedDescription)")
                 await MainActor.run {
                     self.priceLabel.text = "Error loading price"
                     self.subscribeButton.isEnabled = false
@@ -296,18 +310,27 @@ class SubscriptionViewController: UIViewController {
     private func checkSubscriptionStatus() async {
         guard let product = product else { return }
         
-        for await result in Transaction.currentEntitlements {
-            do {
-                let transaction = try result.payloadValue
-                if transaction.productID == product.id {
-                    await MainActor.run {
-                        self.handleSuccessfulPurchase()
+        do {
+            for await result in Transaction.currentEntitlements {
+                do {
+                    let transaction = try result.payloadValue
+                    if transaction.productID == product.id {
+                        await MainActor.run {
+                            self.handleSuccessfulPurchase()
+                        }
+                        return
                     }
-                    return
+                } catch {
+                    // Handle verification failure
+                    print("Transaction verification failed: \(error)")
                 }
-            } catch {
-                // Handle verification failure
-                print("Transaction verification failed: \(error)")
+            }
+        } catch {
+            // Handle errors accessing entitlements
+            if error.localizedDescription.contains("No active account") {
+                print("No Apple Account configured - cannot check entitlements")
+            } else {
+                print("Error checking entitlements: \(error)")
             }
         }
     }
@@ -453,8 +476,21 @@ class SubscriptionViewController: UIViewController {
                     }
                 }
             } catch {
-                await MainActor.run {
-                    self.showError("Failed to restore purchases: \(error.localizedDescription)")
+                let errorString = error.localizedDescription
+                if errorString.contains("No active account") || errorString.contains("userCancelled") {
+                    await MainActor.run {
+                        let alert = UIAlertController(
+                            title: "Apple Account Required",
+                            message: "Please sign in to the App Store to restore purchases.",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(alert, animated: true)
+                    }
+                } else {
+                    await MainActor.run {
+                        self.showError("Failed to restore purchases: \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -483,13 +519,9 @@ class SubscriptionViewController: UIViewController {
     }
     
     @objc private func privacyTapped() {
-        // TODO: Show privacy policy
-        let alert = UIAlertController(
-            title: "Privacy Policy",
-            message: "Privacy Policy will be available soon.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        // Open privacy policy in Safari
+        if let url = URL(string: "https://www.freeprivacypolicy.com/live/62c8e11c-18fe-4b53-82c6-b722c4ac9b6e") {
+            UIApplication.shared.open(url)
+        }
     }
 }

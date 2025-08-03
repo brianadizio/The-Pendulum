@@ -16,6 +16,7 @@ class DeveloperToolsViewController: UIViewController {
         case testAIPendulumMovement = "Test AI Pendulum Movement"
         case debugDashboard = "Debug Dashboard Metrics"
         case diagnosticScientificMetrics = "Diagnostic: Why Are Scientific Metrics 0.00?"
+        case testParticleEffects = "Test Victory Particle Effects"
         case testFirebase = "Test Firebase Integration"
         case clearAllData = "Clear All Analytics Data"
         
@@ -41,6 +42,8 @@ class DeveloperToolsViewController: UIViewController {
                 return "Show diagnostic report for metrics"
             case .diagnosticScientificMetrics:
                 return "Run comprehensive diagnostic to identify scientific metrics issues"
+            case .testParticleEffects:
+                return "Demo victory particle effects with 2-second delay/repeat"
             case .testFirebase:
                 return "Verify Firebase SDK installation and test features"
             case .clearAllData:
@@ -66,6 +69,8 @@ class DeveloperToolsViewController: UIViewController {
                 return "wrench.and.screwdriver"
             case .diagnosticScientificMetrics:
                 return "stethoscope"
+            case .testParticleEffects:
+                return "sparkles"
             case .testFirebase:
                 return "flame.fill"
             case .clearAllData:
@@ -194,6 +199,8 @@ extension DeveloperToolsViewController: UITableViewDelegate {
                     self?.showDebugReportView(report)
                 }
             }
+        case .testParticleEffects:
+            testParticleEffects()
         case .testFirebase:
             testFirebaseIntegration()
         case .clearAllData:
@@ -481,6 +488,14 @@ extension DeveloperToolsViewController: UITableViewDelegate {
     private func testAIPendulumMovement() {
         // Use the scientific metrics validation test
         runScientificMetricsValidation()
+    }
+    
+    // MARK: - Particle Effects Test
+    
+    private func testParticleEffects() {
+        let particleTestVC = ParticleTestViewController()
+        particleTestVC.modalPresentationStyle = .fullScreen
+        present(particleTestVC, animated: true)
     }
     
     // MARK: - Firebase Test

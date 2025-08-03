@@ -30,13 +30,39 @@ class SubscriptionManager: ObservableObject {
             UserDefaults.standard.firstLaunchDate = Date()
         }
         
-        // Start listening for transaction updates
-        updateListenerTask = listenForTransactions()
-        
-        // Check current subscription status
-        Task {
-            await checkSubscriptionStatus()
+        // Check cached subscription status for immediate availability
+        if let hasSubscription = UserDefaults.standard.object(forKey: "has_active_subscription") as? Bool,
+           hasSubscription,
+           let expirationDate = UserDefaults.standard.object(forKey: "subscription_expiration_date") as? Date {
+            if expirationDate > Date() {
+                // Set initial status from cache
+                self.isPremium = true
+                self.subscriptionStatus = .active
+                self.expirationDate = expirationDate
+            }
         }
+        
+        // Completely disable StoreKit in simulator to prevent prompts
+        #if targetEnvironment(simulator)
+        print("📱 Running in Simulator - StoreKit disabled to prevent Apple Account prompts")
+        print("📱 On real devices, subscriptions will work normally")
+        // Don't start any StoreKit listeners or checks in simulator
+        #else
+        // Real device - check StoreKit normally
+        if !UserDefaults.standard.bool(forKey: "skip_storekit_checks") {
+            // Start listening for transaction updates
+            updateListenerTask = listenForTransactions()
+            
+            // Delay subscription check to avoid immediate prompt on app launch
+            Task {
+                // Wait a bit before checking to allow user to start using the app
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                await checkSubscriptionStatus()
+            }
+        } else {
+            print("Skipping StoreKit initialization (no Apple Account)")
+        }
+        #endif
     }
     
     deinit {
@@ -76,6 +102,15 @@ class SubscriptionManager: ObservableObject {
     
     /// Check if user has access to premium features (including trial period)
     func hasPremiumAccess() -> Bool {
+        // First check cached subscription status for quick response
+        if let hasSubscription = UserDefaults.standard.object(forKey: "has_active_subscription") as? Bool,
+           hasSubscription,
+           let expirationDate = UserDefaults.standard.object(forKey: "subscription_expiration_date") as? Date,
+           expirationDate > Date() {
+            // User has a valid cached subscription
+            return true
+        }
+        
         // If user has active subscription, grant access
         if isPremium || isInFreeTrial {
             return true
@@ -91,6 +126,15 @@ class SubscriptionManager: ObservableObject {
     
     /// Check if user needs to see paywall
     func needsPaywall() -> Bool {
+        // First check cached subscription status for quick response
+        if let hasSubscription = UserDefaults.standard.object(forKey: "has_active_subscription") as? Bool,
+           hasSubscription,
+           let expirationDate = UserDefaults.standard.object(forKey: "subscription_expiration_date") as? Date,
+           expirationDate > Date() {
+            // User has a valid cached subscription
+            return false
+        }
+        
         // If has active subscription, no paywall needed
         if isPremium || isInFreeTrial {
             return false
@@ -142,12 +186,21 @@ class SubscriptionManager: ObservableObject {
     /// Listen for transaction updates
     private func listenForTransactions() -> Task<Void, Error> {
         return Task.detached {
-            for await result in Transaction.updates {
-                do {
-                    let transaction = try result.payloadValue
-                    await self.updateSubscriptionStatus(from: transaction)
-                } catch {
-                    print("Transaction update error: \(error)")
+            do {
+                for await result in Transaction.updates {
+                    do {
+                        let transaction = try result.payloadValue
+                        await self.updateSubscriptionStatus(from: transaction)
+                    } catch {
+                        print("Transaction update error: \(error)")
+                    }
+                }
+            } catch {
+                // Silently fail if no Apple Account is configured
+                if error.localizedDescription.contains("No active account") {
+                    print("StoreKit: No Apple Account configured - skipping transaction updates")
+                } else {
+                    print("Transaction listener error: \(error)")
                 }
             }
         }
@@ -156,16 +209,56 @@ class SubscriptionManager: ObservableObject {
     /// Check current subscription status
     @MainActor
     func checkSubscriptionStatus() async {
-        for await result in Transaction.currentEntitlements {
-            do {
-                let transaction = try result.payloadValue
-                if transaction.productID == productID {
-                    await updateSubscriptionStatus(from: transaction)
-                    return
-                }
-            } catch {
-                print("Transaction verification failed: \(error)")
+        // Always skip StoreKit checks in simulator
+        #if targetEnvironment(simulator)
+        print("📱 Simulator detected - skipping subscription status check")
+        return
+        #endif
+        
+        // First try to restore purchases to ensure we have the latest status
+        do {
+            try await AppStore.sync()
+        } catch {
+            // Handle the specific "No active account" error gracefully
+            let errorString = error.localizedDescription
+            if errorString.contains("No active account") || errorString.contains("userCancelled") {
+                print("StoreKit: No Apple Account or user cancelled - using local status")
+                // Set flag to skip future StoreKit checks in this session
+                UserDefaults.standard.set(true, forKey: "skip_storekit_checks")
+                return
             }
+            print("Failed to sync with App Store: \(error)")
+        }
+        
+        var hasActiveSubscription = false
+        
+        do {
+            for await result in Transaction.currentEntitlements {
+                do {
+                    let transaction = try result.payloadValue
+                    if transaction.productID == productID {
+                        await updateSubscriptionStatus(from: transaction)
+                        hasActiveSubscription = true
+                        
+                        // Persist subscription status
+                        UserDefaults.standard.set(true, forKey: "has_active_subscription")
+                        UserDefaults.standard.set(transaction.expirationDate, forKey: "subscription_expiration_date")
+                        UserDefaults.standard.lastSubscriptionCheck = Date()
+                        return
+                    }
+                } catch {
+                    print("Transaction verification failed: \(error)")
+                }
+            }
+        } catch {
+            // Handle errors when checking entitlements
+            let errorString = error.localizedDescription
+            if errorString.contains("No active account") {
+                print("StoreKit: No Apple Account for entitlements check - using local status")
+                UserDefaults.standard.set(true, forKey: "skip_storekit_checks")
+                return
+            }
+            print("Error checking entitlements: \(error)")
         }
         
         // No active subscription found
@@ -173,6 +266,11 @@ class SubscriptionManager: ObservableObject {
         subscriptionStatus = .none
         expirationDate = nil
         isInFreeTrial = false
+        
+        // Clear persisted subscription status
+        UserDefaults.standard.set(false, forKey: "has_active_subscription")
+        UserDefaults.standard.removeObject(forKey: "subscription_expiration_date")
+        UserDefaults.standard.lastSubscriptionCheck = Date()
     }
     
     /// Update subscription status from transaction
@@ -185,6 +283,10 @@ class SubscriptionManager: ObservableObject {
                 self.isPremium = false
                 self.subscriptionStatus = .canceled
                 self.isInFreeTrial = false
+                
+                // Clear persisted subscription status
+                UserDefaults.standard.set(false, forKey: "has_active_subscription")
+                UserDefaults.standard.removeObject(forKey: "subscription_expiration_date")
                 return
             }
             
@@ -193,6 +295,11 @@ class SubscriptionManager: ObservableObject {
             self.subscriptionStatus = .active
             self.isInFreeTrial = false
             self.expirationDate = transaction.expirationDate
+            
+            // Persist subscription status
+            UserDefaults.standard.set(true, forKey: "has_active_subscription")
+            UserDefaults.standard.set(transaction.expirationDate, forKey: "subscription_expiration_date")
+            UserDefaults.standard.lastSubscriptionCheck = Date()
         }
     }
     

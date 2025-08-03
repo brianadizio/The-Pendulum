@@ -248,8 +248,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         levelSuccessTime = config.balanceRequiredTime
         
         print("Starting level \(level): \(config.description)")
-        print("Balance threshold: \(config.balanceThresholdDegrees) degrees")
-        print("Required balance time: \(config.balanceRequiredTime) seconds")
+        // Suppressed: Balance threshold and required time debug output
     }
     
     func updateDifficultyParameters(config: LevelConfig) {
@@ -268,19 +267,13 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
             isUpdatingParameters = false
         } else {
             // Preserve custom parameters
-            print("Preserving custom parameters through level transition")
+            // Preserving custom parameters through level transition
         }
         
         // Update the simulation parameters
         updateSimulationParameters()
         
-        print("Parameters for level \(config.number):")
-        print("Mass: \(mass) \(hasCustomParameters && customMass != nil ? "(custom)" : "")")
-        print("Length: \(length) \(hasCustomParameters && customLength != nil ? "(custom)" : "")")
-        print("Damping: \(damping) \(hasCustomParameters && customDamping != nil ? "(custom)" : "")")
-        print("Gravity: \(gravity) \(hasCustomParameters && customGravity != nil ? "(custom)" : "")")
-        print("Spring Constant: \(springConstant) \(hasCustomParameters && customSpringConstant != nil ? "(custom)" : "")")
-        print("Initial Perturbation: \(initialPerturbation) degrees")
+        // Suppressed: Detailed parameter logging for level transition
     }
     
     private func applyLevelConfiguration(_ config: LevelConfig) {
@@ -474,12 +467,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Print debug info
         print("Starting game with perturbation:")
         print("Direction: \(direction > 0 ? "right" : "left")")
-        print("Perturbation: \(degreesOffset) degrees (\(radianOffset) radians)")
-        print("Initial position: theta = \(initialTheta) (\(initialTheta * 180/Double.pi - 180) degrees from vertical)")
-        print("Initial velocity: thetaDot = \(initialThetaDot)")
-        print("Balance threshold: \(balanceThreshold) radians (\(balanceThreshold * 180/Double.pi) degrees)")
-        print("Failure threshold: \(failureAngleThreshold) radians (\(failureAngleThreshold * 180/Double.pi) degrees)")
-        print("Level success time: \(levelSuccessTime) seconds")
+        // Suppressed: Detailed initial position and threshold logging
         
         // Start simulation, but delay the game over check for a moment
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -1008,7 +996,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
     }
     
     func applyForce(_ magnitude: Double) {
-        print("*** FORCE BUTTON PRESSED ***")
+        // Suppressed: Force button pressed debug output
         
         // Update last force press time for achievements
         lastForcePressTime = Date()
@@ -1036,7 +1024,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Apply external force using the adjustable force strength parameter
         let scaledMagnitude = magnitude * forceStrength
         
-        print("BEFORE force application - theta: \(currentState.theta), thetaDot: \(currentState.thetaDot)")
+        // Suppressed: BEFORE force application debug output
         print("Applying force: \(scaledMagnitude) to pendulum with current velocity \(currentState.thetaDot)")
         
         // Apply force directly to the simulation
@@ -1075,7 +1063,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         // Increment corrections counter for level tracking
         levelTotalCorrections += 1
         
-        print("AFTER force application - theta: \(currentState.theta), thetaDot: \(currentState.thetaDot)")
+        // Suppressed: AFTER force application debug output
         
         // Track force efficiency for achievements
         let angleFromVertical = abs(normalizeAngle(currentState.theta - Double.pi))
@@ -1126,8 +1114,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         updateSimulationParameters()
         
         print("Reset to level 1:")
-        print("Balance threshold: \(balanceThreshold * 180 / Double.pi) degrees")
-        print("Level success time: \(levelSuccessTime) seconds")
+        // Suppressed: Balance threshold and level success time debug output
         print("Mass: \(mass) \(hasCustomParameters ? "(custom)" : "")")
         print("Length: \(length) \(hasCustomParameters ? "(custom)" : "")")
         print("Damping: \(damping) \(hasCustomParameters ? "(custom)" : "")")
@@ -1379,7 +1366,7 @@ class PendulumViewModel: ObservableObject, LevelProgressionDelegate {
         simulation.setMomentOfInertia(momentOfInertia)
         
         // Log that parameters were directly updated
-        print("Parameters directly updated through updateSimulationParameters()")
+        // Suppressed: Parameters directly updated debug output
     }
     
     // Reset to level defaults, clearing custom parameters

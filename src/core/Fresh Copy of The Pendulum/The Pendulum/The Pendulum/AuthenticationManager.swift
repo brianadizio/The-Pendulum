@@ -4,6 +4,7 @@ import FirebaseFirestore
 import AuthenticationServices
 import CryptoKit
 import UIKit
+import CoreData
 
 // MARK: - Authentication Manager
 class AuthenticationManager: NSObject, ObservableObject {
@@ -18,18 +19,77 @@ class AuthenticationManager: NSObject, ObservableObject {
     
     override init() {
         super.init()
-        checkAuthStatus()
+        print("🔐 AuthenticationManager: Initializing...")
+        // Check if we have a saved auth state first
+        if UserDefaults.standard.bool(forKey: "hasAuthenticatedUser") {
+            let userId = UserDefaults.standard.string(forKey: "lastAuthenticatedUserId") ?? "unknown"
+            print("🔐 AuthenticationManager: Found saved auth state for user: \(userId)")
+        }
+        // Delay auth check slightly to ensure Firebase is fully configured
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.checkAuthStatus()
+        }
     }
     
     // MARK: - Check Current Auth Status
     func checkAuthStatus() {
+        print("🔐 AuthenticationManager: Checking auth status...")
+        
+        // Check current user immediately
+        if let currentUser = Auth.auth().currentUser {
+            print("🔐 User already authenticated on launch: \(currentUser.uid)")
+            print("🔐 User email: \(currentUser.email ?? "no email")")
+            print("🔐 User provider: \(currentUser.providerData.first?.providerID ?? "unknown")")
+            print("🔐 Is anonymous: \(currentUser.isAnonymous)")
+            
+            // Check if token needs refresh for Apple Sign-In users
+            if currentUser.providerData.first?.providerID == "apple.com" {
+                print("🍎 Checking Apple Sign-In token validity...")
+                currentUser.getIDTokenResult { result, error in
+                    if let error = error {
+                        print("⚠️ Token refresh error: \(error)")
+                    } else if let result = result {
+                        print("✅ Token valid, expires: \(result.expirationDate ?? Date())")
+                    }
+                }
+            }
+            
+            self.currentUser = currentUser
+            self.isAuthenticated = true
+            self.fetchUserProfile(userId: currentUser.uid)
+            
+            // Save to UserDefaults for quick check
+            UserDefaults.standard.set(true, forKey: "hasAuthenticatedUser")
+            UserDefaults.standard.set(currentUser.uid, forKey: "lastAuthenticatedUserId")
+            
+            // Post notification that user is authenticated
+            NotificationCenter.default.post(name: .authStateDidChange, object: nil)
+        } else {
+            print("🔐 No authenticated user on launch")
+            // Clear UserDefaults
+            UserDefaults.standard.set(false, forKey: "hasAuthenticatedUser")
+            UserDefaults.standard.removeObject(forKey: "lastAuthenticatedUserId")
+        }
+        
         Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            print("🔐 Auth state changed. User: \(user?.uid ?? "nil")")
             self?.currentUser = user
             self?.isAuthenticated = user != nil
             
             if let user = user {
                 print("🔐 User authenticated: \(user.uid)")
+                print("🔐 Provider: \(user.providerData.first?.providerID ?? "unknown")")
                 self?.fetchUserProfile(userId: user.uid)
+                // Save to UserDefaults
+                UserDefaults.standard.set(true, forKey: "hasAuthenticatedUser")
+                UserDefaults.standard.set(user.uid, forKey: "lastAuthenticatedUserId")
+                UserDefaults.standard.synchronize()
+            } else {
+                print("🔐 User signed out or no user")
+                // Clear UserDefaults
+                UserDefaults.standard.set(false, forKey: "hasAuthenticatedUser")
+                UserDefaults.standard.removeObject(forKey: "lastAuthenticatedUserId")
+                UserDefaults.standard.synchronize()
             }
             
             // Post notification when auth state changes
@@ -125,6 +185,12 @@ class AuthenticationManager: NSObject, ObservableObject {
             } else if let user = result?.user {
                 print("✅ Firebase sign in successful for user: \(user.uid)")
                 
+                // Save auth state immediately to persist across launches
+                UserDefaults.standard.set(true, forKey: "hasAuthenticatedUser")
+                UserDefaults.standard.set(user.uid, forKey: "lastAuthenticatedUserId")
+                UserDefaults.standard.synchronize()
+                print("🔐 Saved auth state to UserDefaults for persistence")
+                
                 // Get display name from Apple if available
                 let displayName = appleIDCredential.fullName?.givenName ?? "Player"
                 print("🍎 Display name: \(displayName)")
@@ -164,6 +230,125 @@ class AuthenticationManager: NSObject, ObservableObject {
             isAuthenticated = false
         } catch {
             authError = error.localizedDescription
+        }
+    }
+    
+    // MARK: - Delete Account
+    func deleteAccount(completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let user = Auth.auth().currentUser else {
+            completion(.failure(AuthError.invalidCredential))
+            return
+        }
+        
+        let userId = user.uid
+        
+        // First, delete user data from Firestore
+        db.collection("users").document(userId).delete { [weak self] error in
+            if let error = error {
+                print("Error deleting Firestore user data: \(error)")
+                completion(.failure(error))
+                return
+            }
+            
+            // Delete all local Core Data associated with user
+            self?.deleteAllLocalUserData()
+            
+            // Clear UserDefaults data
+            self?.clearUserDefaults()
+            
+            // Finally, delete the Firebase Auth account
+            user.delete { error in
+                if let error = error {
+                    print("Error deleting Firebase Auth account: \(error)")
+                    completion(.failure(error))
+                } else {
+                    // Update auth state
+                    self?.currentUser = nil
+                    self?.isAuthenticated = false
+                    completion(.success(()))
+                }
+            }
+        }
+    }
+    
+    // MARK: - Delete Local Data
+    private func deleteAllLocalUserData() {
+        // Clear all Core Data entities
+        deleteAllCoreDataEntities()
+        
+        // Clear any cached data
+        clearCachedData()
+    }
+    
+    private func deleteAllCoreDataEntities() {
+        let coreDataManager = CoreDataManager.shared
+        let context = coreDataManager.context
+        
+        // List of all entity names that store user data
+        let entityNames = [
+            "HighScore",
+            "Achievement", 
+            "PlaySession",
+            "LevelCompletion",
+            "InteractionEvent",
+            "PerformanceMetrics",
+            "AggregatedAnalytics"
+        ]
+        
+        for entityName in entityNames {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            do {
+                let objects = try context.fetch(fetchRequest)
+                for object in objects {
+                    context.delete(object)
+                }
+            } catch {
+                print("Error deleting \(entityName) entities: \(error)")
+            }
+        }
+        
+        // Save the context to persist deletions
+        coreDataManager.saveContext()
+    }
+    
+    private func clearUserDefaults() {
+        // Clear user-specific UserDefaults
+        let userDefaultsKeys = [
+            "selectedControlType",
+            "controlSensitivity",
+            "soundEnabled",
+            "musicEnabled",
+            "hapticEnabled",
+            "selectedGameMode",
+            "selectedPhysicsMode",
+            "selectedModeSettings",
+            "selectedSeedValue",
+            "hasSeenOnboarding",
+            "hasGivenTrackingPermission",
+            "launchCount",
+            "firstLaunchDate",
+            "trialStartDate",
+            "lastActiveDate"
+        ]
+        
+        for key in userDefaultsKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        
+        UserDefaults.standard.synchronize()
+    }
+    
+    private func clearCachedData() {
+        // Clear any file-based caches
+        if let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            do {
+                let cacheContents = try FileManager.default.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil)
+                for file in cacheContents {
+                    try FileManager.default.removeItem(at: file)
+                }
+            } catch {
+                print("Error clearing cache: \(error)")
+            }
         }
     }
     

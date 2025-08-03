@@ -16,6 +16,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Initialize Firebase gameplay sync
         _ = FirebaseGameplaySync.shared
         
+        // Initialize AuthenticationManager to check for existing sessions
+        // This ensures Firebase Auth state is checked after Firebase is configured
+        _ = AuthenticationManager.shared
+        
         // Apply Focus Calendar theme
         FocusCalendarTheme.applyTheme()
         

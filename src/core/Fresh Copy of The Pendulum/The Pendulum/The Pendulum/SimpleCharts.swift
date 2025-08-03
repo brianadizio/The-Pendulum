@@ -131,7 +131,7 @@ class SimpleChartView: UIView {
         
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: 16),
-            .foregroundColor: UIColor.black
+            .foregroundColor: UIColor.darkGray
         ]
         
         let titleSize = title.size(withAttributes: titleAttributes)

@@ -3,12 +3,21 @@ import Foundation
 
 // MARK: - Enhanced Tutorial Mode for AI
 extension PendulumAIManager {
+    private var lastSuggestionTime: TimeInterval {
+        get { return objc_getAssociatedObject(self, &AssociatedKeys.lastSuggestionTime) as? TimeInterval ?? 0 }
+        set { objc_setAssociatedObject(self, &AssociatedKeys.lastSuggestionTime, newValue, .OBJC_ASSOCIATION_RETAIN) }
+    }
+    
+    private struct AssociatedKeys {
+        static var lastSuggestionTime = "lastSuggestionTime"
+    }
     
     /// Enhanced tutorial mode that provides visual guidance
     func startEnhancedTutorial(viewModel: PendulumViewModel) {
         self.viewModel = viewModel
         self.currentMode = .tutorial
         tutorialStep = 0
+        lastSuggestionTime = 0
         
         // Create a tutorial AI that suggests actions
         aiPlayer = PendulumAIPlayer(skillLevel: .expert)
@@ -31,13 +40,69 @@ extension PendulumAIManager {
     
     private func setupEnhancedTutorialCallbacks() {
         // Tutorial mode: AI suggests but doesn't push
+        // Add smarter filtering to avoid incorrect suggestions
         aiPlayer?.onPushLeft = { [weak self] in
-            self?.showTutorialSuggestion(direction: .left)
+            guard let self = self, self.shouldShowSuggestion(direction: .left) else { return }
+            self.showTutorialSuggestion(direction: .left)
         }
         
         aiPlayer?.onPushRight = { [weak self] in
-            self?.showTutorialSuggestion(direction: .right)
+            guard let self = self, self.shouldShowSuggestion(direction: .right) else { return }
+            self.showTutorialSuggestion(direction: .right)
         }
+    }
+    
+    private func shouldShowSuggestion(direction: PushDirection) -> Bool {
+        guard let viewModel = viewModel else { return false }
+        let state = viewModel.currentState
+        
+        // Check if pendulum has fallen (past ±75 degrees from vertical)
+        let normalizedAngle = atan2(sin(state.theta), cos(state.theta))
+        let angleFromVertical = abs(normalizedAngle - Double.pi)
+        
+        if angleFromVertical > 1.309 { // 75 degrees in radians
+            // Pendulum has fallen - don't suggest pushes
+            return false
+        }
+        
+        // Cooldown to prevent suggestion spam (minimum 0.8 seconds between suggestions)
+        let currentTime = CACurrentMediaTime()
+        if currentTime - lastSuggestionTime < 0.8 {
+            return false
+        }
+        
+        // Get angle from vertical (0 = upright, positive = tilting right)
+        let angle = state.theta
+        let velocity = state.thetaDot
+        
+        // Calculate where pendulum is heading
+        let predictedAngle = angle + velocity * 0.2 // Look 0.2 seconds ahead
+        
+        // Minimum angle threshold to suggest a push (avoid over-suggesting)
+        let minAngleThreshold = 0.15 // About 8.5 degrees
+        
+        // Smart logic:
+        // - If tilting right (positive angle) and still moving right (positive velocity), suggest left push
+        // - If tilting left (negative angle) and still moving left (negative velocity), suggest right push
+        // - Consider predicted position to be proactive
+        
+        let shouldSuggest: Bool
+        switch direction {
+        case .left:
+            // Suggest left push if pendulum is/will be tilting right
+            shouldSuggest = predictedAngle > minAngleThreshold && velocity >= 0
+        case .right:
+            // Suggest right push if pendulum is/will be tilting left
+            shouldSuggest = predictedAngle < -minAngleThreshold && velocity <= 0
+        case .none:
+            shouldSuggest = false
+        }
+        
+        if shouldSuggest {
+            lastSuggestionTime = currentTime
+        }
+        
+        return shouldSuggest
     }
     
     private func updateTutorialAI() {
@@ -91,26 +156,30 @@ extension PendulumAIManager {
             if angleFromVertical < 0.5 {
                 tutorialStep = 1
                 showTutorialMessage("Good! Now try to get it more vertical. Watch for the push hints!")
+                NotificationCenter.default.post(name: Notification.Name("TutorialProgressUpdate"), object: nil, userInfo: ["step": 1])
             }
         case 1:
             // Step 2: Get pendulum nearly vertical
-            if angleFromVertical < 0.2 {
+            if angleFromVertical < 0.35 {  // Match level 1 threshold
                 tutorialStep = 2
-                showTutorialMessage("Excellent! Now maintain balance for 5 seconds.")
+                showTutorialMessage("Excellent! Now maintain balance briefly.")
                 trackBalanceTime()
+                NotificationCenter.default.post(name: Notification.Name("TutorialProgressUpdate"), object: nil, userInfo: ["step": 2])
             }
         case 2:
-            // Step 3: Maintain for 5 seconds
-            if state.time > 5.0 && angleFromVertical < 0.3 {
+            // Step 3: Maintain for just 0.5 seconds (easier than Level 1!)
+            if state.time > 0.5 && angleFromVertical < 0.35 {
                 tutorialStep = 3
-                showTutorialMessage("Perfect! Try using smaller, gentler pushes now.")
+                showTutorialMessage("Perfect! Now try one more time.")
+                NotificationCenter.default.post(name: Notification.Name("TutorialProgressUpdate"), object: nil, userInfo: ["step": 3])
             }
         case 3:
-            // Step 4: Advanced balancing
-            if state.time > 10.0 && angleFromVertical < 0.3 {
+            // Step 4: Final success - just get it upright again briefly
+            if state.time > 1.0 && angleFromVertical < 0.35 {
                 tutorialStep = 4
                 showTutorialMessage("🎉 Tutorial Complete! You've mastered the basics!")
                 celebrateTutorialCompletion()
+                NotificationCenter.default.post(name: Notification.Name("TutorialProgressUpdate"), object: nil, userInfo: ["step": 4])
             }
         default:
             break
@@ -174,6 +243,7 @@ class TutorialSuggestionView: UIView {
     private func setupView(direction: PushDirection) {
         backgroundColor = FocusCalendarTheme.accentGold.withAlphaComponent(0.9)
         layer.cornerRadius = 25
+        layer.zPosition = 1000 // High z-position to appear on top
         
         // Arrow
         let arrowImage = UIImage(systemName: direction == .left ? "arrow.left.circle.fill" : "arrow.right.circle.fill")
@@ -247,8 +317,8 @@ class TutorialSuggestionView: UIView {
     private func startNormalPulse() {
         pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
         pulseAnimation?.fromValue = 1.0
-        pulseAnimation?.toValue = 1.1
-        pulseAnimation?.duration = 0.5
+        pulseAnimation?.toValue = 1.05  // Reduced from 1.1 for subtler effect
+        pulseAnimation?.duration = 1.0   // Slower from 0.5 for less flashy
         pulseAnimation?.autoreverses = true
         pulseAnimation?.repeatCount = .infinity
         layer.add(pulseAnimation!, forKey: "pulse")
@@ -257,8 +327,8 @@ class TutorialSuggestionView: UIView {
     private func startUrgentPulse() {
         pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
         pulseAnimation?.fromValue = 1.0
-        pulseAnimation?.toValue = 1.2
-        pulseAnimation?.duration = 0.3
+        pulseAnimation?.toValue = 1.08  // Reduced from 1.2 for subtler effect
+        pulseAnimation?.duration = 0.6   // Slower from 0.3 for less flashy
         pulseAnimation?.autoreverses = true
         pulseAnimation?.repeatCount = .infinity
         layer.add(pulseAnimation!, forKey: "pulse")
@@ -286,10 +356,15 @@ class TutorialProgressView: UIView {
     }
     
     private func setupView() {
-        backgroundColor = FocusCalendarTheme.cardBackgroundColor
+        backgroundColor = FocusCalendarTheme.cardBackgroundColor.withAlphaComponent(0.95)
         layer.cornerRadius = 15
         layer.borderWidth = 2
         layer.borderColor = FocusCalendarTheme.accentGold.cgColor
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.3
+        layer.shadowOffset = CGSize(width: 0, height: 2)
+        layer.shadowRadius = 4
+        layer.zPosition = 1000 // High z-position to appear on top
         
         // Progress label
         progressLabel.text = "Tutorial Progress"

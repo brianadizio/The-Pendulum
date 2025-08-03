@@ -52,7 +52,7 @@ extension UIButton {
     func applyGoldenButtonStyle(isPrimary: Bool = true) {
         if isPrimary {
             backgroundColor = .goldenPrimary
-            setTitleColor(.white, for: .normal)
+            setTitleColor(.goldenDark, for: .normal)
         } else {
             backgroundColor = .goldenSecondary
             setTitleColor(.goldenDark, for: .normal)

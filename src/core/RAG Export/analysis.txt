@@ -1,0 +1,35 @@
+PENDULUM BALANCE ANALYSIS REPORT
+================================
+
+Session Duration: 0.2 seconds
+Total Samples: 284
+Balance Success Rate: 0.0%
+
+BALANCE PERSONALITY PROFILE
+--------------------------
+• AGGRESSIVE CONTROLLER: You use strong, decisive corrections
+• REACTIVE: You respond to balance issues as they occur
+• ADAPTIVE: Your timing varies based on conditions
+• DEVELOPING: Room for improvement in balance control
+
+METRICS SUMMARY
+--------------
+Average Angle Deviation: 3.022 rad
+Average Velocity: 0.439 rad/s
+Push Frequency: 24.2 Hz
+Energy Efficiency: 0.0%
+
+SCIENTIFIC METRICS (from Dashboard)
+----------------------------------
+Phase Space Coverage: 0.0%
+Energy Management: 0.0%
+Lyapunov Exponent: 0.000
+Stability Score: 0.0
+Control Effort: 0.0
+Force Timing Accuracy: 0.0%
+
+PHASE SPACE COVERAGE
+-------------------
+The attached phase space diagram shows your pendulum's trajectory through
+angle-velocity space. Red dots indicate push events. A tight spiral near
+the center indicates good control, while large loops suggest instability.
