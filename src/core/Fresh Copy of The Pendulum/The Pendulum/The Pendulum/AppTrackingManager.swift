@@ -1,6 +1,7 @@
 import Foundation
 import AppTrackingTransparency
 import AdSupport
+import Singular
 
 /// Manages App Tracking Transparency permissions and coordinates with Singular SDK
 class AppTrackingManager {
@@ -174,7 +175,6 @@ extension SingularTracker {
     
     /// Track the App Tracking Transparency permission result
     static func trackTrackingPermission(granted: Bool, idfa: String?) {
-        #if SINGULAR_SDK_AVAILABLE
         var attributes = [
             "att_permission_granted": granted ? "true" : "false",
             "att_status": AppTrackingManager.shared.getCurrentTrackingStatus(),
@@ -185,25 +185,18 @@ extension SingularTracker {
             attributes["idfa"] = idfa
         }
         
-        Singular.event(withArgs: "att_permission_result", withAttributes: attributes)
+        Singular.event("att_permission_result", withArgs: attributes)
         print("📊 ATT permission result tracked: \(granted)")
-        #else
-        print("⚠️ SingularTracker: Cannot track ATT permission - SDK not available")
-        #endif
     }
     
     /// Track when user opens settings to change tracking permission
     static func trackTrackingSettingsOpened() {
-        #if SINGULAR_SDK_AVAILABLE
         let attributes = [
             "current_status": AppTrackingManager.shared.getCurrentTrackingStatus(),
             "timestamp": ISO8601DateFormatter().string(from: Date())
         ]
         
-        Singular.event(withArgs: "att_settings_opened", withAttributes: attributes)
+        Singular.event("att_settings_opened", withArgs: attributes)
         print("⚙️ ATT settings opened tracked")
-        #else
-        print("⚠️ SingularTracker: Cannot track settings opened - SDK not available")
-        #endif
     }
 }

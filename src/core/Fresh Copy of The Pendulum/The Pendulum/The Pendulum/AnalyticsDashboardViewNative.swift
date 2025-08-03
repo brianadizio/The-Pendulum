@@ -175,7 +175,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
 
         // Use Golden theme colors
         timeSegmentControl.selectedSegmentTintColor = .goldenPrimary
-        timeSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
+        timeSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.darkGray], for: .selected)
         timeSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.goldenDark], for: .normal)
 
         contentView.addSubview(timeSegmentControl)
@@ -613,7 +613,7 @@ class AnalyticsDashboardViewNative: UIView, UIScrollViewDelegate {
         parameterSegmentControl.backgroundColor = FocusCalendarTheme.secondaryBackgroundColor
         parameterSegmentControl.selectedSegmentTintColor = .goldenPrimary
         parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.label], for: .normal)
-        parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
+        parameterSegmentControl.setTitleTextAttributes([.foregroundColor: UIColor.darkGray], for: .selected)
         parameterSegmentControl.addTarget(self, action: #selector(parameterChanged(_:)), for: .valueChanged)
         pendulumParametersSection.addSubview(parameterSegmentControl)
         

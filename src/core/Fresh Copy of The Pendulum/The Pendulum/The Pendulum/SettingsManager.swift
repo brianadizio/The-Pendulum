@@ -20,7 +20,7 @@ class SettingsManager {
     private struct Defaults {
         static let graphics = "Standard"
         static let metrics = "Basic"
-        static let sounds = "Standard"
+        static let sounds = "Silent"
         static let backgrounds = "Default"
         static let gameControls = "Push"
     }

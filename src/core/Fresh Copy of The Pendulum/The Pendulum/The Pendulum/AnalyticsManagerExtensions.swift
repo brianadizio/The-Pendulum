@@ -60,7 +60,7 @@ extension AnalyticsManager {
         
         // Debug: Log every 1000th data point
         if Int(time * 100) % 1000 == 0 {
-            print("📊 Tracked state - Time: \(String(format: "%.2f", time)), Angle: \(String(format: "%.2f", angle)), Calculator: \(Unmanaged.passUnretained(metricsCalculator).toOpaque())")
+            // Suppressed: Tracked state debug output
         }
     }
     
@@ -271,14 +271,6 @@ extension AnalyticsManager {
             let leftCount = Double(directionalPushes["left"] ?? 0)
             let rightCount = Double(directionalPushes["right"] ?? 0)
             
-            // Debug: Check if analytics is tracking and session is active
-            print("📊 Full Directional Bias Debug:")
-            print("   - Analytics isTracking: \(isTracking)")
-            print("   - Current session ID: \(currentSessionId?.uuidString ?? "none")")
-            print("   - Directional pushes dictionary: \(directionalPushes)")
-            print("   - Left count: \(leftCount), Right count: \(rightCount)")
-            print("   - Analytics tracking active: \(isTracking ? "YES" : "NO")")
-            
             // Even if no data, return [0, 0] to avoid "Not enough data" message
             let distribution = [leftCount, rightCount]
             return createMetricValue(distribution)
@@ -342,7 +334,7 @@ extension AnalyticsManager {
         case .angularDeviation:
             // Check if we have sufficient angle data
             guard !angleBuffer.isEmpty && angleBuffer.count > 10 else {
-                print("📊 Angular Deviation: Insufficient data (\(angleBuffer.count) angles, need >10)")
+                // Suppressed: Angular Deviation insufficient data message
                 return nil
             }
             

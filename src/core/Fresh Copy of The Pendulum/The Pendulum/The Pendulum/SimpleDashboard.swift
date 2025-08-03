@@ -434,6 +434,9 @@ class ControlsCell: UITableViewCell {
         }
         groupControl.selectedSegmentIndex = 0
         groupControl.translatesAutoresizingMaskIntoConstraints = false
+        groupControl.selectedSegmentTintColor = .goldenPrimary
+        groupControl.setTitleTextAttributes([.foregroundColor: UIColor.darkGray], for: .selected)
+        groupControl.setTitleTextAttributes([.foregroundColor: UIColor.goldenDark], for: .normal)
         groupControl.addTarget(self, action: #selector(groupChanged), for: .valueChanged)
         cardView.addSubview(groupControl)
         
@@ -445,6 +448,9 @@ class ControlsCell: UITableViewCell {
         }
         timeControl.selectedSegmentIndex = 1 // Daily
         timeControl.translatesAutoresizingMaskIntoConstraints = false
+        timeControl.selectedSegmentTintColor = .goldenPrimary
+        timeControl.setTitleTextAttributes([.foregroundColor: UIColor.darkGray], for: .selected)
+        timeControl.setTitleTextAttributes([.foregroundColor: UIColor.goldenDark], for: .normal)
         timeControl.addTarget(self, action: #selector(timeRangeChanged), for: .valueChanged)
         cardView.addSubview(timeControl)
         
@@ -742,6 +748,9 @@ class ChartCell: UITableViewCell {
             parameterSelector.insertSegment(withTitle: parameter.rawValue, at: parameterSelector.numberOfSegments, animated: false)
         }
         parameterSelector.selectedSegmentIndex = 0 // Default to first parameter
+        parameterSelector.selectedSegmentTintColor = .goldenPrimary
+        parameterSelector.setTitleTextAttributes([.foregroundColor: UIColor.darkGray], for: .selected)
+        parameterSelector.setTitleTextAttributes([.foregroundColor: UIColor.goldenDark], for: .normal)
         parameterSelector.addTarget(self, action: #selector(parameterChanged), for: .valueChanged)
         parameterSelector.isHidden = true // Initially hidden
         cardView.addSubview(parameterSelector)

@@ -41,8 +41,29 @@ class SignInViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print("🔐 SignInViewController loaded")
+        print("🔐 Current auth status: \(AuthenticationManager.shared.isAuthenticated)")
+        if let user = AuthenticationManager.shared.currentUser {
+            print("🔐 Current user: \(user.uid)")
+        }
+        
         setupUI()
         setupKeyboardHandling()
+        
+        // Disable automatic password autofill prompts
+        emailTextField.textContentType = .none
+        passwordTextField.textContentType = .none
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Check if already signed in when view appears
+        if AuthenticationManager.shared.isAuthenticated {
+            print("🔐 User already authenticated in viewDidAppear, dismissing")
+            self.dismiss(animated: true)
+        }
     }
     
     // MARK: - UI Setup
@@ -277,8 +298,25 @@ class SignInViewController: UIViewController {
     }
     
     @objc private func appleSignInTapped() {
-        print("🍎 Apple Sign-In button tapped")
+        print("🍎 Apple Sign-In button tapped - User initiated action")
         print("🍎 Bundle ID: \(Bundle.main.bundleIdentifier ?? "nil")")
+        
+        // Check if user is already authenticated
+        if AuthenticationManager.shared.isAuthenticated {
+            print("🍎 User is already authenticated, dismissing sign-in view")
+            self.dismiss(animated: true) {
+                // Show a success message if needed
+                if let presentingVC = self.presentingViewController {
+                    let alert = UIAlertController(title: "Already Signed In", 
+                                                message: "You're already signed in to your account.", 
+                                                preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    presentingVC.present(alert, animated: true)
+                }
+            }
+            return
+        }
+        
         showLoadingIndicator()
         
         // Add a timeout to handle cases where the delegate never gets called

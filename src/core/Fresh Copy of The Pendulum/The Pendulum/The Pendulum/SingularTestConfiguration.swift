@@ -1,80 +1,60 @@
 import Foundation
 import UIKit
-
-// Note: After adding Singular SDK via SPM, uncomment the import below
-// import Singular
+import Singular
 
 class SingularTestConfiguration {
     
     // MARK: - Configuration
     
     static func initializeSingular() {
-        #if SINGULAR_SDK_AVAILABLE
         // Initialize Singular with your API Key and Secret
-        // These will need to be replaced with your actual credentials from Singular
-        let config = SingularConfig(apiKey: "goldenenterprises_2c52889f", andSecret: "df4df5c7bc8cbefe57a359f39950915a")
+        guard let config = SingularConfig(apiKey: "goldenenterprises_2c52889f", andSecret: "df4df5c7bc8cbefe57a359f39950915a") else {
+            print("❌ Failed to create SingularConfig")
+            return
+        }
         
-        // Optional: Enable debug logging
-        config.logLevel = SingularLogLevelDebug
-        
-        // Optional: Set custom user ID if you have one
-        // config.customUserId = "user123"
-        
-        // Optional: Enable SKAdNetwork support
+        // Enable SKAdNetwork support
         config.skAdNetworkEnabled = true
         
-        // Full tracking mode - IDFA available
-        config.limitDataSharing = false
+        // Full tracking mode - advertising identifiers available
+        config.limitAdvertisingIdentifiers = false
         
         // Initialize Singular
         Singular.start(config)
         
         print("✅ Singular SDK initialized successfully with full tracking")
-        #else
-        print("⚠️ Singular SDK not available - please add it via Swift Package Manager first")
-        #endif
     }
     
     static func initializeSingularLimitedTracking() {
-        #if SINGULAR_SDK_AVAILABLE
         // Initialize Singular with your API Key and Secret in limited tracking mode
-        let config = SingularConfig(apiKey: "goldenenterprises_2c52889f", andSecret: "df4df5c7bc8cbefe57a359f39950915a")
-        
-        // Enable debug logging
-        config.logLevel = SingularLogLevelDebug
+        guard let config = SingularConfig(apiKey: "goldenenterprises_2c52889f", andSecret: "df4df5c7bc8cbefe57a359f39950915a") else {
+            print("❌ Failed to create SingularConfig")
+            return
+        }
         
         // Enable SKAdNetwork support (this works without IDFA)
         config.skAdNetworkEnabled = true
         
-        // Limited tracking mode - no IDFA
-        config.limitDataSharing = true
+        // Limited tracking mode - no advertising identifiers
+        config.limitAdvertisingIdentifiers = true
         
         // Initialize Singular
         Singular.start(config)
         
         print("✅ Singular SDK initialized successfully with limited tracking")
-        #else
-        print("⚠️ Singular SDK not available - please add it via Swift Package Manager first")
-        #endif
     }
     
     // MARK: - Test Methods
     
     static func testSingularImports() -> Bool {
-        #if SINGULAR_SDK_AVAILABLE
         // Test that we can access Singular classes
         let _ = SingularConfig.self
         let _ = Singular.self
         print("✅ Singular imports successful")
         return true
-        #else
-        print("❌ Singular imports failed - SDK not available")
-        return false
-        #endif
     }
     
     static func testTrackEvent() {
-        #if SINGULAR_SDK_AVAILABLE
         // Track a simple event
         Singular.event("test_event")
         print("✅ Test event tracked")
@@ -84,15 +64,11 @@ class SingularTestConfiguration {
             "test_key": "test_value",
             "timestamp": "\(Date().timeIntervalSince1970)"
         ]
-        Singular.event(withArgs: "test_event_with_attributes", withAttributes: attributes)
+        Singular.event("test_event_with_attributes", withArgs: attributes)
         print("✅ Test event with attributes tracked")
-        #else
-        print("⚠️ Cannot track events - Singular SDK not available")
-        #endif
     }
     
     static func testRevenue() {
-        #if SINGULAR_SDK_AVAILABLE
         // Track revenue event
         Singular.revenue("USD", amount: 9.99)
         print("✅ Revenue tracked: $9.99 USD")
@@ -100,25 +76,17 @@ class SingularTestConfiguration {
         // Track custom revenue event
         Singular.customRevenue("test_purchase", currency: "USD", amount: 4.99)
         print("✅ Custom revenue tracked: $4.99 USD")
-        #else
-        print("⚠️ Cannot track revenue - Singular SDK not available")
-        #endif
     }
     
     static func testDeepLinks() {
-        #if SINGULAR_SDK_AVAILABLE
         // Test deep link handling
         if let url = URL(string: "pendulum://test/deeplink") {
-            let handled = Singular.handleOpenURL(url, options: nil)
-            print("✅ Deep link handled: \(handled)")
+            let isSingularLink = Singular.isSingularLink(url)
+            print("✅ Is Singular link: \(isSingularLink)")
         }
-        #else
-        print("⚠️ Cannot test deep links - Singular SDK not available")
-        #endif
     }
     
     static func testUserAttributes() {
-        #if SINGULAR_SDK_AVAILABLE
         // Set custom user ID
         Singular.setCustomUserId("test_user_123")
         print("✅ Custom user ID set")
@@ -126,17 +94,10 @@ class SingularTestConfiguration {
         // Unset custom user ID
         Singular.unsetCustomUserId()
         print("✅ Custom user ID unset")
-        #else
-        print("⚠️ Cannot set user attributes - Singular SDK not available")
-        #endif
     }
     
     static func getSDKVersion() -> String {
-        #if SINGULAR_SDK_AVAILABLE
         return Singular.version() ?? "Unknown"
-        #else
-        return "SDK Not Available"
-        #endif
     }
     
     // MARK: - Debug Helper
@@ -160,71 +121,10 @@ class SingularTestConfiguration {
     }
     
     static func isSingularAvailable() -> Bool {
-        #if SINGULAR_SDK_AVAILABLE
         return true
-        #else
-        return false
-        #endif
     }
 }
 
 // MARK: - Placeholder Implementations
 // These will be replaced with actual Singular SDK types when available
 
-#if !SINGULAR_SDK_AVAILABLE
-
-// Placeholder for SingularConfig
-class SingularConfig {
-    var logLevel: Int = 0
-    var skAdNetworkEnabled: Bool = false
-    var customUserId: String?
-    var limitDataSharing: Bool = false
-    
-    init(apiKey: String, andSecret secret: String) {
-        print("⚠️ Using placeholder SingularConfig - add real SDK")
-    }
-}
-
-// Placeholder for Singular
-class Singular {
-    static func start(_ config: SingularConfig) {
-        print("⚠️ Using placeholder Singular.start - add real SDK")
-    }
-    
-    static func event(_ name: String) {
-        print("⚠️ Using placeholder Singular.event - add real SDK")
-    }
-    
-    static func event(withArgs name: String, withAttributes: [String: String]) {
-        print("⚠️ Using placeholder Singular.event(withArgs) - add real SDK")
-    }
-    
-    static func revenue(_ currency: String, amount: Double) {
-        print("⚠️ Using placeholder Singular.revenue - add real SDK")
-    }
-    
-    static func customRevenue(_ name: String, currency: String, amount: Double) {
-        print("⚠️ Using placeholder Singular.customRevenue - add real SDK")
-    }
-    
-    static func handleOpenURL(_ url: URL, options: [String: Any]?) -> Bool {
-        print("⚠️ Using placeholder Singular.handleOpenURL - add real SDK")
-        return false
-    }
-    
-    static func setCustomUserId(_ userId: String) {
-        print("⚠️ Using placeholder Singular.setCustomUserId - add real SDK")
-    }
-    
-    static func unsetCustomUserId() {
-        print("⚠️ Using placeholder Singular.unsetCustomUserId - add real SDK")
-    }
-    
-    static func version() -> String? {
-        return "Placeholder"
-    }
-}
-
-let SingularLogLevelDebug = 1
-
-#endif

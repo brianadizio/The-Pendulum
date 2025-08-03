@@ -507,9 +507,9 @@ class PendulumControlManager: NSObject {
                 label.trailingAnchor.constraint(equalTo: parentView.trailingAnchor, constant: -20)
             ])
         } else {
-            // Position in the simulation area, where push buttons normally appear
+            // Position below the simulation area, just above the bottom navigation
             NSLayoutConstraint.activate([
-                label.bottomAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.bottomAnchor, constant: -350),
+                label.bottomAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.bottomAnchor, constant: -120),
                 label.leadingAnchor.constraint(equalTo: parentView.leadingAnchor, constant: 20),
                 label.trailingAnchor.constraint(equalTo: parentView.trailingAnchor, constant: -20)
             ])

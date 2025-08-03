@@ -73,6 +73,7 @@ class HeaderViewCreator {
         // AI Test button with AI icon - use custom type for image
         let aiButton = UIButton(type: .custom)
         aiButton.translatesAutoresizingMaskIntoConstraints = false
+        aiButton.tag = 999 // Tag for easy identification
         
         // Configure AI icon
         if let aiIconImage = UIImage(named: "AIicon") {

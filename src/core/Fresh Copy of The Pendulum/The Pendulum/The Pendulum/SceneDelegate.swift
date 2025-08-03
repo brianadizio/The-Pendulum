@@ -13,10 +13,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: windowScene)
         window?.backgroundColor = FocusCalendarTheme.backgroundColor
         
-        // Show launch screen first
-        let launchScreenVC = LaunchScreenViewController()
-        window?.rootViewController = launchScreenVC
+        // Brief delay to allow launch screen to show, then transition to main app
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.showMainApp()
+        }
+        
+        // The launch screen storyboard will be shown automatically
+        // Create a minimal initial view controller for transition
+        let initialVC = UIViewController()
+        initialVC.view.backgroundColor = FocusCalendarTheme.backgroundColor
+        window?.rootViewController = initialVC
         window?.makeKeyAndVisible()
+    }
+    
+    private func showMainApp() {
+        guard let window = window else { return }
+        
+        // Check subscription status before transitioning
+        if SubscriptionManager.shared.needsPaywall() {
+            // Show subscription view controller with paywall
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                let subscriptionVC = SubscriptionViewController()
+                subscriptionVC.isPaywall = true
+                let navController = UINavigationController(rootViewController: subscriptionVC)
+                navController.modalPresentationStyle = .fullScreen
+                window.rootViewController = navController
+            }, completion: nil)
+        } else {
+            // User has access, show main app
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                let mainViewController = PendulumViewController()
+                window.rootViewController = mainViewController
+            }, completion: nil)
+        }
     }
     
     func sceneDidBecomeActive(_ scene: UIScene) {
