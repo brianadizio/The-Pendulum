@@ -166,16 +166,18 @@ class PendulumScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         guard let viewModel = viewModel else { return }
 
-        // Get current angle (inverted pendulum: 0 = upright)
+        // Get current angle (inverted pendulum: π = upright, 0 = hanging down)
         let theta = viewModel.currentState.theta
 
         // Update bob position for INVERTED pendulum
-        // In SpriteKit, Y increases upward, so bob ABOVE pivot means bobY = pivot.y + length
-        // When theta=0: bob is straight up (cos(0)=1, so bobY = pivot.y + length)
-        // When theta>0 (tilted right): bob moves right and down slightly
+        // Physics model: θ = π is upright (unstable), θ = 0 is hanging down (stable)
+        // Visual mapping: We need bob ABOVE pivot when θ ≈ π
+        // When θ = π: sin(π) = 0, cos(π) = -1
+        // We use -cos(theta) so that when θ = π, bobY = pivot.y + length (above)
+        // When θ = 0, bobY = pivot.y - length (below)
         let pivotPosition = pivotNode.position
         let bobX = pivotPosition.x + pendulumLength * CGFloat(sin(theta))
-        let bobY = pivotPosition.y + pendulumLength * CGFloat(cos(theta))
+        let bobY = pivotPosition.y - pendulumLength * CGFloat(cos(theta))
         bobNode.position = CGPoint(x: bobX, y: bobY)
 
         // Update rod to connect pivot to bob

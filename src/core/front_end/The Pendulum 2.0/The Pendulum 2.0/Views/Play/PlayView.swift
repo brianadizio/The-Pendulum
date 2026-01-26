@@ -207,24 +207,24 @@ struct ControlButtonsView: View {
 
     var body: some View {
         HStack(spacing: 40) {
-            // Push Left
+            // Push Left (positive force pushes pendulum left in θ = π coordinate system)
             ControlButton(
                 label: "Push Left",
                 systemImage: "arrow.left.circle.fill",
                 color: .blue
             ) {
-                viewModel.applyForce(-1.0)
+                viewModel.applyForce(1.0)
                 gameState.recordPush(direction: .left, magnitude: 1.0)
             }
             .disabled(!viewModel.isSimulating)
 
-            // Push Right
+            // Push Right (negative force pushes pendulum right in θ = π coordinate system)
             ControlButton(
                 label: "Push Right",
                 systemImage: "arrow.right.circle.fill",
                 color: .blue
             ) {
-                viewModel.applyForce(1.0)
+                viewModel.applyForce(-1.0)
                 gameState.recordPush(direction: .right, magnitude: 1.0)
             }
             .disabled(!viewModel.isSimulating)
