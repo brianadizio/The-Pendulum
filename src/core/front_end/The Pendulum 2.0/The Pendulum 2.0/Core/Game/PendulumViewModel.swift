@@ -64,10 +64,11 @@ class PendulumViewModel: ObservableObject {
         balanceThreshold = config.balanceThreshold
         requiredBalanceTime = config.balanceRequiredTime
 
-        // Set initial perturbation
+        // Set initial perturbation from upright (π)
+        // θ = π is upright, so we start at π + small offset
         let perturbationRadians = config.initialPerturbation * .pi / 180.0
         let direction: Double = Bool.random() ? 1.0 : -1.0
-        model.reset(withAngle: perturbationRadians * direction)
+        model.reset(withAngle: .pi + perturbationRadians * direction)
     }
 
     // MARK: - Simulation Control
@@ -144,8 +145,9 @@ class PendulumViewModel: ObservableObject {
         // Update published state
         currentState = model.currentState
 
-        // Check if pendulum has fallen past 90 degrees
-        if abs(currentState.theta) > fallThreshold {
+        // Check if pendulum has fallen past 90 degrees from upright (π)
+        // Upright is θ = π, so fallen is when |θ - π| > π/2
+        if abs(currentState.theta - .pi) > fallThreshold {
             handleFall()
             return
         }
@@ -158,7 +160,8 @@ class PendulumViewModel: ObservableObject {
     }
 
     private func checkBalance() {
-        let isBalanced = abs(currentState.theta) < balanceThreshold
+        // Upright is at θ = π, so check distance from π
+        let isBalanced = abs(currentState.theta - .pi) < balanceThreshold
 
         if isBalanced {
             if balanceStartTime == nil {
