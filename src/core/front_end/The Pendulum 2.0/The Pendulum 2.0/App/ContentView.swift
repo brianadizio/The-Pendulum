@@ -265,6 +265,9 @@ class GameState: ObservableObject {
         let metaURL = csvSessionManager?.metadataFilePath
         let sessionId = csvSessionManager?.currentSessionId
 
+        // Compute metrics for App Group before CSV session closes
+        let appGroupMetrics = computeAppGroupMetrics(csvURL: csvURL, sessionDuration: sessionDuration)
+
         // End the CSV session
         csvSessionManager?.endSession()
         perturbationManager.stop()
@@ -272,6 +275,19 @@ class GameState: ObservableObject {
 
         // End AI session (exports training data + uploads to Firebase)
         AIManager.shared.onSessionEnd()
+
+        // Write to App Group shared container (for The Maze integration)
+        if let sid = sessionId {
+            AppGroupManager.shared.writeSession(
+                sessionId: sid,
+                duration: sessionDuration,
+                balancePercent: appGroupMetrics.balancePercent,
+                averageReactionTime: appGroupMetrics.reactionTime,
+                angleVariance: appGroupMetrics.angleVariance,
+                level: levelManager.currentLevel,
+                score: sessionScore
+            )
+        }
 
         // Upload session data to Firebase Storage
         if let csvURL = csvURL, let metaURL = metaURL, let sessionId = sessionId {
@@ -318,6 +334,53 @@ class GameState: ObservableObject {
     func recordPush(direction: PushDirection, magnitude: Double) {
         pushCount += 1
         csvSessionManager?.recordPush(direction: direction, magnitude: magnitude)
+    }
+
+    // MARK: - App Group Metrics
+
+    private func computeAppGroupMetrics(csvURL: URL?, sessionDuration: TimeInterval) -> (balancePercent: Double, reactionTime: Double, angleVariance: Double) {
+        guard let url = csvURL,
+              let data = csvSessionManager?.readSessionData(from: url),
+              !data.isEmpty else {
+            return (0, 0, 0)
+        }
+
+        // Balance percent: % of frames where isBalanced == true
+        var balancedFrames = 0
+        var totalFrames = 0
+        var angles: [Double] = []
+
+        for row in data {
+            if row["isBalanced"] == "true" {
+                balancedFrames += 1
+            }
+            if let angleStr = row["angle"], let angle = Double(angleStr) {
+                let deviation = abs(angle - .pi) * 180 / .pi  // degrees from upright
+                angles.append(deviation)
+                totalFrames += 1
+            }
+        }
+
+        let balancePercent = totalFrames > 0 ? Double(balancedFrames) / Double(totalFrames) * 100.0 : 0
+
+        // Angle variance (std dev in degrees)
+        var angleVariance: Double = 0
+        if !angles.isEmpty {
+            let mean = angles.reduce(0, +) / Double(angles.count)
+            let variance = angles.map { pow($0 - mean, 2) }.reduce(0, +) / Double(angles.count)
+            angleVariance = sqrt(variance)
+        }
+
+        // Average reaction time from CSV reactionTime column
+        var reactionTimes: [Double] = []
+        for row in data {
+            if let rtStr = row["reactionTime"], let rt = Double(rtStr), rt > 0.01 && rt < 2.0 {
+                reactionTimes.append(rt)
+            }
+        }
+        let avgReactionTime = reactionTimes.isEmpty ? 0 : reactionTimes.reduce(0, +) / Double(reactionTimes.count)
+
+        return (balancePercent, avgReactionTime, angleVariance)
     }
 }
 

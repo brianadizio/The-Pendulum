@@ -12,28 +12,11 @@
 		D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */; };
 		D66F27022F2BDE1B0099EA6E /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = D66F27012F2BDE1B0099EA6E /* FirebaseStorage */; };
 		D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D67E74032F27DFB700DBF3DF /* GoldenTheme */; };
-		D67E79932F27F2E600DBF3DF /* SciChart.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D67E79922F27F2E600DBF3DF /* SciChart.xcframework */; };
-		D67E79942F27F2E600DBF3DF /* SciChart.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D67E79922F27F2E600DBF3DF /* SciChart.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */ = {isa = PBXBuildFile; productRef = D67E79A02F2BDF3A0099EA6E /* PendulumSolver */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		D67E79952F27F2E600DBF3DF /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				D67E79942F27F2E600DBF3DF /* SciChart.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum 2.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D67E79922F27F2E600DBF3DF /* SciChart.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SciChart.xcframework; path = ../SciChart_iOS_SDK_4/SciChart.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -49,7 +32,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D67E79932F27F2E600DBF3DF /* SciChart.xcframework in Frameworks */,
 				D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */,
 				D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */,
 				D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */,
@@ -82,7 +64,6 @@
 		D67E76FD2F27F21200DBF3DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				D67E79922F27F2E600DBF3DF /* SciChart.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -97,7 +78,6 @@
 				D67E73F02F27DFA500DBF3DF /* Sources */,
 				D67E73F12F27DFA500DBF3DF /* Frameworks */,
 				D67E73F22F27DFA500DBF3DF /* Resources */,
-				D67E79952F27F2E600DBF3DF /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

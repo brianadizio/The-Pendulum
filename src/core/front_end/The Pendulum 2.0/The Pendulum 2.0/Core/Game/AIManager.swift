@@ -63,6 +63,16 @@ class AIManager: ObservableObject {
   @Published var currentHint: TutorialMode.Hint?
   @Published var lastAIForce: Double = 0.0
 
+  // Tutorial lesson state
+  @Published var tutorialLessonTitle: String = ""
+  @Published var tutorialLessonDescription: String = ""
+  @Published var tutorialLessonProgress: Double = 0.0
+  @Published var tutorialLessonIndex: Int = 0
+  @Published var tutorialLessonCount: Int = 0
+  @Published var tutorialPhase: TutorialMode.Phase?
+  @Published var tutorialLessonComplete: Bool = false
+  @Published var tutorialFinished: Bool = false
+
   // MARK: - Callback
 
   /// Called per-frame when AI wants to apply force. Wire to viewModel.applyExternalForce()
@@ -80,6 +90,13 @@ class AIManager: ObservableObject {
   private var sessionStartTime: Date?
   private var totalControlCalls: Int = 0
   private var totalInterventions: Int = 0  // Frames where AI applied non-zero force
+
+  // Tutorial tracking
+  private var lastUpdateTime: TimeInterval = 0
+  private var lastHintDirection: TutorialMode.Hint.Direction?
+  private var lastHintFollowedTime: TimeInterval = 0
+  private let hintFollowCooldown: TimeInterval = 1.5  // Min seconds between counted hint-follows
+  private var pendingAdvance: Bool = false
 
   // MARK: - Initialization
 
@@ -116,6 +133,29 @@ class AIManager: ObservableObject {
       currentHint = nil
       lastAIForce = 0.0
     }
+
+    // Reset tutorial state
+    if mode != .tutorial {
+      tutorialLessonTitle = ""
+      tutorialLessonDescription = ""
+      tutorialLessonProgress = 0.0
+      tutorialLessonIndex = 0
+      tutorialPhase = nil
+      tutorialLessonComplete = false
+      tutorialFinished = false
+      pendingAdvance = false
+    }
+    lastUpdateTime = 0
+  }
+
+  /// Restart tutorial from Lesson 1 (called after completion overlay dismissal)
+  func restartTutorial() {
+    tutorialFinished = false
+    tutorialLessonComplete = false
+    pendingAdvance = false
+    lastUpdateTime = 0
+    lastHintFollowedTime = 0
+    solver.setMode(.tutorial, difficulty: difficulty)
   }
 
   // MARK: - Per-Frame Update
@@ -146,13 +186,64 @@ class AIManager: ObservableObject {
     totalControlCalls += 1
     lastAIForce = aiForce
 
-    // 3. Tutorial hint (only in tutorial mode)
+    // 3. Tutorial mode: hints, lesson timing, auto-advance
     if currentMode == .tutorial {
       let state = HybridPendulumSolver.PendulumState(theta: theta, thetaDot: thetaDot, time: time)
+      let isBalanced = abs(theta - .pi) < balanceThreshold
+
+      // Update tutorial timers
+      let dt = lastUpdateTime > 0 ? time - lastUpdateTime : 1.0 / 60.0
+      solver.updateTutorial(dt: dt, isBalanced: isBalanced)
+
+      // Get hint
       currentHint = solver.getTutorialHint(state: state)
+
+      // Track hint-following: count once per distinct push with cooldown
+      if let hint = currentHint, hint.suggestedDirection != .none, abs(playerForce) > 0.01 {
+        let playerDir: TutorialMode.Hint.Direction = playerForce > 0 ? .right : .left
+        let cooledDown = (time - lastHintFollowedTime) >= hintFollowCooldown
+        if playerDir == hint.suggestedDirection && cooledDown {
+          solver.recordTutorialHintFollowed()
+          lastHintFollowedTime = time
+        }
+      }
+
+      // Publish lesson state
+      tutorialLessonProgress = solver.tutorialLessonProgress
+      tutorialLessonIndex = solver.tutorialLessonIndex
+      tutorialLessonCount = solver.tutorialLessonCount
+      tutorialPhase = solver.tutorialPhase
+      tutorialLessonComplete = solver.isTutorialLessonComplete
+
+      if let lesson = solver.currentTutorialLesson {
+        tutorialLessonTitle = lesson.title
+        tutorialLessonDescription = lesson.description
+      }
+
+      // Auto-advance when lesson complete (with a small delay to show completion)
+      if solver.isTutorialLessonComplete && !pendingAdvance && !tutorialFinished {
+        pendingAdvance = true
+        let isLastLesson = solver.tutorialLessonIndex >= solver.tutorialLessonCount - 1
+
+        if isLastLesson {
+          // Final lesson complete — show "Tutorial Complete" overlay
+          DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.tutorialFinished = true
+            self?.pendingAdvance = false
+          }
+        } else {
+          // Advance to next lesson
+          DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.solver.advanceTutorialLesson()
+            self?.pendingAdvance = false
+            self?.tutorialLessonComplete = false
+          }
+        }
+      }
     } else {
       currentHint = nil
     }
+    lastUpdateTime = time
 
     // 4. Buffer metrics for adaptive learning
     metricsBuffer.append((theta: theta, thetaDot: thetaDot, playerForce: playerForce, timestamp: time))
