@@ -69,6 +69,7 @@ class FirebaseManager: ObservableObject {
     static let profilePath = "profile"
     static let aiModelsPath = "ai_models"
     static let exportsPath = "exports"
+    static let goldenModePath = "golden_mode"
 
     // MARK: - Private Properties
 
@@ -125,6 +126,11 @@ class FirebaseManager: ObservableObject {
                     self.updateAuthMethod(.anonymous)
                 }
                 // For non-anonymous users, authMethod is set during sign-in flow
+
+                // Sync Golden Mode state from Firebase
+                Task {
+                    await GoldenModeManager.shared.syncFromFirebase()
+                }
             } else {
                 self.updateAuthMethod(.none)
             }

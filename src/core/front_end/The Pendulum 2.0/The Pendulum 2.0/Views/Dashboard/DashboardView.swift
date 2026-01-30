@@ -76,6 +76,15 @@ struct DashboardView: View {
 
                         AIMetricsSection(metricsCalculator: metricsCalculator)
                     }
+
+                    // Golden Mode Metrics (visible when golden sessions exist)
+                    if GoldenModeManager.shared.outcomeCount > 0 {
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        GoldenModeDashboardSection()
+                    }
                 }
                 .padding(.vertical, 16)
             }
