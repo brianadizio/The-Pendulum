@@ -1,0 +1,89 @@
+{
+  "computation_date": "2026-01-28",
+  "start_time": "2026-01-28T14:18:23.578658",
+  "end_time": "2026-01-28T14:23:36.073386",
+  "total_duration_seconds": 312.49,
+  "solution": "The Pendulum",
+  "pca_computations": 9,
+  "total_computation_time_ms": 4802.7,
+  "errors": 1,
+  "global_stats": {
+    "solutions_processed": 73,
+    "total_sources_processed": 734,
+    "total_errors": 360
+  },
+  "details": [
+    {
+      "source": "RAG Export",
+      "dimension": 2,
+      "n_samples": 284,
+      "n_features": 9,
+      "variance_explained": 0.7078,
+      "computation_time_ms": 3.08
+    },
+    {
+      "source": "RAG Export",
+      "dimension": 3,
+      "n_samples": 284,
+      "n_features": 9,
+      "variance_explained": 0.8535,
+      "computation_time_ms": 4.36
+    },
+    {
+      "source": "RAG Export",
+      "dimension": 4,
+      "n_samples": 284,
+      "n_features": 9,
+      "variance_explained": 0.9336,
+      "computation_time_ms": 3.58
+    },
+    {
+      "source": "core",
+      "dimension": 2,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6332,
+      "computation_time_ms": 933.38
+    },
+    {
+      "source": "core",
+      "dimension": 3,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6815,
+      "computation_time_ms": 919.58
+    },
+    {
+      "source": "core",
+      "dimension": 4,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.7129,
+      "computation_time_ms": 929.14
+    },
+    {
+      "source": "src",
+      "dimension": 2,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6332,
+      "computation_time_ms": 653.81
+    },
+    {
+      "source": "src",
+      "dimension": 3,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6815,
+      "computation_time_ms": 681.9
+    },
+    {
+      "source": "src",
+      "dimension": 4,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.7129,
+      "computation_time_ms": 673.86
+    }
+  ]
+}

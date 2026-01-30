@@ -1,13 +1,35 @@
 {
   "metadata": {
     "repo_path": "/Users/briandizio/Documents/2023-Now/Golden Enterprise Solutions/Solutions/The Pendulum",
-    "analysis_timestamp": "20-Jan-2026 16:51:30",
-    "total_commits": 68,
-    "first_commit_date": "20-Jan-2025 22:18:49",
-    "last_commit_date": "11-Nov-2025 18:08:19",
+    "analysis_timestamp": "30-Jan-2026 04:16:45",
+    "total_commits": 69,
+    "first_commit_date": "31-Jan-2025 21:18:51",
+    "last_commit_date": "26-Jan-2026 18:42:59",
     "solution_name": ""
   },
   "commits": [
+    {
+      "hash": "21cb88fccb0f5b5c3e0a996aea3f247ef2e0117c",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769452979E+9,
+      "subject": "The Pendulum 2.0 has proper scientific gameplay",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
+    {
+      "hash": "760fdec2fe44c256c5733476df7916ef24670c5d",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769452108E+9,
+      "subject": "Built The Pendulum 2.0",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
     {
       "hash": "38f587c8ef5ec16a5b968384d8ab57c1936eb9ff",
       "author_name": "brianadizio",
@@ -744,28 +766,17 @@
       "files_changed": 0,
       "total_additions": 0,
       "total_deletions": 0
-    },
-    {
-      "hash": "610d878e0bd8291db9f742dae292b6e596fad93a",
-      "author_name": "brianadizio",
-      "author_email": "33075782+brianadizio@users.noreply.github.com",
-      "timestamp": 1.737411529E+9,
-      "subject": "first commit",
-      "files": [],
-      "files_changed": 0,
-      "total_additions": 0,
-      "total_deletions": 0
     }
   ],
   "file_changes": [],
   "loc_evolution": [],
   "phases": [
     {
-      "start_timestamp": 1.737411529E+9,
+      "start_timestamp": 1.738358331E+9,
       "end_timestamp": 1.738960666E+9,
-      "start_date": "20-Jan-2025 22:18:49",
+      "start_date": "31-Jan-2025 21:18:51",
       "end_date": "07-Feb-2025 20:37:46",
-      "commit_count": 3,
+      "commit_count": 2,
       "phase_number": 1
     },
     {
@@ -791,12 +802,19 @@
       "end_date": "11-Nov-2025 18:08:19",
       "commit_count": 1,
       "phase_number": 4
+    },
+    {
+      "start_timestamp": 1.769452108E+9,
+      "end_timestamp": 1.769452979E+9,
+      "start_date": "26-Jan-2026 18:28:28",
+      "end_date": "26-Jan-2026 18:42:59",
+      "commit_count": 2,
+      "phase_number": 5
     }
   ],
   "velocity": {
     "daily": {
       "dates": [
-        "20-Jan-2025",
         "31-Jan-2025",
         "07-Feb-2025",
         "23-Apr-2025",
@@ -822,10 +840,10 @@
         "25-Jun-2025",
         "26-Jun-2025",
         "03-Aug-2025",
-        "11-Nov-2025"
+        "11-Nov-2025",
+        "26-Jan-2026"
       ],
       "counts": [
-        1,
         1,
         1,
         1,
@@ -851,14 +869,14 @@
         1,
         1,
         2,
-        1
+        1,
+        2
       ],
-      "avg": 2.5185185185185186,
+      "avg": 2.5555555555555554,
       "max": 7
     },
     "weekly": {
       "weeks": [
-        "19-Jan-2025",
         "26-Jan-2025",
         "02-Feb-2025",
         "20-Apr-2025",
@@ -871,10 +889,10 @@
         "15-Jun-2025",
         "22-Jun-2025",
         "03-Aug-2025",
-        "09-Nov-2025"
+        "09-Nov-2025",
+        "25-Jan-2026"
       ],
       "counts": [
-        1,
         1,
         1,
         1,
@@ -887,9 +905,10 @@
         15,
         2,
         2,
-        1
+        1,
+        2
       ],
-      "avg": 4.8571428571428568,
+      "avg": 4.9285714285714288,
       "max": 15
     },
     "monthly": {
@@ -900,28 +919,30 @@
         "01-May-2025",
         "01-Jun-2025",
         "01-Aug-2025",
-        "01-Nov-2025"
+        "01-Nov-2025",
+        "01-Jan-2026"
       ],
       "counts": [
-        2,
+        1,
         1,
         3,
         33,
         26,
         2,
-        1
+        1,
+        2
       ],
-      "avg": 9.7142857142857135,
+      "avg": 8.625,
       "max": 33
     }
   },
   "contributors": {
     "name": "brianadizio",
     "email": "33075782+brianadizio@users.noreply.github.com",
-    "commit_count": 68,
+    "commit_count": 69,
     "additions": 0,
     "deletions": 0,
-    "first_commit": 1.762884499E+9,
-    "last_commit": 1.737411529E+9
+    "first_commit": 1.769452979E+9,
+    "last_commit": 1.738358331E+9
   }
 }

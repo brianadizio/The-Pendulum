@@ -7,11 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FB2F2BDE1B0099EA6E /* FirebaseAnalytics */; };
+		D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */; };
+		D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */; };
+		D66F27022F2BDE1B0099EA6E /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = D66F27012F2BDE1B0099EA6E /* FirebaseStorage */; };
 		D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D67E74032F27DFB700DBF3DF /* GoldenTheme */; };
+		D67E79932F27F2E600DBF3DF /* SciChart.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D67E79922F27F2E600DBF3DF /* SciChart.xcframework */; };
+		D67E79942F27F2E600DBF3DF /* SciChart.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D67E79922F27F2E600DBF3DF /* SciChart.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */ = {isa = PBXBuildFile; productRef = D67E79A02F2BDF3A0099EA6E /* PendulumSolver */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D67E79952F27F2E600DBF3DF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D67E79942F27F2E600DBF3DF /* SciChart.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum 2.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D67E79922F27F2E600DBF3DF /* SciChart.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SciChart.xcframework; path = ../SciChart_iOS_SDK_4/SciChart.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -27,7 +49,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D67E79932F27F2E600DBF3DF /* SciChart.xcframework in Frameworks */,
+				D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */,
 				D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */,
+				D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */,
+				D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */,
+				D66F27022F2BDE1B0099EA6E /* FirebaseStorage in Frameworks */,
+				D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -38,6 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				D67E73F62F27DFA500DBF3DF /* The Pendulum 2.0 */,
+				D67E76FD2F27F21200DBF3DF /* Frameworks */,
 				D67E73F52F27DFA500DBF3DF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -50,6 +79,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D67E76FD2F27F21200DBF3DF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D67E79922F27F2E600DBF3DF /* SciChart.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -60,6 +97,7 @@
 				D67E73F02F27DFA500DBF3DF /* Sources */,
 				D67E73F12F27DFA500DBF3DF /* Frameworks */,
 				D67E73F22F27DFA500DBF3DF /* Resources */,
+				D67E79952F27F2E600DBF3DF /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -71,6 +109,11 @@
 			name = "The Pendulum 2.0";
 			packageProductDependencies = (
 				D67E74032F27DFB700DBF3DF /* GoldenTheme */,
+				D66F26FB2F2BDE1B0099EA6E /* FirebaseAnalytics */,
+				D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */,
+				D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */,
+				D66F27012F2BDE1B0099EA6E /* FirebaseStorage */,
+				D67E79A02F2BDF3A0099EA6E /* PendulumSolver */,
 			);
 			productName = "The Pendulum 2.0";
 			productReference = D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */;
@@ -102,6 +145,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "../../../../../The Theme/src/core/front_end/golden-theme" */,
+				D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D67E73F52F27DFA500DBF3DF /* Products */;
@@ -260,11 +305,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "The Pendulum reads your health data to correlate with your training performance and provide personalized insights.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The Pendulum logs your training sessions as mindfulness minutes to help you track your focus practice.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -275,7 +323,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.ThePendulumbyGES3.0.The-Pendulum-2-0";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum-2-0";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -292,11 +340,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "The Pendulum reads your health data to correlate with your training performance and provide personalized insights.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The Pendulum logs your training sessions as mindfulness minutes to help you track your focus practice.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -307,7 +358,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.ThePendulumbyGES3.0.The-Pendulum-2-0";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum-2-0";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -347,12 +398,52 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../../../../The Theme/src/core/front_end/golden-theme";
 		};
+		D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../../../The Pendulum Solver/src/swift";
+		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		D66F26FB2F2BDE1B0099EA6E /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		D66F27012F2BDE1B0099EA6E /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
 		D67E74032F27DFB700DBF3DF /* GoldenTheme */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GoldenTheme;
+		};
+		D67E79A02F2BDF3A0099EA6E /* PendulumSolver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */;
+			productName = PendulumSolver;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

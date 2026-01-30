@@ -10,8 +10,8 @@ enum PendulumTab: Int, CaseIterable, Identifiable {
     case play = 0
     case modes = 1
     case dashboard = 2
-    case integration = 3
-    case settings = 4
+    case settings = 3
+    case integration = 4
 
     var id: Int { rawValue }
 
@@ -54,7 +54,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main content area
-            TabContent(selectedTab: selectedTab, gameState: gameState)
+            TabContent(selectedTab: selectedTab, gameState: gameState, isPlayTabActive: selectedTab == .play)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Custom tab bar
@@ -68,19 +68,28 @@ struct ContentView: View {
 struct TabContent: View {
     let selectedTab: PendulumTab
     @ObservedObject var gameState: GameState
+    let isPlayTabActive: Bool
 
     var body: some View {
-        switch selectedTab {
-        case .play:
-            PlayView(gameState: gameState)
-        case .modes:
-            ModesView(gameState: gameState)
-        case .dashboard:
-            DashboardView(gameState: gameState)
-        case .integration:
-            IntegrationView()
-        case .settings:
-            SettingsView(gameState: gameState)
+        // Only create PlayView when on Play tab to fully release Metal/SpriteKit resources
+        Group {
+            if selectedTab == .play {
+                PlayView(gameState: gameState, isActive: true)
+            } else {
+                // Non-Play tabs don't need SpriteKit
+                switch selectedTab {
+                case .modes:
+                    ModesView(gameState: gameState)
+                case .dashboard:
+                    DashboardView(gameState: gameState)
+                case .integration:
+                    IntegrationView()
+                case .settings:
+                    SettingsView(gameState: gameState)
+                case .play:
+                    EmptyView()  // Won't reach here
+                }
+            }
         }
     }
 }
@@ -105,8 +114,8 @@ struct PendulumTabBar: View {
         .padding(.top, 8)
         .padding(.bottom, 24)
         .background(
-            Color(uiColor: .systemBackground)
-                .shadow(color: .black.opacity(0.1), radius: 8, y: -4)
+            PendulumColors.background
+                .shadow(color: PendulumColors.iron.opacity(0.15), radius: 8, y: -4)
         )
     }
 }
@@ -130,13 +139,13 @@ struct TabBarButton: View {
                 } else {
                     Image(systemName: tab.sfSymbol)
                         .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                        .foregroundStyle(isSelected ? PendulumColors.gold : PendulumColors.iron)
                         .frame(width: 30, height: 30)
                 }
 
                 Text(tab.label)
                     .font(.system(size: 10, weight: isSelected ? .medium : .regular))
-                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .foregroundStyle(isSelected ? PendulumColors.text : PendulumColors.textSecondary)
             }
             .frame(maxWidth: .infinity)
         }
@@ -151,7 +160,7 @@ class GameState: ObservableObject {
     @Published var csvSessionManager: CSVSessionManager?
 
     // Game mode settings
-    @Published var gameMode: GameMode = .classic
+    @Published var gameMode: GameMode = .freePlay
     @Published var isPlaying: Bool = false
 
     // Physics parameters (user adjustable) - defaults from original app
@@ -159,7 +168,7 @@ class GameState: ObservableObject {
     @Published var length: Double = 1.0
     @Published var gravity: Double = 9.81
     @Published var damping: Double = 0.4           // Higher damping for easier control
-    @Published var springConstant: Double = 0.0    // No artificial stabilization - player must balance!
+    @Published var springConstant: Double = 0.20   // Small stabilization for smoother gameplay
     @Published var momentOfInertia: Double = 1.0   // Increased for more stability
     @Published var forceStrength: Double = 3.0     // Push force multiplier
 
@@ -173,6 +182,10 @@ class GameState: ObservableObject {
     @Published var hapticsEnabled: Bool = true
     @Published var showHints: Bool = true
 
+    // AI settings
+    @Published var aiMode: AIMode = .off
+    @Published var aiDifficulty: Double = 0.5
+
     // Score tracking
     @Published var currentScore: Int = 0
     @Published var currentSessionTime: TimeInterval = 0
@@ -183,7 +196,11 @@ class GameState: ObservableObject {
 
         // Wire up level manager callback
         levelManager.onLevelChange = { [weak self] level in
-            self?.csvSessionManager?.updateLevel(level)
+            guard let self = self else { return }
+            self.csvSessionManager?.updateLevel(level)
+            // Record the config for the new level
+            let config = self.levelManager.getConfigForCurrentLevel()
+            self.csvSessionManager?.recordLevelConfig(config)
         }
     }
 
@@ -194,18 +211,108 @@ class GameState: ObservableObject {
         pushCount = 0
         isPlaying = true
 
+        // Start AI session
+        AIManager.shared.onSessionStart()
+
+        // Configure level manager for current mode and reset to level 1
+        levelManager.activeMode = gameMode
+        levelManager.resetToLevel1()
+
+        // Record initial level config
+        let initialConfig = levelManager.getConfigForCurrentLevel()
+        csvSessionManager?.recordLevelConfig(initialConfig)
+
         // Activate perturbation based on mode
-        if gameMode == .zen {
+        if gameMode.hasPerturbations {
+            if gameMode == .jiggle {
+                let config = levelManager.getConfigForCurrentLevel()
+                perturbationManager.activateProfile(
+                    PerturbationProfile.jiggle(intensity: config.jiggleIntensity)
+                )
+            } else {
+                perturbationManager.activateProfile(
+                    PerturbationProfile.forLevel(levelManager.currentLevel)
+                )
+            }
+        } else {
             perturbationManager.activateProfile(.zen)
-        } else if gameMode == .classic || gameMode == .progressive {
-            perturbationManager.activateProfile(PerturbationProfile.forLevel(levelManager.currentLevel))
+        }
+
+        // For Random mode, apply randomized physics at level start
+        if gameMode == .random {
+            applyRandomizedPhysics()
         }
     }
 
+    /// Apply randomized physics parameters for Random mode
+    func applyRandomizedPhysics() {
+        let config = levelManager.getConfigForCurrentLevel()
+        mass = config.massMultiplier * LevelManager.baseMass
+        length = config.lengthMultiplier * LevelManager.baseLength
+        gravity = config.gravityMultiplier * LevelManager.baseGravity
+        damping = config.dampingValue
+        springConstant = config.springConstantValue
+    }
+
     func endSession() {
+        // Capture session info before ending
+        let sessionStartTime = csvSessionManager?.sessionStartTime
+        let sessionDuration = csvSessionManager?.sessionDuration ?? 0
+        let sessionScore = currentScore
+
+        // Capture file paths before endSession() clears them
+        let csvURL = csvSessionManager?.csvFilePath
+        let metaURL = csvSessionManager?.metadataFilePath
+        let sessionId = csvSessionManager?.currentSessionId
+
+        // End the CSV session
         csvSessionManager?.endSession()
         perturbationManager.stop()
         isPlaying = false
+
+        // End AI session (exports training data + uploads to Firebase)
+        AIManager.shared.onSessionEnd()
+
+        // Upload session data to Firebase Storage
+        if let csvURL = csvURL, let metaURL = metaURL, let sessionId = sessionId {
+            Task {
+                await FirebaseManager.shared.uploadSession(
+                    csvURL: csvURL,
+                    metadataURL: metaURL,
+                    sessionId: sessionId
+                )
+            }
+        }
+
+        // Log to HealthKit if authorized (minimum 1 minute)
+        if HealthKitManager.shared.isAuthorized,
+           let startTime = sessionStartTime,
+           sessionDuration >= 60 {
+            Task {
+                do {
+                    try await HealthKitManager.shared.logMindfulnessSession(
+                        startDate: startTime,
+                        endDate: Date()
+                    )
+
+                    // Store health correlation if profile exists
+                    if ProfileManager.shared.hasCompletedProfile {
+                        let snapshot = try await HealthKitManager.shared.fetchDailyHealthSnapshot()
+                        let correlation = HealthCorrelation(
+                            sessionId: UUID(),
+                            sessionScore: sessionScore,
+                            sessionDuration: sessionDuration,
+                            healthSnapshot: snapshot
+                        )
+                        await MainActor.run {
+                            ProfileManager.shared.addHealthCorrelation(correlation)
+                        }
+                    }
+                } catch {
+                    print("Failed to log session to HealthKit: \(error)")
+                }
+            }
+        }
     }
 
     func recordPush(direction: PushDirection, magnitude: Double) {
@@ -216,22 +323,51 @@ class GameState: ObservableObject {
 
 // MARK: - Game Mode
 enum GameMode: String, CaseIterable, Identifiable {
-    case classic = "Classic"
-    case progressive = "Progressive"
     case freePlay = "Free Play"
-    case challenge = "Challenge"
-    case zen = "Zen"
+    case progressive = "Progressive"
+    case spatial = "Spatial"
+    case jiggle = "Jiggle"
+    case timed = "Timed"
+    case random = "Random"
 
     var id: String { rawValue }
 
     var description: String {
         switch self {
-        case .classic: return "Standard level progression"
-        case .progressive: return "Continuous difficulty increase"
-        case .freePlay: return "No levels, just balance"
-        case .challenge: return "Time-limited challenges"
-        case .zen: return "No perturbations, relaxed"
+        case .freePlay: return "No levels, just balance in the green"
+        case .progressive: return "Balance time increases each level"
+        case .spatial: return "Green zone shrinks each level"
+        case .jiggle: return "Random noise makes balancing harder"
+        case .timed: return "Beat each level before time runs out"
+        case .random: return "Physics change every level"
         }
+    }
+
+    var icon: String {
+        switch self {
+        case .freePlay: return "infinity"
+        case .progressive: return "chart.line.uptrend.xyaxis"
+        case .spatial: return "scope"
+        case .jiggle: return "waveform"
+        case .timed: return "timer"
+        case .random: return "dice"
+        }
+    }
+
+    var hasLevels: Bool {
+        self != .freePlay
+    }
+
+    var hasPerturbations: Bool {
+        self != .freePlay
+    }
+
+    var hasCountdownTimer: Bool {
+        self == .timed
+    }
+
+    var hasJiggle: Bool {
+        self == .jiggle
     }
 }
 

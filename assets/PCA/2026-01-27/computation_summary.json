@@ -1,0 +1,65 @@
+{
+  "computation_date": "2026-01-27",
+  "start_time": "2026-01-27T02:00:24.491934",
+  "end_time": "2026-01-27T02:12:56.094954",
+  "total_duration_seconds": 751.6,
+  "solution": "The Pendulum",
+  "pca_computations": 6,
+  "total_computation_time_ms": 19463.88,
+  "errors": 1,
+  "global_stats": {
+    "solutions_processed": 73,
+    "total_sources_processed": 150,
+    "total_errors": 130
+  },
+  "details": [
+    {
+      "source": "core",
+      "dimension": 2,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6332,
+      "computation_time_ms": 3418.27
+    },
+    {
+      "source": "core",
+      "dimension": 3,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6815,
+      "computation_time_ms": 3460.32
+    },
+    {
+      "source": "core",
+      "dimension": 4,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.7129,
+      "computation_time_ms": 3415.46
+    },
+    {
+      "source": "src",
+      "dimension": 2,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6332,
+      "computation_time_ms": 3063.3
+    },
+    {
+      "source": "src",
+      "dimension": 3,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.6815,
+      "computation_time_ms": 3034.55
+    },
+    {
+      "source": "src",
+      "dimension": 4,
+      "n_samples": 6468,
+      "n_features": 16384,
+      "variance_explained": 0.7129,
+      "computation_time_ms": 3071.98
+    }
+  ]
+}

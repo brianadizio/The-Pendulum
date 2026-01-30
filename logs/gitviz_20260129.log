@@ -1,0 +1,17 @@
+{"ts":"2026-01-29 04:15:47","level":"INFO","msg":"Running git prefetch script","data":{}}
+{"ts":"2026-01-29 04:15:49","level":"INFO","msg":"Prefetch complete, using cached data","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Starting git analysis","data":{"repo":"/Users/briandizio/Documents/2023-Now/Golden Enterprise Solutions/Solutions/The Pendulum","lookback_days":365}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Extracting commit history","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Extracted commits from prefetch","data":{"count":69}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Analyzing file changes","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Analyzed files","data":{"count":0}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Skipping LOC evolution (using prefetch mode)","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Detecting development phases","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Detected phases","data":{"count":5}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Computing velocity metrics","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Computed velocity","data":{"avg_daily":2.5555555555555554,"avg_weekly":4.9285714285714288}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Analyzing contributors","data":{}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Analyzed contributors","data":{"count":1}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Analysis complete","data":{"total_commits":69,"contributors":1}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Saved analysis JSON","data":{"path":"/Users/briandizio/Documents/2023-Now/Golden Enterprise Solutions/Solutions/The Pendulum/assets/processed/git_viz/analysis_results.json"}}
+{"ts":"2026-01-29 04:15:50","level":"INFO","msg":"Saved analysis MAT","data":{"path":"/Users/briandizio/Documents/2023-Now/Golden Enterprise Solutions/Solutions/The Pendulum/assets/processed/git_viz/analysis_results.mat"}}
