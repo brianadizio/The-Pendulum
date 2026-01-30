@@ -27,3 +27,6 @@ vanKaick10.pdf
 **/DistributionSummary*.plist
 **/ExportOptions*.plist
 **/Packaging*.log
+
+# SciChart SDK (large binary files exceed GitHub 50 MB limit)
+src/core/front_end/SciChart_iOS_SDK_4/
