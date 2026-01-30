@@ -27,7 +27,7 @@ class InvertedPendulumModel {
          length: Double = 1.0,
          gravity: Double = 9.81,
          damping: Double = 0.4,          // Higher damping for easier control
-         springConstant: Double = 0.0,    // No artificial stabilization - player must balance!
+         springConstant: Double = 0.20,   // Small stabilization for smoother gameplay
          momentOfInertia: Double = 1.0,   // Increased for more stability
          driveFrequency: Double = 0.0,
          driveAmplitude: Double = 0.0) {

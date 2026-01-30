@@ -26,19 +26,61 @@ struct DashboardView: View {
                     // Basic Metrics Section
                     BasicMetricsSection(metrics: metricsCalculator.basicMetrics)
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
+                    // Phase Space Chart (SciChart) - SKView is paused when on Dashboard
+                    PhaseSpaceSciChartCard(data: metricsCalculator.phaseSpaceData)
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
 
                     // Charts Section
                     ChartsSection(metricsCalculator: metricsCalculator)
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
 
-                    // Advanced Metrics (placeholder for future)
+                    // Advanced Metrics
                     AdvancedMetricsSection(metricsCalculator: metricsCalculator)
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
+                    // Scientific Metrics
+                    ScientificMetricsSection(metricsCalculator: metricsCalculator)
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
+                    // Topology Metrics
+                    TopologyMetricsSection(metricsCalculator: metricsCalculator)
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
+                    // Educational Metrics
+                    EducationalMetricsSection(metricsCalculator: metricsCalculator)
+
+                    // AI Metrics (visible only when AI data exists)
+                    if metricsCalculator.aiMetrics.hasAIData {
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        AIMetricsSection(metricsCalculator: metricsCalculator)
+                    }
                 }
                 .padding(.vertical, 16)
             }
         }
+        .background(PendulumColors.background)
         .onAppear {
             loadMetrics()
         }
@@ -60,13 +102,13 @@ struct DashboardHeader: View {
         HStack {
             Text("Dashboard")
                 .font(.system(size: 24, weight: .bold, design: .serif))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(uiColor: .systemBackground))
+        .background(PendulumColors.background)
     }
 }
 
@@ -101,12 +143,12 @@ struct TimeRangeButton: View {
         Button(action: action) {
             Text(range.rawValue)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? .white : PendulumColors.text)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(isSelected ? Color.accentColor : Color(uiColor: .secondarySystemBackground))
+                        .fill(isSelected ? PendulumColors.gold : PendulumColors.backgroundSecondary)
                 )
         }
         .buttonStyle(PlainButtonStyle())
@@ -121,7 +163,7 @@ struct BasicMetricsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("BASIC METRICS")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             LazyVGrid(columns: [
@@ -159,12 +201,12 @@ struct MetricCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textSecondary)
                 .lineLimit(1)
 
             Text(value)
                 .font(.system(size: 20, weight: .bold, design: .monospaced))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -172,7 +214,11 @@ struct MetricCard: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -185,10 +231,10 @@ struct ChartsSection: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("VISUALIZATIONS")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
-            // Levels Completion Over Time
+            // Levels Completion Over Time (Swift Charts - good for dates)
             if !metricsCalculator.levelCompletionData.isEmpty {
                 ChartCard(title: "Levels Completed Over Time") {
                     Chart(metricsCalculator.levelCompletionData) { point in
@@ -196,42 +242,22 @@ struct ChartsSection: View {
                             x: .value("Time", point.date),
                             y: .value("Level", point.level)
                         )
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(PendulumColors.gold)
                     }
                     .chartYScale(domain: 0...max(10, metricsCalculator.levelCompletionData.map(\.level).max() ?? 10))
+                    .chartXAxisLabel("Date", position: .bottom, alignment: .center)
+                    .chartYAxisLabel("Level", position: .leading, alignment: .center)
                 }
             }
 
-            // Angular Deviation Distribution
-            if !metricsCalculator.angularDeviationData.isEmpty {
-                ChartCard(title: "Angular Deviation (degrees)") {
-                    Chart(metricsCalculator.angularDeviationData) { point in
-                        LineMark(
-                            x: .value("Time", point.time),
-                            y: .value("Angle", point.angleDegrees)
-                        )
-                        .foregroundStyle(Color.orange)
-                    }
-                    .chartYScale(domain: -90...90)
-                }
-            }
+            // Angular Deviation - SciChart version
+            AngularDeviationSciChartCard(data: metricsCalculator.angularDeviationData)
 
             // Directional Bias
             DirectionalBiasCard(bias: metricsCalculator.directionalBias)
 
-            // Learning Curve
-            if !metricsCalculator.learningCurveData.isEmpty {
-                ChartCard(title: "Learning Curve (% skill)") {
-                    Chart(metricsCalculator.learningCurveData) { point in
-                        LineMark(
-                            x: .value("Session", point.sessionNumber),
-                            y: .value("Skill", point.skillPercentage)
-                        )
-                        .foregroundStyle(Color.green)
-                    }
-                    .chartYScale(domain: 0...100)
-                }
-            }
+            // Learning Curve - SciChart version
+            LearningCurveSciChartCard(data: metricsCalculator.learningCurveData)
         }
     }
 }
@@ -245,15 +271,20 @@ struct ChartCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             content()
                 .frame(height: 200)
+                .clipped()
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -267,29 +298,29 @@ struct DirectionalBiasCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Directional Bias")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             HStack {
                 Text("Left")
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.textSecondary)
 
                 GeometryReader { geometry in
                     ZStack(alignment: .center) {
                         // Background track
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(uiColor: .systemGray4))
+                            .fill(PendulumColors.backgroundSecondary)
                             .frame(height: 8)
 
                         // Bias indicator
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(PendulumColors.gold)
                             .frame(width: 16, height: 16)
                             .offset(x: CGFloat(bias) * (geometry.size.width / 2 - 8))
 
                         // Center line
                         Rectangle()
-                            .fill(Color(uiColor: .systemGray2))
+                            .fill(PendulumColors.bronze)
                             .frame(width: 2, height: 16)
                     }
                 }
@@ -297,17 +328,21 @@ struct DirectionalBiasCard: View {
 
                 Text("Right")
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.textSecondary)
             }
 
             Text(biasDescription)
                 .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textSecondary)
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -326,49 +361,280 @@ struct DirectionalBiasCard: View {
 // MARK: - Advanced Metrics Section
 struct AdvancedMetricsSection: View {
     @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    @State private var isExpanded = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("TOPOLOGY METRICS")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 16)
-
-            VStack(spacing: 8) {
-                PlaceholderMetricRow(title: "Winding Number", message: "Coming Soon - requires TDA microservice")
-                PlaceholderMetricRow(title: "Betti Numbers", message: "Coming Soon - requires TDA microservice")
-                PlaceholderMetricRow(title: "Persistent Homology", message: "Coming Soon - requires TDA microservice")
-            }
+            // Advanced Section Header
+            CollapsibleSectionHeader(
+                title: "ADVANCED METRICS",
+                isExpanded: $isExpanded
+            )
             .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    MetricRow(
+                        title: "Directional Bias",
+                        value: formatDirectionalBias(metricsCalculator.advancedMetrics.directionalBias),
+                        icon: "arrow.left.and.right"
+                    )
+                    MetricRow(
+                        title: "Overcorrection Rate",
+                        value: String(format: "%.1f%%", metricsCalculator.advancedMetrics.overcorrectionRate),
+                        icon: "arrow.uturn.left"
+                    )
+                    MetricRow(
+                        title: "Avg Reaction Time",
+                        value: String(format: "%.2fs", metricsCalculator.advancedMetrics.averageReactionTime),
+                        icon: "bolt"
+                    )
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    private func formatDirectionalBias(_ bias: Double) -> String {
+        if abs(bias) < 0.1 {
+            return "Neutral"
+        } else if bias < 0 {
+            return String(format: "%.0f%% Left", abs(bias) * 100)
+        } else {
+            return String(format: "%.0f%% Right", bias * 100)
         }
     }
 }
 
-struct PlaceholderMetricRow: View {
+// MARK: - Scientific Metrics Section
+struct ScientificMetricsSection: View {
+    @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSectionHeader(
+                title: "SCIENTIFIC METRICS",
+                isExpanded: $isExpanded
+            )
+            .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    MetricRow(
+                        title: "Phase Space Coverage",
+                        value: String(format: "%.1f%%", metricsCalculator.scientificMetrics.phaseSpaceCoverage),
+                        icon: "square.grid.3x3"
+                    )
+                    MetricRow(
+                        title: "Energy Management",
+                        value: String(format: "%.1f%%", metricsCalculator.scientificMetrics.energyManagement),
+                        icon: "bolt.fill"
+                    )
+                    MetricRow(
+                        title: "Lyapunov Exponent",
+                        value: String(format: "%.3f", metricsCalculator.scientificMetrics.lyapunovExponent),
+                        icon: "waveform.path.ecg"
+                    )
+                    MetricRow(
+                        title: "Angular Deviation σ",
+                        value: String(format: "%.1f°", metricsCalculator.scientificMetrics.angularDeviationStdDev),
+                        icon: "angle"
+                    )
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+// MARK: - Topology Metrics Section
+struct TopologyMetricsSection: View {
+    @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSectionHeader(
+                title: "TOPOLOGY METRICS",
+                isExpanded: $isExpanded
+            )
+            .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    MetricRow(
+                        title: "Winding Number",
+                        value: String(format: "%.1f", metricsCalculator.topologyMetrics.windingNumber),
+                        icon: "arrow.triangle.2.circlepath"
+                    )
+                    MetricRow(
+                        title: "Basin Stability",
+                        value: String(format: "%.1f%%", metricsCalculator.topologyMetrics.basinStability),
+                        icon: "scope"
+                    )
+                    MetricRow(
+                        title: "Periodic Orbits",
+                        value: "\(metricsCalculator.topologyMetrics.periodicOrbitCount)",
+                        icon: "circle.dashed"
+                    )
+                    MetricRow(
+                        title: "Betti Numbers",
+                        value: "[\(metricsCalculator.topologyMetrics.bettiNumbers[0]), \(metricsCalculator.topologyMetrics.bettiNumbers[1])]",
+                        icon: "number"
+                    )
+                    MetricRow(
+                        title: "Separatrix Crossings",
+                        value: "\(metricsCalculator.topologyMetrics.separatrixCrossings)",
+                        icon: "arrow.up.arrow.down"
+                    )
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+// MARK: - Educational Metrics Section
+struct EducationalMetricsSection: View {
+    @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSectionHeader(
+                title: "EDUCATIONAL METRICS",
+                isExpanded: $isExpanded
+            )
+            .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    MetricRow(
+                        title: "Learning Curve Slope",
+                        value: String(format: "%+.1f%%/sess", metricsCalculator.educationalMetrics.learningCurveSlope),
+                        icon: "chart.line.uptrend.xyaxis"
+                    )
+                    MetricRow(
+                        title: "Skill Retention",
+                        value: formatSkillRetention(metricsCalculator.educationalMetrics.skillRetention),
+                        icon: "brain.head.profile"
+                    )
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    private func formatSkillRetention(_ value: Double) -> String {
+        if value < 0 {
+            return "Need 2+ sessions"
+        }
+        return String(format: "%.0f%%", value)
+    }
+}
+
+// MARK: - AI Metrics Section
+struct AIMetricsSection: View {
+    @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSectionHeader(
+                title: "AI METRICS",
+                isExpanded: $isExpanded
+            )
+            .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    MetricRow(
+                        title: "AI Mode",
+                        value: metricsCalculator.aiMetrics.aiMode,
+                        icon: "sparkles"
+                    )
+                    MetricRow(
+                        title: "Difficulty",
+                        value: metricsCalculator.aiMetrics.aiDifficulty.isEmpty ? "—" : metricsCalculator.aiMetrics.aiDifficulty,
+                        icon: "slider.horizontal.3"
+                    )
+                    MetricRow(
+                        title: "Assistance",
+                        value: String(format: "%.1f%%", metricsCalculator.aiMetrics.assistancePercent),
+                        icon: "hands.sparkles"
+                    )
+                    MetricRow(
+                        title: "Avg AI Force",
+                        value: String(format: "%.3f", metricsCalculator.aiMetrics.aiAvgForce),
+                        icon: "bolt.fill"
+                    )
+                    MetricRow(
+                        title: "AI Interventions",
+                        value: "\(metricsCalculator.aiMetrics.totalInterventions)",
+                        icon: "hand.raised"
+                    )
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+// MARK: - Collapsible Section Header
+struct CollapsibleSectionHeader: View {
     let title: String
-    let message: String
+    @Binding var isExpanded: Bool
+
+    var body: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                isExpanded.toggle()
+            }
+        }) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(PendulumColors.textTertiary)
+
+                Spacer()
+
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PendulumColors.bronze)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Metric Row
+struct MetricRow: View {
+    let title: String
+    let value: String
+    let icon: String
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(PendulumColors.bronze)
+                .frame(width: 24)
 
-                Text(message)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(PendulumColors.text)
 
             Spacer()
 
-            Image(systemName: "clock")
-                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                .foregroundStyle(PendulumColors.gold)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundSecondary)
         )
     }
 }

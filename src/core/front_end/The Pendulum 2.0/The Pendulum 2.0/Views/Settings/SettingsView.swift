@@ -6,8 +6,10 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var gameState: GameState
+    @StateObject private var profileManager = ProfileManager.shared
     @State private var showingExportSheet = false
     @State private var showingClearConfirmation = false
+    @State private var showingProfileSheet = false
     @State private var exportMessage = ""
 
     var body: some View {
@@ -17,15 +19,30 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
+                    // Profile Section (at top)
+                    ProfileSection(
+                        profile: profileManager.currentProfile,
+                        onCreateProfile: { showingProfileSheet = true },
+                        onEditProfile: { showingProfileSheet = true }
+                    )
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
                     // Appearance Section
                     AppearanceSection(gameState: gameState)
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
 
                     // Gameplay Section
                     GameplaySection(gameState: gameState)
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
 
                     // Data Section
                     DataSection(
@@ -35,7 +52,9 @@ struct SettingsView: View {
                         exportMessage: $exportMessage
                     )
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
 
                     // About Section
                     AboutSection()
@@ -43,6 +62,7 @@ struct SettingsView: View {
                 .padding(.vertical, 16)
             }
         }
+        .background(PendulumColors.background)
         .alert("Export Complete", isPresented: $showingExportSheet) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -54,12 +74,115 @@ struct SettingsView: View {
                 clearAllData()
             }
         } message: {
-            Text("This will permanently delete all session data. This action cannot be undone.")
+            Text("This will permanently delete all session data and your profile. This action cannot be undone.")
+        }
+        .sheet(isPresented: $showingProfileSheet) {
+            ProfileSetupView(existingProfile: profileManager.currentProfile)
         }
     }
 
     private func clearAllData() {
         gameState.csvSessionManager?.clearAllSessions()
+        profileManager.clearAllData()
+    }
+}
+
+// MARK: - Profile Section
+struct ProfileSection: View {
+    let profile: UserProfile?
+    let onCreateProfile: () -> Void
+    let onEditProfile: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("PROFILE")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PendulumColors.textTertiary)
+                .padding(.horizontal, 16)
+
+            if let profile = profile {
+                // Profile exists - show summary
+                Button(action: onEditProfile) {
+                    HStack(spacing: 16) {
+                        // Avatar circle with initial
+                        ZStack {
+                            Circle()
+                                .fill(PendulumColors.gold.opacity(0.2))
+                                .frame(width: 50, height: 50)
+
+                            Text(String(profile.displayName.prefix(1)).uppercased())
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(PendulumColors.gold)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(profile.displayName)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(PendulumColors.text)
+
+                            Text(profile.trainingGoal.rawValue)
+                                .font(.system(size: 12))
+                                .foregroundStyle(PendulumColors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Text("Edit")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(PendulumColors.gold)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(PendulumColors.bronze)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(PendulumColors.backgroundTertiary)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.horizontal, 16)
+            } else {
+                // No profile - show create prompt
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Create a profile to personalize your training experience")
+                        .font(.system(size: 14))
+                        .foregroundStyle(PendulumColors.textSecondary)
+
+                    Button(action: onCreateProfile) {
+                        HStack {
+                            Image(systemName: "person.crop.circle.badge.plus")
+                                .font(.system(size: 18))
+                            Text("Create Profile")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(PendulumColors.gold)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(PendulumColors.backgroundTertiary)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
+                )
+                .padding(.horizontal, 16)
+            }
+        }
     }
 }
 
@@ -69,13 +192,13 @@ struct SettingsHeader: View {
         HStack {
             Text("Settings")
                 .font(.system(size: 24, weight: .bold, design: .serif))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(uiColor: .systemBackground))
+        .background(PendulumColors.background)
     }
 }
 
@@ -87,7 +210,7 @@ struct AppearanceSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("APPEARANCE")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
@@ -102,6 +225,7 @@ struct AppearanceSection: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .tint(PendulumColors.gold)
                 }
 
                 // Background Picker
@@ -115,6 +239,7 @@ struct AppearanceSection: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .tint(PendulumColors.gold)
                 }
             }
             .padding(.horizontal, 16)
@@ -130,7 +255,7 @@ struct GameplaySection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("GAMEPLAY")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
@@ -178,7 +303,7 @@ struct DataSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("DATA")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
@@ -258,7 +383,7 @@ struct AboutSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("ABOUT")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
@@ -279,18 +404,18 @@ struct AboutSection: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Credits")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(PendulumColors.text)
 
                     Text("Physics simulation based on rigorous inverted pendulum dynamics. Developed as part of Golden Enterprise Solutions.")
                         .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PendulumColors.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(uiColor: .secondarySystemBackground))
+                        .fill(PendulumColors.backgroundSecondary)
                 )
             }
             .padding(.horizontal, 16)
@@ -310,11 +435,11 @@ struct SettingsRow<Content: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(PendulumColors.text)
 
                 Text(subtitle)
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.textSecondary)
             }
 
             Spacer()
@@ -324,7 +449,11 @@ struct SettingsRow<Content: View>: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -338,6 +467,7 @@ struct SettingsToggleRow: View {
         SettingsRow(title: title, subtitle: subtitle) {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
+                .tint(PendulumColors.gold)
         }
     }
 }
@@ -352,22 +482,26 @@ struct SettingsSliderRow: View {
             HStack {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(PendulumColors.text)
 
                 Spacer()
 
                 Text(String(format: "%.1fx", value))
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.textSecondary)
             }
 
             Slider(value: $value, in: range)
-                .tint(.accentColor)
+                .tint(PendulumColors.gold)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -380,18 +514,22 @@ struct SettingsInfoRow: View {
         HStack {
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             Spacer()
 
             Text(value)
                 .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textSecondary)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -409,23 +547,27 @@ struct SettingsButtonRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(isDestructive ? .red : .primary)
+                        .foregroundStyle(isDestructive ? PendulumColors.danger : PendulumColors.text)
 
                     Text(subtitle)
                         .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PendulumColors.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: iconName)
                     .font(.system(size: 16))
-                    .foregroundStyle(isDestructive ? .red : .accentColor)
+                    .foregroundStyle(isDestructive ? PendulumColors.danger : PendulumColors.gold)
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(PendulumColors.backgroundTertiary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -445,18 +587,22 @@ struct SettingsLinkRow: View {
             HStack {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(PendulumColors.text)
 
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.bronze)
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(PendulumColors.backgroundTertiary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

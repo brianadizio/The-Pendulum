@@ -173,6 +173,19 @@ struct PerturbationProfile {
             dataSource: nil
         )
     }
+
+    /// Jiggle mode - continuous per-frame random noise at given intensity
+    /// Intensity ranges from ~0.3 (gentle) to ~1.5 (intense)
+    static func jiggle(intensity: Double) -> PerturbationProfile {
+        PerturbationProfile(
+            name: "Jiggle (\(String(format: "%.1f", intensity)))",
+            types: [.random],
+            strength: intensity,
+            frequency: 0.0,
+            randomInterval: 0...0,
+            dataSource: nil
+        )
+    }
 }
 
 // MARK: - Perturbation Manager
@@ -275,8 +288,8 @@ class PerturbationManager: ObservableObject {
                 totalForce += sineValue * profile.strength * 0.5
 
             case .random:
-                // Random noise-like perturbation
-                let noise = Double.random(in: -1.0...1.0) * profile.strength * 0.3
+                // Random noise-like perturbation (continuous per-frame jitter)
+                let noise = Double.random(in: -1.0...1.0) * profile.strength
                 totalForce += noise
 
             case .compound:
@@ -292,7 +305,7 @@ class PerturbationManager: ObservableObject {
                                 // Sub-impulses handled separately with their own timing
                                 break
                             case .random:
-                                let noise = Double.random(in: -1.0...1.0) * subProfile.strength * 0.3
+                                let noise = Double.random(in: -1.0...1.0) * subProfile.strength
                                 totalForce += noise
                             default:
                                 break
@@ -311,8 +324,8 @@ class PerturbationManager: ObservableObject {
             }
         }
 
-        // Apply the combined force
-        if abs(totalForce) > 0.01 {
+        // Apply the combined force (low threshold to allow subtle jiggle noise through)
+        if abs(totalForce) > 0.001 {
             onApplyForce?(totalForce)
         }
     }

@@ -18,6 +18,7 @@ struct ModesView: View {
                     GameModeSection(gameState: gameState)
 
                     Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
                         .padding(.horizontal, 16)
 
                     // Section 2: Physics Parameters
@@ -26,6 +27,7 @@ struct ModesView: View {
                 .padding(.vertical, 16)
             }
         }
+        .background(PendulumColors.background)
     }
 }
 
@@ -35,13 +37,13 @@ struct ModesHeader: View {
         HStack {
             Text("Modes")
                 .font(.system(size: 24, weight: .bold, design: .serif))
-                .foregroundStyle(.primary)
+                .foregroundStyle(PendulumColors.text)
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(uiColor: .systemBackground))
+        .background(PendulumColors.background)
     }
 }
 
@@ -53,7 +55,7 @@ struct GameModeSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("GAME MODE")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
@@ -81,15 +83,21 @@ struct ModeButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 12) {
+                // Mode icon
+                Image(systemName: mode.icon)
+                    .font(.system(size: 24))
+                    .foregroundStyle(isSelected ? .white : PendulumColors.gold)
+                    .frame(width: 32)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(mode.rawValue)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(isSelected ? .white : .primary)
+                        .foregroundStyle(isSelected ? .white : PendulumColors.text)
 
                     Text(mode.description)
                         .font(.system(size: 12))
-                        .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+                        .foregroundStyle(isSelected ? .white.opacity(0.8) : PendulumColors.textSecondary)
                 }
 
                 Spacer()
@@ -103,12 +111,13 @@ struct ModeButton: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.accentColor : Color(uiColor: .secondarySystemBackground))
+                    .fill(isSelected ? PendulumColors.gold : PendulumColors.backgroundTertiary)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.clear : Color(uiColor: .separator), lineWidth: 1)
+                    .stroke(isSelected ? Color.clear : PendulumColors.bronze.opacity(0.3), lineWidth: 1)
             )
+            .shadow(color: PendulumColors.iron.opacity(isSelected ? 0.2 : 0.05), radius: 4, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -122,7 +131,7 @@ struct ParametersSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("PHYSICS PARAMETERS")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
             VStack(spacing: 16) {
@@ -184,7 +193,7 @@ struct ParametersSection: View {
                     gameState.length = 1.0
                     gameState.gravity = 9.81
                     gameState.damping = 0.4
-                    gameState.springConstant = 0.0
+                    gameState.springConstant = 0.20
                     gameState.momentOfInertia = 1.0
                     gameState.forceStrength = 3.0
                 }
@@ -194,7 +203,7 @@ struct ParametersSection: View {
                     Text("Reset to Defaults")
                 }
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PendulumColors.gold)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -214,22 +223,22 @@ struct ParameterSlider: View {
             HStack {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(PendulumColors.text)
 
                 Spacer()
 
                 Text(String(format: "%.2f%@", value, unit.isEmpty ? "" : " \(unit)"))
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PendulumColors.textSecondary)
             }
 
             Slider(value: $value, in: range)
-                .tint(.accentColor)
+                .tint(PendulumColors.gold)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(PendulumColors.backgroundSecondary)
         )
     }
 }

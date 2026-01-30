@@ -1,6 +1,6 @@
 // LevelManager.swift
 // The Pendulum 2.0
-// Level progression system - refactored from original
+// Level progression system - mode-aware level generation
 
 import Foundation
 import Combine
@@ -18,9 +18,32 @@ struct LevelConfig {
     let springConstantValue: Double   // Absolute spring constant value
     let description: String           // Level description
 
+    // Mode-specific fields
+    let countdownTime: TimeInterval?  // For Timed mode - seconds to complete level
+    let jiggleIntensity: Double       // For Jiggle mode - noise amplitude (0 = none)
+
     // Calculated property for balance threshold in degrees
     var balanceThresholdDegrees: Double {
         return balanceThreshold * 180 / Double.pi
+    }
+
+    // Convenience initializer with defaults for new fields
+    init(number: Int, balanceThreshold: Double, balanceRequiredTime: Double,
+         initialPerturbation: Double, massMultiplier: Double, lengthMultiplier: Double,
+         dampingValue: Double, gravityMultiplier: Double, springConstantValue: Double,
+         description: String, countdownTime: TimeInterval? = nil, jiggleIntensity: Double = 0.0) {
+        self.number = number
+        self.balanceThreshold = balanceThreshold
+        self.balanceRequiredTime = balanceRequiredTime
+        self.initialPerturbation = initialPerturbation
+        self.massMultiplier = massMultiplier
+        self.lengthMultiplier = lengthMultiplier
+        self.dampingValue = dampingValue
+        self.gravityMultiplier = gravityMultiplier
+        self.springConstantValue = springConstantValue
+        self.description = description
+        self.countdownTime = countdownTime
+        self.jiggleIntensity = jiggleIntensity
     }
 }
 
@@ -52,6 +75,9 @@ class LevelManager: ObservableObject {
     // Maximum reached level for this player
     @Published private(set) var maxReachedLevel: Int = 1
 
+    // Active game mode - determines how level configs are generated
+    var activeMode: GameMode = .freePlay
+
     // Delegate to notify about level progression
     weak var delegate: LevelProgressionDelegate?
 
@@ -66,6 +92,11 @@ class LevelManager: ObservableObject {
         if maxReachedLevel < 1 {
             maxReachedLevel = 1
         }
+    }
+
+    /// Get configuration for the current level using the active mode
+    func getConfigForCurrentLevel() -> LevelConfig {
+        return getConfigForLevel(currentLevel, mode: activeMode)
     }
 
     // MARK: - Level Management
@@ -109,13 +140,26 @@ class LevelManager: ObservableObject {
         setLevel(1)
     }
 
-    /// Get configuration for a specific level
+    /// Get configuration for a specific level (uses active mode)
     func getConfigForLevel(_ level: Int) -> LevelConfig {
-        // For levels beyond predefined ones, use procedural generation
-        if level <= predefinedLevelCount {
-            return getPredefinedLevelConfig(level)
-        } else {
-            return generateProceduralLevelConfig(level)
+        return getConfigForLevel(level, mode: activeMode)
+    }
+
+    /// Get configuration for a specific level and mode
+    func getConfigForLevel(_ level: Int, mode: GameMode) -> LevelConfig {
+        switch mode {
+        case .freePlay:
+            return getFreePlayConfig()
+        case .progressive:
+            return getProgressiveConfig(level)
+        case .spatial:
+            return getSpatialConfig(level)
+        case .jiggle:
+            return getJiggleConfig(level)
+        case .timed:
+            return getTimedConfig(level)
+        case .random:
+            return getRandomConfig(level)
         }
     }
 
@@ -327,6 +371,129 @@ class LevelManager: ObservableObject {
             gravityMultiplier: gravityMultiplier,
             springConstantValue: springConstantValue,
             description: levelDescription
+        )
+    }
+
+    // MARK: - Mode-Specific Level Generators
+
+    /// Free Play: No levels, base config, no perturbations
+    private func getFreePlayConfig() -> LevelConfig {
+        LevelConfig(
+            number: 1,
+            balanceThreshold: LevelManager.baseBalanceThreshold,
+            balanceRequiredTime: LevelManager.baseBalanceRequiredTime,
+            initialPerturbation: 5.0,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Free Play - Balance freely"
+        )
+    }
+
+    /// Progressive: Balance time increases each level, perturbations get stronger
+    /// Level N: balanceTime = 1.5 + (N-1) * 0.5s, threshold stays base
+    private func getProgressiveConfig(_ level: Int) -> LevelConfig {
+        let balanceTime = LevelManager.baseBalanceRequiredTime + Double(level - 1) * 0.5
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: LevelManager.baseBalanceThreshold,
+            balanceRequiredTime: balanceTime,
+            initialPerturbation: 5.0,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Level \(level) - Hold balance for \(String(format: "%.1f", balanceTime))s"
+        )
+    }
+
+    /// Spatial: Green zone shrinks each level, balance time stays constant
+    /// Level N: threshold = max(0.10, 0.35 - (N-1) * 0.04) rad
+    private func getSpatialConfig(_ level: Int) -> LevelConfig {
+        let threshold = max(0.10, LevelManager.baseBalanceThreshold - Double(level - 1) * 0.04)
+        let thresholdDeg = Int(threshold * 180.0 / .pi)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: threshold,
+            balanceRequiredTime: 2.0,
+            initialPerturbation: 5.0,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Level \(level) - Balance within \(thresholdDeg)°"
+        )
+    }
+
+    /// Jiggle: Random noise perturbations increase each level
+    /// Level N: jiggleIntensity = min(1.5, 0.3 + (N-1) * 0.2), balanceTime scales like progressive
+    private func getJiggleConfig(_ level: Int) -> LevelConfig {
+        let balanceTime = LevelManager.baseBalanceRequiredTime + Double(level - 1) * 0.5
+        let intensity = min(1.5, 0.3 + Double(level - 1) * 0.2)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: LevelManager.baseBalanceThreshold,
+            balanceRequiredTime: balanceTime,
+            initialPerturbation: 5.0,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Level \(level) - Jiggle intensity \(String(format: "%.1f", intensity))",
+            jiggleIntensity: intensity
+        )
+    }
+
+    /// Timed: Countdown timer per level, decreases with level
+    /// Level N: countdown = max(10, 30 - (N-1) * 3)s
+    private func getTimedConfig(_ level: Int) -> LevelConfig {
+        let countdown = max(10.0, 30.0 - Double(level - 1) * 3.0)
+        let balanceTime = level < 4 ? 1.5 : 2.0
+        let threshold = max(0.20, LevelManager.baseBalanceThreshold - Double(level - 1) * 0.02)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: threshold,
+            balanceRequiredTime: balanceTime,
+            initialPerturbation: 5.0,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Level \(level) - \(Int(countdown))s countdown",
+            countdownTime: countdown
+        )
+    }
+
+    /// Random: Physics parameters randomized each level
+    /// Mass, gravity, damping, spring constant vary uniformly within ranges
+    private func getRandomConfig(_ level: Int) -> LevelConfig {
+        let massMultiplier = Double.random(in: 0.7...1.5)
+        let lengthMultiplier = Double.random(in: 0.7...1.5)
+        let gravityMultiplier = Double.random(in: 7.0...13.0) / LevelManager.baseGravity
+        let dampingValue = Double.random(in: 0.15...0.6)
+        let springConstantValue = Double.random(in: 0.05...0.35)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: LevelManager.baseBalanceThreshold,
+            balanceRequiredTime: 2.0,
+            initialPerturbation: LevelManager.basePerturbation,
+            massMultiplier: massMultiplier,
+            lengthMultiplier: lengthMultiplier,
+            dampingValue: dampingValue,
+            gravityMultiplier: gravityMultiplier,
+            springConstantValue: springConstantValue,
+            description: "Level \(level) - Randomized physics"
         )
     }
 }

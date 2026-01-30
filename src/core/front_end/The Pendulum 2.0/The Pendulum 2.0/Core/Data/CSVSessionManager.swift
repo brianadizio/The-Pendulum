@@ -5,6 +5,35 @@
 import Foundation
 import Combine
 
+// MARK: - Level Config Snapshot (Codable mirror of LevelConfig)
+struct LevelConfigSnapshot: Codable {
+    let level: Int
+    let balanceThreshold: Double
+    let balanceRequiredTime: Double
+    let initialPerturbation: Double
+    let massMultiplier: Double
+    let lengthMultiplier: Double
+    let dampingValue: Double
+    let gravityMultiplier: Double
+    let springConstantValue: Double
+    let countdownTime: TimeInterval?
+    let jiggleIntensity: Double
+
+    init(from config: LevelConfig) {
+        self.level = config.number
+        self.balanceThreshold = config.balanceThreshold
+        self.balanceRequiredTime = config.balanceRequiredTime
+        self.initialPerturbation = config.initialPerturbation
+        self.massMultiplier = config.massMultiplier
+        self.lengthMultiplier = config.lengthMultiplier
+        self.dampingValue = config.dampingValue
+        self.gravityMultiplier = config.gravityMultiplier
+        self.springConstantValue = config.springConstantValue
+        self.countdownTime = config.countdownTime
+        self.jiggleIntensity = config.jiggleIntensity
+    }
+}
+
 // MARK: - Session Metadata
 struct SessionMetadata: Codable {
     let sessionId: String
@@ -16,6 +45,15 @@ struct SessionMetadata: Codable {
     var totalPushes: Int
     var averageBalanceTime: Double
     var gameMode: String
+    var totalForceApplied: Double
+    var maxScore: Int
+    var levelConfigs: [LevelConfigSnapshot]
+
+    // AI fields (optional for backward compatibility)
+    var aiMode: String?
+    var aiDifficulty: Double?
+    var aiControlCalls: Int?
+    var aiInterventions: Int?
 }
 
 // MARK: - CSV Session Manager
@@ -26,15 +64,27 @@ class CSVSessionManager: ObservableObject {
 
     // File handles
     private var csvFileHandle: FileHandle?
-    private var csvFilePath: URL?
-    private var metadataFilePath: URL?
+    private(set) var csvFilePath: URL?
+    private(set) var metadataFilePath: URL?
 
-    // Session tracking
-    private var sessionStartTime: Date?
+    // Session tracking (public getters for HealthKit integration)
+    private(set) var sessionStartTime: Date?
     private var currentLevel: Int = 1
+
+    /// Current session duration in seconds
+    var sessionDuration: TimeInterval {
+        guard let startTime = sessionStartTime else { return 0 }
+        return Date().timeIntervalSince(startTime)
+    }
     private var metadata: SessionMetadata?
     private var pushCount: Int = 0
     private var levelsCompleted: [Int] = []
+    private var totalForceApplied: Double = 0.0
+    private var currentScore: Int = 0
+    private var maxScore: Int = 0
+    private var lastInstabilityTime: Double = -1.0
+    private var currentBalanceThreshold: Double = 0.35  // Default ~20 degrees
+    private var levelConfigSnapshots: [LevelConfigSnapshot] = []
 
     // Documents directory
     private var sessionsDirectory: URL {
@@ -65,13 +115,18 @@ class CSVSessionManager: ObservableObject {
         pushCount = 0
         levelsCompleted = []
         currentLevel = 1
+        totalForceApplied = 0.0
+        currentScore = 0
+        maxScore = 0
+        lastInstabilityTime = -1.0
+        levelConfigSnapshots = []
 
         // Create CSV file
         csvFilePath = sessionsDirectory.appendingPathComponent("session_\(sessionId).csv")
         metadataFilePath = sessionsDirectory.appendingPathComponent("session_\(sessionId)_meta.json")
 
-        // Write CSV header
-        let header = "timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy\n"
+        // Write CSV header (expanded schema with AI columns)
+        let header = "timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce\n"
 
         do {
             try header.write(to: csvFilePath!, atomically: true, encoding: .utf8)
@@ -92,7 +147,10 @@ class CSVSessionManager: ObservableObject {
             maxLevel: 1,
             totalPushes: 0,
             averageBalanceTime: 0,
-            gameMode: mode.rawValue
+            gameMode: mode.rawValue,
+            totalForceApplied: 0,
+            maxScore: 0,
+            levelConfigs: []
         )
 
         isRecording = true
@@ -100,19 +158,40 @@ class CSVSessionManager: ObservableObject {
     }
 
     /// Record a pendulum state snapshot
-    func recordState(angle: Double, angleVelocity: Double, isBalanced: Bool, energy: Double? = nil) {
+    func recordState(angle: Double, angleVelocity: Double, isBalanced: Bool, energy: Double? = nil, score: Int? = nil, aiMode: String = "", aiForce: Double = 0.0) {
         guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         let energyStr = energy.map { String(format: "%.4f", $0) } ?? ""
+        let gameModeStr = metadata?.gameMode ?? "classic"
 
-        let row = String(format: "%.3f,%.4f,%.4f,0,0.0,%@,%d,%@\n",
+        // Update score tracking
+        if let s = score {
+            currentScore = s
+            maxScore = max(maxScore, s)
+        }
+
+        // Track instability for reaction time calculation
+        let deviationFromUpright = abs(angle - .pi)
+        if deviationFromUpright > currentBalanceThreshold && lastInstabilityTime < 0 {
+            lastInstabilityTime = timestamp
+        } else if deviationFromUpright <= currentBalanceThreshold {
+            lastInstabilityTime = -1.0  // Reset when stable
+        }
+
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+        let row = String(format: "%.3f,%.4f,%.4f,0,0.0,%@,%d,%@,%@,%d,%.4f,,%@,%.4f\n",
                         timestamp,
                         angle,
                         angleVelocity,
                         isBalanced ? "true" : "false",
                         currentLevel,
-                        energyStr)
+                        energyStr,
+                        gameModeStr,
+                        currentScore,
+                        currentBalanceThreshold,
+                        aiMode,
+                        aiForce)
 
         if let data = row.data(using: .utf8) {
             handle.write(data)
@@ -120,17 +199,29 @@ class CSVSessionManager: ObservableObject {
     }
 
     /// Record a push event
-    func recordPush(direction: PushDirection, magnitude: Double) {
+    func recordPush(direction: PushDirection, magnitude: Double, aiMode: String = "", aiForce: Double = 0.0) {
         guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         pushCount += 1
+        totalForceApplied += magnitude
 
-        let row = String(format: "%.3f,0.0,0.0,%d,%.2f,false,%d,\n",
+        // Calculate reaction time (time since last instability)
+        let reactionTime = lastInstabilityTime >= 0 ? timestamp - lastInstabilityTime : 0.0
+        let gameModeStr = metadata?.gameMode ?? "classic"
+
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+        let row = String(format: "%.3f,0.0,0.0,%d,%.2f,false,%d,,%@,%d,%.4f,%.3f,%@,%.4f\n",
                         timestamp,
                         direction.rawValue,
                         magnitude,
-                        currentLevel)
+                        currentLevel,
+                        gameModeStr,
+                        currentScore,
+                        currentBalanceThreshold,
+                        reactionTime,
+                        aiMode,
+                        aiForce)
 
         if let data = row.data(using: .utf8) {
             handle.write(data)
@@ -138,17 +229,40 @@ class CSVSessionManager: ObservableObject {
     }
 
     /// Record a combined state and push event
-    func recordInteraction(angle: Double, angleVelocity: Double, pushDirection: PushDirection, pushMagnitude: Double, isBalanced: Bool, energy: Double? = nil) {
+    func recordInteraction(angle: Double, angleVelocity: Double, pushDirection: PushDirection, pushMagnitude: Double, isBalanced: Bool, energy: Double? = nil, score: Int? = nil, aiMode: String = "", aiForce: Double = 0.0) {
         guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         let energyStr = energy.map { String(format: "%.4f", $0) } ?? ""
+        let gameModeStr = metadata?.gameMode ?? "classic"
+
+        // Update score tracking
+        if let s = score {
+            currentScore = s
+            maxScore = max(maxScore, s)
+        }
 
         if pushDirection != .none {
             pushCount += 1
+            totalForceApplied += pushMagnitude
         }
 
-        let row = String(format: "%.3f,%.4f,%.4f,%d,%.2f,%@,%d,%@\n",
+        // Track instability for reaction time calculation
+        let deviationFromUpright = abs(angle - .pi)
+        var reactionTime: Double = 0.0
+
+        if pushDirection != .none && lastInstabilityTime >= 0 {
+            reactionTime = timestamp - lastInstabilityTime
+        }
+
+        if deviationFromUpright > currentBalanceThreshold && lastInstabilityTime < 0 {
+            lastInstabilityTime = timestamp
+        } else if deviationFromUpright <= currentBalanceThreshold {
+            lastInstabilityTime = -1.0
+        }
+
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+        let row = String(format: "%.3f,%.4f,%.4f,%d,%.2f,%@,%d,%@,%@,%d,%.4f,%.3f,%@,%.4f\n",
                         timestamp,
                         angle,
                         angleVelocity,
@@ -156,7 +270,13 @@ class CSVSessionManager: ObservableObject {
                         pushMagnitude,
                         isBalanced ? "true" : "false",
                         currentLevel,
-                        energyStr)
+                        energyStr,
+                        gameModeStr,
+                        currentScore,
+                        currentBalanceThreshold,
+                        reactionTime,
+                        aiMode,
+                        aiForce)
 
         if let data = row.data(using: .utf8) {
             handle.write(data)
@@ -178,6 +298,28 @@ class CSVSessionManager: ObservableObject {
         }
     }
 
+    /// Update the current score
+    func updateScore(_ score: Int) {
+        currentScore = score
+        maxScore = max(maxScore, score)
+    }
+
+    /// Record the config for a level (call at session start and each level change)
+    func recordLevelConfig(_ config: LevelConfig) {
+        let snapshot = LevelConfigSnapshot(from: config)
+        // Replace if same level already recorded (e.g. restart), otherwise append
+        if let idx = levelConfigSnapshots.firstIndex(where: { $0.level == snapshot.level }) {
+            levelConfigSnapshots[idx] = snapshot
+        } else {
+            levelConfigSnapshots.append(snapshot)
+        }
+    }
+
+    /// Update the balance threshold for current level
+    func updateBalanceThreshold(_ threshold: Double) {
+        currentBalanceThreshold = threshold
+    }
+
     /// End the current session
     func endSession() {
         guard isRecording, let sessionId = currentSessionId else { return }
@@ -186,6 +328,9 @@ class CSVSessionManager: ObservableObject {
         csvFileHandle?.closeFile()
         csvFileHandle = nil
 
+        // Capture AI session summary
+        let aiSummary = AIManager.shared.sessionSummary
+
         // Update and save metadata
         if var meta = metadata, let startTime = sessionStartTime {
             meta.endTime = Date()
@@ -193,6 +338,15 @@ class CSVSessionManager: ObservableObject {
             meta.levelsCompleted = levelsCompleted
             meta.maxLevel = levelsCompleted.max() ?? currentLevel
             meta.totalPushes = pushCount
+            meta.totalForceApplied = totalForceApplied
+            meta.maxScore = maxScore
+            meta.levelConfigs = levelConfigSnapshots
+
+            // AI metadata
+            meta.aiMode = aiSummary.mode
+            meta.aiDifficulty = aiSummary.difficulty
+            meta.aiControlCalls = aiSummary.controlCalls
+            meta.aiInterventions = aiSummary.interventions
 
             // Save metadata
             if let metaPath = metadataFilePath {
