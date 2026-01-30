@@ -22,6 +22,40 @@ struct PendulumSharedData: Codable {
   }
 }
 
+// MARK: - Maze Shared Data Contract (read from The Maze)
+
+struct MazeSharedData: Codable {
+  let lastUpdated: Date
+  let sessions: [MazeSessionSummary]
+  let digitalSignature: MazeDigitalSignature?
+}
+
+struct MazeSessionSummary: Codable {
+  let sessionId: String
+  let date: Date
+  let mazeCategory: String
+  let difficulty: Int
+  let completionTime: Double
+  let movementEfficiency: Double
+  let motorScore: Double
+  let cognitiveScore: Double
+  let emotionalState: String
+  let flowStateScore: Double
+  let frustrationLevel: Double
+  let confidenceScore: Double
+  let focusLevel: Double
+  let decisionLatencyAvg: Double
+  let complexityScore: Double
+  let dominantDirection: String
+  let errorReductionRate: Double
+}
+
+struct MazeDigitalSignature: Codable {
+  let dimensions: [Double]
+  let signatureStrength: Double
+  let lastUpdated: Date
+}
+
 // MARK: - App Group Manager
 
 class AppGroupManager {
@@ -29,6 +63,7 @@ class AppGroupManager {
 
   private let appGroup = "group.com.goldenenterprise.shared"
   private let filename = "pendulum_sessions.json"
+  private let mazeFilename = "maze_sessions.json"
 
   private init() {}
 
@@ -84,5 +119,24 @@ class AppGroupManager {
       try? data.write(to: fileURL, options: .atomic)
       print("AppGroupManager: Wrote session \(sessionId) (\(sessions.count) total)")
     }
+  }
+
+  // MARK: - Read Maze Data (Cross-App: The Maze → The Pendulum)
+
+  /// Load maze session data from the shared App Group container.
+  /// Returns nil if The Maze hasn't written data or the container is empty.
+  func loadMazeData() -> MazeSharedData? {
+    guard let container = FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: appGroup
+    ) else {
+      return nil
+    }
+
+    let fileURL = container.appendingPathComponent(mazeFilename)
+    guard let data = try? Data(contentsOf: fileURL) else { return nil }
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    return try? decoder.decode(MazeSharedData.self, from: data)
   }
 }

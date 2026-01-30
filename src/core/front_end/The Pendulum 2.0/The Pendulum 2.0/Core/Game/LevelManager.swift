@@ -160,6 +160,8 @@ class LevelManager: ObservableObject {
             return getTimedConfig(level)
         case .random:
             return getRandomConfig(level)
+        case .golden:
+            return getGoldenConfig(level)
         }
     }
 
@@ -494,6 +496,30 @@ class LevelManager: ObservableObject {
             gravityMultiplier: gravityMultiplier,
             springConstantValue: springConstantValue,
             description: "Level \(level) - Randomized physics"
+        )
+    }
+
+    /// Golden: Adaptive config based on GoldenModeManager recommendation.
+    /// Uses progressive-style scaling as baseline; actual physics may be
+    /// overridden by the recommendation's GameConfig at session start.
+    private func getGoldenConfig(_ level: Int) -> LevelConfig {
+        // Gentle progressive curve — Golden Mode overrides physics
+        // parameters via GameState.startNewSession(), so this provides
+        // sensible defaults if no recommendation is active.
+        let balanceTime = LevelManager.baseBalanceRequiredTime + Double(level - 1) * 0.4
+        let threshold = max(0.15, LevelManager.baseBalanceThreshold - Double(level - 1) * 0.025)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: threshold,
+            balanceRequiredTime: balanceTime,
+            initialPerturbation: LevelManager.basePerturbation,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping,
+            gravityMultiplier: 1.0,
+            springConstantValue: LevelManager.baseSpringConstant,
+            description: "Golden Level \(level)"
         )
     }
 }

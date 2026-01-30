@@ -58,8 +58,12 @@ struct GameModeSection: View {
                 .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
+            // Golden Mode hero card (featured at top)
+            GoldenModeHeroCard(gameState: gameState)
+                .padding(.horizontal, 16)
+
             VStack(spacing: 8) {
-                ForEach(GameMode.allCases) { mode in
+                ForEach(GameMode.standardModes) { mode in
                     ModeButton(
                         mode: mode,
                         isSelected: gameState.gameMode == mode

@@ -62,6 +62,11 @@ class PendulumViewModel: ObservableObject {
     // Upright is θ = π, so fallen is when |θ - π| > π/2
     private let fallThreshold: Double = .pi / 2
 
+    // Golden Mode: rolling stability for mid-session adaptation
+    private var recentBalanceFrames: Int = 0
+    private var recentTotalFrames: Int = 0
+    private let stabilityWindowFrames: Int = 300 // ~5 seconds at 60fps
+
     init() {
         model = InvertedPendulumModel()
     }
@@ -213,6 +218,40 @@ class PendulumViewModel: ObservableObject {
 
         // Drive perturbation manager (applies forces via onApplyForce callback)
         perturbationManager?.update(currentTime: elapsedTime)
+
+        // Golden Mode: mid-session adaptation (~every 30s)
+        if activeGameMode == .golden {
+            // Track rolling stability
+            let balanced = abs(currentState.theta - .pi) < balanceThreshold
+            recentTotalFrames += 1
+            if balanced { recentBalanceFrames += 1 }
+            // Keep window bounded
+            if recentTotalFrames > stabilityWindowFrames {
+                let excess = recentTotalFrames - stabilityWindowFrames
+                recentTotalFrames = stabilityWindowFrames
+                recentBalanceFrames = max(0, recentBalanceFrames - excess / 2)
+            }
+
+            let recentStability = recentTotalFrames > 0
+                ? Double(recentBalanceFrames) / Double(recentTotalFrames) * 100.0
+                : 50.0
+
+            if let delta = GoldenModeManager.shared.onFrameUpdate(
+                theta: currentState.theta,
+                thetaDot: currentState.thetaDot,
+                elapsedTime: elapsedTime,
+                recentStability: recentStability
+            ) {
+                // Apply gentle adaptations
+                model.damping += delta.dampingDelta
+                model.damping = max(0.1, min(0.8, model.damping))
+
+                balanceThreshold += delta.thresholdDelta
+                balanceThreshold = max(0.08, min(0.5, balanceThreshold))
+
+                perturbationManager?.scaleIntensity(by: delta.perturbationScale)
+            }
+        }
 
         // Update countdown timer (Timed mode)
         if var remaining = countdownTimeRemaining {

@@ -4,6 +4,7 @@
 
 import SwiftUI
 import Combine
+import PendulumSolver
 
 // MARK: - Tab Enum
 enum PendulumTab: Int, CaseIterable, Identifiable {
@@ -214,9 +215,33 @@ class GameState: ObservableObject {
         // Start AI session
         AIManager.shared.onSessionStart()
 
+        // Golden Mode: apply recommendation config before level/perturbation setup
+        if gameMode == .golden, let rec = GoldenModeManager.shared.currentRecommendation {
+            GoldenModeManager.shared.onGoldenSessionStart(recommendation: rec)
+
+            // Apply physics overrides
+            if let d = rec.config.dampingOverride { damping = d }
+            if let g = rec.config.gravityOverride { gravity = g }
+            if let m = rec.config.massOverride { mass = m }
+
+            // Apply AI mode from recommendation
+            let aiModeStr = rec.config.aiMode
+            if let mode = AIMode.allCases.first(where: { $0.rawValue == aiModeStr }) {
+                aiMode = mode
+                AIManager.shared.setMode(mode, difficulty: rec.config.suggestedDifficulty)
+            }
+        }
+
         // Configure level manager for current mode and reset to level 1
         levelManager.activeMode = gameMode
         levelManager.resetToLevel1()
+
+        // For golden mode, jump to recommended level
+        if gameMode == .golden, let rec = GoldenModeManager.shared.currentRecommendation {
+            for _ in 1..<rec.config.suggestedLevel {
+                levelManager.advanceToNextLevel()
+            }
+        }
 
         // Record initial level config
         let initialConfig = levelManager.getConfigForCurrentLevel()
@@ -275,6 +300,18 @@ class GameState: ObservableObject {
 
         // End AI session (exports training data + uploads to Firebase)
         AIManager.shared.onSessionEnd()
+
+        // Golden Mode: record session outcome
+        if gameMode == .golden {
+            GoldenModeManager.shared.onGoldenSessionEnd(
+                sessionDuration: sessionDuration,
+                sessionCompleted: sessionDuration >= 60,
+                levelsCompleted: levelManager.currentLevel - 1,
+                finalStability: appGroupMetrics.balancePercent,
+                finalReactionTime: appGroupMetrics.reactionTime,
+                score: sessionScore
+            )
+        }
 
         // Write to App Group shared container (for The Maze integration)
         if let sid = sessionId {
@@ -392,6 +429,7 @@ enum GameMode: String, CaseIterable, Identifiable {
     case jiggle = "Jiggle"
     case timed = "Timed"
     case random = "Random"
+    case golden = "Golden"
 
     var id: String { rawValue }
 
@@ -403,6 +441,7 @@ enum GameMode: String, CaseIterable, Identifiable {
         case .jiggle: return "Random noise makes balancing harder"
         case .timed: return "Beat each level before time runs out"
         case .random: return "Physics change every level"
+        case .golden: return "Reactive mode shaped by your health, skills & data"
         }
     }
 
@@ -414,11 +453,12 @@ enum GameMode: String, CaseIterable, Identifiable {
         case .jiggle: return "waveform"
         case .timed: return "timer"
         case .random: return "dice"
+        case .golden: return "sun.max.fill"
         }
     }
 
     var hasLevels: Bool {
-        self != .freePlay
+        self != .freePlay && self != .golden
     }
 
     var hasPerturbations: Bool {
@@ -431,6 +471,11 @@ enum GameMode: String, CaseIterable, Identifiable {
 
     var hasJiggle: Bool {
         self == .jiggle
+    }
+
+    /// Standard modes shown in the regular ForEach (golden gets hero card)
+    static var standardModes: [GameMode] {
+        allCases.filter { $0 != .golden }
     }
 }
 

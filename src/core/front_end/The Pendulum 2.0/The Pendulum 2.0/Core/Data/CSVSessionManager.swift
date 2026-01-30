@@ -54,6 +54,12 @@ struct SessionMetadata: Codable {
     var aiDifficulty: Double?
     var aiControlCalls: Int?
     var aiInterventions: Int?
+
+    // Golden Mode fields (optional)
+    var goldenFocusArea: String?
+    var goldenRecommendationTier: String?
+    var goldenCoherenceScore: Double?
+    var goldenAdaptationCount: Int?
 }
 
 // MARK: - CSV Session Manager
@@ -347,6 +353,14 @@ class CSVSessionManager: ObservableObject {
             meta.aiDifficulty = aiSummary.difficulty
             meta.aiControlCalls = aiSummary.controlCalls
             meta.aiInterventions = aiSummary.interventions
+
+            // Golden Mode metadata
+            if GoldenModeManager.shared.isGoldenModeActive || meta.gameMode == GameMode.golden.rawValue {
+              let gm = GoldenModeManager.shared
+              meta.goldenFocusArea = gm.currentFocusAreaName
+              meta.goldenRecommendationTier = gm.currentTier
+              meta.goldenCoherenceScore = gm.coherenceScore
+            }
 
             // Save metadata
             if let metaPath = metadataFilePath {

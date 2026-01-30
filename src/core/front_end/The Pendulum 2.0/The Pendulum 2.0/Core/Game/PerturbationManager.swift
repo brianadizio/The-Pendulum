@@ -233,6 +233,22 @@ class PerturbationManager: ObservableObject {
         lastUpdateTime = 0
     }
 
+    /// Scale perturbation strength by a factor (used by Golden Mode mid-session adaptation)
+    func scaleIntensity(by factor: Double) {
+        guard let profile = activeProfile else { return }
+        let newStrength = max(0.05, min(5.0, profile.strength * factor))
+        var scaled = PerturbationProfile(
+            name: profile.name,
+            types: profile.types,
+            strength: newStrength,
+            frequency: profile.frequency,
+            randomInterval: profile.randomInterval,
+            dataSource: profile.dataSource
+        )
+        scaled.subProfiles = profile.subProfiles
+        activeProfile = scaled
+    }
+
     // Reset to no perturbations
     func deactivate() {
         activeProfile = nil

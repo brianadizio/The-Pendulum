@@ -11,6 +11,10 @@ struct PlayView: View {
     @StateObject private var profileManager = ProfileManager.shared
     @State private var showingProfileSheet = false
     @State private var showingAIPanel = false
+    @State private var showingGoldenPostSession = false
+    @State private var goldenSessionDuration: TimeInterval = 0
+    @State private var goldenLevelsCompleted: Int = 0
+    @State private var goldenSessionScore: Int = 0
     @StateObject private var aiManager = AIManager.shared
     var isActive: Bool = true  // Controls whether SKView is paused (for Metal resource management)
 
@@ -48,6 +52,12 @@ struct PlayView: View {
                                 AIStatusBadge(aiManager: aiManager)
                             }
 
+                            // Golden Mode HUD (visible during golden sessions)
+                            if gameState.gameMode == .golden && viewModel.isSimulating {
+                                GoldenModeHUD()
+                                    .padding(.top, 4)
+                            }
+
                             // Tutorial lesson banner (visible in tutorial mode, hidden when finished)
                             if aiManager.currentMode == .tutorial && !aiManager.tutorialFinished {
                                 TutorialLessonBanner(aiManager: aiManager)
@@ -65,8 +75,16 @@ struct PlayView: View {
                         }
 
                         // Game control buttons (Play/Pause/Reset) - above push buttons
-                        GameControlButtons(gameState: gameState, viewModel: viewModel)
-                            .padding(.bottom, 16)
+                        GameControlButtons(gameState: gameState, viewModel: viewModel) {
+                            // Golden Mode: capture session data before ending
+                            goldenSessionDuration = viewModel.elapsedTime
+                            goldenLevelsCompleted = max(0, gameState.levelManager.currentLevel - 1)
+                            goldenSessionScore = gameState.currentScore
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                showingGoldenPostSession = true
+                            }
+                        }
+                        .padding(.bottom, 16)
 
                         // Push control buttons (disabled in demo mode — AI controls the pendulum)
                         ControlButtonsView(viewModel: viewModel, gameState: gameState)
@@ -104,6 +122,14 @@ struct PlayView: View {
         .sheet(isPresented: $showingAIPanel) {
             AIPanelView(gameState: gameState)
         }
+        .sheet(isPresented: $showingGoldenPostSession) {
+            GoldenModePostSessionView(
+                gameState: gameState,
+                sessionDuration: goldenSessionDuration,
+                levelsCompleted: goldenLevelsCompleted,
+                sessionScore: goldenSessionScore
+            )
+        }
     }
 
     private func setupGame() {
@@ -139,7 +165,15 @@ struct PlayView: View {
 
         // Handle fall - pause game when pendulum falls past 90 degrees
         viewModel.onFall = { [weak gameState] in
+            if gameState?.gameMode == .golden {
+                goldenSessionDuration = viewModel.elapsedTime
+                goldenLevelsCompleted = max(0, (gameState?.levelManager.currentLevel ?? 1) - 1)
+                goldenSessionScore = gameState?.currentScore ?? 0
+            }
             gameState?.endSession()
+            if gameState?.gameMode == .golden {
+                showingGoldenPostSession = true
+            }
         }
 
         // Handle timer expiry (Timed mode) - fail and reset to level 1
@@ -245,6 +279,13 @@ struct PlayHeader: View {
 struct GameControlButtons: View {
     @ObservedObject var gameState: GameState
     @ObservedObject var viewModel: PendulumViewModel
+    var onGoldenSessionEnd: (() -> Void)?
+
+    init(gameState: GameState, viewModel: PendulumViewModel, onGoldenSessionEnd: (() -> Void)? = nil) {
+        self.gameState = gameState
+        self.viewModel = viewModel
+        self.onGoldenSessionEnd = onGoldenSessionEnd
+    }
 
     var body: some View {
         HStack(spacing: 20) {
@@ -276,8 +317,12 @@ struct GameControlButtons: View {
             // Play/Pause button
             Button(action: {
                 if viewModel.isSimulating {
+                    let wasGolden = gameState.gameMode == .golden
                     viewModel.pauseSimulation()
                     gameState.endSession()
+                    if wasGolden {
+                        onGoldenSessionEnd?()
+                    }
                 } else {
                     // Sync mode and apply level config before starting
                     viewModel.activeGameMode = gameState.gameMode
