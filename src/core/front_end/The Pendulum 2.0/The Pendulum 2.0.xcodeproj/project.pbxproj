@@ -11,6 +11,7 @@
 		D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */; };
 		D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */; };
 		D66F27022F2BDE1B0099EA6E /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = D66F27012F2BDE1B0099EA6E /* FirebaseStorage */; };
+		D6772EFC2F2D50E30031EA29 /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = D6772EFB2F2D50E30031EA29 /* Singular */; };
 		D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D67E74032F27DFB700DBF3DF /* GoldenTheme */; };
 		D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */ = {isa = PBXBuildFile; productRef = D67E79A02F2BDF3A0099EA6E /* PendulumSolver */; };
 /* End PBXBuildFile section */
@@ -19,9 +20,22 @@
 		D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum 2.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D67E7A102F3286A000DBF3DF /* Exceptions for "The Pendulum 2.0" folder in "The Pendulum 2.0" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D67E73F32F27DFA500DBF3DF /* The Pendulum 2.0 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D67E73F62F27DFA500DBF3DF /* The Pendulum 2.0 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D67E7A102F3286A000DBF3DF /* Exceptions for "The Pendulum 2.0" folder in "The Pendulum 2.0" target */,
+			);
 			path = "The Pendulum 2.0";
 			sourceTree = "<group>";
 		};
@@ -33,6 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */,
+				D6772EFC2F2D50E30031EA29 /* Singular in Frameworks */,
 				D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */,
 				D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */,
 				D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */,
@@ -94,6 +109,7 @@
 				D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */,
 				D66F27012F2BDE1B0099EA6E /* FirebaseStorage */,
 				D67E79A02F2BDF3A0099EA6E /* PendulumSolver */,
+				D6772EFB2F2D50E30031EA29 /* Singular */,
 			);
 			productName = "The Pendulum 2.0";
 			productReference = D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */;
@@ -127,6 +143,7 @@
 				D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "../../../../../The Theme/src/core/front_end/golden-theme" */,
 				D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */,
+				D6772EFA2F2D50E30031EA29 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D67E73F52F27DFA500DBF3DF /* Products */;
@@ -287,12 +304,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "The Pendulum 2.0/Info.plist";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "The Pendulum reads your health data to correlate with your training performance and provide personalized insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The Pendulum logs your training sessions as mindfulness minutes to help you track your focus practice.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This identifier helps us measure how you discovered The Pendulum and improve our ability to reach players who enjoy physics-based mindfulness games.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -322,12 +341,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "The Pendulum 2.0/Info.plist";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "The Pendulum reads your health data to correlate with your training performance and provide personalized insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The Pendulum logs your training sessions as mindfulness minutes to help you track your focus practice.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This identifier helps us measure how you discovered The Pendulum and improve our ability to reach players who enjoy physics-based mindfulness games.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -393,6 +414,14 @@
 				minimumVersion = 12.8.0;
 			};
 		};
+		D6772EFA2F2D50E30031EA29 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/singular-labs/Singular-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -415,6 +444,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		D6772EFB2F2D50E30031EA29 /* Singular */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6772EFA2F2D50E30031EA29 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */;
+			productName = Singular;
 		};
 		D67E74032F27DFB700DBF3DF /* GoldenTheme */ = {
 			isa = XCSwiftPackageProductDependency;

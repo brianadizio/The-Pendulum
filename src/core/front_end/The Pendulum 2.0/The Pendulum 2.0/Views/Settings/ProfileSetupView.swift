@@ -210,6 +210,8 @@ struct ProfileSetupView: View {
             profileManager.updateProfile(profile)
         } else {
             profileManager.createProfile(profile)
+            // Singular attribution: track profile creation
+            SingularTracker.trackProfileCreated(goal: trainingGoal.rawValue)
         }
 
         dismiss()

@@ -16,6 +16,13 @@ struct ThePendulum2App: App {
             ContentView()
                 .task {
                     await FirebaseManager.shared.signInAnonymously()
+
+                    // Request ATT permission + initialize Singular SDK (delayed for UI readiness)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        AppTrackingManager.shared.requestTrackingAndInitializeSingular { _ in
+                            SingularTracker.trackInstall()
+                        }
+                    }
                 }
         }
     }

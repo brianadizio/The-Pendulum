@@ -174,14 +174,13 @@ class GameState: ObservableObject {
     @Published var forceStrength: Double = 3.0     // Push force multiplier
 
     // Settings - Appearance
-    @Published var selectedTheme: AppTheme = .system
-    @Published var selectedBackground: BackgroundStyle = .minimal
+    @Published var selectedBackgroundPhoto: String = "none"  // Asset name or "none" for default parchment
 
     // Settings - Gameplay
-    @Published var controlSensitivity: Double = 1.0
     @Published var soundEnabled: Bool = true
     @Published var hapticsEnabled: Bool = true
     @Published var showHints: Bool = true
+    @Published var controlStyle: ControlStyle = .buttons
 
     // AI settings
     @Published var aiMode: AIMode = .off
@@ -211,6 +210,10 @@ class GameState: ObservableObject {
         currentSessionTime = 0
         pushCount = 0
         isPlaying = true
+
+        // Singular attribution tracking
+        SingularTracker.trackModeSelected(mode: gameMode.rawValue)
+        SingularTracker.trackSessionStart(mode: gameMode.rawValue, level: levelManager.currentLevel)
 
         // Start AI session
         AIManager.shared.onSessionStart()
@@ -249,7 +252,11 @@ class GameState: ObservableObject {
 
         // Activate perturbation based on mode
         if gameMode.hasPerturbations {
-            if gameMode == .jiggle {
+            if gameMode == .progressive {
+                perturbationManager.activateProfile(
+                    PerturbationProfile.forProgressiveLevel(levelManager.currentLevel)
+                )
+            } else if gameMode == .jiggle {
                 let config = levelManager.getConfigForCurrentLevel()
                 perturbationManager.activateProfile(
                     PerturbationProfile.jiggle(intensity: config.jiggleIntensity)
@@ -293,6 +300,14 @@ class GameState: ObservableObject {
         // Compute metrics for App Group before CSV session closes
         let appGroupMetrics = computeAppGroupMetrics(csvURL: csvURL, sessionDuration: sessionDuration)
 
+        // Singular attribution tracking
+        SingularTracker.trackSessionEnd(
+            mode: gameMode.rawValue,
+            duration: sessionDuration,
+            score: sessionScore,
+            levelsCompleted: max(0, levelManager.currentLevel - 1)
+        )
+
         // End the CSV session
         csvSessionManager?.endSession()
         perturbationManager.stop()
@@ -310,6 +325,12 @@ class GameState: ObservableObject {
                 finalStability: appGroupMetrics.balancePercent,
                 finalReactionTime: appGroupMetrics.reactionTime,
                 score: sessionScore
+            )
+
+            // Singular: track golden mode engagement
+            SingularTracker.trackGoldenSessionEnd(
+                coherenceScore: GoldenModeManager.shared.coherenceScore,
+                duration: sessionDuration
             )
         }
 
@@ -484,6 +505,14 @@ enum PushDirection: Int {
     case left = -1
     case right = 1
     case none = 0
+}
+
+// MARK: - Control Style
+enum ControlStyle: String, CaseIterable, Identifiable {
+    case buttons = "Buttons"
+    case spectrum = "Spectrum"
+
+    var id: String { rawValue }
 }
 
 // MARK: - Preview

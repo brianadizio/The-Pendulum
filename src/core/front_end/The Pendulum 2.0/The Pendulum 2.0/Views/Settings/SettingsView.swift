@@ -7,66 +7,88 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var gameState: GameState
     @StateObject private var profileManager = ProfileManager.shared
-    @State private var showingExportSheet = false
+    @State private var showingExportShare = false
+    @State private var exportFileURL: URL?
+    @State private var showingExportError = false
+    @State private var exportErrorMessage = ""
     @State private var showingClearConfirmation = false
     @State private var showingProfileSheet = false
-    @State private var exportMessage = ""
+    @State private var showingEmailSignIn = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            SettingsHeader()
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header
+                SettingsHeader()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Profile Section (at top)
-                    ProfileSection(
-                        profile: profileManager.currentProfile,
-                        onCreateProfile: { showingProfileSheet = true },
-                        onEditProfile: { showingProfileSheet = true }
-                    )
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Profile Section (at top)
+                        ProfileSection(
+                            profile: profileManager.currentProfile,
+                            onCreateProfile: { showingProfileSheet = true },
+                            onEditProfile: { showingProfileSheet = true }
+                        )
 
-                    Divider()
-                        .background(PendulumColors.bronze.opacity(0.3))
-                        .padding(.horizontal, 16)
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
 
-                    // Appearance Section
-                    AppearanceSection(gameState: gameState)
+                        // Account Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("ACCOUNT")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(PendulumColors.textTertiary)
+                                .padding(.horizontal, 16)
 
-                    Divider()
-                        .background(PendulumColors.bronze.opacity(0.3))
-                        .padding(.horizontal, 16)
+                            AccountCard(onShowEmailSignIn: { showingEmailSignIn = true })
+                                .padding(.horizontal, 16)
+                        }
 
-                    // Gameplay Section
-                    GameplaySection(gameState: gameState)
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
 
-                    Divider()
-                        .background(PendulumColors.bronze.opacity(0.3))
-                        .padding(.horizontal, 16)
+                        // Appearance Section
+                        AppearanceSection(gameState: gameState)
 
-                    // Data Section
-                    DataSection(
-                        gameState: gameState,
-                        showingExportSheet: $showingExportSheet,
-                        showingClearConfirmation: $showingClearConfirmation,
-                        exportMessage: $exportMessage
-                    )
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
 
-                    Divider()
-                        .background(PendulumColors.bronze.opacity(0.3))
-                        .padding(.horizontal, 16)
+                        // Gameplay Section
+                        GameplaySection(gameState: gameState)
 
-                    // About Section
-                    AboutSection()
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        // Data Section
+                        DataSection(
+                            gameState: gameState,
+                            showingExportShare: $showingExportShare,
+                            exportFileURL: $exportFileURL,
+                            showingExportError: $showingExportError,
+                            exportErrorMessage: $exportErrorMessage,
+                            showingClearConfirmation: $showingClearConfirmation
+                        )
+
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        // About Section
+                        AboutSection()
+                    }
+                    .padding(.vertical, 16)
                 }
-                .padding(.vertical, 16)
             }
-        }
-        .background(PendulumColors.background)
-        .alert("Export Complete", isPresented: $showingExportSheet) {
+            .background(PendulumColors.background)
+            .toolbarVisibility(.hidden, for: .navigationBar)
+        .alert("Export Error", isPresented: $showingExportError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(exportMessage)
+            Text(exportErrorMessage)
         }
         .alert("Clear All Data?", isPresented: $showingClearConfirmation) {
             Button("Cancel", role: .cancel) { }
@@ -79,6 +101,15 @@ struct SettingsView: View {
         .sheet(isPresented: $showingProfileSheet) {
             ProfileSetupView(existingProfile: profileManager.currentProfile)
         }
+        .sheet(isPresented: $showingEmailSignIn) {
+            FirebaseSignInSheet(onDismiss: { showingEmailSignIn = false })
+        }
+        .sheet(isPresented: $showingExportShare) {
+            if let url = exportFileURL {
+                ShareSheet(items: [url])
+            }
+        }
+        } // NavigationStack
     }
 
     private func clearAllData() {
@@ -206,6 +237,17 @@ struct SettingsHeader: View {
 struct AppearanceSection: View {
     @ObservedObject var gameState: GameState
 
+    private var currentBackgroundLabel: String {
+        if gameState.selectedBackgroundPhoto == "none" {
+            return "Default"
+        }
+        let manager = NatureBackgroundManager.shared
+        if let photo = manager.allPhotos.first(where: { $0.id == gameState.selectedBackgroundPhoto }) {
+            return photo.displayName
+        }
+        return "Custom"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("APPEARANCE")
@@ -213,37 +255,119 @@ struct AppearanceSection: View {
                 .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
-            VStack(spacing: 8) {
-                // Theme Picker
-                SettingsRow(
-                    title: "Theme",
-                    subtitle: "Visual style of the app"
-                ) {
-                    Picker("Theme", selection: $gameState.selectedTheme) {
-                        ForEach(AppTheme.allCases) { theme in
-                            Text(theme.rawValue).tag(theme)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(PendulumColors.gold)
-                }
-
-                // Background Picker
-                SettingsRow(
-                    title: "Background",
-                    subtitle: "Pendulum scene background"
-                ) {
-                    Picker("Background", selection: $gameState.selectedBackground) {
-                        ForEach(BackgroundStyle.allCases) { bg in
-                            Text(bg.rawValue).tag(bg)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(PendulumColors.gold)
-                }
+            SettingsNavigationRow(
+                title: "Play Background",
+                icon: "photo"
+            ) {
+                BackgroundPickerView(gameState: gameState)
             }
             .padding(.horizontal, 16)
         }
+    }
+}
+
+// MARK: - Background Picker (sub-page)
+struct BackgroundPickerView: View {
+    @ObservedObject var gameState: GameState
+    private let backgroundManager = NatureBackgroundManager.shared
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // "None" option (default parchment)
+                Button {
+                    gameState.selectedBackgroundPhoto = "none"
+                } label: {
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(PendulumColors.background)
+                            .frame(width: 48, height: 64)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(gameState.selectedBackgroundPhoto == "none"
+                                            ? PendulumColors.gold
+                                            : PendulumColors.bronze.opacity(0.3),
+                                            lineWidth: gameState.selectedBackgroundPhoto == "none" ? 2 : 1)
+                            )
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Default")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(PendulumColors.text)
+                            Text("Golden parchment theme")
+                                .font(.system(size: 12))
+                                .foregroundStyle(PendulumColors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        if gameState.selectedBackgroundPhoto == "none" {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(PendulumColors.gold)
+                                .font(.system(size: 20))
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(PendulumColors.backgroundTertiary)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                // Photo backgrounds grouped by location
+                ForEach(NatureLocation.allCases) { location in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(location.rawValue.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(PendulumColors.textTertiary)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(backgroundManager.photos(for: location)) { photo in
+                                    Button {
+                                        gameState.selectedBackgroundPhoto = photo.id
+                                    } label: {
+                                        ZStack(alignment: .bottomTrailing) {
+                                            Image(photo.id)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 72, height: 96)
+                                                .clipped()
+                                                .cornerRadius(10)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .stroke(gameState.selectedBackgroundPhoto == photo.id
+                                                                ? PendulumColors.gold
+                                                                : Color.clear,
+                                                                lineWidth: 2.5)
+                                                )
+
+                                            if gameState.selectedBackgroundPhoto == photo.id {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundStyle(PendulumColors.gold)
+                                                    .font(.system(size: 16))
+                                                    .background(Circle().fill(.white).padding(2))
+                                                    .offset(x: -4, y: -4)
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(PendulumColors.background)
+        .navigationTitle("Play Background")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -259,28 +383,28 @@ struct GameplaySection: View {
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
-                // Control Sensitivity
-                SettingsSliderRow(
-                    title: "Control Sensitivity",
-                    value: $gameState.controlSensitivity,
-                    range: 0.5...2.0
+                // Control Style
+                SettingsPickerRow(
+                    title: "Control Style",
+                    subtitle: "How you push the pendulum",
+                    selection: $gameState.controlStyle
                 )
 
                 // Sound Toggle
                 SettingsToggleRow(
                     title: "Sound Effects",
-                    subtitle: "Play sounds during gameplay",
+                    subtitle: "Nature sounds on level completion",
                     isOn: $gameState.soundEnabled
                 )
 
                 // Haptics Toggle
                 SettingsToggleRow(
                     title: "Haptic Feedback",
-                    subtitle: "Vibration on interactions",
+                    subtitle: "Vibration on push controls",
                     isOn: $gameState.hapticsEnabled
                 )
 
-                // Show Tutorial
+                // Show Hints
                 SettingsToggleRow(
                     title: "Show Hints",
                     subtitle: "Display helpful tips during play",
@@ -295,9 +419,11 @@ struct GameplaySection: View {
 // MARK: - Data Section
 struct DataSection: View {
     @ObservedObject var gameState: GameState
-    @Binding var showingExportSheet: Bool
+    @Binding var showingExportShare: Bool
+    @Binding var exportFileURL: URL?
+    @Binding var showingExportError: Bool
+    @Binding var exportErrorMessage: String
     @Binding var showingClearConfirmation: Bool
-    @Binding var exportMessage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -316,7 +442,7 @@ struct DataSection: View {
                 // Export CSV Button
                 SettingsButtonRow(
                     title: "Export All Data",
-                    subtitle: "Save sessions as CSV to Files app",
+                    subtitle: "Share session summaries as CSV",
                     iconName: "square.and.arrow.up"
                 ) {
                     exportData()
@@ -338,42 +464,47 @@ struct DataSection: View {
 
     private func exportData() {
         guard let manager = gameState.csvSessionManager else {
-            exportMessage = "No session manager available"
-            showingExportSheet = true
+            exportErrorMessage = "No session manager available"
+            showingExportError = true
             return
         }
 
         let sessions = manager.getAllSessions()
         if sessions.isEmpty {
-            exportMessage = "No sessions to export"
-            showingExportSheet = true
+            exportErrorMessage = "No sessions to export"
+            showingExportError = true
             return
         }
 
-        // Export to Documents directory
-        if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let exportPath = documentsPath.appendingPathComponent("PendulumExport_\(Date().ISO8601Format()).csv")
+        // Build session summary CSV from metadata
+        let dateFormatter = ISO8601DateFormatter()
+        var csv = "Date,Mode,Duration (s),Score,Max Level,Total Pushes,Levels Completed\n"
 
-            var combinedData = "session_id,timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy\n"
-
-            for (index, sessionUrl) in sessions.enumerated() {
-                if let data = manager.readSessionData(from: sessionUrl) {
-                    for row in data {
-                        let line = "\(index),\(row["timestamp"] ?? ""),\(row["angle"] ?? ""),\(row["angleVelocity"] ?? ""),\(row["pushDirection"] ?? ""),\(row["pushMagnitude"] ?? ""),\(row["isBalanced"] ?? ""),\(row["level"] ?? ""),\(row["energy"] ?? "")\n"
-                        combinedData += line
-                    }
-                }
-            }
-
-            do {
-                try combinedData.write(to: exportPath, atomically: true, encoding: .utf8)
-                exportMessage = "Exported \(sessions.count) sessions to Documents folder"
-            } catch {
-                exportMessage = "Export failed: \(error.localizedDescription)"
+        for sessionURL in sessions {
+            if let meta = manager.getMetadata(for: sessionURL) {
+                let date = dateFormatter.string(from: meta.startTime)
+                let mode = meta.gameMode
+                let duration = Int(meta.totalDuration)
+                let score = meta.maxScore
+                let maxLevel = meta.maxLevel
+                let pushes = meta.totalPushes
+                let levels = meta.levelsCompleted.map { String($0) }.joined(separator: ",")
+                csv += "\(date),\(mode),\(duration),\(score),\(maxLevel),\(pushes),\"\(levels)\"\n"
             }
         }
 
-        showingExportSheet = true
+        // Write to temp file
+        let tempDir = FileManager.default.temporaryDirectory
+        let exportPath = tempDir.appendingPathComponent("PendulumSessions.csv")
+
+        do {
+            try csv.write(to: exportPath, atomically: true, encoding: .utf8)
+            exportFileURL = exportPath
+            showingExportShare = true
+        } catch {
+            exportErrorMessage = "Export failed: \(error.localizedDescription)"
+            showingExportError = true
+        }
     }
 }
 
@@ -387,17 +518,32 @@ struct AboutSection: View {
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
-                SettingsInfoRow(title: "Version", value: "2.0.0")
-                SettingsInfoRow(title: "Build", value: "1")
+                SettingsInfoRow(title: "Version", value: "1.0")
+                SettingsInfoRow(title: "Build", value: "2")
+
+                // Documentation
+                SettingsNavigationRow(
+                    title: "The Science",
+                    icon: "book.closed"
+                ) {
+                    ScienceDocumentationView()
+                }
+
+                SettingsNavigationRow(
+                    title: "Metrics Guide",
+                    icon: "chart.bar.doc.horizontal"
+                ) {
+                    MetricsDocumentationView()
+                }
 
                 SettingsLinkRow(
                     title: "Privacy Policy",
-                    url: "https://www.golden-enterprises.net/privacy"
+                    url: "https://app.termly.io/policy-viewer/policy.html?policyUUID=01085dff-568d-49e6-8ed8-87b975ccaea9"
                 )
 
                 SettingsLinkRow(
                     title: "Terms of Service",
-                    url: "https://www.golden-enterprises.net/terms"
+                    url: "https://app.termly.io/policy-viewer/policy.html?policyUUID=435400bb-d5d1-4f76-a708-607f87e9d5cb"
                 )
 
                 // Credits
@@ -468,6 +614,24 @@ struct SettingsToggleRow: View {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(PendulumColors.gold)
+        }
+    }
+}
+
+struct SettingsPickerRow<T: Hashable & CaseIterable & RawRepresentable & Identifiable>: View where T.RawValue == String, T.AllCases: RandomAccessCollection {
+    let title: String
+    let subtitle: String
+    @Binding var selection: T
+
+    var body: some View {
+        SettingsRow(title: title, subtitle: subtitle) {
+            Picker("", selection: $selection) {
+                ForEach(T.allCases) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 160)
         }
     }
 }
@@ -609,25 +773,52 @@ struct SettingsLinkRow: View {
     }
 }
 
-// MARK: - Settings Enums
+struct SettingsNavigationRow<Destination: View>: View {
+    let title: String
+    let icon: String
+    @ViewBuilder let destination: () -> Destination
 
-enum AppTheme: String, CaseIterable, Identifiable {
-    case system = "System"
-    case light = "Light"
-    case dark = "Dark"
-    case golden = "Golden"
+    var body: some View {
+        NavigationLink(destination: destination) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(PendulumColors.bronze)
+                    .frame(width: 24)
 
-    var id: String { rawValue }
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PendulumColors.text)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PendulumColors.bronze)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(PendulumColors.backgroundTertiary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
 }
 
-enum BackgroundStyle: String, CaseIterable, Identifiable {
-    case minimal = "Minimal"
-    case gradient = "Gradient"
-    case topology = "Topology"
-    case parchment = "Parchment"
-    case outerSpace = "Outer Space"
+// MARK: - Share Sheet
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
 
-    var id: String { rawValue }
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview
