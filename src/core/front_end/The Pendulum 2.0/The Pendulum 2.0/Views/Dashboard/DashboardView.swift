@@ -234,15 +234,16 @@ struct ChartsSection: View {
                 .foregroundStyle(PendulumColors.textTertiary)
                 .padding(.horizontal, 16)
 
-            // Levels Completion Over Time (Swift Charts - good for dates)
+            // Levels Completion Over Time (bar chart)
             if !metricsCalculator.levelCompletionData.isEmpty {
                 ChartCard(title: "Levels Completed Over Time") {
                     Chart(metricsCalculator.levelCompletionData) { point in
-                        LineMark(
-                            x: .value("Time", point.date),
+                        BarMark(
+                            x: .value("Time", point.date, unit: .hour),
                             y: .value("Level", point.level)
                         )
-                        .foregroundStyle(PendulumColors.gold)
+                        .foregroundStyle(PendulumColors.gold.gradient)
+                        .cornerRadius(4)
                     }
                     .chartYScale(domain: 0...max(10, metricsCalculator.levelCompletionData.map(\.level).max() ?? 10))
                     .chartXAxisLabel("Date", position: .bottom, alignment: .center)

@@ -47,10 +47,22 @@ struct PlayView: View {
                             if aiManager.isActive {
                                 AIStatusBadge(aiManager: aiManager)
                             }
+
+                            // Tutorial lesson banner (visible in tutorial mode, hidden when finished)
+                            if aiManager.currentMode == .tutorial && !aiManager.tutorialFinished {
+                                TutorialLessonBanner(aiManager: aiManager)
+                                    .padding(.top, 4)
+                            }
                         }
                         .padding(.top, 8)
 
                         Spacer()
+
+                        // Tutorial hint overlay (above controls, only during guided/assisted phases)
+                        if let hint = aiManager.currentHint, !aiManager.tutorialFinished {
+                            TutorialHintOverlay(hint: hint)
+                                .padding(.bottom, 8)
+                        }
 
                         // Game control buttons (Play/Pause/Reset) - above push buttons
                         GameControlButtons(gameState: gameState, viewModel: viewModel)
@@ -63,13 +75,14 @@ struct PlayView: View {
                             .opacity(gameState.aiMode == .demo ? 0.4 : 1.0)
                     }
 
-                    // Tutorial hint overlay (centered, above controls)
-                    if let hint = aiManager.currentHint {
-                        VStack {
-                            Spacer()
-                            TutorialHintOverlay(hint: hint)
-                                .padding(.bottom, 200)
-                        }
+                    // Tutorial Complete overlay (centered, above everything)
+                    if aiManager.tutorialFinished {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+                            .transition(.opacity)
+
+                        TutorialCompleteOverlay(aiManager: aiManager)
+                            .transition(.scale(scale: 0.9).combined(with: .opacity))
                     }
                 }
             }
