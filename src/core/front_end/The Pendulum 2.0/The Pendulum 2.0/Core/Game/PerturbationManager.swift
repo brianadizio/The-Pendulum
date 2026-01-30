@@ -162,6 +162,22 @@ struct PerturbationProfile {
         }
     }
 
+    /// Progressive mode: impulse-only with gentle strength ramp.
+    /// No sine or compound perturbations — difficulty comes from longer balance time.
+    static func forProgressiveLevel(_ level: Int) -> PerturbationProfile {
+        let strength = min(0.8, 0.2 + Double(level - 1) * 0.05)
+        let intervalLow = max(2.0, 5.0 - Double(level) * 0.3)
+        let intervalHigh = max(3.0, 7.0 - Double(level) * 0.3)
+        return PerturbationProfile(
+            name: "Progressive L\(level)",
+            types: [.impulse],
+            strength: strength,
+            frequency: 0.0,
+            randomInterval: intervalLow...intervalHigh,
+            dataSource: nil
+        )
+    }
+
     // Zen mode - no perturbations
     static var zen: PerturbationProfile {
         PerturbationProfile(

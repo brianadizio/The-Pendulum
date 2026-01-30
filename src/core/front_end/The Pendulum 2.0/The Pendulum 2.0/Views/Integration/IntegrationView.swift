@@ -8,7 +8,6 @@ struct IntegrationView: View {
     @StateObject private var healthKitManager = HealthKitManager.shared
     @State private var showingHealthExplanation = false
     @State private var showingHealthSettings = false
-    @State private var showingEmailSignIn = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,15 +16,6 @@ struct IntegrationView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
-                    // Account Section
-                    AccountSection(
-                        onShowEmailSignIn: { showingEmailSignIn = true }
-                    )
-
-                    Divider()
-                        .background(PendulumColors.bronze.opacity(0.3))
-                        .padding(.horizontal, 16)
-
                     // Golden Solutions Section
                     GoldenSolutionsSection()
 
@@ -59,26 +49,6 @@ struct IntegrationView: View {
         }
         .sheet(isPresented: $showingHealthSettings) {
             HealthSettingsView()
-        }
-        .sheet(isPresented: $showingEmailSignIn) {
-            FirebaseSignInSheet(onDismiss: { showingEmailSignIn = false })
-        }
-    }
-}
-
-// MARK: - Account Section
-struct AccountSection: View {
-    var onShowEmailSignIn: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("ACCOUNT")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(PendulumColors.textTertiary)
-                .padding(.horizontal, 16)
-
-            AccountCard(onShowEmailSignIn: onShowEmailSignIn)
-                .padding(.horizontal, 16)
         }
     }
 }

@@ -140,6 +140,13 @@ class LevelManager: ObservableObject {
         setLevel(1)
     }
 
+    /// Demote one level (floor at 1) — used on fall to continue session
+    func demoteOneLevel() {
+        if currentLevel > 1 {
+            setLevel(currentLevel - 1)
+        }
+    }
+
     /// Get configuration for a specific level (uses active mode)
     func getConfigForLevel(_ level: Int) -> LevelConfig {
         return getConfigForLevel(level, mode: activeMode)

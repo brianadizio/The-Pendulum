@@ -8,6 +8,7 @@ import SpriteKit
 struct PendulumSceneView: UIViewRepresentable {
     @ObservedObject var viewModel: PendulumViewModel
     var isPaused: Bool = false  // Control SKView pausing to free Metal resources
+    var useTransparentBackground: Bool = false  // Transparent when nature photo is behind
 
     func makeUIView(context: Context) -> SKView {
         let skView = SKView()
@@ -15,6 +16,7 @@ struct PendulumSceneView: UIViewRepresentable {
         skView.showsFPS = false
         skView.showsNodeCount = false
         skView.backgroundColor = .clear
+        skView.allowsTransparency = true
 
         return skView
     }
@@ -28,8 +30,12 @@ struct PendulumSceneView: UIViewRepresentable {
             let scene = PendulumScene(size: skView.bounds.size)
             scene.scaleMode = .resizeFill
             scene.viewModel = viewModel
-            // Golden Theme parchment/cream background
-            scene.backgroundColor = UIColor(red: 0.97, green: 0.95, blue: 0.91, alpha: 1.0)
+            scene.useTransparentBackground = useTransparentBackground
+            if useTransparentBackground {
+                scene.backgroundColor = .clear
+            } else {
+                scene.backgroundColor = UIColor(red: 0.97, green: 0.95, blue: 0.91, alpha: 1.0)
+            }
             skView.presentScene(scene)
         }
 
@@ -41,6 +47,16 @@ struct PendulumSceneView: UIViewRepresentable {
             }
             // Keep viewModel reference updated
             scene.viewModel = viewModel
+
+            // Update transparency when background selection changes
+            if scene.useTransparentBackground != useTransparentBackground {
+                scene.useTransparentBackground = useTransparentBackground
+                if useTransparentBackground {
+                    scene.backgroundColor = .clear
+                } else {
+                    scene.backgroundColor = UIColor(red: 0.97, green: 0.95, blue: 0.91, alpha: 1.0)
+                }
+            }
         }
     }
 }
@@ -48,6 +64,7 @@ struct PendulumSceneView: UIViewRepresentable {
 // MARK: - Pendulum Scene
 class PendulumScene: SKScene {
     weak var viewModel: PendulumViewModel?
+    var useTransparentBackground: Bool = false
 
     // Visual elements
     private var pivotNode: SKShapeNode!
@@ -83,7 +100,7 @@ class PendulumScene: SKScene {
     private let bobBalancedColor = UIColor(red: 0.30, green: 0.69, blue: 0.31, alpha: 1.0) // Green
 
     override func didMove(to view: SKView) {
-        backgroundColor = parchmentColor
+        backgroundColor = useTransparentBackground ? .clear : parchmentColor
         setupScene()
     }
 

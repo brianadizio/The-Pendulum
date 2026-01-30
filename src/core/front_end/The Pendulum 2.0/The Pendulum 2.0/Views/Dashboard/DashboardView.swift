@@ -68,6 +68,18 @@ struct DashboardView: View {
                     // Educational Metrics
                     EducationalMetricsSection(metricsCalculator: metricsCalculator)
 
+                    // Health Correlations (visible when Apple Health connected + enough data)
+                    if HealthKitManager.shared.isAuthorized {
+                        let correlations = ProfileManager.shared.getHealthCorrelations(limit: 50)
+                        if correlations.count >= 5 {
+                            Divider()
+                                .background(PendulumColors.bronze.opacity(0.3))
+                                .padding(.horizontal, 16)
+
+                            HealthCorrelationSection(correlations: correlations)
+                        }
+                    }
+
                     // AI Metrics (visible only when AI data exists)
                     if metricsCalculator.aiMetrics.hasAIData {
                         Divider()
@@ -646,6 +658,185 @@ struct MetricRow: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(PendulumColors.backgroundSecondary)
         )
+    }
+}
+
+// MARK: - Health Correlation Section
+
+private struct HealthInsight: Identifiable {
+    let id = UUID()
+    let metricName: String
+    let icon: String
+    let correlation: Double
+    let description: String
+    let color: Color
+}
+
+struct HealthCorrelationSection: View {
+    let correlations: [HealthCorrelation]
+    @State private var isExpanded = false
+    @State private var insights: [HealthInsight] = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSectionHeader(
+                title: "HEALTH & PERFORMANCE",
+                isExpanded: $isExpanded
+            )
+            .padding(.horizontal, 16)
+
+            if isExpanded {
+                VStack(spacing: 8) {
+                    if insights.isEmpty {
+                        HStack {
+                            Image(systemName: "heart.text.square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(PendulumColors.bronze)
+                                .frame(width: 24)
+
+                            Text("Keep playing to discover patterns")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(PendulumColors.textSecondary)
+
+                            Spacer()
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(PendulumColors.backgroundSecondary)
+                        )
+                    } else {
+                        ForEach(insights) { insight in
+                            HStack {
+                                Image(systemName: insight.icon)
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(insight.color)
+                                    .frame(width: 24)
+
+                                Text(insight.description)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(PendulumColors.text)
+
+                                Spacer()
+
+                                Text(insight.metricName)
+                                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                                    .foregroundStyle(insight.color)
+                            }
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(PendulumColors.backgroundSecondary)
+                            )
+                        }
+                    }
+
+                    // Session count subtitle
+                    Text("Based on \(correlations.count) sessions")
+                        .font(.system(size: 11))
+                        .foregroundStyle(PendulumColors.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+        .onAppear { computeInsights() }
+    }
+
+    // MARK: - Correlation Computation
+
+    private func computeInsights() {
+        let scores = correlations.map { Double($0.sessionScore) }
+
+        var candidates: [(name: String, icon: String, r: Double)] = []
+
+        // HRV vs Score
+        let hrvPairs = correlations.compactMap { c -> (Double, Double)? in
+            guard let hrv = c.healthSnapshot.heartRateVariability else { return nil }
+            return (hrv, Double(c.sessionScore))
+        }
+        if hrvPairs.count >= 5 {
+            let r = pearsonR(hrvPairs.map(\.0), hrvPairs.map(\.1))
+            candidates.append(("HRV", HealthDataType.heartRateVariability.icon, r))
+        }
+
+        // Sleep vs Score
+        let sleepPairs = correlations.compactMap { c -> (Double, Double)? in
+            guard let sleep = c.healthSnapshot.sleepDuration else { return nil }
+            return (sleep / 3600.0, Double(c.sessionScore))
+        }
+        if sleepPairs.count >= 5 {
+            let r = pearsonR(sleepPairs.map(\.0), sleepPairs.map(\.1))
+            candidates.append(("Sleep", HealthDataType.sleep.icon, r))
+        }
+
+        // Steps vs Score
+        let stepPairs = correlations.compactMap { c -> (Double, Double)? in
+            guard let steps = c.healthSnapshot.steps else { return nil }
+            return (Double(steps), Double(c.sessionScore))
+        }
+        if stepPairs.count >= 5 {
+            let r = pearsonR(stepPairs.map(\.0), stepPairs.map(\.1))
+            candidates.append(("Steps", HealthDataType.steps.icon, r))
+        }
+
+        // Resting HR vs Score
+        let hrPairs = correlations.compactMap { c -> (Double, Double)? in
+            guard let hr = c.healthSnapshot.restingHeartRate else { return nil }
+            return (hr, Double(c.sessionScore))
+        }
+        if hrPairs.count >= 5 {
+            let r = pearsonR(hrPairs.map(\.0), hrPairs.map(\.1))
+            candidates.append(("Resting HR", HealthDataType.restingHeartRate.icon, r))
+        }
+
+        // Active Calories vs Score
+        let calPairs = correlations.compactMap { c -> (Double, Double)? in
+            guard let cal = c.healthSnapshot.activeCalories else { return nil }
+            return (cal, Double(c.sessionScore))
+        }
+        if calPairs.count >= 5 {
+            let r = pearsonR(calPairs.map(\.0), calPairs.map(\.1))
+            candidates.append(("Calories", HealthDataType.activeCalories.icon, r))
+        }
+
+        // Filter to moderate+ (|r| >= 0.3), sort by strength, take top 3
+        insights = candidates
+            .filter { abs($0.r) >= 0.3 }
+            .sorted { abs($0.r) > abs($1.r) }
+            .prefix(3)
+            .map { candidate in
+                let strength = abs(candidate.r) >= 0.5 ? "Strong" : "Moderate"
+                let color: Color = abs(candidate.r) >= 0.5 ? PendulumColors.gold : PendulumColors.bronze
+                let direction = candidate.r > 0 ? "higher" : "lower"
+                let moreOrLess = candidate.r > 0 ? "More" : "Less"
+                let description = "\(moreOrLess) \(candidate.name.lowercased()) → \(direction) scores (\(strength.lowercased()))"
+
+                return HealthInsight(
+                    metricName: String(format: "r=%.2f", candidate.r),
+                    icon: candidate.icon,
+                    correlation: candidate.r,
+                    description: description,
+                    color: color
+                )
+            }
+    }
+
+    private func pearsonR(_ x: [Double], _ y: [Double]) -> Double {
+        guard x.count == y.count, x.count >= 5 else { return 0 }
+        let n = Double(x.count)
+        let meanX = x.reduce(0, +) / n
+        let meanY = y.reduce(0, +) / n
+        var cov = 0.0, varX = 0.0, varY = 0.0
+        for i in 0..<x.count {
+            let dx = x[i] - meanX
+            let dy = y[i] - meanY
+            cov += dx * dy
+            varX += dx * dx
+            varY += dy * dy
+        }
+        guard varX > 0, varY > 0 else { return 0 }
+        return cov / sqrt(varX * varY)
     }
 }
 

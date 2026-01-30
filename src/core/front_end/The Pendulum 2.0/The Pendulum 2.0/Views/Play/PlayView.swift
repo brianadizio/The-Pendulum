@@ -34,12 +34,26 @@ struct PlayView: View {
             // Game area
             GeometryReader { geometry in
                 ZStack {
-                    // Background - parchment color
-                    PendulumColors.background
-                        .ignoresSafeArea()
+                    // Background - nature photo or default parchment
+                    if gameState.selectedBackgroundPhoto != "none" {
+                        Image(gameState.selectedBackgroundPhoto)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                            .overlay(Color.black.opacity(0.3))
+                            .ignoresSafeArea()
+                    } else {
+                        PendulumColors.background
+                            .ignoresSafeArea()
+                    }
 
                     // SpriteKit Scene - paused when not active to free Metal resources
-                    PendulumSceneView(viewModel: viewModel, isPaused: !isActive)
+                    PendulumSceneView(
+                        viewModel: viewModel,
+                        isPaused: !isActive,
+                        useTransparentBackground: gameState.selectedBackgroundPhoto != "none"
+                    )
                         .frame(width: geometry.size.width, height: geometry.size.height)
 
                     // HUD overlay
@@ -69,7 +83,9 @@ struct PlayView: View {
                         Spacer()
 
                         // Tutorial hint overlay (above controls, only during guided/assisted phases)
-                        if let hint = aiManager.currentHint, !aiManager.tutorialFinished {
+                        if let hint = aiManager.currentHint,
+                           !aiManager.tutorialFinished,
+                           gameState.showHints {
                             TutorialHintOverlay(hint: hint)
                                 .padding(.bottom, 8)
                         }
@@ -163,16 +179,45 @@ struct PlayView: View {
         )
         AIManager.shared.setMode(gameState.aiMode, difficulty: gameState.aiDifficulty)
 
-        // Handle fall - pause game when pendulum falls past 90 degrees
-        viewModel.onFall = { [weak gameState] in
-            if gameState?.gameMode == .golden {
-                goldenSessionDuration = viewModel.elapsedTime
-                goldenLevelsCompleted = max(0, (gameState?.levelManager.currentLevel ?? 1) - 1)
-                goldenSessionScore = gameState?.currentScore ?? 0
-            }
-            gameState?.endSession()
-            if gameState?.gameMode == .golden {
-                showingGoldenPostSession = true
+        // Handle fall - demote one level for leveled modes, end session for Free Play / Golden
+        viewModel.onFall = { [weak gameState, weak viewModel] in
+            guard let gs = gameState, let vm = viewModel else { return }
+
+            if gs.gameMode.hasLevels {
+                // Demote one level (floor at 1) and continue session
+                gs.levelManager.demoteOneLevel()
+
+                // Update perturbation for the demoted level
+                if gs.gameMode.hasPerturbations {
+                    if gs.gameMode == .progressive {
+                        gs.perturbationManager.activateProfile(
+                            PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
+                        )
+                    } else if gs.gameMode == .jiggle {
+                        let config = gs.levelManager.getConfigForCurrentLevel()
+                        gs.perturbationManager.activateProfile(
+                            PerturbationProfile.jiggle(intensity: config.jiggleIntensity)
+                        )
+                    } else {
+                        gs.perturbationManager.activateProfile(
+                            PerturbationProfile.forLevel(gs.levelManager.currentLevel)
+                        )
+                    }
+                }
+
+                // Reset pendulum and continue
+                vm.resetWithPerturbation(degrees: 8.0)
+            } else {
+                // Free Play / Golden Mode: end session as before
+                if gs.gameMode == .golden {
+                    goldenSessionDuration = vm.elapsedTime
+                    goldenLevelsCompleted = max(0, gs.levelManager.currentLevel - 1)
+                    goldenSessionScore = gs.currentScore
+                }
+                gs.endSession()
+                if gs.gameMode == .golden {
+                    showingGoldenPostSession = true
+                }
             }
         }
 
@@ -189,13 +234,28 @@ struct PlayView: View {
             guard let gs = gameState else { return }
             gs.levelManager.advanceToNextLevel()
 
+            // Play random nature sound on level beat
+            SoundManager.shared.isEnabled = gs.soundEnabled
+            SoundManager.shared.playLevelBeatSound()
+
+            // Singular attribution: track level completion
+            SingularTracker.trackLevelComplete(
+                level: completedLevel,
+                mode: gs.gameMode.rawValue,
+                balanceTime: viewModel?.elapsedTime ?? 0
+            )
+
             // Apply new level config without resetting pendulum position
             let config = gs.levelManager.getConfigForCurrentLevel()
             viewModel?.applyLevelConfigContinuous(config)
 
             // Update perturbation for new level
             if gs.gameMode.hasPerturbations {
-                if gs.gameMode == .jiggle {
+                if gs.gameMode == .progressive {
+                    gs.perturbationManager.activateProfile(
+                        PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
+                    )
+                } else if gs.gameMode == .jiggle {
                     gs.perturbationManager.activateProfile(
                         PerturbationProfile.jiggle(intensity: config.jiggleIntensity)
                     )
@@ -244,9 +304,17 @@ struct PlayHeader: View {
 
     var body: some View {
         HStack {
-            Text("The Pendulum")
-                .font(.system(size: 24, weight: .bold, design: .serif))
-                .foregroundStyle(PendulumColors.text)
+            HStack(spacing: 8) {
+                Image("PendulumLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 32, height: 32)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                Text("The Pendulum")
+                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .foregroundStyle(PendulumColors.text)
+            }
 
             Spacer()
 
@@ -532,30 +600,141 @@ struct ControlButtonsView: View {
     @ObservedObject var gameState: GameState
 
     var body: some View {
-        HStack(spacing: 40) {
-            // Push Left (positive force pushes pendulum left in θ = π coordinate system)
-            ControlButton(
-                label: "Push Left",
-                systemImage: "arrow.left.circle.fill",
-                color: PendulumColors.gold
-            ) {
-                viewModel.applyForce(1.0)
-                gameState.recordPush(direction: .left, magnitude: 1.0)
-            }
-            .disabled(!viewModel.isSimulating)
+        Group {
+            switch gameState.controlStyle {
+            case .buttons:
+                HStack(spacing: 40) {
+                    // Push Left (positive force pushes pendulum left in θ = π coordinate system)
+                    ControlButton(
+                        label: "Push Left",
+                        systemImage: "arrow.left.circle.fill",
+                        color: PendulumColors.gold,
+                        hapticsEnabled: gameState.hapticsEnabled
+                    ) {
+                        let force = gameState.forceStrength
+                        viewModel.applyForce(force)
+                        gameState.recordPush(direction: .left, magnitude: force)
+                    }
+                    .disabled(!viewModel.isSimulating)
 
-            // Push Right (negative force pushes pendulum right in θ = π coordinate system)
-            ControlButton(
-                label: "Push Right",
-                systemImage: "arrow.right.circle.fill",
-                color: PendulumColors.gold
-            ) {
-                viewModel.applyForce(-1.0)
-                gameState.recordPush(direction: .right, magnitude: 1.0)
+                    // Push Right (negative force pushes pendulum right in θ = π coordinate system)
+                    ControlButton(
+                        label: "Push Right",
+                        systemImage: "arrow.right.circle.fill",
+                        color: PendulumColors.gold,
+                        hapticsEnabled: gameState.hapticsEnabled
+                    ) {
+                        let force = gameState.forceStrength
+                        viewModel.applyForce(-force)
+                        gameState.recordPush(direction: .right, magnitude: force)
+                    }
+                    .disabled(!viewModel.isSimulating)
+                }
+                .padding(.horizontal, 32)
+
+            case .spectrum:
+                SpectrumControlBand(viewModel: viewModel, gameState: gameState)
+                    .padding(.horizontal, 16)
             }
-            .disabled(!viewModel.isSimulating)
         }
-        .padding(.horizontal, 32)
+    }
+}
+
+// MARK: - Spectrum Control Band
+struct SpectrumControlBand: View {
+    @ObservedObject var viewModel: PendulumViewModel
+    @ObservedObject var gameState: GameState
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+
+            ZStack {
+                // Background
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(PendulumColors.backgroundTertiary.opacity(0.9))
+
+                // Gradient fill: gold at edges → clear at center
+                HStack(spacing: 0) {
+                    LinearGradient(
+                        colors: [PendulumColors.gold.opacity(0.4), .clear],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    LinearGradient(
+                        colors: [.clear, PendulumColors.gold.opacity(0.4)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                // Center line
+                Rectangle()
+                    .fill(PendulumColors.bronze.opacity(0.5))
+                    .frame(width: 1)
+
+                // Labels
+                HStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Push")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(PendulumColors.text)
+                    .padding(.leading, 16)
+
+                    Spacer()
+
+                    HStack(spacing: 4) {
+                        Text("Push")
+                            .font(.system(size: 14, weight: .medium))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(PendulumColors.text)
+                    .padding(.trailing, 16)
+                }
+
+                // Border
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
+            }
+            .opacity(viewModel.isSimulating ? 1.0 : 0.4)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { value in
+                        guard viewModel.isSimulating else { return }
+
+                        let tapX = value.location.x
+                        let center = width / 2.0
+                        let halfWidth = width / 2.0
+
+                        // Normalized offset: -1.0 (far left) to +1.0 (far right)
+                        let normalizedOffset = max(-1.0, min(1.0, (tapX - center) / halfWidth))
+                        let magnitude = abs(normalizedOffset) * gameState.forceStrength
+
+                        // Skip near-zero taps (dead zone at very center)
+                        guard magnitude > 0.05 else { return }
+
+                        // Positive thetaDot = left push, negative = right push
+                        let signedForce = normalizedOffset < 0 ? magnitude : -magnitude
+                        let direction: PushDirection = normalizedOffset < 0 ? .left : .right
+
+                        viewModel.applyForce(signedForce)
+                        gameState.recordPush(direction: direction, magnitude: magnitude)
+
+                        // Haptic feedback scaled to force magnitude
+                        if gameState.hapticsEnabled {
+                            let intensity = min(1.0, abs(normalizedOffset))
+                            let generator = UIImpactFeedbackGenerator(style: intensity > 0.6 ? .heavy : intensity > 0.3 ? .medium : .light)
+                            generator.impactOccurred()
+                        }
+                    }
+            )
+        }
+        .frame(height: 70)
     }
 }
 
@@ -564,6 +743,7 @@ struct ControlButton: View {
     let label: String
     let systemImage: String
     let color: Color
+    var hapticsEnabled: Bool = true
     let action: () -> Void
 
     @State private var isPressed = false
@@ -571,9 +751,11 @@ struct ControlButton: View {
     var body: some View {
         Button(action: {
             action()
-            // Haptic feedback
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            // Haptic feedback (only if enabled in settings)
+            if hapticsEnabled {
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+            }
         }) {
             VStack(spacing: 8) {
                 Image(systemName: systemImage)
