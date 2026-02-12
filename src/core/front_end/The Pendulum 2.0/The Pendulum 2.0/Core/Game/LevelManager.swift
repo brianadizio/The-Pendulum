@@ -179,7 +179,7 @@ class LevelManager: ObservableObject {
 
     // MARK: - Level Configuration Generation
 
-    /// Generate predefined level configurations
+    /// Generate predefined level configurations (flattened: level 10 ≈ old level 6-7)
     private func getPredefinedLevelConfig(_ level: Int) -> LevelConfig {
         let safeLevel = max(1, min(level, predefinedLevelCount))
 
@@ -201,126 +201,126 @@ class LevelManager: ObservableObject {
         case 2:
             return LevelConfig(
                 number: 2,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.98,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.99,
                 balanceRequiredTime: 1.0,
                 initialPerturbation: LevelManager.basePerturbation,
                 massMultiplier: 1.0,
                 lengthMultiplier: 1.0,
                 dampingValue: LevelManager.baseDamping,
                 gravityMultiplier: 1.0,
-                springConstantValue: LevelManager.baseSpringConstant * 0.95,
+                springConstantValue: LevelManager.baseSpringConstant * 0.98,
                 description: "Novice - Getting the hang of it"
             )
 
         case 3:
             return LevelConfig(
                 number: 3,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.95,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.98,
                 balanceRequiredTime: 1.25,
-                initialPerturbation: LevelManager.basePerturbation * 1.05,
-                massMultiplier: 1.02,
+                initialPerturbation: LevelManager.basePerturbation,
+                massMultiplier: 1.0,
                 lengthMultiplier: 1.0,
-                dampingValue: LevelManager.baseDamping * 0.95,
+                dampingValue: LevelManager.baseDamping * 0.98,
                 gravityMultiplier: 1.0,
-                springConstantValue: LevelManager.baseSpringConstant * 0.9,
+                springConstantValue: LevelManager.baseSpringConstant * 0.96,
                 description: "Apprentice - Find your balance"
             )
 
         case 4:
             return LevelConfig(
                 number: 4,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.92,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.96,
                 balanceRequiredTime: 1.5,
-                initialPerturbation: LevelManager.basePerturbation * 1.1,
-                massMultiplier: 1.05,
+                initialPerturbation: LevelManager.basePerturbation * 1.02,
+                massMultiplier: 1.02,
                 lengthMultiplier: 1.0,
-                dampingValue: LevelManager.baseDamping * 0.9,
-                gravityMultiplier: 1.02,
-                springConstantValue: LevelManager.baseSpringConstant * 0.85,
+                dampingValue: LevelManager.baseDamping * 0.96,
+                gravityMultiplier: 1.01,
+                springConstantValue: LevelManager.baseSpringConstant * 0.93,
                 description: "Adept - Gentle balancing"
             )
 
         case 5:
             return LevelConfig(
                 number: 5,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.89,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.94,
                 balanceRequiredTime: 1.75,
-                initialPerturbation: LevelManager.basePerturbation * 1.15,
-                massMultiplier: 1.08,
-                lengthMultiplier: 1.02,
-                dampingValue: LevelManager.baseDamping * 0.85,
-                gravityMultiplier: 1.05,
-                springConstantValue: LevelManager.baseSpringConstant * 0.8,
+                initialPerturbation: LevelManager.basePerturbation * 1.05,
+                massMultiplier: 1.04,
+                lengthMultiplier: 1.0,
+                dampingValue: LevelManager.baseDamping * 0.93,
+                gravityMultiplier: 1.02,
+                springConstantValue: LevelManager.baseSpringConstant * 0.90,
                 description: "Practiced - Controlled movement"
             )
 
         case 6:
             return LevelConfig(
                 number: 6,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.85,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.92,
                 balanceRequiredTime: 2.0,
-                initialPerturbation: LevelManager.basePerturbation * 1.2,
-                massMultiplier: 1.1,
-                lengthMultiplier: 1.05,
-                dampingValue: LevelManager.baseDamping * 0.8,
-                gravityMultiplier: 1.08,
-                springConstantValue: LevelManager.baseSpringConstant * 0.75,
+                initialPerturbation: LevelManager.basePerturbation * 1.08,
+                massMultiplier: 1.06,
+                lengthMultiplier: 1.02,
+                dampingValue: LevelManager.baseDamping * 0.90,
+                gravityMultiplier: 1.04,
+                springConstantValue: LevelManager.baseSpringConstant * 0.87,
                 description: "Expert - Steady hands"
             )
 
         case 7:
             return LevelConfig(
                 number: 7,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.8,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.90,
                 balanceRequiredTime: 2.25,
-                initialPerturbation: LevelManager.basePerturbation * 1.25,
-                massMultiplier: 1.15,
-                lengthMultiplier: 1.08,
-                dampingValue: LevelManager.baseDamping * 0.75,
-                gravityMultiplier: 1.1,
-                springConstantValue: LevelManager.baseSpringConstant * 0.7,
+                initialPerturbation: LevelManager.basePerturbation * 1.1,
+                massMultiplier: 1.08,
+                lengthMultiplier: 1.03,
+                dampingValue: LevelManager.baseDamping * 0.87,
+                gravityMultiplier: 1.05,
+                springConstantValue: LevelManager.baseSpringConstant * 0.84,
                 description: "Master - Precise control"
             )
 
         case 8:
             return LevelConfig(
                 number: 8,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.75,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.87,
                 balanceRequiredTime: 2.5,
-                initialPerturbation: LevelManager.basePerturbation * 1.3,
-                massMultiplier: 1.2,
-                lengthMultiplier: 1.1,
-                dampingValue: LevelManager.baseDamping * 0.7,
-                gravityMultiplier: 1.15,
-                springConstantValue: LevelManager.baseSpringConstant * 0.65,
+                initialPerturbation: LevelManager.basePerturbation * 1.12,
+                massMultiplier: 1.10,
+                lengthMultiplier: 1.05,
+                dampingValue: LevelManager.baseDamping * 0.84,
+                gravityMultiplier: 1.06,
+                springConstantValue: LevelManager.baseSpringConstant * 0.80,
                 description: "Champion - Delicate balance"
             )
 
         case 9:
             return LevelConfig(
                 number: 9,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.7,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.84,
                 balanceRequiredTime: 2.75,
-                initialPerturbation: LevelManager.basePerturbation * 1.35,
-                massMultiplier: 1.25,
-                lengthMultiplier: 1.15,
-                dampingValue: LevelManager.baseDamping * 0.65,
-                gravityMultiplier: 1.2,
-                springConstantValue: LevelManager.baseSpringConstant * 0.6,
+                initialPerturbation: LevelManager.basePerturbation * 1.15,
+                massMultiplier: 1.12,
+                lengthMultiplier: 1.06,
+                dampingValue: LevelManager.baseDamping * 0.80,
+                gravityMultiplier: 1.08,
+                springConstantValue: LevelManager.baseSpringConstant * 0.76,
                 description: "Legend - Zen focus"
             )
 
         case 10:
             return LevelConfig(
                 number: 10,
-                balanceThreshold: LevelManager.baseBalanceThreshold * 0.65,
+                balanceThreshold: LevelManager.baseBalanceThreshold * 0.80,
                 balanceRequiredTime: 3.0,
-                initialPerturbation: LevelManager.basePerturbation * 1.4,
-                massMultiplier: 1.3,
-                lengthMultiplier: 1.2,
-                dampingValue: LevelManager.baseDamping * 0.6,
-                gravityMultiplier: 1.25,
-                springConstantValue: LevelManager.baseSpringConstant * 0.55,
+                initialPerturbation: LevelManager.basePerturbation * 1.18,
+                massMultiplier: 1.15,
+                lengthMultiplier: 1.08,
+                dampingValue: LevelManager.baseDamping * 0.76,
+                gravityMultiplier: 1.10,
+                springConstantValue: LevelManager.baseSpringConstant * 0.72,
                 description: "Perfect Balance - Mastery achieved"
             )
 

@@ -51,17 +51,27 @@ enum PendulumTab: Int, CaseIterable, Identifiable {
 struct ContentView: View {
     @State private var selectedTab: PendulumTab = .play
     @StateObject private var gameState = GameState()
+    @StateObject private var purchaseManager = PurchaseManager.shared
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Main content area
-            TabContent(selectedTab: selectedTab, gameState: gameState, isPlayTabActive: selectedTab == .play)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        Group {
+            if purchaseManager.canAccessApp {
+                VStack(spacing: 0) {
+                    // Main content area
+                    TabContent(selectedTab: selectedTab, gameState: gameState, isPlayTabActive: selectedTab == .play)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Custom tab bar
-            PendulumTabBar(selectedTab: $selectedTab)
+                    // Custom tab bar
+                    PendulumTabBar(selectedTab: $selectedTab)
+                }
+                .edgesIgnoringSafeArea(.bottom)
+            } else {
+                PaywallView(purchaseManager: purchaseManager)
+            }
         }
-        .edgesIgnoringSafeArea(.bottom)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            purchaseManager.updateTrialStatus()
+        }
     }
 }
 
@@ -177,7 +187,7 @@ class GameState: ObservableObject {
     @Published var selectedBackgroundPhoto: String = "none"  // Asset name or "none" for default parchment
 
     // Settings - Gameplay
-    @Published var soundEnabled: Bool = true
+    @Published var soundEnabled: Bool = false
     @Published var hapticsEnabled: Bool = true
     @Published var showHints: Bool = true
     @Published var controlStyle: ControlStyle = .buttons
@@ -239,9 +249,10 @@ class GameState: ObservableObject {
         levelManager.activeMode = gameMode
         levelManager.resetToLevel1()
 
-        // For golden mode, jump to recommended level
+        // For golden mode, jump to recommended level (capped at 3 to prevent impossible starts)
         if gameMode == .golden, let rec = GoldenModeManager.shared.currentRecommendation {
-            for _ in 1..<rec.config.suggestedLevel {
+            let cappedLevel = min(rec.config.suggestedLevel, 3)
+            for _ in 1..<cappedLevel {
                 levelManager.advanceToNextLevel()
             }
         }
@@ -252,7 +263,7 @@ class GameState: ObservableObject {
 
         // Activate perturbation based on mode
         if gameMode.hasPerturbations {
-            if gameMode == .progressive {
+            if gameMode == .progressive || gameMode == .golden {
                 perturbationManager.activateProfile(
                     PerturbationProfile.forProgressiveLevel(levelManager.currentLevel)
                 )

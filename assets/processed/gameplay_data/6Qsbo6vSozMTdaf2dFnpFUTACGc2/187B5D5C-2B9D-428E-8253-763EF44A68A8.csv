@@ -1,0 +1,11 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+0.869,0.0,0.0,1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+1.069,0.0,0.0,1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+1.368,0.0,0.0,1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+1.668,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+1.835,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+2.235,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+2.435,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+2.602,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+2.719,0.0,0.0,-1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000
+3.170,0.0,0.0,1,1.77,false,1,,Free Play,0,0.3500,0.000,,0.0000

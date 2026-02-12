@@ -4,12 +4,14 @@
 
 import SwiftUI
 import AuthenticationServices
+import FirebaseAuth
 
 struct AccountCard: View {
     @ObservedObject var firebaseManager = FirebaseManager.shared
     @StateObject private var appleSignInHelper = AppleSignInHelper()
 
     var onShowEmailSignIn: () -> Void
+    var onAccountDeleted: (() -> Void)?
 
     private var isFullySignedIn: Bool {
         firebaseManager.authMethod == .apple || firebaseManager.authMethod == .email
@@ -27,6 +29,13 @@ struct AccountCard: View {
         }
         return "Sign in to save your progress"
     }
+
+    // Delete account state
+    @State private var showingDeleteConfirmation = false
+    @State private var showingReauthPassword = false
+    @State private var reauthPassword = ""
+    @State private var isDeleting = false
+    @State private var deleteError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -110,10 +119,34 @@ struct AccountCard: View {
                         .foregroundStyle(PendulumColors.danger)
                 }
                 .buttonStyle(PlainButtonStyle())
+
+                // Delete Account button
+                Button(action: {
+                    showingDeleteConfirmation = true
+                }) {
+                    HStack(spacing: 6) {
+                        if isDeleting {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(PendulumColors.danger)
+                        }
+                        Text("Delete Account")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(PendulumColors.danger.opacity(0.7))
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(isDeleting)
             }
 
-            // Error message
+            // Error messages
             if let error = appleSignInHelper.errorMessage {
+                Text(error)
+                    .font(.system(size: 12))
+                    .foregroundStyle(PendulumColors.danger)
+            }
+
+            if let error = deleteError {
                 Text(error)
                     .font(.system(size: 12))
                     .foregroundStyle(PendulumColors.danger)
@@ -133,7 +166,29 @@ struct AccountCard: View {
                     lineWidth: 1
                 )
         )
+        .alert("Delete Account?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                performAccountDeletion()
+            }
+        } message: {
+            Text("This will permanently delete your account, all cloud data, and local data. This action cannot be undone.")
+        }
+        .alert("Re-enter Password", isPresented: $showingReauthPassword) {
+            SecureField("Password", text: $reauthPassword)
+            Button("Cancel", role: .cancel) {
+                reauthPassword = ""
+                isDeleting = false
+            }
+            Button("Confirm", role: .destructive) {
+                performReauthAndDelete()
+            }
+        } message: {
+            Text("For security, please re-enter your password to delete your account.")
+        }
     }
+
+    // MARK: - Apple Sign-In
 
     private func handleAppleSignIn() {
         appleSignInHelper.startSignInWithApple { result in
@@ -152,6 +207,92 @@ struct AccountCard: View {
                 if (error as NSError).code != 1001 {
                     appleSignInHelper.errorMessage = error.localizedDescription
                 }
+            }
+        }
+    }
+
+    // MARK: - Account Deletion
+
+    private func performAccountDeletion() {
+        isDeleting = true
+        deleteError = nil
+
+        Task {
+            do {
+                try await firebaseManager.deleteAccount()
+                await MainActor.run {
+                    isDeleting = false
+                    onAccountDeleted?()
+                }
+            } catch let error as NSError {
+                await MainActor.run {
+                    if error.code == AuthErrorCode.requiresRecentLogin.rawValue {
+                        if firebaseManager.authMethod == .email {
+                            showingReauthPassword = true
+                        } else if firebaseManager.authMethod == .apple {
+                            handleAppleReauthForDeletion()
+                        }
+                    } else {
+                        deleteError = error.localizedDescription
+                        isDeleting = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func performReauthAndDelete() {
+        guard !reauthPassword.isEmpty, let email = firebaseManager.email else {
+            deleteError = "Please enter your password"
+            isDeleting = false
+            return
+        }
+
+        deleteError = nil
+
+        Task {
+            do {
+                try await firebaseManager.reauthenticateWithEmail(email: email, password: reauthPassword)
+                reauthPassword = ""
+                try await firebaseManager.deleteAccount()
+                await MainActor.run {
+                    isDeleting = false
+                    onAccountDeleted?()
+                }
+            } catch {
+                await MainActor.run {
+                    deleteError = error.localizedDescription
+                    reauthPassword = ""
+                    isDeleting = false
+                }
+            }
+        }
+    }
+
+    private func handleAppleReauthForDeletion() {
+        appleSignInHelper.startSignInWithApple { result in
+            switch result {
+            case .success(let credential):
+                Task {
+                    do {
+                        try await firebaseManager.reauthenticateWithApple(credential)
+                        try await firebaseManager.deleteAccount()
+                        await MainActor.run {
+                            isDeleting = false
+                            onAccountDeleted?()
+                        }
+                    } catch {
+                        await MainActor.run {
+                            deleteError = error.localizedDescription
+                            isDeleting = false
+                        }
+                    }
+                }
+            case .failure(let error):
+                if (error as NSError).code != 1001 {
+                    deleteError = error.localizedDescription
+                }
+                isDeleting = false
             }
         }
     }

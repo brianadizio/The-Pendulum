@@ -1,0 +1,89 @@
+{
+  "maxLevel" : 4,
+  "totalPushes" : 38,
+  "aiMode" : "Off",
+  "aiInterventions" : 0,
+  "endTime" : "2026-02-05T16:12:19Z",
+  "levelsCompleted" : [
+    1,
+    2,
+    3,
+    4
+  ],
+  "averageBalanceTime" : 0,
+  "aiDifficulty" : 0.5,
+  "totalForceApplied" : 66.88439425826073,
+  "maxScore" : 0,
+  "totalDuration" : 25.152857899665833,
+  "levelConfigs" : [
+    {
+      "massMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "level" : 1,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "countdownTime" : 30,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 1.5,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.35
+    },
+    {
+      "massMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "level" : 2,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "countdownTime" : 27,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 1.5,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.32999999999999996
+    },
+    {
+      "massMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "level" : 3,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "countdownTime" : 24,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 1.5,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.31
+    },
+    {
+      "massMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "level" : 4,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "countdownTime" : 21,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 2,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.29
+    },
+    {
+      "massMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "level" : 5,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "countdownTime" : 18,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 2,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.26999999999999996
+    }
+  ],
+  "startTime" : "2026-02-05T16:11:54Z",
+  "gameMode" : "Timed",
+  "aiControlCalls" : 0,
+  "sessionId" : "B38E5074-D6E8-4DBE-8729-9129D727B834"
+}

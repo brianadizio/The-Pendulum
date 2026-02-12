@@ -426,6 +426,88 @@ class FirebaseManager: ObservableObject {
         return meta
     }
 
+    // MARK: - Account Deletion
+
+    /// Delete the current user's account and all associated data
+    func deleteAccount() async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw FirebaseError.notSignedIn
+        }
+
+        // Delete user's cloud storage data first
+        await deleteUserStorageData()
+
+        // Delete the Firebase Auth account (may throw requiresRecentLogin)
+        try await user.delete()
+        print("Firebase: Account deleted successfully")
+
+        // Clear all local state
+        clearLocalState()
+
+        // Re-sign in anonymously
+        await signInAnonymously()
+    }
+
+    /// Re-authenticate with email/password before account deletion
+    func reauthenticateWithEmail(email: String, password: String) async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw FirebaseError.notSignedIn
+        }
+
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        try await user.reauthenticate(with: credential)
+        print("Firebase: Re-authenticated with email")
+    }
+
+    /// Re-authenticate with Apple credential before account deletion
+    func reauthenticateWithApple(_ credential: AuthCredential) async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw FirebaseError.notSignedIn
+        }
+
+        try await user.reauthenticate(with: credential)
+        print("Firebase: Re-authenticated with Apple")
+    }
+
+    /// Delete all user data from Firebase Storage
+    private func deleteUserStorageData() async {
+        guard let userRef = userStorageRef else { return }
+
+        do {
+            let result = try await userRef.listAll()
+
+            for item in result.items {
+                try? await item.delete()
+            }
+
+            for prefix in result.prefixes {
+                let subResult = try await prefix.listAll()
+                for item in subResult.items {
+                    try? await item.delete()
+                }
+            }
+
+            print("Firebase: Deleted all user storage data")
+        } catch {
+            print("Firebase: Failed to list/delete storage data: \(error.localizedDescription)")
+        }
+    }
+
+    /// Clear all locally cached Firebase state
+    private func clearLocalState() {
+        UserDefaults.standard.removeObject(forKey: Keys.authMethod)
+        UserDefaults.standard.removeObject(forKey: Keys.lastUploadDate)
+        UserDefaults.standard.removeObject(forKey: Keys.pendingUploads)
+        UserDefaults.standard.removeObject(forKey: Keys.displayName)
+        UserDefaults.standard.removeObject(forKey: Keys.email)
+
+        displayName = nil
+        email = nil
+        lastUploadDate = nil
+        pendingUploadCount = 0
+        updateAuthMethod(.none)
+    }
+
     // MARK: - Cleanup
 
     deinit {
@@ -440,6 +522,7 @@ enum FirebaseError: LocalizedError {
     case notSignedIn
     case uploadFailed(String)
     case authFailed(String)
+    case deletionFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -449,6 +532,8 @@ enum FirebaseError: LocalizedError {
             return "Upload failed: \(message)"
         case .authFailed(let message):
             return "Authentication failed: \(message)"
+        case .deletionFailed(let message):
+            return "Account deletion failed: \(message)"
         }
     }
 }

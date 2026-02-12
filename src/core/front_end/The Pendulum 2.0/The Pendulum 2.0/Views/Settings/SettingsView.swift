@@ -41,8 +41,13 @@ struct SettingsView: View {
                                 .foregroundStyle(PendulumColors.textTertiary)
                                 .padding(.horizontal, 16)
 
-                            AccountCard(onShowEmailSignIn: { showingEmailSignIn = true })
-                                .padding(.horizontal, 16)
+                            AccountCard(
+                                onShowEmailSignIn: { showingEmailSignIn = true },
+                                onAccountDeleted: {
+                                    clearAllData()
+                                }
+                            )
+                            .padding(.horizontal, 16)
                         }
 
                         Divider()
@@ -76,6 +81,15 @@ struct SettingsView: View {
                         Divider()
                             .background(PendulumColors.bronze.opacity(0.3))
                             .padding(.horizontal, 16)
+
+                        #if DEBUG
+                        // Developer Tools Section (debug builds only)
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        DebugPurchaseSection()
+                        #endif
 
                         // About Section
                         AboutSection()
@@ -568,6 +582,65 @@ struct AboutSection: View {
         }
     }
 }
+
+// MARK: - Debug Purchase Section
+#if DEBUG
+struct DebugPurchaseSection: View {
+    @StateObject private var purchaseManager = PurchaseManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("DEVELOPER TOOLS")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PendulumColors.caution)
+                .padding(.horizontal, 16)
+
+            VStack(spacing: 8) {
+                // Current status
+                SettingsInfoRow(
+                    title: "Trial Active",
+                    value: purchaseManager.isTrialActive ? "Yes (\(purchaseManager.trialDaysRemaining)d left)" : "Expired"
+                )
+
+                SettingsInfoRow(
+                    title: "Purchased",
+                    value: purchaseManager.isUnlocked ? "Yes" : "No"
+                )
+
+                // Expire trial (set start date 4 days ago)
+                SettingsButtonRow(
+                    title: "Expire Trial Now",
+                    subtitle: "Sets trial start to 4 days ago — shows paywall",
+                    iconName: "clock.badge.xmark"
+                ) {
+                    let fourDaysAgo = Calendar.current.date(byAdding: .day, value: -4, to: Date())!
+                    purchaseManager.debugSetTrialStart(fourDaysAgo)
+                }
+
+                // Reset trial (set start date to now)
+                SettingsButtonRow(
+                    title: "Reset Trial to 3 Days",
+                    subtitle: "Restarts the trial as if freshly installed",
+                    iconName: "arrow.counterclockwise"
+                ) {
+                    purchaseManager.debugSetTrialStart(Date())
+                }
+
+                // Reset purchase
+                SettingsButtonRow(
+                    title: "Reset Purchase State",
+                    subtitle: "Clears purchased flag (keeps trial state)",
+                    iconName: "cart.badge.minus",
+                    isDestructive: true
+                ) {
+                    purchaseManager.debugResetPurchase()
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+}
+#endif
 
 // MARK: - Settings Row Components
 

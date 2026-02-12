@@ -217,6 +217,7 @@ class PendulumViewModel: ObservableObject {
         currentFramePlayerForce = 0.0
 
         // Drive perturbation manager (applies forces via onApplyForce callback)
+        perturbationManager?.currentTheta = currentState.theta
         perturbationManager?.update(currentTime: elapsedTime)
 
         // Golden Mode: mid-session adaptation (~every 30s)

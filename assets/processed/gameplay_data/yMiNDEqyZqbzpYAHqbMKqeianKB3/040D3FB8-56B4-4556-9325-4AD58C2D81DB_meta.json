@@ -1,0 +1,16 @@
+{
+  "endTime" : "2026-01-29T22:34:26Z",
+  "sessionId" : "040D3FB8-56B4-4556-9325-4AD58C2D81DB",
+  "maxLevel" : 2,
+  "totalDuration" : 4.833972096443176,
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "gameMode" : "Random",
+  "totalForceApplied" : 5,
+  "totalPushes" : 5,
+  "averageBalanceTime" : 0,
+  "startTime" : "2026-01-29T22:34:21Z",
+  "maxScore" : 0
+}

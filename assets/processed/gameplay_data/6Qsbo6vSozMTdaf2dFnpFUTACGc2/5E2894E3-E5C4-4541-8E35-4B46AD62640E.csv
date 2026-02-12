@@ -1,0 +1,4 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+0.376,0.0,0.0,1,1.66,false,1,,Jiggle,0,0.3500,0.000,,0.0000
+0.710,0.0,0.0,-1,1.66,false,1,,Jiggle,0,0.3500,0.000,,0.0000
+0.910,0.0,0.0,1,1.66,false,1,,Jiggle,0,0.3500,0.000,,0.0000

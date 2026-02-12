@@ -1,0 +1,89 @@
+{
+  "computation_date": "2026-02-05",
+  "start_time": "2026-02-05T02:00:26.237417",
+  "end_time": "2026-02-05T02:41:08.642851",
+  "total_duration_seconds": 2442.41,
+  "solution": "The Pendulum",
+  "pca_computations": 9,
+  "total_computation_time_ms": 4859.82,
+  "errors": 3,
+  "global_stats": {
+    "solutions_processed": 73,
+    "total_sources_processed": 184,
+    "total_errors": 134
+  },
+  "details": [
+    {
+      "source": "tda",
+      "dimension": 2,
+      "n_samples": 2482,
+      "n_features": 3,
+      "variance_explained": 0.7549,
+      "computation_time_ms": 10.19
+    },
+    {
+      "source": "tda",
+      "dimension": 3,
+      "n_samples": 2482,
+      "n_features": 3,
+      "variance_explained": 1.0,
+      "computation_time_ms": 7.47
+    },
+    {
+      "source": "tda",
+      "dimension": 4,
+      "n_samples": 2482,
+      "n_features": 3,
+      "variance_explained": 1.0,
+      "computation_time_ms": 7.07
+    },
+    {
+      "source": "core",
+      "dimension": 2,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.6902,
+      "computation_time_ms": 734.85
+    },
+    {
+      "source": "core",
+      "dimension": 3,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.7277,
+      "computation_time_ms": 745.43
+    },
+    {
+      "source": "core",
+      "dimension": 4,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.7456,
+      "computation_time_ms": 762.38
+    },
+    {
+      "source": "src",
+      "dimension": 2,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.6902,
+      "computation_time_ms": 858.36
+    },
+    {
+      "source": "src",
+      "dimension": 3,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.7277,
+      "computation_time_ms": 863.2
+    },
+    {
+      "source": "src",
+      "dimension": 4,
+      "n_samples": 762,
+      "n_features": 16384,
+      "variance_explained": 0.7456,
+      "computation_time_ms": 870.86
+    }
+  ]
+}

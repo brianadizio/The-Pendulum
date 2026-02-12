@@ -1,0 +1,58 @@
+{
+  "startTime" : "2026-02-06T01:40:28Z",
+  "aiMode" : "Off",
+  "totalForceApplied" : 21.493573129177094,
+  "endTime" : "2026-02-06T01:40:38Z",
+  "averageBalanceTime" : 0,
+  "aiDifficulty" : 0.5,
+  "aiInterventions" : 0,
+  "levelConfigs" : [
+    {
+      "dampingValue" : 0.46479380962890915,
+      "springConstantValue" : 0.1965037227309625,
+      "gravityMultiplier" : 1.0859825751219565,
+      "balanceThreshold" : 0.35,
+      "jiggleIntensity" : 0,
+      "massMultiplier" : 1.0552248615352466,
+      "level" : 1,
+      "balanceRequiredTime" : 2,
+      "lengthMultiplier" : 1.0134408545527451,
+      "initialPerturbation" : 8
+    },
+    {
+      "dampingValue" : 0.17328563308989567,
+      "springConstantValue" : 0.10111309431196167,
+      "gravityMultiplier" : 1.11513247523659,
+      "balanceThreshold" : 0.35,
+      "jiggleIntensity" : 0,
+      "massMultiplier" : 1.4874370580828975,
+      "level" : 2,
+      "balanceRequiredTime" : 2,
+      "lengthMultiplier" : 1.2016446614907927,
+      "initialPerturbation" : 8
+    },
+    {
+      "dampingValue" : 0.2743267327267254,
+      "springConstantValue" : 0.06761615385565364,
+      "gravityMultiplier" : 1.078029712955913,
+      "balanceThreshold" : 0.35,
+      "jiggleIntensity" : 0,
+      "massMultiplier" : 1.4869601765966172,
+      "level" : 3,
+      "balanceRequiredTime" : 2,
+      "lengthMultiplier" : 1.4860815313207723,
+      "initialPerturbation" : 8
+    }
+  ],
+  "totalPushes" : 12,
+  "gameMode" : "Random",
+  "maxScore" : 0,
+  "maxLevel" : 2,
+  "totalDuration" : 9.727609038352966,
+  "sessionId" : "A65B7BFE-54B1-4476-A3FC-B535876DBD73",
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "aiControlCalls" : 0
+}

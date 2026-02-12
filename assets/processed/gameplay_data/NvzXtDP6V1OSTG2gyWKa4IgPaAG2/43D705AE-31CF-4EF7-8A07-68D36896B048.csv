@@ -1,0 +1,11 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+0.625,0.0,0.0,1,1.49,false,1,,Golden,0,0.3500,0.000,,0.0000
+1.516,0.0,0.0,1,1.48,false,1,,Golden,0,0.3500,0.000,,0.0000
+2.433,0.0,0.0,-1,1.83,false,1,,Golden,0,0.3500,0.000,,0.0000
+2.866,0.0,0.0,1,1.62,false,1,,Golden,0,0.3500,0.000,,0.0000
+3.183,0.0,0.0,1,1.59,false,2,,Golden,0,0.3500,0.000,,0.0000
+3.616,0.0,0.0,-1,1.86,false,2,,Golden,0,0.3500,0.000,,0.0000
+4.083,0.0,0.0,1,1.69,false,2,,Golden,0,0.3500,0.000,,0.0000
+4.466,0.0,0.0,-1,1.95,false,2,,Golden,0,0.3500,0.000,,0.0000
+4.841,0.0,0.0,1,1.82,false,2,,Golden,0,0.3500,0.000,,0.0000
+5.458,0.0,0.0,1,1.81,false,3,,Golden,0,0.3500,0.000,,0.0000

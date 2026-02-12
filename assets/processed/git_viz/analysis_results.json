@@ -1,13 +1,68 @@
 {
   "metadata": {
     "repo_path": "/Users/briandizio/Documents/2023-Now/Golden Enterprise Solutions/Solutions/The Pendulum",
-    "analysis_timestamp": "30-Jan-2026 04:16:45",
-    "total_commits": 69,
-    "first_commit_date": "31-Jan-2025 21:18:51",
-    "last_commit_date": "26-Jan-2026 18:42:59",
+    "analysis_timestamp": "05-Feb-2026 04:29:22",
+    "total_commits": 73,
+    "first_commit_date": "07-Feb-2025 20:37:46",
+    "last_commit_date": "30-Jan-2026 22:50:49",
     "solution_name": ""
   },
   "commits": [
+    {
+      "hash": "18b1cc2217320696d90db5d44ccbd4ddcf6e5e22",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769813449E+9,
+      "subject": "First archive of The Pendulum 2.0, built on iPhone, all functionality, testing.",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
+    {
+      "hash": "d1b53e20d96c132eb90731e9c0d9a9a7609bdcb6",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769801243E+9,
+      "subject": "Wrote The Golden Mode with Claude",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
+    {
+      "hash": "4c12f5038aa514b384ba5a5209c8476988c82e89",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769796084E+9,
+      "subject": "Revised AI, tutorial perfect, starting The Golden Mode",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
+    {
+      "hash": "b0c436ab0b885a3cbf568cdd6a1810596599b70c",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769792101E+9,
+      "subject": "Add SciChart SDK directory to .gitignore",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
+    {
+      "hash": "64a5c630b26040e11ae6692bda8ba8d4c3a48db4",
+      "author_name": "brianadizio",
+      "author_email": "33075782+brianadizio@users.noreply.github.com",
+      "timestamp": 1.769791548E+9,
+      "subject": "Fixed tweaks, added Firebase, revised levels, added AI",
+      "files": [],
+      "files_changed": 0,
+      "total_additions": 0,
+      "total_deletions": 0
+    },
     {
       "hash": "21cb88fccb0f5b5c3e0a996aea3f247ef2e0117c",
       "author_name": "brianadizio",
@@ -755,28 +810,17 @@
       "files_changed": 0,
       "total_additions": 0,
       "total_deletions": 0
-    },
-    {
-      "hash": "08394f55e453a9ebb40b8a32faa67b137eb260d2",
-      "author_name": "brianadizio",
-      "author_email": "33075782+brianadizio@users.noreply.github.com",
-      "timestamp": 1.738358331E+9,
-      "subject": "Restructure to standard solution format",
-      "files": [],
-      "files_changed": 0,
-      "total_additions": 0,
-      "total_deletions": 0
     }
   ],
   "file_changes": [],
   "loc_evolution": [],
   "phases": [
     {
-      "start_timestamp": 1.738358331E+9,
+      "start_timestamp": 1.738960666E+9,
       "end_timestamp": 1.738960666E+9,
-      "start_date": "31-Jan-2025 21:18:51",
+      "start_date": "07-Feb-2025 20:37:46",
       "end_date": "07-Feb-2025 20:37:46",
-      "commit_count": 2,
+      "commit_count": 1,
       "phase_number": 1
     },
     {
@@ -805,17 +849,16 @@
     },
     {
       "start_timestamp": 1.769452108E+9,
-      "end_timestamp": 1.769452979E+9,
+      "end_timestamp": 1.769813449E+9,
       "start_date": "26-Jan-2026 18:28:28",
-      "end_date": "26-Jan-2026 18:42:59",
-      "commit_count": 2,
+      "end_date": "30-Jan-2026 22:50:49",
+      "commit_count": 7,
       "phase_number": 5
     }
   ],
   "velocity": {
     "daily": {
       "dates": [
-        "31-Jan-2025",
         "07-Feb-2025",
         "23-Apr-2025",
         "28-Apr-2025",
@@ -841,10 +884,10 @@
         "26-Jun-2025",
         "03-Aug-2025",
         "11-Nov-2025",
-        "26-Jan-2026"
+        "26-Jan-2026",
+        "30-Jan-2026"
       ],
       "counts": [
-        1,
         1,
         1,
         2,
@@ -870,14 +913,14 @@
         1,
         2,
         1,
-        2
+        2,
+        5
       ],
-      "avg": 2.5555555555555554,
+      "avg": 2.7037037037037037,
       "max": 7
     },
     "weekly": {
       "weeks": [
-        "26-Jan-2025",
         "02-Feb-2025",
         "20-Apr-2025",
         "27-Apr-2025",
@@ -895,7 +938,6 @@
       "counts": [
         1,
         1,
-        1,
         8,
         11,
         6,
@@ -906,14 +948,13 @@
         2,
         2,
         1,
-        2
+        7
       ],
-      "avg": 4.9285714285714288,
+      "avg": 5.615384615384615,
       "max": 15
     },
     "monthly": {
       "months": [
-        "01-Jan-2025",
         "01-Feb-2025",
         "01-Apr-2025",
         "01-May-2025",
@@ -924,25 +965,24 @@
       ],
       "counts": [
         1,
-        1,
         3,
         33,
         26,
         2,
         1,
-        2
+        7
       ],
-      "avg": 8.625,
+      "avg": 10.428571428571429,
       "max": 33
     }
   },
   "contributors": {
     "name": "brianadizio",
     "email": "33075782+brianadizio@users.noreply.github.com",
-    "commit_count": 69,
+    "commit_count": 73,
     "additions": 0,
     "deletions": 0,
-    "first_commit": 1.769452979E+9,
-    "last_commit": 1.738358331E+9
+    "first_commit": 1.769813449E+9,
+    "last_commit": 1.738960666E+9
   }
 }

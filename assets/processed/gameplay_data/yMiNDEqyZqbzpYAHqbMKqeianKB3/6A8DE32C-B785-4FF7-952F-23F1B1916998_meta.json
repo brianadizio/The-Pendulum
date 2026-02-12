@@ -1,0 +1,16 @@
+{
+  "maxScore" : 0,
+  "gameMode" : "Spatial",
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "averageBalanceTime" : 0,
+  "maxLevel" : 2,
+  "startTime" : "2026-01-29T22:33:15Z",
+  "endTime" : "2026-01-29T22:33:21Z",
+  "sessionId" : "6A8DE32C-B785-4FF7-952F-23F1B1916998",
+  "totalPushes" : 8,
+  "totalForceApplied" : 8,
+  "totalDuration" : 6.484417915344238
+}

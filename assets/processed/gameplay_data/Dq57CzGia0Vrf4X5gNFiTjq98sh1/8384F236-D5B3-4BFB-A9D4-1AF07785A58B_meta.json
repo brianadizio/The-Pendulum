@@ -1,0 +1,33 @@
+{
+  "startTime" : "2026-02-07T13:40:40Z",
+  "levelsCompleted" : [
+
+  ],
+  "maxScore" : 0,
+  "totalForceApplied" : 0,
+  "totalPushes" : 0,
+  "sessionId" : "8384F236-D5B3-4BFB-A9D4-1AF07785A58B",
+  "gameMode" : "Free Play",
+  "averageBalanceTime" : 0,
+  "aiMode" : "Off",
+  "levelConfigs" : [
+    {
+      "jiggleIntensity" : 0,
+      "initialPerturbation" : 5,
+      "balanceRequiredTime" : 1.5,
+      "lengthMultiplier" : 1,
+      "balanceThreshold" : 0.35,
+      "springConstantValue" : 0.2,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "massMultiplier" : 1,
+      "level" : 1
+    }
+  ],
+  "totalDuration" : 0.02075791358947754,
+  "aiControlCalls" : 0,
+  "aiInterventions" : 0,
+  "aiDifficulty" : 0.5,
+  "maxLevel" : 1,
+  "endTime" : "2026-02-07T13:40:40Z"
+}
