@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-02-12T10:12:14.819272",
+  "data_type": "gameplay_sessions",
+  "users": {
+    "NRXj6wUbhYdWfvejxZzzFb7FPEu2": {
+      "csv_files": 2,
+      "metadata_files": 2,
+      "sessions": 2
+    },
+    "6Qsbo6vSozMTdaf2dFnpFUTACGc2": {
+      "csv_files": 153,
+      "metadata_files": 153,
+      "sessions": 153
+    },
+    "NvzXtDP6V1OSTG2gyWKa4IgPaAG2": {
+      "csv_files": 33,
+      "metadata_files": 33,
+      "sessions": 33
+    },
+    "Gma2VLpgfFV7QNQK1I9Z1LYr3RQ2": {
+      "csv_files": 3,
+      "metadata_files": 3,
+      "sessions": 3
+    },
+    "FYanoAFIcgfBi4mQtHSYyt3h0zV2": {
+      "csv_files": 2,
+      "metadata_files": 2,
+      "sessions": 2
+    },
+    "yMiNDEqyZqbzpYAHqbMKqeianKB3": {
+      "csv_files": 44,
+      "metadata_files": 44,
+      "sessions": 44
+    },
+    "Dq57CzGia0Vrf4X5gNFiTjq98sh1": {
+      "csv_files": 7,
+      "metadata_files": 7,
+      "sessions": 7
+    },
+    "lI9boT4yXaUFVuRKdNUOOwLDqUE3": {
+      "csv_files": 1,
+      "metadata_files": 1,
+      "sessions": 1
+    },
+    "o39xurfj7oP1DNEBjcrDrQhdip32": {
+      "csv_files": 5,
+      "metadata_files": 5,
+      "sessions": 5
+    },
+    "QkHtvmj6RmTxQIdLEtgmWtZSwsG3": {
+      "csv_files": 2,
+      "metadata_files": 2,
+      "sessions": 2
+    },
+    "V1xYqVE8FAYWp5ji6YpKABu62nz1": {
+      "csv_files": 132,
+      "metadata_files": 132,
+      "sessions": 132
+    },
+    "PHk1AlhuUEU8wXfUoFk2OJPAKZn2": {
+      "csv_files": 1,
+      "metadata_files": 1,
+      "sessions": 1
+    }
+  },
+  "total_sessions": 385,
+  "total_csv_files": 385,
+  "total_metadata_files": 385
+}

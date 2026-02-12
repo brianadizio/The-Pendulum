@@ -189,7 +189,7 @@ struct PlayView: View {
 
                 // Update perturbation for the demoted level
                 if gs.gameMode.hasPerturbations {
-                    if gs.gameMode == .progressive {
+                    if gs.gameMode == .progressive || gs.gameMode == .golden {
                         gs.perturbationManager.activateProfile(
                             PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
                         )
@@ -251,7 +251,7 @@ struct PlayView: View {
 
             // Update perturbation for new level
             if gs.gameMode.hasPerturbations {
-                if gs.gameMode == .progressive {
+                if gs.gameMode == .progressive || gs.gameMode == .golden {
                     gs.perturbationManager.activateProfile(
                         PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
                     )

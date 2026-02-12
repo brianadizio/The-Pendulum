@@ -1,0 +1,16 @@
+{
+  "startTime" : "2026-01-29T22:38:12Z",
+  "maxScore" : 0,
+  "averageBalanceTime" : 0,
+  "gameMode" : "Progressive",
+  "sessionId" : "9DC61F16-9901-4DA3-A907-428CE2205F02",
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "totalPushes" : 10,
+  "maxLevel" : 2,
+  "endTime" : "2026-01-29T22:38:17Z",
+  "totalDuration" : 5.517782092094421,
+  "totalForceApplied" : 10
+}

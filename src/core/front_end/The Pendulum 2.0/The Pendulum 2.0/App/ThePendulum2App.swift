@@ -9,6 +9,10 @@ import FirebaseCore
 struct ThePendulum2App: App {
     init() {
         FirebaseManager.shared.configure()
+
+        // Initialize PurchaseManager early to start listening for transactions
+        // and record trial start date on first launch
+        _ = PurchaseManager.shared
     }
 
     var body: some Scene {
@@ -16,6 +20,9 @@ struct ThePendulum2App: App {
             ContentView()
                 .task {
                     await FirebaseManager.shared.signInAnonymously()
+
+                    // Sync trial start date with Firebase (prevents reinstall gaming)
+                    await PurchaseManager.shared.syncTrialStartWithFirebase()
 
                     // Request ATT permission + initialize Singular SDK (delayed for UI readiness)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {

@@ -16,9 +16,10 @@ class SoundManager {
     ]
 
     private var audioPlayer: AVAudioPlayer?
+    private var fadeTimer: Timer?
 
     /// Whether sound effects are enabled (bound to gameState.soundEnabled)
-    var isEnabled: Bool = true
+    var isEnabled: Bool = false
 
     private init() {
         // Configure audio session for playback alongside other audio
@@ -34,6 +35,9 @@ class SoundManager {
     func playLevelBeatSound() {
         guard isEnabled else { return }
 
+        // Stop any currently playing sound to prevent overlap
+        stopAll()
+
         // Pick a random sound
         guard let soundName = levelBeatSounds.randomElement() else { return }
 
@@ -47,6 +51,9 @@ class SoundManager {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.volume = 0.7
             audioPlayer?.play()
+
+            // Auto-fadeout after ~3 seconds to prevent bleeding into next level
+            scheduleFadeout(after: 3.0)
         } catch {
             print("SoundManager: Failed to play \(soundName): \(error)")
         }
@@ -54,7 +61,38 @@ class SoundManager {
 
     /// Stop any currently playing audio
     func stopAll() {
+        fadeTimer?.invalidate()
+        fadeTimer = nil
         audioPlayer?.stop()
         audioPlayer = nil
+    }
+
+    /// Schedule a volume fadeout after the given delay
+    private func scheduleFadeout(after delay: TimeInterval) {
+        fadeTimer?.invalidate()
+        fadeTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.fadeOut()
+        }
+    }
+
+    /// Quick 0.5s volume ramp-down then stop
+    private func fadeOut() {
+        guard let player = audioPlayer, player.isPlaying else { return }
+
+        let fadeSteps = 10
+        let fadeInterval = 0.5 / Double(fadeSteps)
+        let volumeStep = player.volume / Float(fadeSteps)
+
+        fadeTimer = Timer.scheduledTimer(withTimeInterval: fadeInterval, repeats: true) { [weak self] timer in
+            guard let self = self, let player = self.audioPlayer else {
+                timer.invalidate()
+                return
+            }
+            player.volume -= volumeStep
+            if player.volume <= 0.05 {
+                timer.invalidate()
+                self.stopAll()
+            }
+        }
     }
 }

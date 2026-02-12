@@ -1,0 +1,33 @@
+{
+  "totalPushes" : 0,
+  "levelConfigs" : [
+    {
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.35,
+      "gravityMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "jiggleIntensity" : 0,
+      "dampingValue" : 0.4,
+      "level" : 1,
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 1.5,
+      "lengthMultiplier" : 1
+    }
+  ],
+  "endTime" : "2026-02-08T02:46:28Z",
+  "maxLevel" : 1,
+  "gameMode" : "Progressive",
+  "totalForceApplied" : 0,
+  "startTime" : "2026-02-08T02:46:27Z",
+  "totalDuration" : 1.6455539464950562,
+  "maxScore" : 0,
+  "aiDifficulty" : 0.5,
+  "aiInterventions" : 0,
+  "aiMode" : "Off",
+  "levelsCompleted" : [
+
+  ],
+  "aiControlCalls" : 0,
+  "sessionId" : "46AA13D0-BBEA-4BD8-8428-FD9CBA5FD801",
+  "averageBalanceTime" : 0
+}

@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-02-12T10:12:14.813420",
+  "data_type": "chat_finetuning",
+  "users": {
+    "6Qsbo6vSozMTdaf2dFnpFUTACGc2": {
+      "conversations": 1,
+      "messages": 8,
+      "tokens": 2692
+    },
+    "PHk1AlhuUEU8wXfUoFk2OJPAKZn2": {
+      "conversations": 1,
+      "messages": 2,
+      "tokens": 840
+    }
+  },
+  "total_conversations": 2,
+  "total_messages": 10,
+  "total_tokens": 3532,
+  "fallback_count": 2,
+  "model_usage": {
+    "gemini-2.5-flash-lite": 3
+  }
+}

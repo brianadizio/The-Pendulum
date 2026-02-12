@@ -27,16 +27,16 @@ struct PerturbationProfile {
     let dataSource: String?    // Filename for data-driven perturbations
     var subProfiles: [PerturbationProfile]?
 
-    // Factory method for level-specific profiles
+    // Factory method for level-specific profiles (rebalanced: levels 1-10 accessible)
     static func forLevel(_ level: Int) -> PerturbationProfile {
         switch level {
         case 1:
             return PerturbationProfile(
                 name: "Gentle Breeze",
                 types: [.impulse],
-                strength: 0.3,
+                strength: 0.15,
                 frequency: 0.0,
-                randomInterval: 4.0...6.0,
+                randomInterval: 5.0...8.0,
                 dataSource: nil
             )
 
@@ -44,75 +44,95 @@ struct PerturbationProfile {
             return PerturbationProfile(
                 name: "Moderate Wind",
                 types: [.impulse],
-                strength: 0.5,
+                strength: 0.20,
                 frequency: 0.0,
-                randomInterval: 3.0...5.0,
+                randomInterval: 4.0...7.0,
                 dataSource: nil
             )
 
         case 3:
             return PerturbationProfile(
-                name: "Rhythmic Current",
-                types: [.impulse, .sine],
-                strength: 0.6,
-                frequency: 0.2,
-                randomInterval: 3.0...5.0,
+                name: "Steady Push",
+                types: [.impulse],
+                strength: 0.25,
+                frequency: 0.0,
+                randomInterval: 4.0...6.0,
                 dataSource: nil
             )
 
         case 4:
             return PerturbationProfile(
-                name: "Ocean Waves",
-                types: [.sine],
-                strength: 0.7,
-                frequency: 0.3,
-                randomInterval: 3.0...4.0,
+                name: "Rhythmic Current",
+                types: [.impulse],
+                strength: 0.30,
+                frequency: 0.0,
+                randomInterval: 3.5...6.0,
                 dataSource: nil
             )
 
         case 5:
             return PerturbationProfile(
-                name: "Stormy Waters",
-                types: [.sine, .impulse],
-                strength: 0.8,
-                frequency: 0.4,
-                randomInterval: 2.5...4.0,
+                name: "Ocean Waves",
+                types: [.impulse, .sine],
+                strength: 0.35,
+                frequency: 0.15,
+                randomInterval: 3.0...5.5,
                 dataSource: nil
             )
 
         case 6:
             return PerturbationProfile(
-                name: "Seismic Tremors",
-                types: [.random, .impulse],
-                strength: 0.9,
-                frequency: 0.0,
-                randomInterval: 2.0...3.5,
+                name: "Stormy Waters",
+                types: [.impulse, .sine],
+                strength: 0.40,
+                frequency: 0.2,
+                randomInterval: 3.0...5.0,
                 dataSource: nil
             )
 
         case 7:
             return PerturbationProfile(
-                name: "Chaotic Turbulence",
-                types: [.random],
-                strength: 1.0,
-                frequency: 0.0,
-                randomInterval: 1.5...3.0,
+                name: "Seismic Tremors",
+                types: [.sine, .impulse],
+                strength: 0.50,
+                frequency: 0.25,
+                randomInterval: 2.5...4.5,
                 dataSource: nil
             )
 
-        case 8...10:
+        case 8:
+            return PerturbationProfile(
+                name: "Chaotic Turbulence",
+                types: [.sine, .impulse],
+                strength: 0.60,
+                frequency: 0.3,
+                randomInterval: 2.0...4.0,
+                dataSource: nil
+            )
+
+        case 9:
+            return PerturbationProfile(
+                name: "Wild Gusts",
+                types: [.random, .impulse],
+                strength: 0.70,
+                frequency: 0.0,
+                randomInterval: 2.0...3.5,
+                dataSource: nil
+            )
+
+        case 10:
             return PerturbationProfile(
                 name: "Perfect Storm",
                 types: [.compound],
-                strength: 1.0 + Double(level - 8) * 0.2,
-                frequency: 0.5,
-                randomInterval: 1.0...2.0,
+                strength: 0.80,
+                frequency: 0.35,
+                randomInterval: 1.5...3.0,
                 dataSource: nil,
                 subProfiles: [
                     PerturbationProfile(
                         name: "Base Sine",
                         types: [.sine],
-                        strength: 0.8,
+                        strength: 0.5,
                         frequency: 0.3,
                         randomInterval: 0...0,
                         dataSource: nil
@@ -120,7 +140,7 @@ struct PerturbationProfile {
                     PerturbationProfile(
                         name: "Random Gusts",
                         types: [.impulse],
-                        strength: 1.2,
+                        strength: 0.8,
                         frequency: 0.0,
                         randomInterval: 1.5...3.0,
                         dataSource: nil
@@ -129,9 +149,9 @@ struct PerturbationProfile {
             )
 
         default:
-            // Procedural generation for levels beyond 10
-            let baseStrength = min(1.0 + Double(level - 10) * 0.1, 2.0)
-            let baseFrequency = min(0.5 + Double(level - 10) * 0.05, 1.0)
+            // Procedural generation for levels beyond 10 (lower base than before)
+            let baseStrength = min(0.8 + Double(level - 10) * 0.08, 2.0)
+            let baseFrequency = min(0.35 + Double(level - 10) * 0.05, 1.0)
 
             return PerturbationProfile(
                 name: "Extreme Challenge \(level)",
@@ -165,9 +185,9 @@ struct PerturbationProfile {
     /// Progressive mode: impulse-only with gentle strength ramp.
     /// No sine or compound perturbations — difficulty comes from longer balance time.
     static func forProgressiveLevel(_ level: Int) -> PerturbationProfile {
-        let strength = min(0.8, 0.2 + Double(level - 1) * 0.05)
-        let intervalLow = max(2.0, 5.0 - Double(level) * 0.3)
-        let intervalHigh = max(3.0, 7.0 - Double(level) * 0.3)
+        let strength = min(0.8, 0.10 + Double(level - 1) * 0.03)
+        let intervalLow = max(2.5, 6.0 - Double(level) * 0.25)
+        let intervalHigh = max(3.5, 8.0 - Double(level) * 0.25)
         return PerturbationProfile(
             name: "Progressive L\(level)",
             types: [.impulse],
@@ -210,10 +230,18 @@ class PerturbationManager: ObservableObject {
     // Current active profile
     @Published private(set) var activeProfile: PerturbationProfile?
 
+    /// Current pendulum angle — set by PendulumViewModel each frame.
+    /// Default .pi (upright) is a safe fallback (full jiggle strength).
+    var currentTheta: Double = .pi
+
     // Timing variables
     private var lastUpdateTime: TimeInterval = 0
     private var elapsedTime: TimeInterval = 0
     private var timeUntilNextImpulse: TimeInterval = 0
+
+    // Grace period: forces ramp from 0% to 100% over this duration (seconds)
+    var gracePeriod: TimeInterval = 2.0
+    private var graceTimeRemaining: TimeInterval = 0
 
     // Track if manager is active
     private var isActive: Bool = false
@@ -233,6 +261,7 @@ class PerturbationManager: ObservableObject {
         activeProfile = profile
         elapsedTime = 0
         lastUpdateTime = 0
+        graceTimeRemaining = gracePeriod
         resetImpulseTiming()
         isActive = true
     }
@@ -299,6 +328,11 @@ class PerturbationManager: ObservableObject {
 
         elapsedTime += deltaTime
 
+        // Count down grace period
+        if graceTimeRemaining > 0 {
+            graceTimeRemaining -= deltaTime
+        }
+
         var totalForce: Double = 0.0
 
         // Process each perturbation type
@@ -320,8 +354,11 @@ class PerturbationManager: ObservableObject {
                 totalForce += sineValue * profile.strength * 0.5
 
             case .random:
-                // Random noise-like perturbation (continuous per-frame jitter)
-                let noise = Double.random(in: -1.0...1.0) * profile.strength
+                // Random noise with angle-dependent attenuation:
+                // Full jiggle near upright (pi), reduced to 15% at 90 deg from upright
+                let angleFromUpright = abs(currentTheta - .pi)
+                let attenuation = max(0.15, 1.0 - (angleFromUpright / (.pi / 2.0)) * 0.85)
+                let noise = Double.random(in: -1.0...1.0) * profile.strength * attenuation
                 totalForce += noise
 
             case .compound:
@@ -337,7 +374,9 @@ class PerturbationManager: ObservableObject {
                                 // Sub-impulses handled separately with their own timing
                                 break
                             case .random:
-                                let noise = Double.random(in: -1.0...1.0) * subProfile.strength
+                                let angleFromUpright = abs(currentTheta - .pi)
+                                let attenuation = max(0.15, 1.0 - (angleFromUpright / (.pi / 2.0)) * 0.85)
+                                let noise = Double.random(in: -1.0...1.0) * subProfile.strength * attenuation
                                 totalForce += noise
                             default:
                                 break
@@ -354,6 +393,12 @@ class PerturbationManager: ObservableObject {
             case .none:
                 break
             }
+        }
+
+        // Grace period ramp: scale forces from 0% → 100% over gracePeriod
+        if graceTimeRemaining > 0 {
+            let ramp = min(1.0, (gracePeriod - graceTimeRemaining) / gracePeriod)
+            totalForce *= ramp
         }
 
         // Apply the combined force (low threshold to allow subtle jiggle noise through)

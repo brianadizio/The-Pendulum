@@ -1,0 +1,12 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime
+0.584,0.0,0.0,1,1.00,false,1,,Jiggle,0,0.3500,0.000
+1.100,0.0,0.0,-1,1.00,false,1,,Jiggle,0,0.3500,0.000
+1.134,3.5842,1.5983,0,0.0,false,1,19.9519,Jiggle,0,0.3500,
+1.234,3.7269,1.6005,0,0.0,false,1,19.2677,Jiggle,0,0.3500,
+1.350,3.9447,1.9638,0,0.0,false,1,18.5512,Jiggle,0,0.3500,
+1.401,0.0,0.0,1,1.00,false,1,,Jiggle,0,0.3500,0.267
+1.450,4.0575,0.7536,0,0.0,false,1,16.0688,Jiggle,0,0.3500,
+1.551,4.1785,1.6282,0,0.0,false,1,16.1278,Jiggle,0,0.3500,
+1.651,4.3415,1.5869,0,0.0,false,1,14.6250,Jiggle,0,0.3500,
+1.718,0.0,0.0,1,1.00,false,1,,Jiggle,0,0.3500,0.584
+1.770,4.5385,1.8484,0,0.0,false,1,13.2152,Jiggle,0,0.3500,

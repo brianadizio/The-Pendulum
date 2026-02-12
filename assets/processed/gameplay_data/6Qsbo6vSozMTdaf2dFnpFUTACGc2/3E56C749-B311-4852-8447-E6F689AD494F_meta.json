@@ -1,0 +1,45 @@
+{
+  "aiDifficulty" : 0.5,
+  "aiMode" : "Off",
+  "levelsCompleted" : [
+    1
+  ],
+  "aiControlCalls" : 0,
+  "gameMode" : "Jiggle",
+  "maxLevel" : 1,
+  "aiInterventions" : 0,
+  "totalForceApplied" : 2.3265896266740227,
+  "startTime" : "2026-01-31T20:42:59Z",
+  "levelConfigs" : [
+    {
+      "gravityMultiplier" : 1,
+      "jiggleIntensity" : 0.3,
+      "level" : 1,
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 1.5,
+      "lengthMultiplier" : 1,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.35,
+      "dampingValue" : 0.4,
+      "springConstantValue" : 0.2
+    },
+    {
+      "gravityMultiplier" : 1,
+      "jiggleIntensity" : 0.5,
+      "level" : 2,
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 2,
+      "lengthMultiplier" : 1,
+      "initialPerturbation" : 5,
+      "balanceThreshold" : 0.35,
+      "dampingValue" : 0.4,
+      "springConstantValue" : 0.2
+    }
+  ],
+  "endTime" : "2026-01-31T20:43:02Z",
+  "totalDuration" : 2.9405689239501953,
+  "averageBalanceTime" : 0,
+  "sessionId" : "3E56C749-B311-4852-8447-E6F689AD494F",
+  "totalPushes" : 2,
+  "maxScore" : 0
+}

@@ -1,0 +1,16 @@
+{
+  "maxScore" : 0,
+  "gameMode" : "Timed",
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "averageBalanceTime" : 0,
+  "maxLevel" : 2,
+  "startTime" : "2026-01-29T22:33:36Z",
+  "endTime" : "2026-01-29T22:33:40Z",
+  "sessionId" : "AADF3FC1-071B-4F03-906E-F171DDFA646A",
+  "totalPushes" : 5,
+  "totalForceApplied" : 5,
+  "totalDuration" : 3.934378981590271
+}

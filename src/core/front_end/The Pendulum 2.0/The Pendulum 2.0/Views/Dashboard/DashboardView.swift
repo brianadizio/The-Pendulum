@@ -8,6 +8,8 @@ import Charts
 struct DashboardView: View {
     @ObservedObject var gameState: GameState
     @State private var selectedTimeRange: AnalyticsTimeRange = .daily
+    @State private var showingAIChat = false
+    @State private var selectedQuestionId: String? = nil
     @StateObject private var metricsCalculator = CSVMetricsCalculator()
 
     var body: some View {
@@ -25,6 +27,15 @@ struct DashboardView: View {
                 VStack(spacing: 20) {
                     // Basic Metrics Section
                     BasicMetricsSection(metrics: metricsCalculator.basicMetrics)
+
+                    // Quick Insights Section (AI Chat shortcuts)
+                    QuickInsightsSection(
+                        metricsCalculator: metricsCalculator,
+                        onQuestionTapped: { questionId in
+                            selectedQuestionId = questionId
+                            showingAIChat = true
+                        }
+                    )
 
                     Divider()
                         .background(PendulumColors.bronze.opacity(0.3))
@@ -107,6 +118,20 @@ struct DashboardView: View {
         }
         .onChange(of: selectedTimeRange) { _, newRange in
             loadMetrics()
+        }
+        .sheet(isPresented: $showingAIChat) {
+            ChatView(metricsCalculator: metricsCalculator)
+                .onAppear {
+                    // If a specific question was selected, auto-send it
+                    if let questionId = selectedQuestionId,
+                       let question = PresetQuestionsCatalog.allQuestions.first(where: { $0.id == questionId }) {
+                        let context = GameplaySummaryBuilder.build(from: metricsCalculator)
+                        Task {
+                            await ChatService.shared.sendPresetQuestion(question, context: context)
+                        }
+                        selectedQuestionId = nil
+                    }
+                }
         }
     }
 
@@ -210,6 +235,108 @@ struct BasicMetricsSection: View {
         } else {
             return String(format: "%dm %ds", minutes, Int(seconds) % 60)
         }
+    }
+}
+
+// MARK: - Quick Insights Section (AI Chat Shortcuts)
+struct QuickInsightsSection: View {
+    @ObservedObject var metricsCalculator: CSVMetricsCalculator
+    let onQuestionTapped: (String) -> Void
+
+    // Show 2 quick insight chips from Tier 1
+    private var displayQuestions: [PresetQuestion] {
+        Array(PresetQuestionsCatalog.tier1Questions.prefix(2))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("QUICK INSIGHTS")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(PendulumColors.textTertiary)
+
+                Spacer()
+
+                // AI sparkle badge
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 10))
+                    Text("AI")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundStyle(PendulumColors.gold)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(PendulumColors.gold.opacity(0.15))
+                )
+            }
+            .padding(.horizontal, 16)
+
+            // Horizontal scroll of quick insight chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(displayQuestions) { question in
+                        QuickInsightChip(question: question) {
+                            onQuestionTapped(question.id)
+                        }
+                    }
+
+                    // "More" button to open full chat
+                    Button(action: { onQuestionTapped("") }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "ellipsis.bubble")
+                                .font(.system(size: 14))
+
+                            Text("More")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundStyle(PendulumColors.bronze)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+// MARK: - Quick Insight Chip
+struct QuickInsightChip: View {
+    let question: PresetQuestion
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: question.icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(PendulumColors.gold)
+
+                Text(question.displayText)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PendulumColors.text)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(PendulumColors.backgroundTertiary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(PendulumColors.gold.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

@@ -1,0 +1,107 @@
+{
+  "messages" : [
+    {
+      "role" : "user",
+      "id" : "E3E75CCE-FDC8-4D93-BC02-D600BE45A72E",
+      "content" : "Based on my gameplay patterns, reaction times, and overcorrection rate, would you say I tend to be more cautious or impulsive when making decisions? What specific behaviors indicate this?",
+      "timestamp" : "2026-02-05T05:27:19Z",
+      "presetQuestionId" : "cautious_impulsive"
+    },
+    {
+      "role" : "assistant",
+      "id" : "29DC13C3-6A0B-4CDE-992E-1F4EA9C16B64",
+      "content" : "Based on your gameplay data, here's what I can see:\n\nBuilding balance skills takes time. Your current stability score of 0% will improve with practice. Try making smaller, more frequent adjustments.\n\nYour directional control is well-balanced, showing adaptability in your responses.\n\nKeep playing to discover more about your unique patterns. Each session adds to your personal insights.",
+      "timestamp" : "2026-02-05T05:27:20Z",
+      "isFallback" : true
+    },
+    {
+      "role" : "user",
+      "id" : "2A279666-A149-4C65-B197-45B8160E8C9C",
+      "content" : "Test",
+      "timestamp" : "2026-02-05T05:29:34Z"
+    },
+    {
+      "role" : "assistant",
+      "id" : "1191ED15-75B2-4DD2-B184-E43D64DA70F9",
+      "content" : "Based on your gameplay data, here's what I can see:\n\nBuilding balance skills takes time. Your current stability score of 0% will improve with practice. Try making smaller, more frequent adjustments.\n\nYour directional control is well-balanced, showing adaptability in your responses.\n\nKeep playing to discover more about your unique patterns. Each session adds to your personal insights.",
+      "timestamp" : "2026-02-05T05:29:34Z",
+      "isFallback" : true
+    },
+    {
+      "role" : "user",
+      "id" : "CEDE1B06-F356-45F3-9A95-72EBC6C1D8C3",
+      "content" : "What recurring patterns do you notice in my gameplay? Are there specific habits, tendencies, or strategies I tend to fall back on? How might these patterns reflect my broader approach to challenges?",
+      "timestamp" : "2026-02-05T05:36:05Z",
+      "presetQuestionId" : "repeating_patterns"
+    },
+    {
+      "timestamp" : "2026-02-05T05:36:07Z",
+      "tokenUsage" : {
+        "promptTokens" : 677,
+        "totalTokens" : 936,
+        "completionTokens" : 259
+      },
+      "content" : "It's great to see you diving into The Pendulum! Right now, your gameplay data is still building up, so it's a bit like looking at a blank canvas. We have 0 sessions played and 0 total play time, which means we don't have any specific patterns or habits to analyze just yet.\n\nTo start noticing recurring patterns, we'll need you to play a few more sessions. Think of it like getting to know someone – you need some time and interaction to see their unique traits emerge! Once you've had some more time with the game, we can look at things like your stability score, how quickly you react, or if you tend to favor pushing in one direction more than the other.\n\nDon't worry about not having data yet; it's a completely normal starting point! As you play, we'll be able to see how your control style develops. For example, if you find yourself reacting very quickly to keep the pendulum balanced, it might show up as a low average reaction time. Or, if you're able to keep it steady for long periods, your stability score will be high. We can then explore how these in-game tendencies might relate to how you approach real-life challenges and decisions!",
+      "role" : "assistant",
+      "id" : "5CBA55DA-E5D3-4972-B33F-3967C3518801",
+      "modelName" : "gemini-2.5-flash-lite",
+      "isFallback" : false,
+      "responseLatencyMs" : 1812
+    },
+    {
+      "role" : "user",
+      "content" : "What recurring patterns do you notice in my gameplay? Are there specific habits, tendencies, or strategies I tend to fall back on? How might these patterns reflect my broader approach to challenges?",
+      "presetQuestionId" : "repeating_patterns",
+      "timestamp" : "2026-02-05T05:36:45Z",
+      "id" : "F915CB81-5CA7-49F0-A44F-A09E8C8AAA6D"
+    },
+    {
+      "timestamp" : "2026-02-05T05:36:48Z",
+      "tokenUsage" : {
+        "promptTokens" : 1328,
+        "totalTokens" : 1756,
+        "completionTokens" : 428
+      },
+      "content" : "Wow, it's fantastic to see your data has really filled out! You've played quite a bit, reaching level 47 and accumulating a solid 38 minutes of playtime. It looks like you've developed a few interesting patterns here.\n\nOne of the most noticeable patterns is your **overcorrection rate of 20.0%**. This suggests that when the pendulum starts to wobble, you tend to make larger adjustments than might be strictly necessary to bring it back into balance. This is also reflected in your **Lyapunov exponent of 111.200**, which is quite high and indicates a more chaotic or energetic control style. Coupled with a **stability score of 53.3%**, it seems like you're actively engaged in keeping the pendulum upright, but sometimes those energetic corrections can lead to overshooting the mark.\n\nThis tendency to overcorrect might translate to how you approach challenges in life. Perhaps you tend to be very proactive and jump into action, making decisive moves. While this can be a strength, ensuring things get done, it might also mean you sometimes find yourself needing to backtrack or readjust more than someone who takes a more measured approach. Your **right-leaning directional bias of 0.15** is subtle but suggests a slight preference for making adjustments to the right. This could be a minor habit that emerges when you're focused on the task.\n\nIt's also interesting to see your **efficiency rating is 6.6%**. This is quite low, which aligns with the overcorrection. It means that while you're expending energy (your energy management is 74.9%, which is good!), not all of that energy is being used in the most precise way to maintain balance.\n\nGiven your goal of Relaxation & Mindfulness, this pattern of energetic, sometimes overcorrecting control might be something to explore. You're clearly very engaged, but perhaps finding ways to fine-tune those adjustments could lead to a more serene and less effortful experience in the game, and potentially in other areas of your life too!",
+      "role" : "assistant",
+      "id" : "73AFDC40-4BB7-4851-94AF-439A2B60E008",
+      "modelName" : "gemini-2.5-flash-lite",
+      "isFallback" : false,
+      "responseLatencyMs" : 2379
+    }
+  ],
+  "updatedAt" : "2026-02-05T05:36:48Z",
+  "createdAt" : "2026-02-05T05:27:19Z",
+  "gameplayContext" : {
+    "basinStability" : 65.44723485597521,
+    "skillRetention" : 0,
+    "phaseSpaceCoverage" : 19.040000000000003,
+    "dominantHand" : "Right",
+    "overcorrectionRate" : 20.013591573224602,
+    "mazeSessions" : 200,
+    "windingNumber" : -2.2403717105516896,
+    "energyManagement" : 74.92667625238404,
+    "efficiencyRating" : 6.644682924289894,
+    "totalPlayTime" : 2312.606731772423,
+    "sessionsPlayed" : 185,
+    "trainingGoal" : "Relaxation & Mindfulness",
+    "ageRange" : "31-50",
+    "generatedAt" : "2026-02-05T05:36:45Z",
+    "directionalBias" : 0.15120625212368333,
+    "averageReactionTime" : 0.35068350638977724,
+    "mazeCognitiveScore" : 0.2625,
+    "learningCurveSlope" : -0.20182239318830242,
+    "angularDeviationStdDev" : 65.38548584039602,
+    "periodicOrbitCount" : 5,
+    "aiAssistancePercent" : 27.32186408278953,
+    "totalPushes" : 2943,
+    "mazeFlowScore" : 0,
+    "maxLevel" : 47,
+    "aiModeUsed" : "Helper",
+    "mazeMotorScore" : 0.8408801956605025,
+    "stabilityScore" : 53.332015028673126,
+    "lyapunovExponent" : 111.1995611385514
+  },
+  "conversationId" : "EC136DA0-3C87-40A3-8601-663C7A54C4F7",
+  "userId" : "6Qsbo6vSozMTdaf2dFnpFUTACGc2"
+}

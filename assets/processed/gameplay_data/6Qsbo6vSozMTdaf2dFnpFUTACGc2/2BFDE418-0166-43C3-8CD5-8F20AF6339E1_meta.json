@@ -1,0 +1,71 @@
+{
+  "totalForceApplied" : 25.817708333333325,
+  "totalDuration" : 23.167850017547607,
+  "aiDifficulty" : 0.5,
+  "maxScore" : 0,
+  "aiInterventions" : 1372,
+  "totalPushes" : 18,
+  "levelsCompleted" : [
+    1,
+    2,
+    3
+  ],
+  "maxLevel" : 3,
+  "averageBalanceTime" : 0,
+  "aiControlCalls" : 1373,
+  "sessionId" : "2BFDE418-0166-43C3-8CD5-8F20AF6339E1",
+  "levelConfigs" : [
+    {
+      "level" : 1,
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "springConstantValue" : 0.2,
+      "massMultiplier" : 1,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "balanceRequiredTime" : 1.5,
+      "dampingValue" : 0.4,
+      "jiggleIntensity" : 0.3
+    },
+    {
+      "level" : 2,
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "springConstantValue" : 0.2,
+      "massMultiplier" : 1,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "balanceRequiredTime" : 2,
+      "dampingValue" : 0.4,
+      "jiggleIntensity" : 0.5
+    },
+    {
+      "level" : 3,
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "springConstantValue" : 0.2,
+      "massMultiplier" : 1,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "balanceRequiredTime" : 2.5,
+      "dampingValue" : 0.4,
+      "jiggleIntensity" : 0.7
+    },
+    {
+      "level" : 4,
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "springConstantValue" : 0.2,
+      "massMultiplier" : 1,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "balanceRequiredTime" : 3,
+      "dampingValue" : 0.4,
+      "jiggleIntensity" : 0.9000000000000001
+    }
+  ],
+  "aiMode" : "Helper",
+  "endTime" : "2026-01-31T14:16:07Z",
+  "gameMode" : "Jiggle",
+  "startTime" : "2026-01-31T14:15:44Z"
+}

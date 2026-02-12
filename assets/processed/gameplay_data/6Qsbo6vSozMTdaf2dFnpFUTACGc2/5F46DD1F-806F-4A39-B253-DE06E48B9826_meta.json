@@ -1,0 +1,36 @@
+{
+  "totalForceApplied" : 21.405405405405407,
+  "gameMode" : "Golden",
+  "averageBalanceTime" : 0,
+  "sessionId" : "5F46DD1F-806F-4A39-B253-DE06E48B9826",
+  "maxLevel" : 1,
+  "endTime" : "2026-01-31T14:20:48Z",
+  "maxScore" : 0,
+  "aiControlCalls" : 0,
+  "goldenFocusArea" : "deepFocus",
+  "aiDifficulty" : 0.5,
+  "goldenRecommendationTier" : "Weighted Scorer",
+  "totalPushes" : 12,
+  "aiMode" : "Off",
+  "goldenCoherenceScore" : 60.882341253923045,
+  "startTime" : "2026-01-31T14:20:42Z",
+  "levelsCompleted" : [
+
+  ],
+  "levelConfigs" : [
+    {
+      "massMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1,
+      "balanceThreshold" : 0.35,
+      "jiggleIntensity" : 0,
+      "initialPerturbation" : 8,
+      "springConstantValue" : 0.2,
+      "level" : 1,
+      "balanceRequiredTime" : 1.5
+    }
+  ],
+  "totalDuration" : 5.3888009786605835,
+  "aiInterventions" : 0
+}

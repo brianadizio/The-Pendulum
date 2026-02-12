@@ -1,0 +1,97 @@
+{
+  "sessionId" : "90466A65-6898-4E20-AA55-AFDDDDE310CD",
+  "totalForceApplied" : 110.93266832917706,
+  "levelsCompleted" : [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "aiControlCalls" : 0,
+  "maxScore" : 0,
+  "totalDuration" : 35.95475697517395,
+  "gameMode" : "Progressive",
+  "aiInterventions" : 0,
+  "totalPushes" : 66,
+  "maxLevel" : 5,
+  "aiDifficulty" : 0.5,
+  "averageBalanceTime" : 0,
+  "startTime" : "2026-02-01T23:23:28Z",
+  "levelConfigs" : [
+    {
+      "gravityMultiplier" : 1,
+      "balanceRequiredTime" : 1.5,
+      "jiggleIntensity" : 0,
+      "springConstantValue" : 0.2,
+      "balanceThreshold" : 0.35,
+      "massMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "level" : 1,
+      "dampingValue" : 0.4,
+      "initialPerturbation" : 5
+    },
+    {
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 2,
+      "jiggleIntensity" : 0,
+      "balanceThreshold" : 0.35,
+      "level" : 2,
+      "lengthMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "initialPerturbation" : 5,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1
+    },
+    {
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 2.5,
+      "jiggleIntensity" : 0,
+      "balanceThreshold" : 0.35,
+      "level" : 3,
+      "lengthMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "initialPerturbation" : 5,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1
+    },
+    {
+      "massMultiplier" : 1,
+      "balanceRequiredTime" : 3,
+      "jiggleIntensity" : 0,
+      "balanceThreshold" : 0.35,
+      "level" : 4,
+      "lengthMultiplier" : 1,
+      "springConstantValue" : 0.2,
+      "initialPerturbation" : 5,
+      "dampingValue" : 0.4,
+      "gravityMultiplier" : 1
+    },
+    {
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "level" : 5,
+      "springConstantValue" : 0.2,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "massMultiplier" : 1,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 3.5
+    },
+    {
+      "balanceThreshold" : 0.35,
+      "initialPerturbation" : 5,
+      "level" : 6,
+      "springConstantValue" : 0.2,
+      "gravityMultiplier" : 1,
+      "lengthMultiplier" : 1,
+      "dampingValue" : 0.4,
+      "massMultiplier" : 1,
+      "jiggleIntensity" : 0,
+      "balanceRequiredTime" : 4
+    }
+  ],
+  "endTime" : "2026-02-01T23:24:04Z",
+  "aiMode" : "Off"
+}

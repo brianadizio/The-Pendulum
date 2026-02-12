@@ -6,8 +6,12 @@ import SwiftUI
 
 struct IntegrationView: View {
     @StateObject private var healthKitManager = HealthKitManager.shared
+    @StateObject private var metricsCalculator = CSVMetricsCalculator()
     @State private var showingHealthExplanation = false
     @State private var showingHealthSettings = false
+    @State private var showingMazeConnection = false
+    @State private var showingAIChat = false
+    @State private var isMazeConnected = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,8 +20,18 @@ struct IntegrationView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
+                    // AI Insights Section - "Your Play Style, Decoded"
+                    AIInsightsSection(onChatTapped: { showingAIChat = true })
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
                     // Golden Solutions Section
-                    GoldenSolutionsSection()
+                    GoldenSolutionsSection(
+                        isMazeConnected: isMazeConnected,
+                        onMazeTapped: { showingMazeConnection = true }
+                    )
 
                     Divider()
                         .background(PendulumColors.bronze.opacity(0.3))
@@ -41,6 +55,13 @@ struct IntegrationView: View {
             }
         }
         .background(PendulumColors.background)
+        .onAppear {
+            isMazeConnected = AppGroupManager.shared.loadMazeData() != nil
+            // Load metrics for AI context
+            if let sessionManager = CSVSessionManager() as CSVSessionManager? {
+                metricsCalculator.calculateMetrics(from: sessionManager, timeRange: .allTime)
+            }
+        }
         .sheet(isPresented: $showingHealthExplanation) {
             HealthExplanationSheet(
                 healthKitManager: healthKitManager,
@@ -49,6 +70,15 @@ struct IntegrationView: View {
         }
         .sheet(isPresented: $showingHealthSettings) {
             HealthSettingsView()
+        }
+        .sheet(isPresented: $showingMazeConnection) {
+            MazeConnectionSheet(
+                isMazeConnected: $isMazeConnected,
+                onDismiss: { showingMazeConnection = false }
+            )
+        }
+        .sheet(isPresented: $showingAIChat) {
+            ChatView(metricsCalculator: metricsCalculator)
         }
     }
 }
@@ -69,8 +99,81 @@ struct IntegrationHeader: View {
     }
 }
 
+// MARK: - AI Insights Section
+struct AIInsightsSection: View {
+    var onChatTapped: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("AI INSIGHTS")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PendulumColors.textTertiary)
+                .padding(.horizontal, 16)
+
+            Button(action: onChatTapped) {
+                HStack(spacing: 12) {
+                    // Sparkle icon with gradient
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [PendulumColors.goldLight, PendulumColors.gold],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 40, height: 40)
+
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Your Play Style, Decoded")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(PendulumColors.text)
+
+                        Text("Ask AI about your gameplay patterns and cognitive style")
+                            .font(.system(size: 12))
+                            .foregroundStyle(PendulumColors.textSecondary)
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PendulumColors.gold)
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(PendulumColors.backgroundTertiary)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            LinearGradient(
+                                colors: [PendulumColors.goldLight.opacity(0.4), PendulumColors.gold.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal, 16)
+        }
+    }
+}
+
 // MARK: - Golden Solutions Section
 struct GoldenSolutionsSection: View {
+    var isMazeConnected: Bool = false
+    var onMazeTapped: (() -> Void)? = nil
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("GOLDEN SOLUTIONS")
@@ -79,12 +182,15 @@ struct GoldenSolutionsSection: View {
                 .padding(.horizontal, 16)
 
             VStack(spacing: 8) {
-                IntegrationCard(
-                    title: "The Maze",
-                    description: "Connect balance patterns to maze navigation",
-                    iconName: "square.grid.3x3",
-                    isConnected: false
-                )
+                Button(action: { onMazeTapped?() }) {
+                    IntegrationCard(
+                        title: "The Maze",
+                        description: "Connect balance patterns to maze navigation",
+                        iconName: "square.grid.3x3",
+                        isConnected: isMazeConnected
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
 
                 IntegrationCard(
                     title: "Focus Calendar",
@@ -529,6 +635,201 @@ struct IntegrationCard: View {
                 .stroke(PendulumColors.bronze.opacity(0.2), lineWidth: 1)
         )
         .opacity(comingSoon ? 0.6 : 1.0)
+    }
+}
+
+// MARK: - Maze Connection Sheet
+struct MazeConnectionSheet: View {
+    @Binding var isMazeConnected: Bool
+    var onDismiss: () -> Void
+
+    @State private var isChecking = false
+    @State private var mazeData: MazeSharedData?
+    @State private var checkComplete = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Icon
+                Image(systemName: "square.grid.3x3.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(PendulumColors.gold)
+                    .padding(.top, 32)
+
+                // Title
+                Text("Connect The Maze")
+                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .foregroundStyle(PendulumColors.text)
+
+                // Explanation
+                VStack(alignment: .leading, spacing: 16) {
+                    ExplanationRow(
+                        icon: "arrow.triangle.branch",
+                        title: "Balance patterns",
+                        description: "Your pendulum control data flows into maze navigation analysis"
+                    )
+
+                    ExplanationRow(
+                        icon: "chart.dots.scatter",
+                        title: "Maze performance",
+                        description: "Motor scores, cognitive metrics, and decision latency from The Maze"
+                    )
+
+                    ExplanationRow(
+                        icon: "sun.max.fill",
+                        title: "Golden Mode enhancement",
+                        description: "Combined data powers smarter difficulty adaptation"
+                    )
+                }
+                .padding(.horizontal, 24)
+
+                // Connection status
+                if let data = mazeData {
+                    MazeDataSummary(data: data)
+                        .padding(.horizontal, 24)
+                } else if checkComplete {
+                    VStack(spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 24))
+                            .foregroundStyle(PendulumColors.caution)
+
+                        Text("No maze data found yet")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(PendulumColors.text)
+
+                        Text("Play a session in The Maze first, then come back to connect.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(PendulumColors.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 24)
+                }
+
+                Spacer()
+
+                // Check button
+                Button(action: checkForMazeData) {
+                    HStack {
+                        if isChecking {
+                            ProgressView()
+                                .tint(.white)
+                        } else if isMazeConnected {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("Connected")
+                        } else {
+                            Text("Check for The Maze")
+                        }
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(isMazeConnected ? PendulumColors.success : PendulumColors.gold)
+                    )
+                }
+                .disabled(isChecking)
+                .padding(.horizontal, 24)
+
+                Text("Data is shared securely via App Group between The Pendulum and The Maze.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(PendulumColors.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 32)
+            }
+            .background(PendulumColors.background)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { onDismiss() }
+                        .foregroundStyle(PendulumColors.textSecondary)
+                }
+            }
+            .onAppear {
+                // Auto-check on appear
+                checkForMazeData()
+            }
+        }
+    }
+
+    private func checkForMazeData() {
+        isChecking = true
+        // Small delay for UX feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            mazeData = AppGroupManager.shared.loadMazeData()
+            isMazeConnected = mazeData != nil
+            checkComplete = true
+            isChecking = false
+        }
+    }
+}
+
+// MARK: - Maze Data Summary
+struct MazeDataSummary: View {
+    let data: MazeSharedData
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(PendulumColors.success)
+
+                Text("Connected to The Maze")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(PendulumColors.text)
+            }
+
+            HStack(spacing: 16) {
+                MazeMetricBadge(
+                    value: "\(data.sessions.count)",
+                    label: "sessions"
+                )
+
+                if let latest = data.sessions.last {
+                    MazeMetricBadge(
+                        value: String(format: "%.0f", latest.motorScore * 100),
+                        label: "motor"
+                    )
+
+                    MazeMetricBadge(
+                        value: String(format: "%.0f", latest.flowStateScore * 100),
+                        label: "flow"
+                    )
+                }
+            }
+
+            Text("Last updated: \(data.lastUpdated, style: .relative) ago")
+                .font(.system(size: 11))
+                .foregroundStyle(PendulumColors.textTertiary)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(PendulumColors.success.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(PendulumColors.success.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+struct MazeMetricBadge: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .foregroundStyle(PendulumColors.text)
+
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundStyle(PendulumColors.textTertiary)
+        }
     }
 }
 

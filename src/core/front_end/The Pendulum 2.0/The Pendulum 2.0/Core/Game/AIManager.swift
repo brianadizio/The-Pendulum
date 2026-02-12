@@ -178,13 +178,28 @@ class AIManager: ObservableObject {
     // 1. Compute AI control
     let aiForce = solver.computeControl(theta: theta, thetaDot: thetaDot, playerInput: playerForce != 0 ? playerForce : nil)
 
-    // 2. Apply force via callback
-    if abs(aiForce) > 0.001 {
-      onApplyForce?(aiForce)
+    // 2. Apply force via callback (mode-aware scaling)
+    let scaledForce: Double
+    if currentMode == .helper {
+      // Helper: only intervene when deviation exceeds dead zone (~8.6 deg from upright)
+      let deviation = abs(theta - .pi)
+      let deadZone: Double = 0.15  // radians
+      if deviation > deadZone {
+        scaledForce = aiForce * 0.55  // Scale to 55% so player still feels in control
+      } else {
+        scaledForce = 0.0  // Let player handle small wobbles
+      }
+    } else {
+      // Competition, Tutorial, Demo: full strength
+      scaledForce = aiForce
+    }
+
+    if abs(scaledForce) > 0.001 {
+      onApplyForce?(scaledForce)
       totalInterventions += 1
     }
     totalControlCalls += 1
-    lastAIForce = aiForce
+    lastAIForce = scaledForce
 
     // 3. Tutorial mode: hints, lesson timing, auto-advance
     if currentMode == .tutorial {
@@ -200,7 +215,7 @@ class AIManager: ObservableObject {
 
       // Track hint-following: count once per distinct push with cooldown
       if let hint = currentHint, hint.suggestedDirection != .none, abs(playerForce) > 0.01 {
-        let playerDir: TutorialMode.Hint.Direction = playerForce > 0 ? .right : .left
+        let playerDir: TutorialMode.Hint.Direction = playerForce > 0 ? .left : .right
         let cooledDown = (time - lastHintFollowedTime) >= hintFollowCooldown
         if playerDir == hint.suggestedDirection && cooledDown {
           solver.recordTutorialHintFollowed()

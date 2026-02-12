@@ -1,0 +1,6 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime
+0.434,0.0,0.0,1,1.00,false,1,,Timed,0,0.3500,0.000
+1.467,0.0,0.0,1,1.00,false,1,,Timed,0,0.3500,0.000
+2.050,0.0,0.0,1,1.00,false,2,,Timed,0,0.3500,0.000
+2.867,0.0,0.0,1,1.00,false,2,,Timed,0,0.3500,0.000
+3.567,0.0,0.0,-1,1.00,false,3,,Timed,0,0.3500,0.000

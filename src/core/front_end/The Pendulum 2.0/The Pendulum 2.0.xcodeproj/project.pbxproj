@@ -14,6 +14,8 @@
 		D6772EFC2F2D50E30031EA29 /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = D6772EFB2F2D50E30031EA29 /* Singular */; };
 		D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D67E74032F27DFB700DBF3DF /* GoldenTheme */; };
 		D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */ = {isa = PBXBuildFile; productRef = D67E79A02F2BDF3A0099EA6E /* PendulumSolver */; };
+		D6ACE22E2F345EE20059B47D /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = D6ACE22D2F345EE20059B47D /* FirebaseAI */; };
+		D6ACE2302F345EE20059B47D /* FirebaseAILogic in Frameworks */ = {isa = PBXBuildFile; productRef = D6ACE22F2F345EE20059B47D /* FirebaseAILogic */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,11 +48,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6ACE2302F345EE20059B47D /* FirebaseAILogic in Frameworks */,
 				D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */,
 				D6772EFC2F2D50E30031EA29 /* Singular in Frameworks */,
 				D67E74042F27DFB700DBF3DF /* GoldenTheme in Frameworks */,
 				D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */,
 				D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */,
+				D6ACE22E2F345EE20059B47D /* FirebaseAI in Frameworks */,
 				D66F27022F2BDE1B0099EA6E /* FirebaseStorage in Frameworks */,
 				D67E79A12F2BDF3A0099EA6E /* PendulumSolver in Frameworks */,
 			);
@@ -110,6 +114,8 @@
 				D66F27012F2BDE1B0099EA6E /* FirebaseStorage */,
 				D67E79A02F2BDF3A0099EA6E /* PendulumSolver */,
 				D6772EFB2F2D50E30031EA29 /* Singular */,
+				D6ACE22D2F345EE20059B47D /* FirebaseAI */,
+				D6ACE22F2F345EE20059B47D /* FirebaseAILogic */,
 			);
 			productName = "The Pendulum 2.0";
 			productReference = D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */;
@@ -304,7 +310,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -341,7 +347,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -458,6 +464,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */;
 			productName = PendulumSolver;
+		};
+		D6ACE22D2F345EE20059B47D /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		D6ACE22F2F345EE20059B47D /* FirebaseAILogic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAILogic;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

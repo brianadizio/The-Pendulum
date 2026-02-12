@@ -1,0 +1,58 @@
+{
+  "levelsCompleted" : [
+    1,
+    2
+  ],
+  "endTime" : "2026-02-06T01:40:15Z",
+  "maxScore" : 0,
+  "totalDuration" : 7.14462411403656,
+  "levelConfigs" : [
+    {
+      "initialPerturbation" : 5,
+      "jiggleIntensity" : 0,
+      "dampingValue" : 0.4,
+      "balanceRequiredTime" : 2,
+      "massMultiplier" : 1,
+      "balanceThreshold" : 0.35,
+      "springConstantValue" : 0.2,
+      "level" : 1,
+      "lengthMultiplier" : 1,
+      "gravityMultiplier" : 1
+    },
+    {
+      "initialPerturbation" : 5,
+      "jiggleIntensity" : 0,
+      "dampingValue" : 0.4,
+      "balanceRequiredTime" : 2,
+      "massMultiplier" : 1,
+      "balanceThreshold" : 0.31,
+      "springConstantValue" : 0.2,
+      "level" : 2,
+      "lengthMultiplier" : 1,
+      "gravityMultiplier" : 1
+    },
+    {
+      "initialPerturbation" : 5,
+      "jiggleIntensity" : 0,
+      "dampingValue" : 0.4,
+      "balanceRequiredTime" : 2,
+      "massMultiplier" : 1,
+      "balanceThreshold" : 0.26999999999999996,
+      "springConstantValue" : 0.2,
+      "level" : 3,
+      "lengthMultiplier" : 1,
+      "gravityMultiplier" : 1
+    }
+  ],
+  "aiInterventions" : 0,
+  "maxLevel" : 2,
+  "aiControlCalls" : 0,
+  "totalPushes" : 6,
+  "sessionId" : "5C3EE5F5-C14C-4E3E-BA3C-8254EDA2EC7F",
+  "gameMode" : "Spatial",
+  "aiDifficulty" : 0.5,
+  "startTime" : "2026-02-06T01:40:08Z",
+  "totalForceApplied" : 10.746786564588547,
+  "aiMode" : "Off",
+  "averageBalanceTime" : 0
+}

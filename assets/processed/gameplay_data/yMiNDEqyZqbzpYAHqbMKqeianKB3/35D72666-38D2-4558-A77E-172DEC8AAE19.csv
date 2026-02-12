@@ -1,0 +1,7 @@
+timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
+0.684,0.0,0.0,1,1.00,false,1,,Progressive,0,0.3500,0.000,,0.0000
+1.001,0.0,0.0,1,1.00,false,1,,Progressive,0,0.3500,0.000,,0.0000
+1.801,0.0,0.0,-1,1.00,false,2,,Progressive,0,0.3500,0.000,,0.0000
+2.467,0.0,0.0,1,1.00,false,2,,Progressive,0,0.3500,0.000,,0.0000
+2.617,0.0,0.0,1,1.00,false,2,,Progressive,0,0.3500,0.000,,0.0000
+3.517,0.0,0.0,-1,1.00,false,2,,Progressive,0,0.3500,0.000,,0.0000
