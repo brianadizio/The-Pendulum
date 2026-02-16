@@ -344,14 +344,32 @@ class GoldenModeManager: ObservableObject {
     guard isGoldenModeActive else { return }
     isGoldenModeActive = false
 
-    let coherenceEnd = computeCoherence()
+    // Build a post-session feature vector using actual gameplay results
+    // instead of hardcoded defaults, so coherence reflects real performance
+    var postSessionFeatures = buildFeatureVector()
+
+    // Override hardcoded player metrics with actual session data
+    postSessionFeatures.overcorrectionRate = max(0, 1.0 - finalStability / 100.0)
+    let normalizedScore = Double(score) / max(1.0, sessionDuration)
+    postSessionFeatures.forceEfficiency = min(1.0, max(0.1, normalizedScore / 10.0))
+
+    // Compute learning curve from pre→post stability improvement
+    let stabilityImprovement = finalStability - preSessionStability
+    postSessionFeatures.learningCurveSlope = stabilityImprovement / 100.0
+
+    // Skill retention: higher for completed sessions with good duration
+    let targetDuration = currentRecommendation?.config.targetDurationMinutes ?? 10.0
+    let durationFraction = min(sessionDuration / 60.0 / targetDuration, 1.0)
+    postSessionFeatures.skillRetention = sessionCompleted
+      ? min(1.0, 0.5 + durationFraction * 0.5)
+      : max(0.1, durationFraction * 0.5)
+
+    let coherenceEnd = computeCoherence(features: postSessionFeatures)
 
     // Compute improvements
-    let stabilityImprovement = finalStability - preSessionStability
     let reactionImprovement = preSessionReactionTime - finalReactionTime
 
     // Enjoyment proxy: normalized duration × completion
-    let targetDuration = currentRecommendation?.config.targetDurationMinutes ?? 10.0
     let durationRatio = min(sessionDuration / 60.0 / targetDuration, 1.5)
     let enjoymentProxy = sessionCompleted ? durationRatio : durationRatio * 0.6
 

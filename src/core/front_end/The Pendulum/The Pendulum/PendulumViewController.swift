@@ -4063,10 +4063,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
                 updateGameMessageLabel("Applied \(profile.name) perturbation mode")
                 pendingPerturbationProfile = nil
             }
-            
+
+            // If AI competition was active, record the loss and adjust difficulty
+            if PendulumAIManager.shared.isAIPlaying() && PendulumAIManager.shared.currentMode == .compete {
+                PendulumAIManager.shared.recordCompetitionLoss()
+                PendulumAIManager.shared.resetCompetitionScore()
+            }
+
             phaseSpaceView.clearPoints()
             viewModel.resetAndStart()
-            
+
             // Cycle background when restarting
             BackgroundManager.shared.cycleBackground(for: simulationView)
         } else {
