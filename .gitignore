@@ -10,16 +10,25 @@
 *.iMovie
 *.mp4
 *.mp3
+*.csv
 *.JPG
 *.JPEG
 *.PNG
 *.docx
 *.pptx
+*.json
 The Icons GES_Title Apr 8, 2024.pdf
 The Icons GES_Title Apr 8, 2024_compressed.pdf
 OverviewConformalGeometryProcessing
 vanKaick10.pdf
 **/.claude/settings.local.json
+
+# OS files
+.DS_Store
+
+# Processed/generated data (large, regenerable)
+assets/processed/
+assets/PCA/
 
 # Backup directories and build artifacts
 **/The Pendulum 2025-*/
