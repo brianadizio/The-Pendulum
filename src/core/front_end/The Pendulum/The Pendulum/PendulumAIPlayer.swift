@@ -654,6 +654,10 @@ class PendulumAIManager {
     private var isAssisting: Bool = false
     private var competitionScore: Int = 0
     internal var tutorialStep: Int = 0
+
+    // Competition difficulty tracking
+    private var competitionSkill: AISkillLevel = .advanced
+    private var competitionGameActive: Bool = false
     
     // AI Modes
     enum AIMode {
@@ -688,6 +692,7 @@ class PendulumAIManager {
             aiPlayer = PendulumAIPlayer(skillLevel: skillLevel)
             aiPlayer?.humanErrorEnabled = true
             competitionScore = 0
+            competitionGameActive = true
             
         case .tutorial:
             // Use enhanced tutorial mode
@@ -714,14 +719,16 @@ class PendulumAIManager {
         case .demo, .compete:
             // AI controls directly
             aiPlayer?.onPushLeft = { [weak self] in
-                // Apply lighter force based on AI's calculated magnitude
+                // In competition mode, skip pushes when game is over to prevent
+                // AI forces from auto-restarting the game via applyForce()
+                if self?.currentMode == .compete && self?.viewModel?.isGameActive != true { return }
                 let force = -2.0  // Much lighter base force
                 self?.viewModel?.applyForce(force)
                 self?.showAIActionIndicator(direction: PushDirection.left)
             }
-            
+
             aiPlayer?.onPushRight = { [weak self] in
-                // Apply lighter force
+                if self?.currentMode == .compete && self?.viewModel?.isGameActive != true { return }
                 let force = 2.0  // Much lighter base force
                 self?.viewModel?.applyForce(force)
                 self?.showAIActionIndicator(direction: PushDirection.right)
@@ -767,21 +774,81 @@ class PendulumAIManager {
     func isAIPlaying() -> Bool {
         return aiPlayer != nil
     }
+
+    /// Get the current competition skill level (adjusts based on win/loss history)
+    func getCompetitionSkillLevel() -> AISkillLevel {
+        return competitionSkill
+    }
+
+    /// Record a competition loss and reduce difficulty for next session
+    func recordCompetitionLoss() {
+        switch competitionSkill {
+        case .perfect: competitionSkill = .expert
+        case .expert: competitionSkill = .advanced
+        case .advanced: competitionSkill = .intermediate
+        case .intermediate, .beginner: competitionSkill = .beginner
+        }
+        print("AI Competition: Player lost → difficulty reduced to \(competitionSkill.rawValue)")
+    }
+
+    /// Record a competition win and increase difficulty for next session
+    func recordCompetitionWin() {
+        switch competitionSkill {
+        case .beginner: competitionSkill = .intermediate
+        case .intermediate: competitionSkill = .advanced
+        case .advanced: competitionSkill = .expert
+        case .expert, .perfect: competitionSkill = .expert // Cap at expert
+        }
+        print("AI Competition: Player won → difficulty increased to \(competitionSkill.rawValue)")
+    }
+
+    /// Reset competition score for a new round (called on game restart)
+    func resetCompetitionScore() {
+        competitionScore = 0
+        updateCompetitionDisplay()
+    }
     
     private func updateAI() {
         guard let viewModel = viewModel,
               let aiPlayer = aiPlayer else { return }
-        
+
+        // In competition mode, pause AI when game is not active to prevent
+        // the AI from getting a head start when the player restarts
+        if currentMode == .compete {
+            if !viewModel.isGameActive {
+                if competitionGameActive {
+                    // Game just ended — pause the AI player
+                    aiPlayer.stopPlaying()
+                    competitionGameActive = false
+                }
+                return
+            } else if !competitionGameActive {
+                // Game just restarted — give player a 1-second head start
+                competitionGameActive = true
+                competitionScore = 0
+                updateCompetitionDisplay()
+                let restartTime = Date()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    guard let self = self,
+                          self.currentMode == .compete,
+                          self.competitionGameActive else { return }
+                    self.aiPlayer?.startPlaying()
+                    print("AI Competition: AI resumes after 1s head-start for player")
+                }
+                return
+            }
+        }
+
         // Get current pendulum state
         let state = viewModel.currentState
-        
+
         // Update AI with current state
         aiPlayer.updatePendulumState(
             angle: state.theta,
             angleVelocity: state.thetaDot,
             time: state.time
         )
-        
+
         // Handle mode-specific logic
         switch currentMode {
         case .assist:
