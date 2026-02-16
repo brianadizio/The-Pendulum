@@ -142,8 +142,12 @@ extension PendulumViewController {
         // 6. Start AI with explicit debugging
         print("🔧 Starting AI Manager...")
         PendulumAIManager.shared.viewModel = viewModel
+        // Use dynamic difficulty for competition; expert for other modes
+        let skillLevel: AISkillLevel = (mode == .compete)
+            ? PendulumAIManager.shared.getCompetitionSkillLevel()
+            : .expert
         PendulumAIManager.shared.startAIPlayer(
-            skillLevel: .expert, // Use expert level for demo
+            skillLevel: skillLevel,
             viewModel: viewModel,
             mode: mode
         )
