@@ -61,7 +61,7 @@ struct FirebaseSignInSheet: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(PendulumColors.textSecondary)
 
-                        SecureField("Password", text: $password)
+                        SecureField("Password (6+ characters)", text: $password)
                             .textContentType(isCreatingAccount ? .newPassword : .password)
                             .padding(12)
                             .background(
@@ -72,6 +72,12 @@ struct FirebaseSignInSheet: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
                             )
+
+                        if !password.isEmpty && password.count < 6 {
+                            Text("Password must be at least 6 characters")
+                                .font(.system(size: 11))
+                                .foregroundStyle(PendulumColors.danger)
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
