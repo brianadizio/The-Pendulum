@@ -74,19 +74,13 @@ struct AccountCard: View {
                     // Apple Sign-In button
                     SignInWithAppleButton(.signIn) { request in
                         request.requestedScopes = [.fullName, .email]
-                    } onCompletion: { _ in
-                        // Handled by AppleSignInHelper delegate
+                        request.nonce = appleSignInHelper.prepareRequest()
+                    } onCompletion: { result in
+                        handleAppleSignIn(result)
                     }
                     .signInWithAppleButtonStyle(.whiteOutline)
                     .frame(height: 44)
                     .cornerRadius(8)
-                    .overlay(
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                handleAppleSignIn()
-                            }
-                    )
 
                     // Email sign-in button
                     Button(action: onShowEmailSignIn) {
@@ -190,21 +184,16 @@ struct AccountCard: View {
 
     // MARK: - Apple Sign-In
 
-    private func handleAppleSignIn() {
-        appleSignInHelper.startSignInWithApple { result in
-            switch result {
-            case .success(let credential):
-                Task {
-                    do {
-                        try await FirebaseManager.shared.linkAppleCredential(credential)
-                    } catch {
-                        await MainActor.run {
-                            appleSignInHelper.errorMessage = error.localizedDescription
-                        }
-                    }
-                }
-            case .failure(let error):
-                if (error as NSError).code != 1001 {
+    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        guard let credential = appleSignInHelper.handleSignInCompletion(result) else {
+            return
+        }
+
+        Task {
+            do {
+                try await FirebaseManager.shared.linkAppleCredential(credential)
+            } catch {
+                await MainActor.run {
                     appleSignInHelper.errorMessage = error.localizedDescription
                 }
             }

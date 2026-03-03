@@ -2439,18 +2439,52 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         accountLabel.textColor = FocusCalendarTheme.tertiaryTextColor
         accountLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(accountLabel)
-        
+
         NSLayoutConstraint.activate([
             accountLabel.topAnchor.constraint(equalTo: controlsCard.bottomAnchor, constant: 40),
             accountLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40)
         ])
-        
+
+        // Lifetime Access button
+        let lifetimeAccessButton = UIButton(type: .system)
+        let hasPremium = SubscriptionManager.shared.hasPremiumAccess()
+        let isTrialActive = !SubscriptionManager.shared.isTrialExpired() && !SubscriptionManager.shared.isPremium
+
+        if hasPremium && SubscriptionManager.shared.isPremium {
+            lifetimeAccessButton.setTitle("  Lifetime Access — Active", for: .normal)
+            lifetimeAccessButton.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
+            lifetimeAccessButton.setTitleColor(.systemGreen, for: .normal)
+        } else if isTrialActive {
+            let daysLeft = SubscriptionManager.shared.getRemainingTrialDays()
+            lifetimeAccessButton.setTitle("  Lifetime Access — \(daysLeft) Day\(daysLeft == 1 ? "" : "s") Left in Trial", for: .normal)
+            lifetimeAccessButton.backgroundColor = UIColor.systemBlue
+            lifetimeAccessButton.setTitleColor(.white, for: .normal)
+        } else {
+            lifetimeAccessButton.setTitle("  Unlock Lifetime Access", for: .normal)
+            lifetimeAccessButton.backgroundColor = UIColor.systemBlue
+            lifetimeAccessButton.setTitleColor(.white, for: .normal)
+        }
+        lifetimeAccessButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        lifetimeAccessButton.contentHorizontalAlignment = .center
+        lifetimeAccessButton.layer.cornerRadius = 12
+        lifetimeAccessButton.clipsToBounds = true
+        lifetimeAccessButton.translatesAutoresizingMaskIntoConstraints = false
+        lifetimeAccessButton.addTarget(self, action: #selector(lifetimeAccessTapped), for: .touchUpInside)
+        contentView.addSubview(lifetimeAccessButton)
+
+        NSLayoutConstraint.activate([
+            lifetimeAccessButton.topAnchor.constraint(equalTo: accountLabel.bottomAnchor, constant: 10),
+            lifetimeAccessButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            lifetimeAccessButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            lifetimeAccessButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+
         // Account card
         let accountCard = createSettingsCard()
         contentView.addSubview(accountCard)
-        
+
         NSLayoutConstraint.activate([
-            accountCard.topAnchor.constraint(equalTo: accountLabel.bottomAnchor, constant: 10),
+            accountCard.topAnchor.constraint(equalTo: lifetimeAccessButton.bottomAnchor, constant: 12),
             accountCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             accountCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
         ])
@@ -2464,16 +2498,16 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
             accountOptions = [
                 ("person.crop.circle", "Profile", false),
                 ("icloud", "Cloud Sync", false),
-                ("creditcard", "Subscription", false),
+                ("creditcard", "Lifetime Access", false),
                 ("rectangle.portrait.and.arrow.right", "Sign Out", false)
             ]
-            print("DEBUG: Added Profile, Cloud Sync, Subscription, and Sign Out options")
+            print("DEBUG: Added Profile, Cloud Sync, Lifetime Access, and Sign Out options")
         } else {
             accountOptions = [
                 ("person.crop.circle.badge.plus", "Sign In", false),
-                ("creditcard", "Subscription", false)
+                ("creditcard", "Lifetime Access", false)
             ]
-            print("DEBUG: Added Sign In and Subscription options")
+            print("DEBUG: Added Sign In and Lifetime Access options")
         }
         
         previousView = nil
@@ -2852,6 +2886,10 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         }
     }
     
+    @objc private func lifetimeAccessTapped() {
+        showSubscription()
+    }
+
     private func showSubscription() {
         let subscriptionVC = SubscriptionViewController()
         let navController = UINavigationController(rootViewController: subscriptionVC)
@@ -2870,7 +2908,7 @@ class PendulumViewController: UIViewController, UITabBarDelegate, PendulumPartic
         let syncStatus = getCloudSyncStatus()
         
         if syncStatus == "Premium Required" {
-            alert.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { _ in
+            alert.addAction(UIAlertAction(title: "Unlock Lifetime Access", style: .default) { _ in
                 self.showSubscription()
             })
         } else if syncStatus == "Sign In Required" {

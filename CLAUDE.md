@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **The Pendulum** is an iOS physics simulation game featuring a rigorous inverted pendulum model with comprehensive analytics, Firebase integration, and educational features. The app combines scientific accuracy with gamification to create an engaging learning tool for physics and control theory.
 
-**Primary Directory**: `src/core/front_end/The Pendulum/`
+**Primary Directory (Current Focus)**: `src/core/front_end/The Pendulum 2.0/` — SwiftUI rewrite, this is the active app submitted to the App Store.
+
+**Legacy Directory**: `src/core/front_end/The Pendulum/` — Original UIKit version, no longer the focus.
 
 ## Directory Structure
 
@@ -233,6 +235,41 @@ users/{userId}/
 - **Conflict resolution**: Keep highest score on sync
 - **Offline support**: CoreData as source of truth
 - **Sync trigger**: App launch, background/foreground transition
+
+### Nightly Firebase Data Download
+
+A Python script (`scripts/download_firebase_data.py`) runs nightly via macOS LaunchAgent to pull all user data from Firebase Storage to the local machine and Synology NAS.
+
+**Schedule**: Daily at 3:00 AM via `com.golden.firebase-download` LaunchAgent
+
+**LaunchAgent plist**: `~/Library/LaunchAgents/com.golden.firebase-download.plist`
+
+**What it downloads**:
+- Chat fine-tuning data (AI conversations with token usage) → `assets/processed/chat_finetuning/{userId}/*.json`
+- Gameplay session data (CSV + metadata) → `assets/processed/gameplay_data/{userId}/*.csv` and `*.json`
+- User profiles → `assets/processed/gameplay_data/profiles/{userId}/*.json`
+
+**NAS sync**: Copies to `/Volumes/home/Solutions/The Pendulum Data/` (if mounted)
+
+**Service account**: `~/.config/firebase/pendulum-service-account.json`
+
+**Python venv**: `scripts/venv/` (Python 3.14, packages: `google-cloud-storage`, `firebase-admin`)
+
+**Storage policy** (automatic tiered storage):
+- Under 100 GB local data: downloads to Mac Studio + syncs to Synology NAS
+- Over 100 GB local data: downloads directly to Synology only (NAS must be mounted)
+- Hard cap at 10 TB total — stops downloading and notifies if reached
+- Limits defined in script as `LOCAL_STORAGE_LIMIT` (100 GB) and `TOTAL_STORAGE_LIMIT` (10 TB)
+
+**Logs**:
+- `logs/firebase_sync_stdout.log` — run output, storage status, and summary stats
+- `logs/firebase_sync_stderr.log` — errors (empty when healthy)
+
+**Current data volume** (as of Feb 2026): 14 users, 530 gameplay sessions, 4 chat conversations, 6,466 total tokens (~2.8 MB)
+
+**Verify after reboot**: `launchctl list | grep firebase` — should show exit code `0`
+
+**Setup docs**: `scripts/FIREBASE_DOWNLOAD_SETUP.md`
 
 ## Physics Implementation
 

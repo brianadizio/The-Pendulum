@@ -45,6 +45,9 @@ class HealthKitManager: ObservableObject {
         if let hrType = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) {
             types.insert(hrType)
         }
+        if let liveHrType = HKQuantityType.quantityType(forIdentifier: .heartRate) {
+            types.insert(liveHrType)
+        }
         if let hrvType = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) {
             types.insert(hrvType)
         }
@@ -143,9 +146,10 @@ class HealthKitManager: ObservableObject {
                     }
                 }
 
-                // If authorized, trigger initial sync
+                // If authorized, trigger initial sync and enable background delivery
                 if writeStatus == .sharingAuthorized {
                     await syncHealthData()
+                    enableBackgroundHeartRateDelivery()
                 }
 
                 return writeStatus == .sharingAuthorized
@@ -450,6 +454,84 @@ class HealthKitManager: ObservableObject {
             print("Failed to sync health data: \(error.localizedDescription)")
             await MainActor.run {
                 isSyncing = false
+            }
+        }
+    }
+
+    // MARK: - Real-Time Heart Rate Streaming
+
+    /// Active anchored object query for live heart rate samples
+    private var heartRateQuery: HKAnchoredObjectQuery?
+
+    /// Collected HR samples during the current gameplay session
+    private var heartRateSamples: [HeartRateSample] = []
+
+    /// Start streaming heart rate samples from Apple Watch.
+    /// Uses HKAnchoredObjectQuery with updateHandler to receive live samples.
+    /// Gaps are expected if Apple Watch is not actively measuring.
+    func startHeartRateStreaming(sessionStart: Date) {
+        guard isAuthorized else { return }
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
+
+        heartRateSamples.removeAll()
+
+        let predicate = HKQuery.predicateForSamples(withStart: sessionStart, end: nil, options: .strictStartDate)
+
+        let query = HKAnchoredObjectQuery(
+            type: hrType,
+            predicate: predicate,
+            anchor: nil,
+            limit: HKObjectQueryNoLimit
+        ) { [weak self] _, samples, _, _, _ in
+            self?.processHeartRateSamples(samples)
+        }
+
+        // Update handler for live samples as they arrive
+        query.updateHandler = { [weak self] _, samples, _, _, _ in
+            self?.processHeartRateSamples(samples)
+        }
+
+        heartRateQuery = query
+        healthStore.execute(query)
+        print("HealthKit: Started heart rate streaming")
+    }
+
+    /// Stop streaming and return all collected HR samples.
+    func stopHeartRateStreaming() -> [HeartRateSample] {
+        if let query = heartRateQuery {
+            healthStore.stop(query)
+            heartRateQuery = nil
+        }
+        let samples = heartRateSamples
+        heartRateSamples.removeAll()
+        print("HealthKit: Stopped HR streaming, collected \(samples.count) samples")
+        return samples
+    }
+
+    private func processHeartRateSamples(_ samples: [HKSample]?) {
+        guard let quantitySamples = samples as? [HKQuantitySample] else { return }
+
+        let bpmUnit = HKUnit.count().unitDivided(by: .minute())
+        for sample in quantitySamples {
+            let bpm = sample.quantity.doubleValue(for: bpmUnit)
+            let hrSample = HeartRateSample(timestamp: sample.startDate, bpm: bpm)
+            heartRateSamples.append(hrSample)
+        }
+    }
+
+    // MARK: - Background Delivery
+
+    /// Enable periodic background delivery for heart rate data.
+    /// This allows HealthKit to wake the app when new HR data is available.
+    func enableBackgroundHeartRateDelivery() {
+        guard isAuthorized else { return }
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
+
+        healthStore.enableBackgroundDelivery(for: hrType, frequency: .immediate) { success, error in
+            if success {
+                print("HealthKit: Background delivery enabled for heart rate")
+            } else if let error = error {
+                print("HealthKit: Failed to enable background delivery: \(error.localizedDescription)")
             }
         }
     }

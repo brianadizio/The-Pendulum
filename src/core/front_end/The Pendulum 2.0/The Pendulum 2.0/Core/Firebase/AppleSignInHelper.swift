@@ -40,9 +40,54 @@ class AppleSignInHelper: NSObject, ObservableObject {
         return hashedData.compactMap { String(format: "%02x", $0) }.joined()
     }
 
-    // MARK: - Sign-In Flow
+    // MARK: - SwiftUI SignInWithAppleButton Support
 
-    /// Start the Apple Sign-In flow
+    /// Prepare a nonce for the SwiftUI SignInWithAppleButton request.
+    /// Call this in the button's request configuration closure and set `request.nonce` to the return value.
+    func prepareRequest() -> String {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        isSigningIn = true
+        errorMessage = nil
+        return sha256(nonce)
+    }
+
+    /// Handle the result from a SwiftUI SignInWithAppleButton's onCompletion callback.
+    /// Returns a Firebase AuthCredential on success, or nil on failure/cancellation.
+    func handleSignInCompletion(_ result: Result<ASAuthorization, Error>) -> AuthCredential? {
+        switch result {
+        case .success(let authorization):
+            guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let nonce = currentNonce,
+                  let appleIDToken = appleIDCredential.identityToken,
+                  let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                isSigningIn = false
+                errorMessage = "Failed to get Apple ID credential"
+                return nil
+            }
+
+            isSigningIn = false
+            return OAuthProvider.credential(
+                providerID: .apple,
+                idToken: idTokenString,
+                rawNonce: nonce
+            )
+
+        case .failure(let error):
+            isSigningIn = false
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                print("Apple Sign-In: User cancelled")
+            } else {
+                errorMessage = error.localizedDescription
+                print("Apple Sign-In error: \(error.localizedDescription)")
+            }
+            return nil
+        }
+    }
+
+    // MARK: - ASAuthorizationController Flow (used for reauthentication)
+
+    /// Start the Apple Sign-In flow using ASAuthorizationController (for reauthentication before account deletion).
     func startSignInWithApple(completion: @escaping (Result<AuthCredential, Error>) -> Void) {
         self.completion = completion
         isSigningIn = true
@@ -57,7 +102,22 @@ class AppleSignInHelper: NSObject, ObservableObject {
 
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
+        controller.presentationContextProvider = self
         controller.performRequests()
+    }
+}
+
+// MARK: - ASAuthorizationControllerPresentationContextProviding
+extension AppleSignInHelper: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) else {
+            return UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap { $0.windows }
+                .first ?? ASPresentationAnchor()
+        }
+        return window
     }
 }
 

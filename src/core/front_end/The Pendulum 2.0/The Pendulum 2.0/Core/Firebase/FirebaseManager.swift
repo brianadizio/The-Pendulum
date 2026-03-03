@@ -350,6 +350,22 @@ class FirebaseManager: ObservableObject {
         }
     }
 
+    /// Upload a motion CSV file to Firebase Storage (Golden Cipher)
+    func uploadMotionCSV(fileURL: URL, sessionId: String) async {
+        guard let userRef = userStorageRef else { return }
+
+        let motionRef = userRef.child("\(Self.sessionsPath)/\(sessionId)_motion.csv")
+        let metadata = StorageMetadata()
+        metadata.contentType = "text/csv"
+
+        do {
+            _ = try await motionRef.putFileAsync(from: fileURL, metadata: metadata)
+            print("Firebase: Uploaded motion CSV for session \(sessionId)")
+        } catch {
+            print("Firebase: Failed to upload motion CSV: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Retry Queue
 
     /// Get all pending uploads from UserDefaults

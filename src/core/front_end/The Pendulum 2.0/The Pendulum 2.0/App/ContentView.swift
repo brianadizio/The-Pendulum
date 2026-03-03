@@ -221,6 +221,16 @@ class GameState: ObservableObject {
         pushCount = 0
         isPlaying = true
 
+        // Start motion capture (no-op on Simulator)
+        if let sessionId = csvSessionManager?.currentSessionId {
+            MotionManager.shared.startCapture(sessionId: sessionId)
+        }
+
+        // Start heart rate streaming if authorized
+        if HealthKitManager.shared.isAuthorized {
+            HealthKitManager.shared.startHeartRateStreaming(sessionStart: Date())
+        }
+
         // Singular attribution tracking
         SingularTracker.trackModeSelected(mode: gameMode.rawValue)
         SingularTracker.trackSessionStart(mode: gameMode.rawValue, level: levelManager.currentLevel)
@@ -272,6 +282,14 @@ class GameState: ObservableObject {
                 perturbationManager.activateProfile(
                     PerturbationProfile.jiggle(intensity: config.jiggleIntensity)
                 )
+            } else if gameMode == .speed {
+                perturbationManager.activateProfile(
+                    PerturbationProfile.forProgressiveLevel(levelManager.currentLevel)
+                )
+            } else if gameMode == .endurance {
+                perturbationManager.activateProfile(
+                    PerturbationProfile.forProgressiveLevel(1)
+                )
             } else {
                 perturbationManager.activateProfile(
                     PerturbationProfile.forLevel(levelManager.currentLevel)
@@ -318,6 +336,19 @@ class GameState: ObservableObject {
             score: sessionScore,
             levelsCompleted: max(0, levelManager.currentLevel - 1)
         )
+
+        // Stop motion capture and collect HR data before ending CSV session
+        let motionFileURL = MotionManager.shared.stopCapture()
+        let hrSamples = HealthKitManager.shared.stopHeartRateStreaming()
+
+        // Write HR summary to CSV session metadata before it closes
+        if !hrSamples.isEmpty {
+            let bpms = hrSamples.map { $0.bpm }
+            csvSessionManager?.metadata?.heartRateSamples = hrSamples.count
+            csvSessionManager?.metadata?.heartRateAvg = bpms.reduce(0, +) / Double(bpms.count)
+            csvSessionManager?.metadata?.heartRateMin = bpms.min()
+            csvSessionManager?.metadata?.heartRateMax = bpms.max()
+        }
 
         // End the CSV session
         csvSessionManager?.endSession()
@@ -366,6 +397,14 @@ class GameState: ObservableObject {
                     metadataURL: metaURL,
                     sessionId: sessionId
                 )
+
+                // Upload motion CSV if captured
+                if let motionURL = motionFileURL {
+                    await FirebaseManager.shared.uploadMotionCSV(
+                        fileURL: motionURL,
+                        sessionId: sessionId
+                    )
+                }
             }
         }
 
@@ -461,6 +500,8 @@ enum GameMode: String, CaseIterable, Identifiable {
     case jiggle = "Jiggle"
     case timed = "Timed"
     case random = "Random"
+    case speed = "Speed"
+    case endurance = "Endurance"
     case golden = "Golden"
 
     var id: String { rawValue }
@@ -473,6 +514,8 @@ enum GameMode: String, CaseIterable, Identifiable {
         case .jiggle: return "Random noise makes balancing harder"
         case .timed: return "Beat each level before time runs out"
         case .random: return "Physics change every level"
+        case .speed: return "Lower damping, higher gravity, tight thresholds"
+        case .endurance: return "Continuous play with increasing difficulty"
         case .golden: return "Reactive mode shaped by your health, skills & data"
         }
     }
@@ -485,12 +528,17 @@ enum GameMode: String, CaseIterable, Identifiable {
         case .jiggle: return "waveform"
         case .timed: return "timer"
         case .random: return "dice"
+        case .speed: return "bolt.fill"
+        case .endurance: return "figure.run"
         case .golden: return "sun.max.fill"
         }
     }
 
     var hasLevels: Bool {
-        self != .freePlay && self != .golden
+        switch self {
+        case .freePlay, .golden, .endurance: return false
+        default: return true
+        }
     }
 
     var hasPerturbations: Bool {
@@ -498,7 +546,7 @@ enum GameMode: String, CaseIterable, Identifiable {
     }
 
     var hasCountdownTimer: Bool {
-        self == .timed
+        self == .timed || self == .speed
     }
 
     var hasJiggle: Bool {

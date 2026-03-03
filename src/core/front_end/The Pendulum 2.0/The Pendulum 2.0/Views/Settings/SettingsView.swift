@@ -3,6 +3,7 @@
 // User preferences and app configuration
 
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @ObservedObject var gameState: GameState
@@ -39,6 +40,10 @@ struct SettingsView: View {
                             Text("ACCOUNT")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(PendulumColors.textTertiary)
+                                .padding(.horizontal, 16)
+
+                            // Lifetime Access button
+                            LifetimeAccessButton()
                                 .padding(.horizontal, 16)
 
                             AccountCard(
@@ -518,6 +523,74 @@ struct DataSection: View {
         } catch {
             exportErrorMessage = "Export failed: \(error.localizedDescription)"
             showingExportError = true
+        }
+    }
+}
+
+// MARK: - Lifetime Access Button
+struct LifetimeAccessButton: View {
+    @StateObject private var purchaseManager = PurchaseManager.shared
+    @State private var showingPaywall = false
+
+    var body: some View {
+        Button(action: { showingPaywall = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: purchaseManager.isUnlocked ? "checkmark.seal.fill" : "lock.open.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    if purchaseManager.isUnlocked {
+                        Text("Lifetime Access — Active")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                    } else if purchaseManager.isTrialActive {
+                        Text("Lifetime Access")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                        Text("\(purchaseManager.trialDaysRemaining) day\(purchaseManager.trialDaysRemaining == 1 ? "" : "s") left in trial")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.8))
+                    } else {
+                        Text("Unlock Lifetime Access")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                }
+
+                Spacer()
+
+                if !purchaseManager.isUnlocked {
+                    if let product = purchaseManager.product {
+                        Text(product.displayPrice)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        purchaseManager.isUnlocked
+                            ? AnyShapeStyle(PendulumColors.success)
+                            : AnyShapeStyle(
+                                LinearGradient(
+                                    colors: [PendulumColors.gold, PendulumColors.goldDark],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    )
+            )
+            .shadow(color: (purchaseManager.isUnlocked ? PendulumColors.success : PendulumColors.gold).opacity(0.3), radius: 4, y: 2)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showingPaywall) {
+            PaywallView(purchaseManager: purchaseManager)
         }
     }
 }

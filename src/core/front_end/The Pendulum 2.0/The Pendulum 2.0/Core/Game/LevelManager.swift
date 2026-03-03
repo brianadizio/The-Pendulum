@@ -167,6 +167,10 @@ class LevelManager: ObservableObject {
             return getTimedConfig(level)
         case .random:
             return getRandomConfig(level)
+        case .speed:
+            return getSpeedConfig(level)
+        case .endurance:
+            return getEnduranceConfig(level)
         case .golden:
             return getGoldenConfig(level)
         }
@@ -503,6 +507,52 @@ class LevelManager: ObservableObject {
             gravityMultiplier: gravityMultiplier,
             springConstantValue: springConstantValue,
             description: "Level \(level) - Randomized physics"
+        )
+    }
+
+    /// Speed: Lower damping (0.6x base), higher gravity (1.1x+ base), short countdown, tight thresholds
+    /// Level N: countdown = max(5, 15 - (N-1) * 1.5)s, damping decreases, gravity increases
+    private func getSpeedConfig(_ level: Int) -> LevelConfig {
+        let countdown = max(5.0, 15.0 - Double(level - 1) * 1.5)
+        let dampingScale = max(0.30, 0.60 - Double(level - 1) * 0.03)
+        let gravityScale = 1.1 + Double(level - 1) * 0.05
+        let threshold = max(0.12, LevelManager.baseBalanceThreshold - Double(level - 1) * 0.03)
+
+        return LevelConfig(
+            number: level,
+            balanceThreshold: threshold,
+            balanceRequiredTime: 1.0,
+            initialPerturbation: LevelManager.basePerturbation * 1.2,
+            massMultiplier: 1.0,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping * dampingScale,
+            gravityMultiplier: gravityScale,
+            springConstantValue: LevelManager.baseSpringConstant * 0.8,
+            description: "Speed \(level) - \(Int(countdown))s, low damping",
+            countdownTime: countdown
+        )
+    }
+
+    /// Endurance: Continuous play, no levels. Difficulty ramps via phases (every 30s).
+    /// Phase N: damping decreases, gravity increases, threshold tightens
+    /// `level` here represents the current phase (managed by PendulumViewModel).
+    private func getEnduranceConfig(_ level: Int) -> LevelConfig {
+        let phase = max(1, level)
+        let dampingScale = max(0.15, 1.0 - Double(phase - 1) * 0.04)
+        let gravityScale = 1.0 + Double(phase - 1) * 0.03
+        let threshold = max(0.10, LevelManager.baseBalanceThreshold - Double(phase - 1) * 0.02)
+
+        return LevelConfig(
+            number: phase,
+            balanceThreshold: threshold,
+            balanceRequiredTime: 999.0,  // Never "completes" — continuous play
+            initialPerturbation: LevelManager.basePerturbation,
+            massMultiplier: 1.0 + Double(phase - 1) * 0.02,
+            lengthMultiplier: 1.0,
+            dampingValue: LevelManager.baseDamping * dampingScale,
+            gravityMultiplier: gravityScale,
+            springConstantValue: max(0.05, LevelManager.baseSpringConstant * (1.0 - Double(phase - 1) * 0.05)),
+            description: "Endurance Phase \(phase)"
         )
     }
 

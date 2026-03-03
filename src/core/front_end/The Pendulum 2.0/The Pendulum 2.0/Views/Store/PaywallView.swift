@@ -165,9 +165,9 @@ struct PaywallView: View {
 
     private var purchaseButtonLabel: String {
         if let product = purchaseManager.product {
-            return "Unlock Full Access - \(product.displayPrice)"
+            return "Unlock Lifetime Access - \(product.displayPrice)"
         }
-        return "Unlock Full Access"
+        return "Unlock Lifetime Access"
     }
 }
 

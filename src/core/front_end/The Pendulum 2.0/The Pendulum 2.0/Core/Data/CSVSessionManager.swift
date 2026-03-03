@@ -60,6 +60,14 @@ struct SessionMetadata: Codable {
     var goldenRecommendationTier: String?
     var goldenCoherenceScore: Double?
     var goldenAdaptationCount: Int?
+
+    // Golden Cipher fields (optional)
+    var samplingRateHz: Int?
+    var reactionTimeDistribution: ReactionTimeDistribution?
+    var heartRateSamples: Int?
+    var heartRateAvg: Double?
+    var heartRateMin: Double?
+    var heartRateMax: Double?
 }
 
 // MARK: - CSV Session Manager
@@ -82,7 +90,7 @@ class CSVSessionManager: ObservableObject {
         guard let startTime = sessionStartTime else { return 0 }
         return Date().timeIntervalSince(startTime)
     }
-    private var metadata: SessionMetadata?
+    var metadata: SessionMetadata?
     private var pushCount: Int = 0
     private var levelsCompleted: [Int] = []
     private var totalForceApplied: Double = 0.0
@@ -91,6 +99,17 @@ class CSVSessionManager: ObservableObject {
     private var lastInstabilityTime: Double = -1.0
     private var currentBalanceThreshold: Double = 0.35  // Default ~20 degrees
     private var levelConfigSnapshots: [LevelConfigSnapshot] = []
+
+    // Touch position tracking (Phase C: Golden Cipher)
+    private(set) var lastTouchX: Double = -1.0
+    private(set) var lastTouchY: Double = -1.0
+
+    // Write buffer — reduces I/O at 50 Hz from 50 writes/s to ~5 flushes/s
+    private var writeBuffer: [String] = []
+    private let writeBufferSize: Int = 10
+
+    // Reaction times collected during session (avoids re-reading CSV)
+    private(set) var allReactionTimes: [Double] = []
 
     // Documents directory
     private var sessionsDirectory: URL {
@@ -103,6 +122,26 @@ class CSVSessionManager: ObservableObject {
         }
 
         return sessionsPath
+    }
+
+    // MARK: - Write Buffer
+
+    /// Buffer a CSV row and flush when buffer is full
+    private func bufferWrite(_ row: String) {
+        writeBuffer.append(row)
+        if writeBuffer.count >= writeBufferSize {
+            flushWriteBuffer()
+        }
+    }
+
+    /// Flush buffered rows to disk
+    private func flushWriteBuffer() {
+        guard !writeBuffer.isEmpty, let handle = csvFileHandle else { return }
+        let combined = writeBuffer.joined()
+        if let data = combined.data(using: .utf8) {
+            handle.write(data)
+        }
+        writeBuffer.removeAll(keepingCapacity: true)
     }
 
     // MARK: - Session Management
@@ -126,13 +165,17 @@ class CSVSessionManager: ObservableObject {
         maxScore = 0
         lastInstabilityTime = -1.0
         levelConfigSnapshots = []
+        writeBuffer.removeAll()
+        allReactionTimes.removeAll()
+        lastTouchX = -1.0
+        lastTouchY = -1.0
 
         // Create CSV file
         csvFilePath = sessionsDirectory.appendingPathComponent("session_\(sessionId).csv")
         metadataFilePath = sessionsDirectory.appendingPathComponent("session_\(sessionId)_meta.json")
 
-        // Write CSV header (expanded schema with AI columns)
-        let header = "timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce\n"
+        // Write CSV header (expanded schema with AI + Golden Cipher columns)
+        let header = "timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce,touchX,touchY\n"
 
         do {
             try header.write(to: csvFilePath!, atomically: true, encoding: .utf8)
@@ -165,7 +208,7 @@ class CSVSessionManager: ObservableObject {
 
     /// Record a pendulum state snapshot
     func recordState(angle: Double, angleVelocity: Double, isBalanced: Bool, energy: Double? = nil, score: Int? = nil, aiMode: String = "", aiForce: Double = 0.0) {
-        guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
+        guard isRecording, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         let energyStr = energy.map { String(format: "%.4f", $0) } ?? ""
@@ -185,8 +228,8 @@ class CSVSessionManager: ObservableObject {
             lastInstabilityTime = -1.0  // Reset when stable
         }
 
-        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
-        let row = String(format: "%.3f,%.4f,%.4f,0,0.0,%@,%d,%@,%@,%d,%.4f,,%@,%.4f\n",
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce,touchX,touchY
+        let row = String(format: "%.3f,%.4f,%.4f,0,0.0,%@,%d,%@,%@,%d,%.4f,,%@,%.4f,%.1f,%.1f\n",
                         timestamp,
                         angle,
                         angleVelocity,
@@ -197,16 +240,16 @@ class CSVSessionManager: ObservableObject {
                         currentScore,
                         currentBalanceThreshold,
                         aiMode,
-                        aiForce)
+                        aiForce,
+                        lastTouchX,
+                        lastTouchY)
 
-        if let data = row.data(using: .utf8) {
-            handle.write(data)
-        }
+        bufferWrite(row)
     }
 
     /// Record a push event
     func recordPush(direction: PushDirection, magnitude: Double, aiMode: String = "", aiForce: Double = 0.0) {
-        guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
+        guard isRecording, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         pushCount += 1
@@ -216,8 +259,13 @@ class CSVSessionManager: ObservableObject {
         let reactionTime = lastInstabilityTime >= 0 ? timestamp - lastInstabilityTime : 0.0
         let gameModeStr = metadata?.gameMode ?? "classic"
 
-        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
-        let row = String(format: "%.3f,0.0,0.0,%d,%.2f,false,%d,,%@,%d,%.4f,%.3f,%@,%.4f\n",
+        // Collect valid reaction times for distribution analysis
+        if reactionTime > 0.01 && reactionTime < 5.0 {
+            allReactionTimes.append(reactionTime)
+        }
+
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce,touchX,touchY
+        let row = String(format: "%.3f,0.0,0.0,%d,%.2f,false,%d,,%@,%d,%.4f,%.3f,%@,%.4f,%.1f,%.1f\n",
                         timestamp,
                         direction.rawValue,
                         magnitude,
@@ -227,16 +275,16 @@ class CSVSessionManager: ObservableObject {
                         currentBalanceThreshold,
                         reactionTime,
                         aiMode,
-                        aiForce)
+                        aiForce,
+                        lastTouchX,
+                        lastTouchY)
 
-        if let data = row.data(using: .utf8) {
-            handle.write(data)
-        }
+        bufferWrite(row)
     }
 
     /// Record a combined state and push event
     func recordInteraction(angle: Double, angleVelocity: Double, pushDirection: PushDirection, pushMagnitude: Double, isBalanced: Bool, energy: Double? = nil, score: Int? = nil, aiMode: String = "", aiForce: Double = 0.0) {
-        guard isRecording, let handle = csvFileHandle, let startTime = sessionStartTime else { return }
+        guard isRecording, let startTime = sessionStartTime else { return }
 
         let timestamp = Date().timeIntervalSince(startTime)
         let energyStr = energy.map { String(format: "%.4f", $0) } ?? ""
@@ -259,6 +307,10 @@ class CSVSessionManager: ObservableObject {
 
         if pushDirection != .none && lastInstabilityTime >= 0 {
             reactionTime = timestamp - lastInstabilityTime
+            // Collect valid reaction times for distribution analysis
+            if reactionTime > 0.01 && reactionTime < 5.0 {
+                allReactionTimes.append(reactionTime)
+            }
         }
 
         if deviationFromUpright > currentBalanceThreshold && lastInstabilityTime < 0 {
@@ -267,8 +319,8 @@ class CSVSessionManager: ObservableObject {
             lastInstabilityTime = -1.0
         }
 
-        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce
-        let row = String(format: "%.3f,%.4f,%.4f,%d,%.2f,%@,%d,%@,%@,%d,%.4f,%.3f,%@,%.4f\n",
+        // Format: timestamp,angle,angleVelocity,pushDirection,pushMagnitude,isBalanced,level,energy,gameMode,score,balanceThreshold,reactionTime,aiMode,aiForce,touchX,touchY
+        let row = String(format: "%.3f,%.4f,%.4f,%d,%.2f,%@,%d,%@,%@,%d,%.4f,%.3f,%@,%.4f,%.1f,%.1f\n",
                         timestamp,
                         angle,
                         angleVelocity,
@@ -282,11 +334,11 @@ class CSVSessionManager: ObservableObject {
                         currentBalanceThreshold,
                         reactionTime,
                         aiMode,
-                        aiForce)
+                        aiForce,
+                        lastTouchX,
+                        lastTouchY)
 
-        if let data = row.data(using: .utf8) {
-            handle.write(data)
-        }
+        bufferWrite(row)
     }
 
     /// Update the current level
@@ -326,9 +378,18 @@ class CSVSessionManager: ObservableObject {
         currentBalanceThreshold = threshold
     }
 
+    /// Update the last touch position (called from PlayView controls)
+    func updateTouchPosition(x: Double, y: Double) {
+        lastTouchX = x
+        lastTouchY = y
+    }
+
     /// End the current session
     func endSession() {
         guard isRecording, let sessionId = currentSessionId else { return }
+
+        // Flush any remaining buffered rows before closing
+        flushWriteBuffer()
 
         // Close file handle
         csvFileHandle?.closeFile()
@@ -361,6 +422,10 @@ class CSVSessionManager: ObservableObject {
               meta.goldenRecommendationTier = gm.currentTier
               meta.goldenCoherenceScore = gm.coherenceScore
             }
+
+            // Golden Cipher metadata
+            meta.samplingRateHz = 50
+            meta.reactionTimeDistribution = ReactionTimeAnalyzer.analyze(allReactionTimes)
 
             // Save metadata
             if let metaPath = metadataFilePath {
@@ -436,6 +501,8 @@ class CSVSessionManager: ObservableObject {
     }
 
     /// Read CSV data from a session file
+    /// Flexible parser: handles CSVs with fewer or more columns than the header.
+    /// Missing columns default to ""; extra columns are ignored.
     func readSessionData(from url: URL) -> [[String: String]]? {
         guard let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
 
@@ -445,15 +512,20 @@ class CSVSessionManager: ObservableObject {
         // Parse header
         let header = lines.removeFirst().components(separatedBy: ",")
 
-        // Parse data rows
+        // Parse data rows — accept rows with at least 1 value
         var data: [[String: String]] = []
         for line in lines {
             let values = line.components(separatedBy: ",")
-            guard values.count == header.count else { continue }
+            guard values.count >= 1, !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
 
             var row: [String: String] = [:]
             for (index, key) in header.enumerated() {
-                row[key.trimmingCharacters(in: .whitespaces)] = values[index].trimmingCharacters(in: .whitespaces)
+                let trimmedKey = key.trimmingCharacters(in: .whitespaces)
+                if index < values.count {
+                    row[trimmedKey] = values[index].trimmingCharacters(in: .whitespaces)
+                } else {
+                    row[trimmedKey] = ""  // Default for missing columns
+                }
             }
             data.append(row)
         }

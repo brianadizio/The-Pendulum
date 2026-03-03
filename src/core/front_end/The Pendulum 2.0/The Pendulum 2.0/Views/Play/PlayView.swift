@@ -189,7 +189,7 @@ struct PlayView: View {
 
                 // Update perturbation for the demoted level
                 if gs.gameMode.hasPerturbations {
-                    if gs.gameMode == .progressive || gs.gameMode == .golden {
+                    if gs.gameMode == .progressive || gs.gameMode == .golden || gs.gameMode == .speed {
                         gs.perturbationManager.activateProfile(
                             PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
                         )
@@ -251,7 +251,7 @@ struct PlayView: View {
 
             // Update perturbation for new level
             if gs.gameMode.hasPerturbations {
-                if gs.gameMode == .progressive || gs.gameMode == .golden {
+                if gs.gameMode == .progressive || gs.gameMode == .golden || gs.gameMode == .speed {
                     gs.perturbationManager.activateProfile(
                         PerturbationProfile.forProgressiveLevel(gs.levelManager.currentLevel)
                     )
@@ -612,6 +612,7 @@ struct ControlButtonsView: View {
                         hapticsEnabled: gameState.hapticsEnabled
                     ) {
                         let force = gameState.forceStrength
+                        gameState.csvSessionManager?.updateTouchPosition(x: -1, y: -1)
                         viewModel.applyForce(force)
                         gameState.recordPush(direction: .left, magnitude: force)
                     }
@@ -625,6 +626,7 @@ struct ControlButtonsView: View {
                         hapticsEnabled: gameState.hapticsEnabled
                     ) {
                         let force = gameState.forceStrength
+                        gameState.csvSessionManager?.updateTouchPosition(x: -1, y: -1)
                         viewModel.applyForce(-force)
                         gameState.recordPush(direction: .right, magnitude: force)
                     }
@@ -722,6 +724,7 @@ struct SpectrumControlBand: View {
                         let signedForce = normalizedOffset < 0 ? magnitude : -magnitude
                         let direction: PushDirection = normalizedOffset < 0 ? .left : .right
 
+                        gameState.csvSessionManager?.updateTouchPosition(x: Double(value.location.x), y: Double(value.location.y))
                         viewModel.applyForce(signedForce)
                         gameState.recordPush(direction: direction, magnitude: magnitude)
 

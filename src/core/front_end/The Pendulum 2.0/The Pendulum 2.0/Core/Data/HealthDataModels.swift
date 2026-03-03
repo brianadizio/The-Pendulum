@@ -51,6 +51,14 @@ struct HealthSnapshot: Codable, Equatable {
     }
 }
 
+// MARK: - Heart Rate Sample (for real-time streaming during gameplay)
+
+/// A single heart rate measurement captured during a gameplay session
+struct HeartRateSample: Codable {
+    let timestamp: Date
+    let bpm: Double
+}
+
 // MARK: - Health Correlation
 
 /// Links a gameplay session with health data for correlation analysis

@@ -50,7 +50,7 @@ class PendulumViewModel: ObservableObject {
 
     // Recording interval - don't record every frame (too much data)
     private var lastRecordTime: TimeInterval = 0
-    private let recordInterval: TimeInterval = 0.1  // Record 10 times per second
+    private let recordInterval: TimeInterval = 0.02  // Record 50 times per second
 
     // Callbacks
     var onStateUpdate: ((PendulumState) -> Void)?
@@ -66,6 +66,11 @@ class PendulumViewModel: ObservableObject {
     private var recentBalanceFrames: Int = 0
     private var recentTotalFrames: Int = 0
     private let stabilityWindowFrames: Int = 300 // ~5 seconds at 60fps
+
+    // Endurance mode: phase tracking (difficulty ramp every 30s)
+    private var endurancePhase: Int = 1
+    private var lastPhaseAdvanceTime: TimeInterval = 0
+    private let endurancePhaseDuration: TimeInterval = 30.0
 
     init() {
         model = InvertedPendulumModel()
@@ -157,6 +162,8 @@ class PendulumViewModel: ObservableObject {
         balanceProgress = 0.0
         balanceStartTime = nil
         countdownTimeRemaining = nil
+        endurancePhase = 1
+        lastPhaseAdvanceTime = 0
     }
 
     /// Reset with a small initial perturbation (pendulum starts slightly off-center from upright)
@@ -173,6 +180,8 @@ class PendulumViewModel: ObservableObject {
         balanceProgress = 0.0
         balanceStartTime = nil
         countdownTimeRemaining = nil
+        endurancePhase = 1
+        lastPhaseAdvanceTime = 0
     }
 
     // MARK: - Force Application
@@ -254,7 +263,27 @@ class PendulumViewModel: ObservableObject {
             }
         }
 
-        // Update countdown timer (Timed mode)
+        // Endurance mode: advance difficulty phase every 30s
+        if activeGameMode == .endurance {
+            if elapsedTime - lastPhaseAdvanceTime >= endurancePhaseDuration {
+                lastPhaseAdvanceTime = elapsedTime
+                endurancePhase += 1
+
+                // Get new config for this phase and apply smoothly
+                if let lm = levelManager {
+                    let config = lm.getConfigForLevel(endurancePhase, mode: .endurance)
+                    model.damping = config.dampingValue
+                    model.gravity = LevelManager.baseGravity * config.gravityMultiplier
+                    model.mass = LevelManager.baseMass * config.massMultiplier
+                    model.springConstant = config.springConstantValue
+                    balanceThreshold = config.balanceThreshold
+
+                    csvSessionManager?.updateBalanceThreshold(config.balanceThreshold)
+                }
+            }
+        }
+
+        // Update countdown timer (Timed/Speed mode)
         if var remaining = countdownTimeRemaining {
             remaining -= dt
             if remaining <= 0 {
@@ -333,8 +362,8 @@ class PendulumViewModel: ObservableObject {
         balanceStartTime = nil
         balanceProgress = 0.0
 
-        // Reset countdown for next level if in Timed mode
-        if activeGameMode == .timed, let lm = levelManager {
+        // Reset countdown for next level if in Timed or Speed mode
+        if (activeGameMode == .timed || activeGameMode == .speed), let lm = levelManager {
             let nextConfig = lm.getConfigForCurrentLevel()
             countdownTimeRemaining = nextConfig.countdownTime
         }

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMotionUsageDescription</key>
+	<string>The Pendulum uses motion data to study how your device movements correlate with gameplay.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
