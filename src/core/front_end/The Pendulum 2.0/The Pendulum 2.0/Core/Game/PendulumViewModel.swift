@@ -229,6 +229,19 @@ class PendulumViewModel: ObservableObject {
         perturbationManager?.currentTheta = currentState.theta
         perturbationManager?.update(currentTime: elapsedTime)
 
+        // Golden Cipher: capture frame data when in auth session
+        if GoldenModeManager.shared.isAuthSession {
+            let isBalanced = abs(currentState.theta - .pi) < balanceThreshold
+            GoldenModeManager.shared.cipherCollector.recordFrame(
+                timestamp: elapsedTime,
+                angle: currentState.theta,
+                angularVelocity: currentState.thetaDot,
+                appliedForce: currentFramePlayerForce != 0 ? currentFramePlayerForce : nil,
+                isBalanced: isBalanced,
+                balanceThreshold: balanceThreshold
+            )
+        }
+
         // Golden Mode: mid-session adaptation (~every 30s)
         if activeGameMode == .golden {
             // Track rolling stability

@@ -7,6 +7,8 @@ import FirebaseCore
 
 @main
 struct ThePendulum2App: App {
+    @UIApplicationDelegateAdaptor(CipherNotificationDelegate.self) var notificationDelegate
+
     init() {
         FirebaseManager.shared.configure()
 

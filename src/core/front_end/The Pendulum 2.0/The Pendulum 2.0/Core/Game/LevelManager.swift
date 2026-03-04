@@ -579,4 +579,34 @@ class LevelManager: ObservableObject {
             description: "Golden Level \(level)"
         )
     }
+
+    // MARK: - Cipher Authentication Level
+
+    /// Create a LevelConfig from a Cipher API LevelSpec.
+    /// The LevelSpec parameters are derived from the transaction seed,
+    /// so the same transaction always produces the same physics challenge.
+    func configFromCipherSpec(_ spec: CipherAuthService.LevelSpec) -> LevelConfig {
+        return LevelConfig(
+            number: 0,  // Auth levels don't have a progression number
+            balanceThreshold: spec.parameters["balance_threshold"]
+                ?? LevelManager.baseBalanceThreshold,
+            balanceRequiredTime: spec.parameters["hold_duration"]
+                ?? LevelManager.baseBalanceRequiredTime,
+            initialPerturbation: spec.parameters["initial_angle"]
+                ?? LevelManager.basePerturbation,
+            massMultiplier: spec.parameters["mass"]
+                ?? 1.0,
+            lengthMultiplier: spec.parameters["length"]
+                ?? 1.0,
+            dampingValue: spec.parameters["damping"]
+                ?? LevelManager.baseDamping,
+            gravityMultiplier: spec.parameters["gravity"]
+                ?? 1.0,
+            springConstantValue: spec.parameters["spring_constant"]
+                ?? LevelManager.baseSpringConstant,
+            description: "Authentication Challenge",
+            countdownTime: spec.timeLimit,
+            jiggleIntensity: spec.parameters["jiggle_intensity"] ?? 0.0
+        )
+    }
 }

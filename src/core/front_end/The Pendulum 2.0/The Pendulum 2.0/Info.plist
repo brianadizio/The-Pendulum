@@ -4,6 +4,10 @@
 <dict>
 	<key>NSMotionUsageDescription</key>
 	<string>The Pendulum uses motion data to study how your device movements correlate with gameplay.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

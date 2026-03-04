@@ -639,4 +639,81 @@ class GoldenModeManager: ObservableObject {
     }
     return dates.max()
   }
+
+  // MARK: - Golden Cipher Authentication
+
+  /// Session collector that captures physics data during cipher auth gameplay
+  private(set) var cipherCollector = CipherSessionCollector()
+
+  /// Current challenge ID (non-nil when playing an auth level)
+  private(set) var cipherChallengeId: String?
+
+  /// Whether the current session is a cipher authentication challenge
+  var isAuthSession: Bool { cipherChallengeId != nil }
+
+  /// Request a cipher authentication challenge and return the LevelConfig to play.
+  /// The API returns a LevelSpec with physics parameters derived from the transaction seed.
+  func requestAuthChallenge(
+    action: String,
+    actionType: String,
+    tier: Int = 1
+  ) async throws -> (challengeId: String, config: LevelConfig) {
+    let userId = CipherEnrollmentManager.shared.cipherUserId
+
+    let challenge = try await CipherAuthService.shared.requestChallenge(
+      userId: userId,
+      action: action,
+      actionType: actionType,
+      tier: tier
+    )
+
+    guard let spec = challenge.levelSpec else {
+      throw CipherAuthError.noLevelSpec
+    }
+
+    let config = LevelManager().configFromCipherSpec(spec)
+
+    // Store challenge state
+    cipherChallengeId = challenge.challengeId
+    cipherCollector = CipherSessionCollector()
+    cipherCollector.startSession(config: config)
+
+    return (challenge.challengeId, config)
+  }
+
+  /// Verify the completed auth session. Call after the user finishes the challenge level.
+  func verifyAuthSession(completionTime: Double?) async throws -> CipherAuthService.AuthResult {
+    guard let challengeId = cipherChallengeId else {
+      throw CipherAuthError.noActiveChallenge
+    }
+
+    let payload = cipherCollector.buildPayload(completionTime: completionTime)
+
+    let result = try await CipherAuthService.shared.verify(
+      challengeId: challengeId,
+      session: payload
+    )
+
+    // Reset state
+    cipherChallengeId = nil
+
+    return result
+  }
+
+  /// Cancel an in-progress auth challenge without verifying
+  func cancelAuthChallenge() {
+    cipherChallengeId = nil
+  }
+
+  enum CipherAuthError: LocalizedError {
+    case noLevelSpec
+    case noActiveChallenge
+
+    var errorDescription: String? {
+      switch self {
+      case .noLevelSpec: return "Cipher API didn't return a level specification"
+      case .noActiveChallenge: return "No active cipher authentication challenge"
+      }
+    }
+  }
 }

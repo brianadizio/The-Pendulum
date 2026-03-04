@@ -116,6 +116,7 @@
 				D6772EFB2F2D50E30031EA29 /* Singular */,
 				D6ACE22D2F345EE20059B47D /* FirebaseAI */,
 				D6ACE22F2F345EE20059B47D /* FirebaseAILogic */,
+				D6B1C4012F55A00100CIPHER /* FirebaseMessaging */,
 			);
 			productName = "The Pendulum 2.0";
 			productReference = D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */;
@@ -474,6 +475,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAILogic;
+		};
+		D6B1C4012F55A00100CIPHER /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

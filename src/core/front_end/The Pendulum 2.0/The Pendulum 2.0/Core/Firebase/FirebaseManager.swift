@@ -524,6 +524,26 @@ class FirebaseManager: ObservableObject {
         updateAuthMethod(.none)
     }
 
+    // MARK: - Cipher API Ingestion
+
+    /// Upload pendulum session to the Cipher API for behavioral template building.
+    /// Fire-and-forget alongside existing Firebase uploads.
+    func ingestToCipher(session: CipherAuthService.PendulumSessionPayload) async {
+        let baseURL = CipherAuthService.shared.baseURL
+        guard let url = URL(string: "\(baseURL)/ingest/pendulum") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 15
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        request.httpBody = try? encoder.encode(session)
+
+        let _ = try? await URLSession.shared.data(for: request)
+    }
+
     // MARK: - Cleanup
 
     deinit {

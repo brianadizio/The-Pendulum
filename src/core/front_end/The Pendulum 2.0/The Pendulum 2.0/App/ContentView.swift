@@ -52,6 +52,8 @@ struct ContentView: View {
     @State private var selectedTab: PendulumTab = .play
     @StateObject private var gameState = GameState()
     @StateObject private var purchaseManager = PurchaseManager.shared
+    @State private var showCipherAuth = false
+    @State private var pendingChallengeId: String?
 
     var body: some View {
         Group {
@@ -71,6 +73,23 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             purchaseManager.updateTrialStatus()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .cipherChallengeReceived)) { notification in
+            if let challengeId = notification.userInfo?["challengeId"] as? String {
+                pendingChallengeId = challengeId
+                // Switch to Play tab and present auth level
+                selectedTab = .play
+                showCipherAuth = true
+            }
+        }
+        .sheet(isPresented: $showCipherAuth) {
+            CipherAuthView(gameState: gameState, challengeId: pendingChallengeId) { result in
+                showCipherAuth = false
+                pendingChallengeId = nil
+                if let result = result {
+                    print("[Cipher] Auth result: \(result.decision), confidence: \(result.confidence)")
+                }
+            }
         }
     }
 }
@@ -201,6 +220,9 @@ class GameState: ObservableObject {
     @Published var currentSessionTime: TimeInterval = 0
     @Published var pushCount: Int = 0
 
+    // Golden Cipher: session collector for behavioral data ingestion
+    var cipherSessionCollector = CipherSessionCollector()
+
     init() {
         csvSessionManager = CSVSessionManager()
 
@@ -225,6 +247,10 @@ class GameState: ObservableObject {
         if let sessionId = csvSessionManager?.currentSessionId {
             MotionManager.shared.startCapture(sessionId: sessionId)
         }
+
+        // Start cipher session collector for behavioral data
+        let currentConfig = levelManager.getConfigForCurrentLevel()
+        cipherSessionCollector.startSession(config: currentConfig)
 
         // Start heart rate streaming if authorized
         if HealthKitManager.shared.isAuthorized {
@@ -405,6 +431,24 @@ class GameState: ObservableObject {
                         sessionId: sessionId
                     )
                 }
+            }
+        }
+
+        // Golden Cipher: ingest session data to Cipher API
+        // Build a cipher payload from the session's collector and send to API
+        if !GoldenModeManager.shared.isAuthSession {
+            let cipherPayload = cipherSessionCollector.buildPayload(completionTime: sessionDuration)
+            let userId = CipherEnrollmentManager.shared.cipherUserId
+            Task {
+                // If enrolling, submit to enrollment pipeline
+                if CipherEnrollmentManager.shared.isEnrolling {
+                    try? await CipherEnrollmentManager.shared.submitSession(cipherPayload)
+                }
+                // Always ingest for behavioral template building
+                try? await CipherAuthService.shared.ingestSession(
+                    userId: userId,
+                    session: cipherPayload
+                )
             }
         }
 
