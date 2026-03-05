@@ -14,6 +14,13 @@
 *.JPG
 *.JPEG
 *.PNG
+# Whitelist images inside Xcode asset catalogs
+!**/*.xcassets/**/*.png
+!**/*.xcassets/**/*.jpg
+!**/*.xcassets/**/*.jpeg
+!**/*.xcassets/**/*.PNG
+!**/*.xcassets/**/*.JPG
+!**/*.xcassets/**/*.JPEG
 *.docx
 *.pptx
 *.json

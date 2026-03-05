@@ -147,9 +147,9 @@
 			mainGroup = D67E73EB2F27DFA500DBF3DF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "../../../../../The Theme/src/core/front_end/golden-theme" */,
+				D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "Packages/GoldenTheme" */,
 				D66F26FA2F2BDE1B0099EA6E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */,
+				D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "Packages/PendulumSolver" */,
 				D6772EFA2F2D50E30031EA29 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -402,13 +402,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "../../../../../The Theme/src/core/front_end/golden-theme" */ = {
+		D67E74022F27DFB700DBF3DF /* XCLocalSwiftPackageReference "Packages/GoldenTheme" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../../The Theme/src/core/front_end/golden-theme";
+			relativePath = Packages/GoldenTheme;
 		};
-		D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */ = {
+		D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "Packages/PendulumSolver" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../../The Pendulum Solver/src/swift";
+			relativePath = Packages/PendulumSolver;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -463,7 +463,7 @@
 		};
 		D67E79A02F2BDF3A0099EA6E /* PendulumSolver */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "../../../../../The Pendulum Solver/src/swift" */;
+			package = D67E799F2F2BDF3A0099EA6E /* XCLocalSwiftPackageReference "Packages/PendulumSolver" */;
 			productName = PendulumSolver;
 		};
 		D6ACE22D2F345EE20059B47D /* FirebaseAI */ = {
