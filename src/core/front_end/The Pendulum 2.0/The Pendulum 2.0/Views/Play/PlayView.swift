@@ -211,19 +211,7 @@ struct PlayView: View {
                 // Reset pendulum and continue
                 vm.resetWithPerturbation(degrees: 8.0)
             } else {
-                // Free Play / Golden Mode
-                if gs.gameMode == .golden && GoldenModeManager.shared.isAuthSession {
-                    // Auth session: keep accumulating data until 60s total
-                    let totalSwings = GoldenModeManager.shared.cipherCollector.swings.count
-                    let estimatedTime = Double(totalSwings) * 0.1  // ~10 Hz recording
-                    if estimatedTime < 60.0 {
-                        // Not enough data yet — reset and keep playing
-                        print("[Cipher] Auth fall at ~\(String(format: "%.0f", estimatedTime))s — resetting to continue (\(totalSwings) swings)")
-                        vm.resetWithPerturbation(degrees: 8.0)
-                        vm.startSimulation()
-                        return
-                    }
-                }
+                // Free Play / Golden Mode: end session on fall
                 if gs.gameMode == .golden {
                     goldenSessionDuration = vm.elapsedTime
                     goldenLevelsCompleted = max(0, gs.levelManager.currentLevel - 1)

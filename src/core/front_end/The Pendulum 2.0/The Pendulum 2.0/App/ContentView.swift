@@ -464,8 +464,9 @@ class GameState: ObservableObject {
             let swingCount = GoldenModeManager.shared.cipherCollector.swings.count
             print("[Cipher] Auth session ended. Swings: \(swingCount), duration: \(String(format: "%.1f", sessionDuration))s")
 
-            // Require minimum 60 seconds of gameplay for auth verification
-            let minAuthDuration: TimeInterval = 60.0
+            // Require minimum gameplay for auth — 15s gives enough motor features;
+            // backend excludes dynamics features that need longer sessions
+            let minAuthDuration: TimeInterval = 15.0
             if sessionDuration < minAuthDuration {
                 print("[Cipher] Session too short for auth (\(String(format: "%.1f", sessionDuration))s < \(Int(minAuthDuration))s), skipping verify")
                 GoldenModeManager.shared.cancelAuthChallenge()
