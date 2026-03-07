@@ -152,6 +152,9 @@ struct PlayView: View {
         // Connect CSV session manager for state recording
         viewModel.csvSessionManager = gameState.csvSessionManager
 
+        // Connect cipher session collector for behavioral data ingest
+        viewModel.cipherSessionCollector = gameState.cipherSessionCollector
+
         // Connect level manager
         viewModel.levelManager = gameState.levelManager
 

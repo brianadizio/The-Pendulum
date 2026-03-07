@@ -45,6 +45,9 @@ class PendulumViewModel: ObservableObject {
     // Track player force applied this frame (so AI knows what the player did)
     private var currentFramePlayerForce: Double = 0.0
 
+    // Cipher session collector for normal (non-auth) ingest recording
+    var cipherSessionCollector: CipherSessionCollector?
+
     // CSV session manager reference for recording state
     weak var csvSessionManager: CSVSessionManager?
 
@@ -229,22 +232,33 @@ class PendulumViewModel: ObservableObject {
         perturbationManager?.currentTheta = currentState.theta
         perturbationManager?.update(currentTime: elapsedTime)
 
-        // Golden Cipher: capture frame data when in auth session
+        // Golden Cipher: capture frame data for behavioral analysis
+        let isBalanced = abs(currentState.theta - .pi) < balanceThreshold
+        let cipherForce = currentFramePlayerForce != 0 ? currentFramePlayerForce : nil
         if GoldenModeManager.shared.isAuthSession {
-            let isBalanced = abs(currentState.theta - .pi) < balanceThreshold
+            // Auth session: record to GoldenModeManager's collector
             GoldenModeManager.shared.cipherCollector.recordFrame(
                 timestamp: elapsedTime,
                 angle: currentState.theta,
                 angularVelocity: currentState.thetaDot,
-                appliedForce: currentFramePlayerForce != 0 ? currentFramePlayerForce : nil,
+                appliedForce: cipherForce,
                 isBalanced: isBalanced,
                 balanceThreshold: balanceThreshold
             )
-            // Diagnostic: log at key milestones
             let count = GoldenModeManager.shared.cipherCollector.swings.count
             if count == 1 || count == 100 || count == 300 || count == 600 {
-                print("[Cipher] Physics recording: \(count) swings, elapsed=\(String(format: "%.1f", elapsedTime))s")
+                print("[Cipher] Auth recording: \(count) swings, elapsed=\(String(format: "%.1f", elapsedTime))s")
             }
+        } else {
+            // Normal session: record to ContentView's collector for ingest
+            cipherSessionCollector?.recordFrame(
+                timestamp: elapsedTime,
+                angle: currentState.theta,
+                angularVelocity: currentState.thetaDot,
+                appliedForce: cipherForce,
+                isBalanced: isBalanced,
+                balanceThreshold: balanceThreshold
+            )
         }
 
         // Golden Mode: mid-session adaptation (~every 30s)
