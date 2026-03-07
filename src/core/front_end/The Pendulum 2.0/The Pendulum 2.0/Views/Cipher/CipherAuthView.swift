@@ -225,14 +225,14 @@ struct CipherAuthView: View {
     private func startAuthSession() {
         guard authConfig != nil else { return }
 
-        // Configure game for auth level
-        gameState.levelManager.activeMode = .golden
-        gameState.gameMode = .golden
+        // Auth works from free play — no special mode required.
+        // GoldenModeManager.isAuthSession is true (challenge was requested),
+        // so PendulumViewModel feeds data to the cipher collector.
+        gameState.gameMode = .freePlay
 
-        // Dismiss the cover — user plays on the Play tab
-        // GoldenModeManager.isAuthSession is now true, so PendulumViewModel
-        // feeds data to the cipher collector, and ContentView auto-verifies
-        // when the session ends.
+        // Dismiss the cover — user plays on the Play tab.
+        // On fall, PlayView shows cumulative time dialog.
+        // When 60s accumulated, ContentView auto-verifies.
         if let onStartPlaying = onStartPlaying {
             onStartPlaying()
         } else {

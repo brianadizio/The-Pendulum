@@ -19,8 +19,11 @@ class CipherSessionCollector {
     private var previousDirection: Int = 0  // -1 decreasing, 0 unknown, +1 increasing
 
     // Downsampling: collect at ~10 Hz for cipher (not every 60fps frame)
-    private var lastRecordTime: TimeInterval = 0
+    private var lastRecordTime: TimeInterval = -1
     private let recordInterval: TimeInterval = 0.1
+
+    // Cumulative time offset — added to timestamps when resuming after falls
+    private var timeOffset: TimeInterval = 0
 
     // Summary statistics accumulated during session
     private(set) var totalBalanceTime: TimeInterval = 0
@@ -38,12 +41,33 @@ class CipherSessionCollector {
         levelConfig = config
         previousAngle = nil
         previousDirection = 0
-        lastRecordTime = 0
+        lastRecordTime = -1
+        timeOffset = 0
         totalBalanceTime = 0
         lastBalanceCheckTime = nil
         angleSum = 0
         angleCount = 0
         maxAngleDeviation = 0
+    }
+
+    /// Resume collecting after a fall — shifts timestamps so they keep
+    /// increasing monotonically across multiple attempts.
+    func resumeAfterFall() {
+        // The new attempt's elapsedTime will start at 0, so offset by
+        // the last recorded timestamp + a small gap
+        if let lastSwing = swings.last {
+            timeOffset = lastSwing.timestamp + 0.2
+        }
+        lastRecordTime = -1
+        lastBalanceCheckTime = nil
+        previousAngle = nil
+        previousDirection = 0
+    }
+
+    /// Cumulative play time across all attempts
+    var cumulativeTime: TimeInterval {
+        guard let last = swings.last else { return 0 }
+        return last.timestamp
     }
 
     /// Record a physics frame (called from PendulumViewModel update loop).
@@ -56,13 +80,16 @@ class CipherSessionCollector {
         isBalanced: Bool,
         balanceThreshold: Double
     ) {
+        // Apply offset so timestamps increase monotonically across fall resets
+        let adjustedTime = timestamp + timeOffset
+
         // Track balance time
         if isBalanced {
             if let lastCheck = lastBalanceCheckTime {
-                totalBalanceTime += timestamp - lastCheck
+                totalBalanceTime += adjustedTime - lastCheck
             }
         }
-        lastBalanceCheckTime = timestamp
+        lastBalanceCheckTime = adjustedTime
 
         // Accumulate angle stats (every frame for accuracy)
         let deviation = abs(angle - .pi)
@@ -73,14 +100,14 @@ class CipherSessionCollector {
         }
 
         // Peak detection (every frame for accuracy)
-        detectPeak(timestamp: timestamp, angle: angle)
+        detectPeak(timestamp: adjustedTime, angle: angle)
 
         // Downsample swing recording to ~10 Hz
-        guard timestamp - lastRecordTime >= recordInterval else { return }
-        lastRecordTime = timestamp
+        guard adjustedTime - lastRecordTime >= recordInterval else { return }
+        lastRecordTime = adjustedTime
 
         swings.append(CipherAuthService.SwingPayload(
-            timestamp: timestamp,
+            timestamp: adjustedTime,
             angle: angle,
             angularVelocity: angularVelocity,
             appliedForce: appliedForce

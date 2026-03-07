@@ -462,20 +462,20 @@ class GameState: ObservableObject {
         // Golden Cipher: auth verify or normal ingest
         if GoldenModeManager.shared.isAuthSession {
             let swingCount = GoldenModeManager.shared.cipherCollector.swings.count
-            print("[Cipher] Auth session ended. Swings: \(swingCount), duration: \(String(format: "%.1f", sessionDuration))s")
+            let cumulativeTime = GoldenModeManager.shared.cipherCollector.cumulativeTime
+            print("[Cipher] Auth session ended. Swings: \(swingCount), cumulative: \(String(format: "%.1f", cumulativeTime))s")
 
-            // Require minimum gameplay for auth — 15s gives enough motor features;
-            // backend excludes dynamics features that need longer sessions
-            let minAuthDuration: TimeInterval = 15.0
-            if sessionDuration < minAuthDuration {
-                print("[Cipher] Session too short for auth (\(String(format: "%.1f", sessionDuration))s < \(Int(minAuthDuration))s), skipping verify")
+            // Require 60s cumulative play time for reliable auth
+            let minAuthDuration: TimeInterval = 60.0
+            if cumulativeTime < minAuthDuration {
+                print("[Cipher] Not enough cumulative time (\(String(format: "%.1f", cumulativeTime))s < \(Int(minAuthDuration))s), skipping verify")
                 GoldenModeManager.shared.cancelAuthChallenge()
             } else {
                 // Auto-verify the auth session
                 Task {
                     do {
                         let result = try await GoldenModeManager.shared.verifyAuthSession(
-                            completionTime: sessionDuration
+                            completionTime: cumulativeTime
                         )
                         print("[Cipher] Auth result: \(result.decision), confidence: \(result.confidence)")
                         await MainActor.run {
