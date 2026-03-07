@@ -54,6 +54,7 @@ struct ContentView: View {
     @StateObject private var purchaseManager = PurchaseManager.shared
     @State private var showCipherAuth = false
     @State private var pendingChallengeId: String?
+    @State private var cipherAuthResult: CipherAuthService.AuthResult?
 
     var body: some View {
         Group {
@@ -82,13 +83,37 @@ struct ContentView: View {
                 showCipherAuth = true
             }
         }
-        .sheet(isPresented: $showCipherAuth) {
-            CipherAuthView(gameState: gameState, challengeId: pendingChallengeId) { result in
-                showCipherAuth = false
-                pendingChallengeId = nil
-                if let result = result {
-                    print("[Cipher] Auth result: \(result.decision), confidence: \(result.confidence)")
+        .onReceive(NotificationCenter.default.publisher(for: .cipherAuthResultReceived)) { _ in
+            print("[Cipher] Received auth result notification")
+            if let result = GoldenModeManager.shared.lastAuthResult {
+                print("[Cipher] Showing result sheet: \(result.decision), confidence: \(result.confidence)")
+                cipherAuthResult = result
+            } else {
+                print("[Cipher] WARNING: lastAuthResult is nil")
+            }
+        }
+        .fullScreenCover(isPresented: $showCipherAuth) {
+            CipherAuthView(
+                gameState: gameState,
+                challengeId: pendingChallengeId,
+                onComplete: { result in
+                    showCipherAuth = false
+                    pendingChallengeId = nil
+                    if let result = result {
+                        cipherAuthResult = result
+                    }
+                },
+                onStartPlaying: {
+                    // Dismiss cover so the Play tab is visible
+                    showCipherAuth = false
+                    pendingChallengeId = nil
+                    selectedTab = .play
                 }
+            )
+        }
+        .sheet(item: $cipherAuthResult) { result in
+            CipherAuthResultView(result: result) {
+                cipherAuthResult = nil
             }
         }
     }
@@ -434,9 +459,39 @@ class GameState: ObservableObject {
             }
         }
 
-        // Golden Cipher: ingest session data to Cipher API
-        // Build a cipher payload from the session's collector and send to API
-        if !GoldenModeManager.shared.isAuthSession {
+        // Golden Cipher: auth verify or normal ingest
+        if GoldenModeManager.shared.isAuthSession {
+            let swingCount = GoldenModeManager.shared.cipherCollector.swings.count
+            print("[Cipher] Auth session ended. Swings: \(swingCount), duration: \(String(format: "%.1f", sessionDuration))s")
+
+            // Require minimum 60 seconds of gameplay for auth verification
+            let minAuthDuration: TimeInterval = 60.0
+            if sessionDuration < minAuthDuration {
+                print("[Cipher] Session too short for auth (\(String(format: "%.1f", sessionDuration))s < \(Int(minAuthDuration))s), skipping verify")
+                GoldenModeManager.shared.cancelAuthChallenge()
+            } else {
+                // Auto-verify the auth session
+                Task {
+                    do {
+                        let result = try await GoldenModeManager.shared.verifyAuthSession(
+                            completionTime: sessionDuration
+                        )
+                        print("[Cipher] Auth result: \(result.decision), confidence: \(result.confidence)")
+                        await MainActor.run {
+                            GoldenModeManager.shared.lastAuthResult = result
+                            print("[Cipher] Posting auth result notification")
+                            NotificationCenter.default.post(
+                                name: .cipherAuthResultReceived,
+                                object: nil
+                            )
+                        }
+                    } catch {
+                        print("[Cipher] Auth verify failed: \(error)")
+                    }
+                }
+            }
+        } else {
+            // Normal ingest: build payload and send to API
             let cipherPayload = cipherSessionCollector.buildPayload(completionTime: sessionDuration)
             let userId = CipherEnrollmentManager.shared.cipherUserId
             Task {
@@ -447,6 +502,7 @@ class GameState: ObservableObject {
                 // Always ingest for behavioral template building
                 try? await CipherAuthService.shared.ingestSession(
                     userId: userId,
+                    templateId: CipherEnrollmentManager.shared.templateId,
                     session: cipherPayload
                 )
             }

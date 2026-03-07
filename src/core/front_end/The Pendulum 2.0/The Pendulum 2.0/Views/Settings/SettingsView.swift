@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var showingExportError = false
     @State private var exportErrorMessage = ""
     @State private var showingClearConfirmation = false
+    @State private var showingCipherResetConfirmation = false
     @State private var showingProfileSheet = false
     @State private var showingEmailSignIn = false
 
@@ -80,7 +81,8 @@ struct SettingsView: View {
                             exportFileURL: $exportFileURL,
                             showingExportError: $showingExportError,
                             exportErrorMessage: $exportErrorMessage,
-                            showingClearConfirmation: $showingClearConfirmation
+                            showingClearConfirmation: $showingClearConfirmation,
+                            showingCipherResetConfirmation: $showingCipherResetConfirmation
                         )
 
                         Divider()
@@ -116,6 +118,14 @@ struct SettingsView: View {
             }
         } message: {
             Text("This will permanently delete all session data and your profile. This action cannot be undone.")
+        }
+        .alert("Re-enroll Cipher?", isPresented: $showingCipherResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Re-enroll", role: .destructive) {
+                CipherEnrollmentManager.shared.resetEnrollment()
+            }
+        } message: {
+            Text("This will reset your Golden Cipher enrollment. You'll need to play 30 levels to re-enroll your behavioral signature.")
         }
         .sheet(isPresented: $showingProfileSheet) {
             ProfileSetupView(existingProfile: profileManager.currentProfile)
@@ -443,6 +453,7 @@ struct DataSection: View {
     @Binding var showingExportError: Bool
     @Binding var exportErrorMessage: String
     @Binding var showingClearConfirmation: Bool
+    @Binding var showingCipherResetConfirmation: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -476,6 +487,17 @@ struct DataSection: View {
                 ) {
                     showingClearConfirmation = true
                 }
+
+                // Re-enroll Cipher Button
+                SettingsButtonRow(
+                    title: "Re-enroll Cipher",
+                    subtitle: "Reset behavioral signature enrollment",
+                    iconName: "arrow.counterclockwise",
+                    isDestructive: true
+                ) {
+                    showingCipherResetConfirmation = true
+                }
+
             }
             .padding(.horizontal, 16)
         }

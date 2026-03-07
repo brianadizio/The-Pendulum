@@ -12,6 +12,7 @@ struct IntegrationView: View {
     @State private var showingMazeConnection = false
     @State private var showingAIChat = false
     @State private var isMazeConnected = false
+    @StateObject private var cipherEnrollment = CipherEnrollmentManager.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,6 +23,13 @@ struct IntegrationView: View {
                 VStack(spacing: 24) {
                     // AI Insights Section - "Your Play Style, Decoded"
                     AIInsightsSection(onChatTapped: { showingAIChat = true })
+
+                    Divider()
+                        .background(PendulumColors.bronze.opacity(0.3))
+                        .padding(.horizontal, 16)
+
+                    // Golden Cipher Section
+                    GoldenCipherSection(enrollment: cipherEnrollment)
 
                     Divider()
                         .background(PendulumColors.bronze.opacity(0.3))
@@ -829,6 +837,190 @@ struct MazeMetricBadge: View {
             Text(label)
                 .font(.system(size: 10))
                 .foregroundStyle(PendulumColors.textTertiary)
+        }
+    }
+}
+
+// MARK: - Golden Cipher Section
+struct GoldenCipherSection: View {
+    @ObservedObject var enrollment: CipherEnrollmentManager
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    private var statusText: String {
+        if enrollment.isEnrolled {
+            return "Enrolled — your behavioral signature is ready"
+        } else if enrollment.isEnrolling {
+            return "Enrolling — \(enrollment.sessionsSubmitted)/\(enrollment.targetSessions) sessions recorded"
+        } else {
+            return "Create your unique behavioral cipher from gameplay"
+        }
+    }
+
+    private var statusColor: Color {
+        if enrollment.isEnrolled { return PendulumColors.success }
+        if enrollment.isEnrolling { return PendulumColors.caution }
+        return PendulumColors.bronze
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("GOLDEN CIPHER")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PendulumColors.textTertiary)
+                .padding(.horizontal, 16)
+
+            VStack(spacing: 12) {
+                // Main cipher card
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [PendulumColors.gold, PendulumColors.bronze],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 40, height: 40)
+
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Behavioral Authentication")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(PendulumColors.text)
+
+                        Text(statusText)
+                            .font(.system(size: 12))
+                            .foregroundStyle(PendulumColors.textSecondary)
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+
+                    if enrollment.isEnrolled {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(PendulumColors.success)
+                    }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(PendulumColors.backgroundTertiary)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(statusColor.opacity(0.3), lineWidth: 1)
+                )
+
+                // Enrollment progress bar (while enrolling)
+                if enrollment.isEnrolling {
+                    VStack(spacing: 8) {
+                        ProgressView(value: enrollment.enrollmentProgress)
+                            .tint(PendulumColors.gold)
+
+                        Text("Play \(enrollment.targetSessions - enrollment.sessionsSubmitted) more sessions to complete enrollment")
+                            .font(.system(size: 11))
+                            .foregroundStyle(PendulumColors.textTertiary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(PendulumColors.backgroundSecondary)
+                    )
+                }
+
+                // Action buttons
+                if !enrollment.isEnrolled && !enrollment.isEnrolling {
+                    // Start enrollment button
+                    Button(action: startEnrollment) {
+                        HStack {
+                            if isLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: "person.badge.key.fill")
+                                Text("Start Enrollment")
+                            }
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [PendulumColors.gold, PendulumColors.bronze],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                    }
+                    .disabled(isLoading)
+                } else if enrollment.isEnrolled {
+                    // Test Cipher Authentication button
+                    Button(action: {
+                        NotificationCenter.default.post(
+                            name: .cipherChallengeReceived,
+                            object: nil,
+                            userInfo: ["challengeId": "test-\(UUID().uuidString)"]
+                        )
+                    }) {
+                        HStack {
+                            Image(systemName: "lock.shield")
+                            Text("Test Cipher Authentication")
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [PendulumColors.gold, PendulumColors.bronze],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                    }
+                }
+
+                // Error message
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.system(size: 12))
+                        .foregroundStyle(PendulumColors.danger)
+                        .padding(.horizontal, 4)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func startEnrollment() {
+        isLoading = true
+        errorMessage = nil
+        Task {
+            do {
+                try await CipherEnrollmentManager.shared.startEnrollment()
+                await MainActor.run {
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Enrollment failed: \(error.localizedDescription)"
+                }
+            }
         }
     }
 }

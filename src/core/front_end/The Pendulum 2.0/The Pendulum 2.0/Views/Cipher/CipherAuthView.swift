@@ -3,7 +3,7 @@
 //  The Pendulum 2.0
 //
 //  Presents a cipher authentication challenge as a playable pendulum level.
-//  Flow: challenge received -> load level spec -> user plays -> verify -> result
+//  Flow: load challenge -> show ready screen -> dismiss to play -> auto-verify on session end
 //
 
 import SwiftUI
@@ -12,6 +12,8 @@ struct CipherAuthView: View {
     @ObservedObject var gameState: GameState
     let challengeId: String?
     let onComplete: (CipherAuthService.AuthResult?) -> Void
+    /// Called when the user starts playing — dismisses the cover so the Play tab is visible
+    var onStartPlaying: (() -> Void)?
 
     @State private var phase: AuthPhase = .loading
     @State private var authConfig: LevelConfig?
@@ -21,47 +23,51 @@ struct CipherAuthView: View {
     enum AuthPhase {
         case loading
         case ready
-        case playing
-        case verifying
-        case result
         case error
     }
 
     var body: some View {
-        NavigationView {
+        ZStack {
+            PendulumColors.background.ignoresSafeArea()
+
             VStack(spacing: 24) {
+                // Header bar
+                HStack {
+                    Button("Cancel") {
+                        GoldenModeManager.shared.cancelAuthChallenge()
+                        onComplete(nil)
+                    }
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(PendulumColors.textSecondary)
+
+                    Spacer()
+
+                    Text("Identity Verification")
+                        .font(.system(size: 16, weight: .semibold, design: .serif))
+                        .foregroundStyle(PendulumColors.text)
+
+                    Spacer()
+
+                    // Balance the layout
+                    Text("Cancel")
+                        .font(.system(size: 16, weight: .medium))
+                        .hidden()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+
+                Spacer()
+
                 switch phase {
                 case .loading:
                     loadingView
-
                 case .ready:
                     readyView
-
-                case .playing:
-                    playingView
-
-                case .verifying:
-                    verifyingView
-
-                case .result:
-                    resultView
-
                 case .error:
                     errorView
                 }
-            }
-            .padding()
-            .navigationTitle("Identity Verification")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    if phase != .playing && phase != .verifying {
-                        Button("Cancel") {
-                            GoldenModeManager.shared.cancelAuthChallenge()
-                            onComplete(nil)
-                        }
-                    }
-                }
+
+                Spacer()
             }
         }
         .task {
@@ -75,184 +81,133 @@ struct CipherAuthView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
+                .tint(PendulumColors.gold)
+
             Text("Loading challenge...")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 16, weight: .medium, design: .serif))
+                .foregroundStyle(PendulumColors.textSecondary)
         }
     }
 
     private var readyView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "lock.shield")
-                .font(.system(size: 60))
-                .foregroundStyle(.blue)
+        VStack(spacing: 24) {
+            // Shield icon
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [PendulumColors.gold.opacity(0.2), PendulumColors.bronze.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [PendulumColors.gold, PendulumColors.bronze],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
 
             Text("Authentication Required")
-                .font(.title2.bold())
+                .font(.system(size: 24, weight: .bold, design: .serif))
+                .foregroundStyle(PendulumColors.text)
 
             Text("Balance the pendulum to verify your identity. Your unique movement pattern will be compared to your behavioral profile.")
-                .font(.body)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14))
+                .foregroundStyle(PendulumColors.textSecondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
 
             if let config = authConfig, let countdown = config.countdownTime {
-                HStack {
+                HStack(spacing: 6) {
                     Image(systemName: "timer")
+                        .font(.system(size: 14))
                     Text("Time limit: \(Int(countdown))s")
+                        .font(.system(size: 14, weight: .medium))
                 }
-                .font(.subheadline)
-                .foregroundStyle(.orange)
+                .foregroundStyle(PendulumColors.caution)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(PendulumColors.caution.opacity(0.12))
+                )
             }
 
             Button {
                 startAuthSession()
             } label: {
-                Text("Begin Verification")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .padding(.top, 8)
-        }
-    }
-
-    private var playingView: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "waveform.path.ecg")
-                Text("Verifying...")
-            }
-            .font(.caption)
-            .foregroundStyle(.blue)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.blue.opacity(0.1))
-            .clipShape(Capsule())
-
-            Text("Balance the pendulum")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            // The actual gameplay happens in the PlayView behind this sheet.
-            // This view shows status while the user plays.
-            Text("Complete the level to verify your identity")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            Button("Done Playing") {
-                Task { await verifySession() }
-            }
-            .font(.headline)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(.green)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding(.top, 16)
-        }
-    }
-
-    private var verifyingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Analyzing your movement pattern...")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var resultView: some View {
-        VStack(spacing: 20) {
-            if let result = authResult {
-                if result.decision == "ACCEPT" {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.green)
-
-                    Text("Identity Verified")
-                        .font(.title2.bold())
-
-                    Text("Confidence: \(Int(result.confidence * 100))%")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    if let binding = result.s1BindingScore {
-                        Text("S\u{00B9} Binding: \(String(format: "%.2f", binding))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                } else if result.decision == "REJECT" {
-                    Image(systemName: "xmark.seal.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.red)
-
-                    Text("Verification Failed")
-                        .font(.title2.bold())
-
-                    Text("Your movement pattern did not match your profile.")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                } else {
-                    Image(systemName: "questionmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.orange)
-
-                    Text("Uncertain")
-                        .font(.title2.bold())
-
-                    Text("Please try again for a more confident result.")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                HStack {
+                    Image(systemName: "play.fill")
+                    Text("Begin Verification")
                 }
-
-                Button("Done") {
-                    onComplete(result)
-                }
-                .font(.headline)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(result.decision == "ACCEPT" ? .green : .blue)
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [PendulumColors.gold, PendulumColors.bronze],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                )
+                .shadow(color: PendulumColors.gold.opacity(0.3), radius: 6, y: 3)
             }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal, 32)
+            .padding(.top, 8)
         }
     }
 
     private var errorView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 50))
-                .foregroundStyle(.orange)
+            ZStack {
+                Circle()
+                    .fill(PendulumColors.caution.opacity(0.15))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(PendulumColors.caution)
+            }
 
             Text("Challenge Failed")
-                .font(.title2.bold())
+                .font(.system(size: 22, weight: .bold, design: .serif))
+                .foregroundStyle(PendulumColors.text)
 
             Text(errorMessage ?? "Unknown error")
-                .font(.body)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14))
+                .foregroundStyle(PendulumColors.textSecondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
 
             Button("Dismiss") {
                 onComplete(nil)
             }
-            .font(.headline)
-            .padding()
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(PendulumColors.text)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 32)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
+            )
         }
     }
 
     // MARK: - Actions
 
     private func loadChallenge() async {
-        // If we have a challengeId from push notification, the challenge already exists
-        // on the server. We just need to present the level.
-        // If no challengeId, request a new challenge.
         do {
             let (_, config) = try await GoldenModeManager.shared.requestAuthChallenge(
                 action: "verify_identity",
@@ -270,29 +225,143 @@ struct CipherAuthView: View {
     private func startAuthSession() {
         guard authConfig != nil else { return }
 
-        // Apply the cipher level config to the game
+        // Configure game for auth level
         gameState.levelManager.activeMode = .golden
         gameState.gameMode = .golden
 
-        // The PendulumViewModel will detect isAuthSession and record frames
-        // via GoldenModeManager.shared.cipherCollector
-        phase = .playing
+        // Dismiss the cover — user plays on the Play tab
+        // GoldenModeManager.isAuthSession is now true, so PendulumViewModel
+        // feeds data to the cipher collector, and ContentView auto-verifies
+        // when the session ends.
+        if let onStartPlaying = onStartPlaying {
+            onStartPlaying()
+        } else {
+            onComplete(nil)
+        }
+    }
+}
+
+// MARK: - Auth Result Sheet (shown after auto-verify in ContentView)
+
+struct CipherAuthResultView: View {
+    let result: CipherAuthService.AuthResult
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            PendulumColors.background.ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Spacer()
+
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(iconBackgroundColor.opacity(0.15))
+                        .frame(width: 100, height: 100)
+
+                    Image(systemName: iconName)
+                        .font(.system(size: 44))
+                        .foregroundStyle(iconColor)
+                }
+
+                // Title
+                Text(titleText)
+                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .foregroundStyle(PendulumColors.text)
+
+                // Subtitle
+                Text(subtitleText)
+                    .font(.system(size: 14))
+                    .foregroundStyle(PendulumColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                // Confidence score
+                VStack(spacing: 8) {
+                    Text("Confidence")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(PendulumColors.textTertiary)
+
+                    Text("\(Int(result.confidence * 100))%")
+                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .foregroundStyle(iconColor)
+
+                    if let binding = result.s1BindingScore {
+                        Text("S\u{00B9} Binding: \(String(format: "%.2f", binding))")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(PendulumColors.textTertiary)
+                    }
+                }
+                .padding(.vertical, 16)
+                .padding(.horizontal, 32)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(PendulumColors.backgroundTertiary)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(iconColor.opacity(0.3), lineWidth: 1)
+                )
+
+                Spacer()
+
+                // Dismiss button
+                Button(action: onDismiss) {
+                    Text("Done")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [PendulumColors.gold, PendulumColors.bronze],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.horizontal, 32)
+                .padding(.bottom, 32)
+            }
+        }
     }
 
-    private func verifySession() async {
-        phase = .verifying
+    private var iconName: String {
+        switch result.decision {
+        case "ACCEPT": return "checkmark.seal.fill"
+        case "REJECT": return "xmark.seal.fill"
+        default: return "questionmark.circle.fill"
+        }
+    }
 
-        let sessionDuration = gameState.csvSessionManager?.sessionDuration ?? 0
+    private var iconColor: Color {
+        switch result.decision {
+        case "ACCEPT": return PendulumColors.success
+        case "REJECT": return PendulumColors.danger
+        default: return PendulumColors.caution
+        }
+    }
 
-        do {
-            let result = try await GoldenModeManager.shared.verifyAuthSession(
-                completionTime: sessionDuration
-            )
-            authResult = result
-            phase = .result
-        } catch {
-            errorMessage = error.localizedDescription
-            phase = .error
+    private var iconBackgroundColor: Color { iconColor }
+
+    private var titleText: String {
+        switch result.decision {
+        case "ACCEPT": return "Identity Verified"
+        case "REJECT": return "Verification Failed"
+        default: return "Uncertain"
+        }
+    }
+
+    private var subtitleText: String {
+        switch result.decision {
+        case "ACCEPT": return "Your movement pattern matched your behavioral profile."
+        case "REJECT": return "Your movement pattern did not match your profile."
+        default: return "Please try again for a more confident result."
         }
     }
 }

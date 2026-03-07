@@ -41,9 +41,16 @@ final class CipherAuthService {
         let transaction: TransactionRequest?
     }
 
+    struct TransactionSeed: Codable {
+        let seedValue: Int
+        let seedHex: String
+        let s1Position: Double
+        let tier: Int
+    }
+
     struct LevelSpec: Codable {
         let game: String
-        let seed: Int
+        let seed: TransactionSeed
         let difficulty: Double
         let timeLimit: Double?
         let parameters: [String: Double]
@@ -55,8 +62,12 @@ final class CipherAuthService {
 
     struct ChallengeResponse: Codable {
         let challengeId: String
+        let userId: String?
+        let acceptedModalities: [String]?
+        let message: String?
         let transactionBound: Bool
         let levelSpec: LevelSpec?
+        let levelSpecs: [LevelSpec]?
         let expiresAt: String?
     }
 
@@ -101,11 +112,13 @@ final class CipherAuthService {
         let pendulumSession: PendulumSessionPayload
     }
 
-    struct AuthResult: Codable {
+    struct AuthResult: Codable, Identifiable {
         let decision: String  // "ACCEPT", "REJECT", "UNCERTAIN"
         let confidence: Double
         let transactionBound: Bool
         let s1BindingScore: Double?
+
+        var id: String { "\(decision)-\(confidence)" }
     }
 
     // MARK: - Enrollment Models
@@ -144,6 +157,7 @@ final class CipherAuthService {
 
     struct IngestRequest: Codable {
         let userId: String
+        let templateId: String?
         let pendulumSession: PendulumSessionPayload
     }
 
@@ -193,7 +207,7 @@ final class CipherAuthService {
         return try await post("/authenticate/verify", body: body)
     }
 
-    func startEnrollment(userId: String, sessions: Int = 5) async throws -> EnrollStartResponse {
+    func startEnrollment(userId: String, sessions: Int = 30) async throws -> EnrollStartResponse {
         let body = EnrollStartRequest(userId: userId, targetSessions: sessions)
         return try await post("/enroll/start", body: body)
     }
@@ -215,9 +229,9 @@ final class CipherAuthService {
         return try await post("/enroll/finalize", body: body)
     }
 
-    func ingestSession(userId: String, session: PendulumSessionPayload) async throws {
-        let body = IngestRequest(userId: userId, pendulumSession: session)
-        let _: EnrollSessionResponse = try await post("/ingest/pendulum", body: body)
+    func ingestSession(userId: String, templateId: String? = nil, session: PendulumSessionPayload) async throws {
+        let body = IngestRequest(userId: userId, templateId: templateId, pendulumSession: session)
+        try await postIgnoringResponse("/ingest/pendulum", body: body)
     }
 
     func registerDevice(userId: String, fcmToken: String) async throws {
@@ -231,6 +245,27 @@ final class CipherAuthService {
     }
 
     // MARK: - HTTP
+
+    private func postIgnoringResponse<T: Encodable>(_ path: String, body: T) async throws {
+        guard let url = URL(string: baseURL + path) else {
+            throw CipherError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try encoder.encode(body)
+        request.timeoutInterval = 30
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let msg = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw CipherError.serverError(statusCode: code, message: msg)
+        }
+    }
 
     private func post<T: Encodable, R: Decodable>(_ path: String, body: T) async throws -> R {
         guard let url = URL(string: baseURL + path) else {

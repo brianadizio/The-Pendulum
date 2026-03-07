@@ -2,7 +2,7 @@
 //  CipherEnrollmentManager.swift
 //  The Pendulum 2.0
 //
-//  Manages the Golden Cipher enrollment flow: play 5 sessions to build
+//  Manages the Golden Cipher enrollment flow: play 30 sessions to build
 //  a behavioral template, then authenticate via gameplay.
 //
 
@@ -17,7 +17,7 @@ class CipherEnrollmentManager: ObservableObject {
 
     @Published private(set) var isEnrolling: Bool = false
     @Published private(set) var sessionsSubmitted: Int = 0
-    @Published private(set) var targetSessions: Int = 5
+    @Published private(set) var targetSessions: Int = 30
 
     private var enrollmentId: String?
 

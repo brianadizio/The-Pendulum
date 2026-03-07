@@ -240,6 +240,11 @@ class PendulumViewModel: ObservableObject {
                 isBalanced: isBalanced,
                 balanceThreshold: balanceThreshold
             )
+            // Diagnostic: log at key milestones
+            let count = GoldenModeManager.shared.cipherCollector.swings.count
+            if count == 1 || count == 100 || count == 300 || count == 600 {
+                print("[Cipher] Physics recording: \(count) swings, elapsed=\(String(format: "%.1f", elapsedTime))s")
+            }
         }
 
         // Golden Mode: mid-session adaptation (~every 30s)

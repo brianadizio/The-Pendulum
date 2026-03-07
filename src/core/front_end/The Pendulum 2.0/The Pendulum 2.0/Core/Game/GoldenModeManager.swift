@@ -642,6 +642,9 @@ class GoldenModeManager: ObservableObject {
 
   // MARK: - Golden Cipher Authentication
 
+  /// Last auth result (set by endSession auto-verify, read by ContentView)
+  var lastAuthResult: CipherAuthService.AuthResult?
+
   /// Session collector that captures physics data during cipher auth gameplay
   private(set) var cipherCollector = CipherSessionCollector()
 
@@ -682,16 +685,22 @@ class GoldenModeManager: ObservableObject {
   }
 
   /// Verify the completed auth session. Call after the user finishes the challenge level.
-  func verifyAuthSession(completionTime: Double?) async throws -> CipherAuthService.AuthResult {
+  /// Pass an external payload (from GameState's collector) to include actual gameplay data;
+  /// falls back to the internal cipherCollector if none provided.
+  func verifyAuthSession(
+    completionTime: Double?,
+    payload: CipherAuthService.PendulumSessionPayload? = nil
+  ) async throws -> CipherAuthService.AuthResult {
     guard let challengeId = cipherChallengeId else {
       throw CipherAuthError.noActiveChallenge
     }
 
-    let payload = cipherCollector.buildPayload(completionTime: completionTime)
+    let sessionPayload = payload ?? cipherCollector.buildPayload(completionTime: completionTime)
+    print("[Cipher] Verifying auth: challengeId=\(challengeId), swings=\(sessionPayload.swings.count)")
 
     let result = try await CipherAuthService.shared.verify(
       challengeId: challengeId,
-      session: payload
+      session: sessionPayload
     )
 
     // Reset state

@@ -118,4 +118,5 @@ class CipherNotificationDelegate: NSObject, UIApplicationDelegate, MessagingDele
 
 extension Notification.Name {
     static let cipherChallengeReceived = Notification.Name("cipherChallengeReceived")
+    static let cipherAuthResultReceived = Notification.Name("cipherAuthResultReceived")
 }
