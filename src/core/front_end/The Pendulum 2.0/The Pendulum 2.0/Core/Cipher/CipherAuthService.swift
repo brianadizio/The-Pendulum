@@ -42,7 +42,7 @@ final class CipherAuthService {
     }
 
     struct TransactionSeed: Codable {
-        let seedValue: Int
+        let seedValue: UInt64
         let seedHex: String
         let s1Position: Double
         let tier: Int
@@ -54,10 +54,7 @@ final class CipherAuthService {
         let difficulty: Double
         let timeLimit: Double?
         let parameters: [String: Double]
-        // parameters keys for pendulum:
-        //   balance_threshold, hold_duration, initial_angle,
-        //   mass, length, damping, gravity, spring_constant,
-        //   jiggle_intensity
+        // generated_maze is null for pendulum — ignored by Codable
     }
 
     struct ChallengeResponse: Codable {
