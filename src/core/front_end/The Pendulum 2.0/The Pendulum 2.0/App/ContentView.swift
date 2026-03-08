@@ -367,6 +367,8 @@ class GameState: ObservableObject {
     }
 
     func endSession() {
+        guard isPlaying else { return }
+
         // Capture session info before ending
         let sessionStartTime = csvSessionManager?.sessionStartTime
         let sessionDuration = csvSessionManager?.sessionDuration ?? 0

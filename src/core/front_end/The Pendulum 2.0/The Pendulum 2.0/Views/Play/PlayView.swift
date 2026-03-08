@@ -157,12 +157,19 @@ struct PlayView: View {
             }
             Button("Cancel Auth", role: .destructive) {
                 GoldenModeManager.shared.cancelAuthChallenge()
-                gameState.endSession()
+                if gameState.isPlaying {
+                    gameState.endSession()
+                }
             }
         } message: {
-            let remaining = max(0, 60.0 - authCumulativeTime)
-            Text("\(Int(authCumulativeTime))s of 60s recorded.\n\(Int(remaining))s remaining. Keep balancing!")
+            Text(authFallMessage)
         }
+    }
+
+    private var authFallMessage: String {
+        let secs = Int(authCumulativeTime)
+        let remaining = max(0, 60 - secs)
+        return "\(secs)s of 60s recorded. \(remaining)s remaining. Keep balancing!"
     }
 
     private func setupGame() {

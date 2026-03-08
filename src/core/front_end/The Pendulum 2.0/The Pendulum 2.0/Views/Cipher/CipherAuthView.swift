@@ -191,17 +191,32 @@ struct CipherAuthView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
-            Button("Dismiss") {
-                onComplete(nil)
+            HStack(spacing: 16) {
+                Button("Retry") {
+                    phase = .loading
+                    Task { await loadChallenge() }
+                }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(PendulumColors.gold)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(PendulumColors.gold.opacity(0.3), lineWidth: 1)
+                )
+
+                Button("Dismiss") {
+                    onComplete(nil)
+                }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(PendulumColors.text)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
+                )
             }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(PendulumColors.text)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 32)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(PendulumColors.bronze.opacity(0.3), lineWidth: 1)
-            )
         }
     }
 
@@ -217,7 +232,7 @@ struct CipherAuthView: View {
             authConfig = config
             phase = .ready
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "\(error)"
             phase = .error
         }
     }
