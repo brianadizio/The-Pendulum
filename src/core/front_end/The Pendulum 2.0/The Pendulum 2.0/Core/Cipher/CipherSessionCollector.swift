@@ -102,8 +102,9 @@ class CipherSessionCollector {
         // Peak detection (every frame for accuracy)
         detectPeak(timestamp: adjustedTime, angle: angle)
 
-        // Downsample swing recording to ~10 Hz
+        // Downsample swing recording to ~10 Hz, cap at 1000 swings (~100s)
         guard adjustedTime - lastRecordTime >= recordInterval else { return }
+        guard swings.count < 1000 else { return }
         lastRecordTime = adjustedTime
 
         swings.append(CipherAuthService.SwingPayload(

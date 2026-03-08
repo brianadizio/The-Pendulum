@@ -130,9 +130,12 @@ struct PlayView: View {
             profileManager.updatePromptState()
         }
         .onDisappear {
-            // End session properly when leaving Play tab
-            viewModel.pauseSimulation()
-            gameState.endSession()
+            // End session when leaving Play tab, but NOT during auth
+            // (auth cover temporarily "disappears" PlayView)
+            if !GoldenModeManager.shared.isAuthSession {
+                viewModel.pauseSimulation()
+                gameState.endSession()
+            }
         }
         .sheet(isPresented: $showingProfileSheet) {
             ProfileSetupView(existingProfile: profileManager.currentProfile)
