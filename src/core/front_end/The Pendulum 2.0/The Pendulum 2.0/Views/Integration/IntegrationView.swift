@@ -65,10 +65,11 @@ struct IntegrationView: View {
         .background(PendulumColors.background)
         .onAppear {
             isMazeConnected = AppGroupManager.shared.loadMazeData() != nil
-            // Load metrics for AI context
-            if let sessionManager = CSVSessionManager() as CSVSessionManager? {
-                metricsCalculator.calculateMetrics(from: sessionManager, timeRange: .allTime)
-            }
+        }
+        .task {
+            // Defer heavy metrics calculation so the UI renders first
+            let sessionManager = CSVSessionManager()
+            metricsCalculator.calculateMetrics(from: sessionManager, timeRange: .allTime)
         }
         .sheet(isPresented: $showingHealthExplanation) {
             HealthExplanationSheet(

@@ -151,15 +151,21 @@ struct PlayView: View {
                 sessionScore: goldenSessionScore
             )
         }
-        .alert("Authentication Session", isPresented: $showingAuthFallDialog) {
+        .alert("Keep Playing", isPresented: $showingAuthFallDialog) {
             Button("Continue Playing") {
-                // Resume: tell collector about the reset, restart pendulum
-                GoldenModeManager.shared.cipherCollector.resumeAfterFall()
+                // Resume: tell the appropriate collector about the reset
+                if GoldenModeManager.shared.isAuthSession {
+                    GoldenModeManager.shared.cipherCollector.resumeAfterFall()
+                } else {
+                    gameState.cipherSessionCollector.resumeAfterFall()
+                }
                 viewModel.resetWithPerturbation(degrees: 8.0)
                 viewModel.startSimulation()
             }
-            Button("Cancel Auth", role: .destructive) {
-                GoldenModeManager.shared.cancelAuthChallenge()
+            Button("Cancel", role: .destructive) {
+                if GoldenModeManager.shared.isAuthSession {
+                    GoldenModeManager.shared.cancelAuthChallenge()
+                }
                 if gameState.isPlaying {
                     gameState.endSession()
                 }
@@ -172,7 +178,8 @@ struct PlayView: View {
     private var authFallMessage: String {
         let secs = Int(authCumulativeTime)
         let remaining = max(0, 60 - secs)
-        return "\(secs)s of 60s recorded. \(remaining)s remaining. Keep balancing!"
+        let context = GoldenModeManager.shared.isAuthSession ? "verification" : "enrollment"
+        return "\(secs)s of 60s recorded. \(remaining)s remaining. Keep balancing to complete \(context)!"
     }
 
     private func setupGame() {
@@ -238,14 +245,22 @@ struct PlayView: View {
                 // Reset pendulum and continue
                 vm.resetWithPerturbation(degrees: 8.0)
             } else {
-                // Free Play / Golden Mode: check if auth session
-                if GoldenModeManager.shared.isAuthSession {
-                    // Auth session: pause and show continue/verify dialog
+                // Free Play / Golden Mode: check if auth or enrollment session
+                let isAuth = GoldenModeManager.shared.isAuthSession
+                let isEnrolling = CipherEnrollmentManager.shared.isEnrolling
+
+                if isAuth || isEnrolling {
+                    // Cumulative session: pause and check accumulated time
                     vm.pauseSimulation()
-                    let cumTime = GoldenModeManager.shared.cipherCollector.cumulativeTime
+                    let cumTime: TimeInterval
+                    if isAuth {
+                        cumTime = GoldenModeManager.shared.cipherCollector.cumulativeTime
+                    } else {
+                        cumTime = gs.cipherSessionCollector.cumulativeTime
+                    }
                     authCumulativeTime = cumTime
                     if cumTime >= 60.0 {
-                        // Enough data — end session and trigger verification
+                        // Enough data — end session (triggers verify or enrollment submit)
                         if gs.gameMode == .golden {
                             goldenSessionDuration = cumTime
                             goldenLevelsCompleted = max(0, gs.levelManager.currentLevel - 1)
@@ -260,7 +275,7 @@ struct PlayView: View {
                         showingAuthFallDialog = true
                     }
                 } else {
-                    // Non-auth: end session as before
+                    // Normal session: end on fall
                     if gs.gameMode == .golden {
                         goldenSessionDuration = vm.elapsedTime
                         goldenLevelsCompleted = max(0, gs.levelManager.currentLevel - 1)

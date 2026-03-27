@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D631CED92F5C6D740056BEF1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = D6B1C4012F55A00100CIPHER /* FirebaseMessaging */; };
 		D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FB2F2BDE1B0099EA6E /* FirebaseAnalytics */; };
 		D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */; };
 		D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FF2F2BDE1B0099EA6E /* FirebaseCore */; };
@@ -48,6 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D631CED92F5C6D740056BEF1 /* FirebaseMessaging in Frameworks */,
 				D6ACE2302F345EE20059B47D /* FirebaseAILogic in Frameworks */,
 				D66F27002F2BDE1B0099EA6E /* FirebaseCore in Frameworks */,
 				D6772EFC2F2D50E30031EA29 /* Singular in Frameworks */,
@@ -311,7 +313,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -328,7 +330,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum-2-0";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -348,7 +350,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -365,7 +367,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.golden-enterprises.The-Pendulum-2-0";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

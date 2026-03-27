@@ -108,6 +108,10 @@ class AppTrackingManager {
         config.skAdNetworkEnabled = true
         config.limitAdvertisingIdentifiers = !granted
 
+        // Wait up to 300 seconds for ATT response before sending the first session.
+        // This ensures the IDFA is available for deterministic attribution matching.
+        config.waitForTrackingAuthorizationWithTimeoutInterval = 300
+
         Singular.start(config)
         print("Singular SDK initialized (tracking: \(granted ? "full" : "limited"))")
 

@@ -55,6 +55,7 @@ struct ContentView: View {
     @State private var showCipherAuth = false
     @State private var pendingChallengeId: String?
     @State private var cipherAuthResult: CipherAuthService.AuthResult?
+    @State private var cipherAuthError: String?
 
     var body: some View {
         Group {
@@ -92,6 +93,11 @@ struct ContentView: View {
                 print("[Cipher] WARNING: lastAuthResult is nil")
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .cipherAuthErrorOccurred)) { notification in
+            if let error = notification.userInfo?["error"] as? String {
+                cipherAuthError = error
+            }
+        }
         .fullScreenCover(isPresented: $showCipherAuth) {
             CipherAuthView(
                 gameState: gameState,
@@ -115,6 +121,14 @@ struct ContentView: View {
             CipherAuthResultView(result: result) {
                 cipherAuthResult = nil
             }
+        }
+        .alert("Verification Error", isPresented: Binding(
+            get: { cipherAuthError != nil },
+            set: { if !$0 { cipherAuthError = nil } }
+        )) {
+            Button("OK") { cipherAuthError = nil }
+        } message: {
+            Text(cipherAuthError ?? "Unknown error")
         }
     }
 }
@@ -472,6 +486,11 @@ class GameState: ObservableObject {
             if cumulativeTime < minAuthDuration {
                 print("[Cipher] Not enough cumulative time (\(String(format: "%.1f", cumulativeTime))s < \(Int(minAuthDuration))s), skipping verify")
                 GoldenModeManager.shared.cancelAuthChallenge()
+                NotificationCenter.default.post(
+                    name: .cipherAuthErrorOccurred,
+                    object: nil,
+                    userInfo: ["error": "Not enough play time (\(Int(cumulativeTime))s of \(Int(minAuthDuration))s required). Try again with a longer session."]
+                )
             } else {
                 // Auto-verify the auth session
                 Task {
@@ -490,12 +509,23 @@ class GameState: ObservableObject {
                         }
                     } catch {
                         print("[Cipher] Auth verify failed: \(error)")
+                        await MainActor.run {
+                            NotificationCenter.default.post(
+                                name: .cipherAuthErrorOccurred,
+                                object: nil,
+                                userInfo: ["error": "\(error)"]
+                            )
+                        }
                     }
                 }
             }
         } else {
             // Normal ingest: build payload and send to API
-            let cipherPayload = cipherSessionCollector.buildPayload(completionTime: sessionDuration)
+            // Use cumulative time if available (enrollment sessions accumulate across falls)
+            let cipherCompletionTime = cipherSessionCollector.cumulativeTime > 0
+                ? cipherSessionCollector.cumulativeTime
+                : sessionDuration
+            let cipherPayload = cipherSessionCollector.buildPayload(completionTime: cipherCompletionTime)
             let userId = CipherEnrollmentManager.shared.cipherUserId
             Task {
                 // If enrolling, submit to enrollment pipeline

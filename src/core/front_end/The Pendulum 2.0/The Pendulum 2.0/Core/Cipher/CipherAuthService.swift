@@ -137,6 +137,10 @@ final class CipherAuthService {
     }
 
     struct EnrollSessionResponse: Codable {
+        let enrollmentId: String?
+        let sessionsSubmitted: Int?
+        let sessionsRemaining: Int?
+        let modalitiesSeen: [String]?
         let status: String?
     }
 
@@ -189,7 +193,7 @@ final class CipherAuthService {
                 tier: tier
             )
         )
-        return try await post("/authenticate/challenge", body: body)
+        return try await post("/authenticate/challenge", body: body, timeout: 60)
     }
 
     func verify(
@@ -201,7 +205,7 @@ final class CipherAuthService {
             modality: "pendulum",
             pendulumSession: session
         )
-        return try await post("/authenticate/verify", body: body)
+        return try await post("/authenticate/verify", body: body, timeout: 90)
     }
 
     func startEnrollment(userId: String, sessions: Int = 30) async throws -> EnrollStartResponse {
@@ -209,16 +213,17 @@ final class CipherAuthService {
         return try await post("/enroll/start", body: body)
     }
 
+    @discardableResult
     func submitEnrollmentSession(
         enrollmentId: String,
         session: PendulumSessionPayload
-    ) async throws {
+    ) async throws -> EnrollSessionResponse {
         let body = EnrollSessionRequest(
             enrollmentId: enrollmentId,
             modality: "pendulum",
             pendulumSession: session
         )
-        let _: EnrollSessionResponse = try await post("/enroll/session", body: body)
+        return try await post("/enroll/session", body: body, timeout: 60)
     }
 
     func finalizeEnrollment(enrollmentId: String) async throws -> EnrollFinalizeResponse {
@@ -264,7 +269,7 @@ final class CipherAuthService {
         }
     }
 
-    private func post<T: Encodable, R: Decodable>(_ path: String, body: T) async throws -> R {
+    private func post<T: Encodable, R: Decodable>(_ path: String, body: T, timeout: TimeInterval = 30) async throws -> R {
         guard let url = URL(string: baseURL + path) else {
             throw CipherError.invalidURL
         }
@@ -273,7 +278,7 @@ final class CipherAuthService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
-        request.timeoutInterval = 30
+        request.timeoutInterval = timeout
 
         let (data, response) = try await URLSession.shared.data(for: request)
 

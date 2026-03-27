@@ -64,14 +64,24 @@ class CipherEnrollmentManager: ObservableObject {
     /// Submit a completed gameplay session for enrollment.
     /// Call after each normal session during the enrollment period.
     func submitSession(_ payload: CipherAuthService.PendulumSessionPayload) async throws {
-        guard let eid = enrollmentId else { return }
+        guard let eid = enrollmentId else {
+            print("[Cipher] Enrollment submitSession: no enrollmentId, skipping")
+            return
+        }
 
-        try await CipherAuthService.shared.submitEnrollmentSession(
+        let response = try await CipherAuthService.shared.submitEnrollmentSession(
             enrollmentId: eid,
             session: payload
         )
-        sessionsSubmitted += 1
+
+        // Use server-returned count (authoritative) or increment locally
+        if let serverCount = response.sessionsSubmitted {
+            sessionsSubmitted = serverCount
+        } else {
+            sessionsSubmitted += 1
+        }
         UserDefaults.standard.set(sessionsSubmitted, forKey: "cipherEnrollmentSessions")
+        print("[Cipher] Enrollment session submitted: \(sessionsSubmitted)/\(targetSessions)")
 
         // Auto-finalize when target reached
         if sessionsSubmitted >= targetSessions {

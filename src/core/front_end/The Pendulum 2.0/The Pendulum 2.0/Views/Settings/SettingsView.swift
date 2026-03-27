@@ -488,20 +488,6 @@ struct DataSection: View {
                     showingClearConfirmation = true
                 }
 
-                // Test Verification Button
-                SettingsButtonRow(
-                    title: "Test Verification",
-                    subtitle: "Start a behavioral auth challenge",
-                    iconName: "lock.shield"
-                ) {
-                    // Post notification to trigger auth flow in ContentView
-                    NotificationCenter.default.post(
-                        name: .cipherChallengeReceived,
-                        object: nil,
-                        userInfo: ["challengeId": "manual-test"]
-                    )
-                }
-
                 // Re-enroll Cipher Button
                 SettingsButtonRow(
                     title: "Re-enroll Cipher",
