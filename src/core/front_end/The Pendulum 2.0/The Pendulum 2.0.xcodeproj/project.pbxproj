@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02628B686320CA2C682539A4 /* NatureShareRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D61FB0C778C3C70A622411B /* NatureShareRenderer.swift */; };
+		57D301EAF697A44775089A83 /* PendulumNatureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57ADBE9995248D50231E9435 /* PendulumNatureSheet.swift */; };
+		675C2B476B7E9265D92DA70C /* PendulumNatureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DC42F1872242287A7D97FB /* PendulumNatureViewModel.swift */; };
+		8790356727F9B989CA718402 /* StabilityScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76E0EBBA06BC2FFB4C5EEFD /* StabilityScoreRing.swift */; };
+		8A8D236BE88D480F5DD04368 /* NatureDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D182CD210D40C318BB33430B /* NatureDataProvider.swift */; };
+		96B133742ECF99D71EEE013F /* ArchetypeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB981478C2A78E9823B3D2BA /* ArchetypeClassifier.swift */; };
+		C858F4934199B6EFFA64D0FA /* BalanceTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F5B7323E775FC7C2BD8934 /* BalanceTimelineView.swift */; };
 		D631CED92F5C6D740056BEF1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = D6B1C4012F55A00100CIPHER /* FirebaseMessaging */; };
 		D66F26FC2F2BDE1B0099EA6E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FB2F2BDE1B0099EA6E /* FirebaseAnalytics */; };
 		D66F26FE2F2BDE1B0099EA6E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D66F26FD2F2BDE1B0099EA6E /* FirebaseAuth */; };
@@ -20,7 +27,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0D61FB0C778C3C70A622411B /* NatureShareRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NatureShareRenderer.swift; path = "../../The Pendulum 2.0/Views/Nature/NatureShareRenderer.swift"; sourceTree = "<group>"; };
+		57ADBE9995248D50231E9435 /* PendulumNatureSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PendulumNatureSheet.swift; path = "../../The Pendulum 2.0/Views/Nature/PendulumNatureSheet.swift"; sourceTree = "<group>"; };
+		79DC42F1872242287A7D97FB /* PendulumNatureViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PendulumNatureViewModel.swift; path = "../../The Pendulum 2.0/Views/Nature/PendulumNatureViewModel.swift"; sourceTree = "<group>"; };
+		89F5B7323E775FC7C2BD8934 /* BalanceTimelineView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BalanceTimelineView.swift; path = "../../The Pendulum 2.0/Views/Nature/BalanceTimelineView.swift"; sourceTree = "<group>"; };
+		A76E0EBBA06BC2FFB4C5EEFD /* StabilityScoreRing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StabilityScoreRing.swift; path = "../../The Pendulum 2.0/Views/Nature/StabilityScoreRing.swift"; sourceTree = "<group>"; };
+		D182CD210D40C318BB33430B /* NatureDataProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NatureDataProvider.swift; path = "../../The Pendulum 2.0/Core/Data/NatureDataProvider.swift"; sourceTree = "<group>"; };
 		D67E73F42F27DFA500DBF3DF /* The Pendulum 2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Pendulum 2.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB981478C2A78E9823B3D2BA /* ArchetypeClassifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ArchetypeClassifier.swift; path = "../../The Pendulum 2.0/Core/Data/ArchetypeClassifier.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -65,12 +79,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		67B8FFFCB38ED3E85490586C /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				EB981478C2A78E9823B3D2BA /* ArchetypeClassifier.swift */,
+				D182CD210D40C318BB33430B /* NatureDataProvider.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		7E3AA956138D111713B7B34E /* Nature */ = {
+			isa = PBXGroup;
+			children = (
+				79DC42F1872242287A7D97FB /* PendulumNatureViewModel.swift */,
+				57ADBE9995248D50231E9435 /* PendulumNatureSheet.swift */,
+				89F5B7323E775FC7C2BD8934 /* BalanceTimelineView.swift */,
+				A76E0EBBA06BC2FFB4C5EEFD /* StabilityScoreRing.swift */,
+				0D61FB0C778C3C70A622411B /* NatureShareRenderer.swift */,
+			);
+			path = Nature;
+			sourceTree = "<group>";
+		};
 		D67E73EB2F27DFA500DBF3DF = {
 			isa = PBXGroup;
 			children = (
 				D67E73F62F27DFA500DBF3DF /* The Pendulum 2.0 */,
 				D67E76FD2F27F21200DBF3DF /* Frameworks */,
 				D67E73F52F27DFA500DBF3DF /* Products */,
+				F3DAB7B76EEF9E5824D57852 /* Core */,
+				F814B24A522E33878E1CDFAA /* Views */,
 			);
 			sourceTree = "<group>";
 		};
@@ -87,6 +124,22 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F3DAB7B76EEF9E5824D57852 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				67B8FFFCB38ED3E85490586C /* Data */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		F814B24A522E33878E1CDFAA /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7E3AA956138D111713B7B34E /* Nature */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,6 +232,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				96B133742ECF99D71EEE013F /* ArchetypeClassifier.swift in Sources */,
+				8A8D236BE88D480F5DD04368 /* NatureDataProvider.swift in Sources */,
+				675C2B476B7E9265D92DA70C /* PendulumNatureViewModel.swift in Sources */,
+				57D301EAF697A44775089A83 /* PendulumNatureSheet.swift in Sources */,
+				C858F4934199B6EFFA64D0FA /* BalanceTimelineView.swift in Sources */,
+				8790356727F9B989CA718402 /* StabilityScoreRing.swift in Sources */,
+				02628B686320CA2C682539A4 /* NatureShareRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,7 +373,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -350,7 +410,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "The Pendulum 2.0/The Pendulum 2.0.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = 45VKNM5222;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

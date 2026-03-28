@@ -37,6 +37,11 @@ struct PaywallView: View {
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(PendulumColors.textSecondary)
 
+                    // Vestibular progression data (shown when 3+ play days exist)
+                    if CSVSessionManager.currentPlayDay >= 3 {
+                        vestibularProgressionCard
+                    }
+
                     // Feature highlights
                     VStack(alignment: .leading, spacing: 16) {
                         FeatureRow(
@@ -161,6 +166,55 @@ struct PaywallView: View {
                 Task { await purchaseManager.loadProduct() }
             }
         }
+    }
+
+    // MARK: - Vestibular Progression Card
+
+    private var vestibularProgressionCard: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 16))
+                    .foregroundStyle(PendulumColors.gold)
+
+                Text("Your Vestibular Journey")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(PendulumColors.text)
+
+                Spacer()
+            }
+
+            // Day progress dots
+            HStack(spacing: 16) {
+                let playDays = CSVSessionManager.getPlayDays()
+                ForEach(0..<min(playDays.count, 5), id: \.self) { idx in
+                    VStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(PendulumColors.gold)
+                        Text("Day \(idx + 1)")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(PendulumColors.textSecondary)
+                    }
+                }
+                Spacer()
+            }
+
+            Text("Continue tracking your vestibular signature and see how your motor control evolves over time.")
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(PendulumColors.textSecondary)
+                .lineSpacing(3)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(PendulumColors.backgroundTertiary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(PendulumColors.gold.opacity(0.2), lineWidth: 1)
+        )
+        .padding(.horizontal, 24)
     }
 
     private var purchaseButtonLabel: String {

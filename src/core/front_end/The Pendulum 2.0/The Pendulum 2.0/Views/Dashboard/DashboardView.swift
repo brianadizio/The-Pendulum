@@ -10,6 +10,7 @@ struct DashboardView: View {
     @State private var selectedTimeRange: AnalyticsTimeRange = .daily
     @State private var showingAIChat = false
     @State private var selectedQuestionId: String? = nil
+    @State private var showingNatureSheet = false
     @StateObject private var metricsCalculator = CSVMetricsCalculator()
 
     var body: some View {
@@ -34,7 +35,11 @@ struct DashboardView: View {
                         onQuestionTapped: { questionId in
                             selectedQuestionId = questionId
                             showingAIChat = true
-                        }
+                        },
+                        onNatureTapped: {
+                            showingNatureSheet = true
+                        },
+                        showNatureButton: (gameState.csvSessionManager?.getAllSessions().count ?? 0) >= 3
                     )
 
                     Divider()
@@ -132,6 +137,9 @@ struct DashboardView: View {
                         selectedQuestionId = nil
                     }
                 }
+        }
+        .sheet(isPresented: $showingNatureSheet) {
+            PendulumNatureSheet(gameState: gameState)
         }
     }
 
@@ -242,6 +250,8 @@ struct BasicMetricsSection: View {
 struct QuickInsightsSection: View {
     @ObservedObject var metricsCalculator: CSVMetricsCalculator
     let onQuestionTapped: (String) -> Void
+    var onNatureTapped: (() -> Void)? = nil
+    var showNatureButton: Bool = false
 
     // Show 2 quick insight chips from Tier 1
     private var displayQuestions: [PresetQuestion] {
@@ -277,6 +287,33 @@ struct QuickInsightsSection: View {
             // Horizontal scroll of quick insight chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
+                    // Your Pendulum Nature chip
+                    if showNatureButton {
+                        Button(action: { onNatureTapped?() }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "waveform.path.ecg")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(PendulumColors.gold)
+
+                                Text("Your Pendulum Nature")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(PendulumColors.text)
+                                    .lineLimit(1)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(PendulumColors.backgroundTertiary)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(PendulumColors.gold.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+
                     ForEach(displayQuestions) { question in
                         QuickInsightChip(question: question) {
                             onQuestionTapped(question.id)

@@ -96,6 +96,12 @@ struct SettingsView: View {
                             .padding(.horizontal, 16)
 
                         DebugPurchaseSection()
+
+                        Divider()
+                            .background(PendulumColors.bronze.opacity(0.3))
+                            .padding(.horizontal, 16)
+
+                        DebugProgressionSection()
                         #endif
 
                         // About Section
@@ -729,6 +735,83 @@ struct DebugPurchaseSection: View {
                     isDestructive: true
                 ) {
                     purchaseManager.debugResetPurchase()
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+}
+
+struct DebugProgressionSection: View {
+    @State private var currentDay = CSVSessionManager.currentPlayDay
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("PROGRESSION DEBUG")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PendulumColors.caution)
+                .padding(.horizontal, 16)
+
+            VStack(spacing: 8) {
+                SettingsInfoRow(
+                    title: "Current Play Day",
+                    value: "\(currentDay)"
+                )
+
+                SettingsInfoRow(
+                    title: "Play Days",
+                    value: CSVSessionManager.getPlayDays().joined(separator: ", ")
+                )
+
+                SettingsInfoRow(
+                    title: "Last Nature Shown",
+                    value: UserDefaults.standard.string(forKey: "pendulum_nature_last_shown_day") ?? "never"
+                )
+
+                SettingsButtonRow(
+                    title: "Simulate Day 1",
+                    subtitle: "Reset to Day 1 — clears all play days",
+                    iconName: "1.circle"
+                ) {
+                    UserDefaults.standard.set([] as [String], forKey: "pendulum_play_days")
+                    UserDefaults.standard.removeObject(forKey: "pendulum_nature_last_shown_day")
+                    currentDay = CSVSessionManager.currentPlayDay
+                }
+
+                SettingsButtonRow(
+                    title: "Simulate Day 2",
+                    subtitle: "Adds a fake yesterday play day",
+                    iconName: "2.circle"
+                ) {
+                    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+                    let today = CSVSessionManager.calendarDayString(from: Date())
+                    let yesterdayStr = CSVSessionManager.calendarDayString(from: yesterday)
+                    UserDefaults.standard.set([yesterdayStr, today], forKey: "pendulum_play_days")
+                    UserDefaults.standard.removeObject(forKey: "pendulum_nature_last_shown_day")
+                    currentDay = CSVSessionManager.currentPlayDay
+                }
+
+                SettingsButtonRow(
+                    title: "Simulate Day 3",
+                    subtitle: "Adds fake Day 1, Day 2, and today",
+                    iconName: "3.circle"
+                ) {
+                    let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date())!
+                    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+                    let today = CSVSessionManager.calendarDayString(from: Date())
+                    let d1 = CSVSessionManager.calendarDayString(from: twoDaysAgo)
+                    let d2 = CSVSessionManager.calendarDayString(from: yesterday)
+                    UserDefaults.standard.set([d1, d2, today], forKey: "pendulum_play_days")
+                    UserDefaults.standard.removeObject(forKey: "pendulum_nature_last_shown_day")
+                    currentDay = CSVSessionManager.currentPlayDay
+                }
+
+                SettingsButtonRow(
+                    title: "Show Nature Sheet Now",
+                    subtitle: "Triggers the Nature sheet via notification",
+                    iconName: "waveform.path.ecg"
+                ) {
+                    NotificationCenter.default.post(name: .pendulumNatureReady, object: nil)
                 }
             }
             .padding(.horizontal, 16)

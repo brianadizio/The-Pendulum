@@ -17,6 +17,7 @@ struct PlayView: View {
     @State private var goldenSessionScore: Int = 0
     @State private var showingAuthFallDialog = false
     @State private var authCumulativeTime: TimeInterval = 0
+    @State private var sessionFallCount: Int = 0
     @StateObject private var aiManager = AIManager.shared
     var isActive: Bool = true  // Controls whether SKView is paused (for Metal resource management)
 
@@ -183,6 +184,9 @@ struct PlayView: View {
     }
 
     private func setupGame() {
+        // Reset fall counter for new session
+        sessionFallCount = 0
+
         // Connect CSV session manager for state recording
         viewModel.csvSessionManager = gameState.csvSessionManager
 
@@ -219,6 +223,22 @@ struct PlayView: View {
         // Handle fall - demote one level for leveled modes, end session for Free Play / Golden
         viewModel.onFall = { [weak gameState, weak viewModel] in
             guard let gs = gameState, let vm = viewModel else { return }
+
+            // Count falls and trigger "Your Pendulum Nature" after 3rd fall (once per calendar day)
+            sessionFallCount += 1
+            if sessionFallCount == 3 {
+                let lastShownDayKey = "pendulum_nature_last_shown_day"
+                let today = CSVSessionManager.calendarDayString(from: Date())
+                let lastShownDay = UserDefaults.standard.string(forKey: lastShownDayKey)
+
+                if lastShownDay != today {
+                    UserDefaults.standard.set(today, forKey: lastShownDayKey)
+                    // Delay so the 3rd fall's data gets fully recorded to CSV
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        NotificationCenter.default.post(name: .pendulumNatureReady, object: nil)
+                    }
+                }
+            }
 
             if gs.gameMode.hasLevels {
                 // Demote one level (floor at 1) and continue session

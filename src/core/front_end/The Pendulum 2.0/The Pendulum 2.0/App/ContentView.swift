@@ -56,6 +56,7 @@ struct ContentView: View {
     @State private var pendingChallengeId: String?
     @State private var cipherAuthResult: CipherAuthService.AuthResult?
     @State private var cipherAuthError: String?
+    @State private var showingNatureSheet = false
 
     var body: some View {
         Group {
@@ -97,6 +98,23 @@ struct ContentView: View {
             if let error = notification.userInfo?["error"] as? String {
                 cipherAuthError = error
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .pendulumNatureReady)) { _ in
+            // Present sheet directly without switching tabs
+            // Switching to Dashboard triggers PlayView.onDisappear → endSession(),
+            // which finalizes the CSV before we can read it
+            showingNatureSheet = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToDashboard)) { _ in
+            selectedTab = .dashboard
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .progressionNotificationTapped)) { _ in
+            showingNatureSheet = true
+        }
+        .sheet(isPresented: $showingNatureSheet, onDismiss: {
+            ProgressionNotificationManager.scheduleNextDayReminder()
+        }) {
+            PendulumNatureSheet(gameState: gameState)
         }
         .fullScreenCover(isPresented: $showCipherAuth) {
             CipherAuthView(

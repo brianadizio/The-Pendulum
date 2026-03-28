@@ -93,6 +93,9 @@ class CipherNotificationDelegate: NSObject, UIApplicationDelegate, MessagingDele
                 object: nil,
                 userInfo: ["challengeId": challengeId]
             )
+        } else if response.notification.request.identifier.hasPrefix("pendulum_progression_") {
+            // Local progression notification tapped — show Nature sheet
+            NotificationCenter.default.post(name: .progressionNotificationTapped, object: nil)
         }
 
         completionHandler()

@@ -76,6 +76,36 @@ class CSVSessionManager: ObservableObject {
     @Published private(set) var currentSessionId: String?
     @Published private(set) var isRecording: Bool = false
 
+    // MARK: - Play Day Tracking
+
+    private static let playDaysKey = "pendulum_play_days"
+
+    /// Record today as a play day (called from startSession)
+    func recordPlayDay() {
+        let today = Self.calendarDayString(from: Date())
+        var days = Self.getPlayDays()
+        if !days.contains(today) {
+            days.append(today)
+            UserDefaults.standard.set(days, forKey: Self.playDaysKey)
+        }
+    }
+
+    /// Get all distinct calendar days the user has played, sorted chronologically
+    static func getPlayDays() -> [String] {
+        (UserDefaults.standard.stringArray(forKey: playDaysKey) ?? []).sorted()
+    }
+
+    /// Current progression day number (1-based)
+    static var currentPlayDay: Int { max(getPlayDays().count, 1) }
+
+    /// Format a date as yyyy-MM-dd
+    static func calendarDayString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
+        return formatter.string(from: date)
+    }
+
     // File handles
     private var csvFileHandle: FileHandle?
     private(set) var csvFilePath: URL?
@@ -203,6 +233,7 @@ class CSVSessionManager: ObservableObject {
         )
 
         isRecording = true
+        recordPlayDay()
         print("Started session: \(sessionId)")
     }
 
@@ -442,6 +473,12 @@ class CSVSessionManager: ObservableObject {
         isRecording = false
         currentSessionId = nil
         print("Ended session: \(sessionId)")
+    }
+
+    /// Flush buffered CSV data to disk without ending the session
+    func flushCurrentSession() {
+        flushWriteBuffer()
+        csvFileHandle?.synchronizeFile()
     }
 
     // MARK: - Data Retrieval
